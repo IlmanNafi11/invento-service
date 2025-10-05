@@ -4,20 +4,19 @@ import (
 	"fmt"
 	"log"
 
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 func ConnectDatabase(cfg *Config) *gorm.DB {
 	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Database.Host,
-		cfg.Database.Port,
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.Database.User,
 		cfg.Database.Password,
+		cfg.Database.Host,
+		cfg.Database.Port,
 		cfg.Database.Name,
-		cfg.Database.SSLMode,
 	)
 
 	var logLevel logger.LogLevel
@@ -27,7 +26,7 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 		logLevel = logger.Error
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logLevel),
 	})
 
@@ -35,6 +34,6 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 		log.Fatal("Gagal menghubungkan ke database:", err)
 	}
 
-	log.Println("Berhasil terhubung ke database PostgreSQL")
+	log.Println("Berhasil terhubung ke database MySQL")
 	return db
 }

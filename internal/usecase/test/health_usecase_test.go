@@ -52,7 +52,7 @@ func TestHealthUsecase_GetBasicHealth_Success(t *testing.T) {
 		},
 	}
 
-	healthUsecase := usecase.NewHealthUsecase(nil, nil, cfg)
+	healthUsecase := usecase.NewHealthUsecase(nil, cfg)
 	result := healthUsecase.GetBasicHealth()
 
 	assert.NotNil(t, result)
@@ -69,7 +69,7 @@ func TestHealthUsecase_GetComprehensiveHealth_Success(t *testing.T) {
 		},
 	}
 
-	healthUsecase := usecase.NewHealthUsecase(nil, nil, cfg)
+	healthUsecase := usecase.NewHealthUsecase(nil, cfg)
 	result := healthUsecase.GetComprehensiveHealth()
 
 	assert.NotNil(t, result)
@@ -79,10 +79,7 @@ func TestHealthUsecase_GetComprehensiveHealth_Success(t *testing.T) {
 	assert.NotEmpty(t, result.App.Uptime)
 	assert.Equal(t, domain.HealthStatusUnhealthy, result.Status)
 
-	// Test Redis status with nil client
-	assert.NotNil(t, result.Redis)
-	assert.Equal(t, domain.ServiceStatusDisconnected, result.Redis.Status)
-	assert.Equal(t, "Koneksi Redis tidak tersedia", result.Redis.Error)
+	// Test database status with nil client
 	assert.Equal(t, domain.ServiceStatusError, result.Database.Status)
 	assert.WithinDuration(t, time.Now(), result.Timestamp, time.Second)
 }
@@ -95,7 +92,7 @@ func TestHealthUsecase_GetSystemMetrics_Success(t *testing.T) {
 		},
 	}
 
-	healthUsecase := usecase.NewHealthUsecase(nil, nil, cfg)
+	healthUsecase := usecase.NewHealthUsecase(nil, cfg)
 	result := healthUsecase.GetSystemMetrics()
 
 	assert.NotNil(t, result)
@@ -111,9 +108,7 @@ func TestHealthUsecase_GetSystemMetrics_Success(t *testing.T) {
 	assert.Greater(t, result.Http.TotalRequests, int64(0))
 	assert.Equal(t, domain.ServiceStatusError, result.Database.Status)
 
-	// Test Redis metrics with nil client
-	assert.NotNil(t, result.Redis)
-	assert.Equal(t, domain.ServiceStatusDisconnected, result.Redis.Status)
+	// Test database metrics with nil client
 }
 
 func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
@@ -124,7 +119,7 @@ func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
 		},
 	}
 
-	healthUsecase := usecase.NewHealthUsecase(nil, nil, cfg)
+	healthUsecase := usecase.NewHealthUsecase(nil, cfg)
 	result := healthUsecase.GetApplicationStatus()
 
 	assert.NotNil(t, result)
@@ -133,12 +128,8 @@ func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
 	assert.Equal(t, "test", result.App.Environment)
 	assert.Equal(t, "running", result.App.Status)
 	assert.NotEmpty(t, result.App.Uptime)
-	assert.Equal(t, "PostgreSQL", result.Services.Database.Name)
+	assert.Equal(t, "MySQL", result.Services.Database.Name)
 	assert.Equal(t, domain.ServiceStatusUnhealthy, result.Services.Database.Status)
-
-	// Test Redis service status with nil client
-	assert.Equal(t, "Redis", result.Services.Redis.Name)
-	assert.Equal(t, domain.ServiceStatusUnhealthy, result.Services.Redis.Status)
 
 	assert.NotEmpty(t, result.Dependencies)
 	assert.Greater(t, len(result.Dependencies), 0)
@@ -158,7 +149,7 @@ func TestHealthUsecase_FormatDuration(t *testing.T) {
 		},
 	}
 
-	healthUsecase := usecase.NewHealthUsecase(nil, nil, cfg)
+	healthUsecase := usecase.NewHealthUsecase(nil, cfg)
 
 	basicHealth := healthUsecase.GetBasicHealth()
 	assert.NotNil(t, basicHealth)

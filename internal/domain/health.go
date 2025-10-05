@@ -49,19 +49,6 @@ type DatabaseStatus struct {
 	Version         string        `json:"version,omitempty"`
 }
 
-type RedisStatus struct {
-	Status                 ServiceStatus `json:"status"`
-	PingTime               string        `json:"ping_time,omitempty"`
-	ConnectedClients       int           `json:"connected_clients,omitempty"`
-	UsedMemory             string        `json:"used_memory,omitempty"`
-	MaxMemory              string        `json:"max_memory,omitempty"`
-	KeyspaceHits           int64         `json:"keyspace_hits,omitempty"`
-	KeyspaceMisses         int64         `json:"keyspace_misses,omitempty"`
-	TotalCommandsProcessed int64         `json:"total_commands_processed,omitempty"`
-	Error                  string        `json:"error,omitempty"`
-	Name                   string        `json:"name,omitempty"`
-	Version                string        `json:"version,omitempty"`
-}
 
 type SystemInfo struct {
 	MemoryUsage string `json:"memory_usage"`
@@ -108,7 +95,6 @@ type ResponseTimes struct {
 
 type ServicesStatus struct {
 	Database DatabaseService `json:"database"`
-	Redis    RedisService    `json:"redis,omitempty"`
 }
 
 type DatabaseService struct {
@@ -118,12 +104,6 @@ type DatabaseService struct {
 	PingTime string        `json:"ping_time"`
 }
 
-type RedisService struct {
-	Name     string        `json:"name"`
-	Status   ServiceStatus `json:"status"`
-	Version  string        `json:"version"`
-	PingTime string        `json:"ping_time"`
-}
 
 type Dependency struct {
 	Name    string        `json:"name"`
@@ -135,7 +115,6 @@ type ComprehensiveHealthCheck struct {
 	Status    HealthStatus   `json:"status"`
 	App       AppInfo        `json:"app"`
 	Database  DatabaseStatus `json:"database"`
-	Redis     RedisStatus    `json:"redis"`
 	System    SystemInfo     `json:"system"`
 	Timestamp time.Time      `json:"timestamp"`
 }
@@ -144,7 +123,6 @@ type SystemMetrics struct {
 	App      AppInfo            `json:"app"`
 	System   DetailedSystemInfo `json:"system"`
 	Database DatabaseStatus     `json:"database"`
-	Redis    RedisStatus        `json:"redis"`
 	Http     HttpMetrics        `json:"http"`
 }
 

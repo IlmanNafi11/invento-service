@@ -1,14 +1,12 @@
 package usecase
 
 import (
-	"context"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
 	"fmt"
 	"runtime"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -21,15 +19,13 @@ type HealthUsecase interface {
 
 type healthUsecase struct {
 	db        *gorm.DB
-	rdb       *redis.Client
 	config    *config.Config
 	startTime time.Time
 }
 
-func NewHealthUsecase(db *gorm.DB, rdb *redis.Client, config *config.Config) HealthUsecase {
+func NewHealthUsecase(db *gorm.DB, config *config.Config) HealthUsecase {
 	return &healthUsecase{
 		db:        db,
-		rdb:       rdb,
 		config:    config,
 		startTime: time.Now(),
 	}
@@ -46,14 +42,11 @@ func (uc *healthUsecase) GetBasicHealth() *domain.BasicHealthCheck {
 func (uc *healthUsecase) GetComprehensiveHealth() *domain.ComprehensiveHealthCheck {
 	appInfo := uc.getAppInfo()
 	dbStatus := uc.getDatabaseStatus()
-	redisStatus := uc.getRedisStatus()
 	systemInfo := uc.getSystemInfo()
 
 	status := domain.HealthStatusHealthy
 	if dbStatus.Status == domain.ServiceStatusDisconnected ||
-		dbStatus.Status == domain.ServiceStatusError ||
-		redisStatus.Status == domain.ServiceStatusDisconnected ||
-		redisStatus.Status == domain.ServiceStatusError {
+		dbStatus.Status == domain.ServiceStatusError {
 		status = domain.HealthStatusUnhealthy
 	}
 
@@ -61,7 +54,6 @@ func (uc *healthUsecase) GetComprehensiveHealth() *domain.ComprehensiveHealthChe
 		Status:    status,
 		App:       appInfo,
 		Database:  dbStatus,
-		Redis:     redisStatus,
 		System:    systemInfo,
 		Timestamp: time.Now(),
 	}
@@ -75,7 +67,6 @@ func (uc *healthUsecase) GetSystemMetrics() *domain.SystemMetrics {
 		App:      appInfo,
 		System:   uc.getDetailedSystemInfo(),
 		Database: uc.getDetailedDatabaseStatus(),
-		Redis:    uc.getRedisStatus(),
 		Http:     uc.getHttpMetrics(),
 	}
 }
@@ -137,47 +128,6 @@ func (uc *healthUsecase) getDatabaseStatus() domain.DatabaseStatus {
 	}
 }
 
-func (uc *healthUsecase) getRedisStatus() domain.RedisStatus {
-	if uc.rdb == nil {
-		return domain.RedisStatus{
-			Status: domain.ServiceStatusDisconnected,
-			Error:  "Koneksi Redis tidak tersedia",
-		}
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	start := time.Now()
-	pong, err := uc.rdb.Ping(ctx).Result()
-	if err != nil {
-		return domain.RedisStatus{
-			Status: domain.ServiceStatusError,
-			Error:  fmt.Sprintf("Gagal ping Redis: %v", err),
-		}
-	}
-	pingTime := time.Since(start)
-
-	// Ambil info Redis untuk monitoring
-	info, err := uc.rdb.Info(ctx, "server", "memory", "stats").Result()
-	redisStatus := domain.RedisStatus{
-		Status:   domain.ServiceStatusConnected,
-		PingTime: fmt.Sprintf("%dms", pingTime.Milliseconds()),
-		Name:     "Redis",
-	}
-
-	if err == nil && pong == "PONG" {
-		// Parse informasi dari Redis INFO command
-		redisStatus.Version = uc.parseRedisVersion(info)
-		redisStatus.UsedMemory = uc.parseRedisMemoryUsage(info)
-		redisStatus.ConnectedClients = uc.parseRedisConnectedClients(info)
-		redisStatus.KeyspaceHits = uc.parseRedisKeyspaceHits(info)
-		redisStatus.KeyspaceMisses = uc.parseRedisKeyspaceMisses(info)
-		redisStatus.TotalCommandsProcessed = uc.parseRedisTotalCommands(info)
-	}
-
-	return redisStatus
-}
 
 func (uc *healthUsecase) getDetailedDatabaseStatus() domain.DatabaseStatus {
 	dbStatus := uc.getDatabaseStatus()
@@ -241,29 +191,18 @@ func (uc *healthUsecase) getHttpMetrics() domain.HttpMetrics {
 
 func (uc *healthUsecase) getServicesStatus() domain.ServicesStatus {
 	dbStatus := uc.getDatabaseStatus()
-	redisStatus := uc.getRedisStatus()
 
 	services := domain.ServicesStatus{
 		Database: domain.DatabaseService{
-			Name:     "PostgreSQL",
+			Name:     "MySQL",
 			Status:   domain.ServiceStatusHealthy,
-			Version:  "15.3",
+			Version:  "8.0",
 			PingTime: dbStatus.PingTime,
-		},
-		Redis: domain.RedisService{
-			Name:     "Redis",
-			Status:   domain.ServiceStatusHealthy,
-			Version:  redisStatus.Version,
-			PingTime: redisStatus.PingTime,
 		},
 	}
 
 	if dbStatus.Status != domain.ServiceStatusConnected {
 		services.Database.Status = domain.ServiceStatusUnhealthy
-	}
-
-	if redisStatus.Status != domain.ServiceStatusConnected {
-		services.Redis.Status = domain.ServiceStatusUnhealthy
 	}
 
 	return services
@@ -282,8 +221,8 @@ func (uc *healthUsecase) getDependencies() []domain.Dependency {
 			Status:  domain.ServiceStatusLoaded,
 		},
 		{
-			Name:    "postgresql",
-			Version: "v1.5.4",
+			Name:    "mysql",
+			Version: "v1.5.7",
 			Status:  domain.ServiceStatusLoaded,
 		},
 		{
@@ -294,11 +233,6 @@ func (uc *healthUsecase) getDependencies() []domain.Dependency {
 		{
 			Name:    "bcrypt",
 			Version: "v0.14.0",
-			Status:  domain.ServiceStatusLoaded,
-		},
-		{
-			Name:    "redis",
-			Version: "v9.14.0",
 			Status:  domain.ServiceStatusLoaded,
 		},
 	}
@@ -318,33 +252,3 @@ func (uc *healthUsecase) formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%ds", seconds)
 }
 
-// Redis parsing helper methods
-func (uc *healthUsecase) parseRedisVersion(info string) string {
-	// Default value jika parsing gagal
-	return "Unknown"
-}
-
-func (uc *healthUsecase) parseRedisMemoryUsage(info string) string {
-	// Default value jika parsing gagal
-	return "Unknown"
-}
-
-func (uc *healthUsecase) parseRedisConnectedClients(info string) int {
-	// Default value jika parsing gagal
-	return 0
-}
-
-func (uc *healthUsecase) parseRedisKeyspaceHits(info string) int64 {
-	// Default value jika parsing gagal
-	return 0
-}
-
-func (uc *healthUsecase) parseRedisKeyspaceMisses(info string) int64 {
-	// Default value jika parsing gagal
-	return 0
-}
-
-func (uc *healthUsecase) parseRedisTotalCommands(info string) int64 {
-	// Default value jika parsing gagal
-	return 0
-}

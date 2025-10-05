@@ -4,7 +4,7 @@ import "time"
 
 type User struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
-	Email     string    `json:"email" gorm:"uniqueIndex;not null"`
+	Email     string    `json:"email" gorm:"uniqueIndex;not null;size:255"`
 	Password  string    `json:"-" gorm:"not null"`
 	Name      string    `json:"name" gorm:"not null"`
 	IsActive  bool      `json:"is_active" gorm:"default:true"`
@@ -54,7 +54,7 @@ type RefreshTokenResponse struct {
 type RefreshToken struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	UserID    uint      `json:"user_id" gorm:"not null"`
-	Token     string    `json:"token" gorm:"uniqueIndex;not null"`
+	Token     string    `json:"token" gorm:"uniqueIndex;not null;size:512"`
 	ExpiresAt time.Time `json:"expires_at" gorm:"not null"`
 	IsRevoked bool      `json:"is_revoked" gorm:"default:false"`
 	CreatedAt time.Time `json:"created_at"`
@@ -65,7 +65,7 @@ type RefreshToken struct {
 type PasswordResetToken struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	Email     string    `json:"email" gorm:"not null"`
-	Token     string    `json:"token" gorm:"uniqueIndex;not null"`
+	Token     string    `json:"token" gorm:"uniqueIndex;not null;size:512"`
 	ExpiresAt time.Time `json:"expires_at" gorm:"not null"`
 	IsUsed    bool      `json:"is_used" gorm:"default:false"`
 	CreatedAt time.Time `json:"created_at"`

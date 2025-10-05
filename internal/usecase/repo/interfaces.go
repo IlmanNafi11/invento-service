@@ -27,17 +27,3 @@ type PasswordResetTokenRepository interface {
 	CleanupExpired() error
 }
 
-type RedisRepository interface {
-	Set(key string, value interface{}, ttl time.Duration) error
-	Get(key string) (string, error)
-	GetJSON(key string, dest interface{}) error
-	SetJSON(key string, value interface{}, ttl time.Duration) error
-	Delete(key string) error
-	Exists(key string) (bool, error)
-	Increment(key string) (int64, error)
-	Decrement(key string) (int64, error)
-	SetExpire(key string, ttl time.Duration) error
-	GetTTL(key string) (time.Duration, error)
-	FlushAll() error
-	Ping() error
-}

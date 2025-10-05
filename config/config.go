@@ -14,7 +14,6 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	Mail     MailConfig
-	Redis    RedisConfig
 }
 
 type AppConfig struct {
@@ -29,7 +28,6 @@ type DatabaseConfig struct {
 	User           string
 	Password       string
 	Name           string
-	SSLMode        string
 	AutoMigrate    bool
 	RunSeeder      bool
 	SeedUsers      bool
@@ -50,14 +48,6 @@ type MailConfig struct {
 	From     string
 }
 
-type RedisConfig struct {
-	Host       string
-	Port       string
-	Password   string
-	DB         int
-	MaxRetries int
-	PoolSize   int
-}
 
 func LoadConfig() *Config {
 	if err := godotenv.Load(); err != nil {
@@ -74,11 +64,10 @@ func LoadConfig() *Config {
 		},
 		Database: DatabaseConfig{
 			Host:           getEnv("DB_HOST", "localhost"),
-			Port:           getEnv("DB_PORT", "5432"),
-			User:           getEnv("DB_USER", "postgres"),
-			Password:       getEnv("DB_PASSWORD", "postgres"),
+			Port:           getEnv("DB_PORT", "3306"),
+			User:           getEnv("DB_USER", "root"),
+			Password:       getEnv("DB_PASSWORD", "admin"),
 			Name:           getEnv("DB_NAME", "fiber_boilerplate"),
-			SSLMode:        getEnv("DB_SSL_MODE", "disable"),
 			AutoMigrate:    getEnvAsBool("DB_AUTO_MIGRATE", true),
 			RunSeeder:      getEnvAsBool("DB_RUN_SEEDER", false),
 			SeedUsers:      getEnvAsBool("DB_SEED_USERS", false),
@@ -95,14 +84,6 @@ func LoadConfig() *Config {
 			Username: getEnv("MAIL_USERNAME", ""),
 			Password: getEnv("MAIL_PASSWORD", ""),
 			From:     getEnv("MAIL_FROM", "noreply@example.com"),
-		},
-		Redis: RedisConfig{
-			Host:       getEnv("REDIS_HOST", "localhost"),
-			Port:       getEnv("REDIS_PORT", "6379"),
-			Password:   getEnv("REDIS_PASSWORD", ""),
-			DB:         getEnvAsInt("REDIS_DB", 0),
-			MaxRetries: getEnvAsInt("REDIS_MAX_RETRIES", 3),
-			PoolSize:   getEnvAsInt("REDIS_POOL_SIZE", 10),
 		},
 	}
 

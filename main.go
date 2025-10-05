@@ -10,7 +10,6 @@ func main() {
 	cfg := config.LoadConfig()
 
 	db := config.ConnectDatabase(cfg)
-	rdb := config.ConnectRedis(cfg)
 
 	if cfg.Database.MigrateOnStart && cfg.Database.AutoMigrate {
 		log.Printf("🔄 Menjalankan auto migration untuk environment: %s", cfg.App.Env)
@@ -32,7 +31,7 @@ func main() {
 		log.Println("⏭️  Seeder dinonaktifkan melalui konfigurasi DB_RUN_SEEDER=false")
 	}
 
-	server := app.NewServer(cfg, db, rdb)
+	server := app.NewServer(cfg, db)
 
 	log.Printf("Server berjalan di port %s", cfg.App.Port)
 	log.Fatal(server.Listen(":" + cfg.App.Port))

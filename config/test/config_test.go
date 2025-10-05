@@ -94,11 +94,10 @@ func TestConfig_StructureValidation(t *testing.T) {
 		},
 		Database: config.DatabaseConfig{
 			Host:           "localhost",
-			Port:           "5432",
-			User:           "postgres",
-			Password:       "password",
+			Port:           "3306",
+			User:           "root",
+			Password:       "admin",
 			Name:           "testdb",
-			SSLMode:        "disable",
 			AutoMigrate:    true,
 			RunSeeder:      false,
 			SeedUsers:      true,
@@ -124,7 +123,7 @@ func TestConfig_StructureValidation(t *testing.T) {
 	assert.Equal(t, "development", cfg.App.Env)
 
 	assert.Equal(t, "localhost", cfg.Database.Host)
-	assert.Equal(t, "5432", cfg.Database.Port)
+	assert.Equal(t, "3306", cfg.Database.Port)
 	assert.True(t, cfg.Database.AutoMigrate)
 	assert.False(t, cfg.Database.RunSeeder)
 
@@ -136,36 +135,3 @@ func TestConfig_StructureValidation(t *testing.T) {
 	assert.Equal(t, "587", cfg.Mail.Port)
 }
 
-func TestLoadConfig_RedisDefaultValues(t *testing.T) {
-	os.Clearenv()
-
-	cfg := config.LoadConfig()
-
-	assert.NotNil(t, cfg.Redis)
-	assert.Equal(t, "localhost", cfg.Redis.Host)
-	assert.Equal(t, "6379", cfg.Redis.Port)
-	assert.Equal(t, "", cfg.Redis.Password)
-	assert.Equal(t, 0, cfg.Redis.DB)
-	assert.Equal(t, 3, cfg.Redis.MaxRetries)
-	assert.Equal(t, 10, cfg.Redis.PoolSize)
-}
-
-func TestLoadConfig_RedisCustomValues(t *testing.T) {
-	os.Clearenv()
-
-	os.Setenv("REDIS_HOST", "redis.example.com")
-	os.Setenv("REDIS_PORT", "6380")
-	os.Setenv("REDIS_PASSWORD", "redis-password")
-	os.Setenv("REDIS_DB", "1")
-	os.Setenv("REDIS_MAX_RETRIES", "5")
-	os.Setenv("REDIS_POOL_SIZE", "20")
-
-	cfg := config.LoadConfig()
-
-	assert.Equal(t, "redis.example.com", cfg.Redis.Host)
-	assert.Equal(t, "6380", cfg.Redis.Port)
-	assert.Equal(t, "redis-password", cfg.Redis.Password)
-	assert.Equal(t, 1, cfg.Redis.DB)
-	assert.Equal(t, 5, cfg.Redis.MaxRetries)
-	assert.Equal(t, 20, cfg.Redis.PoolSize)
-}
