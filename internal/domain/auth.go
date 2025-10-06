@@ -7,9 +7,11 @@ type User struct {
 	Email     string    `json:"email" gorm:"uniqueIndex;not null;size:255"`
 	Password  string    `json:"-" gorm:"not null"`
 	Name      string    `json:"name" gorm:"not null"`
+	RoleID    *uint     `json:"role_id" gorm:"null"`
 	IsActive  bool      `json:"is_active" gorm:"default:true"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Role      *Role     `json:"role,omitempty" gorm:"foreignKey:RoleID"`
 }
 
 type AuthRequest struct {

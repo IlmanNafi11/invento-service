@@ -79,7 +79,6 @@ func TestHealthUsecase_GetComprehensiveHealth_Success(t *testing.T) {
 	assert.NotEmpty(t, result.App.Uptime)
 	assert.Equal(t, domain.HealthStatusUnhealthy, result.Status)
 
-	// Test database status with nil client
 	assert.Equal(t, domain.ServiceStatusError, result.Database.Status)
 	assert.WithinDuration(t, time.Now(), result.Timestamp, time.Second)
 }
@@ -107,8 +106,6 @@ func TestHealthUsecase_GetSystemMetrics_Success(t *testing.T) {
 	assert.NotEmpty(t, result.System.Runtime.OS)
 	assert.Greater(t, result.Http.TotalRequests, int64(0))
 	assert.Equal(t, domain.ServiceStatusError, result.Database.Status)
-
-	// Test database metrics with nil client
 }
 
 func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {

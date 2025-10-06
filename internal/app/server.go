@@ -32,10 +32,20 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	userRepo := repo.NewUserRepository(db)
 	refreshTokenRepo := repo.NewRefreshTokenRepository(db)
 	resetTokenRepo := repo.NewPasswordResetTokenRepository(db)
-	// redisRepo := repo.NewRedisRepository(rdb) // Ready for use when needed
+	roleRepo := repo.NewRoleRepository(db)
+	permissionRepo := repo.NewPermissionRepository(db)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+
+	casbinEnforcer, err := helper.NewCasbinEnforcer(db)
+	if err != nil {
+		panic("Gagal inisialisasi Casbin enforcer: " + err.Error())
+	}
 
 	authUsecase := usecase.NewAuthUsecase(userRepo, refreshTokenRepo, resetTokenRepo, cfg)
 	authController := http.NewAuthController(authUsecase)
+
+	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
+	roleController := http.NewRoleController(roleUsecase)
 
 	healthUsecase := usecase.NewHealthUsecase(db, cfg)
 	healthController := http.NewHealthController(healthUsecase)
@@ -51,6 +61,14 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	protected := auth.Group("/", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	protected.Post("logout", authController.Logout)
+
+	role := api.Group("/role", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	role.Get("/permissions", roleController.GetAvailablePermissions)
+	role.Get("/", roleController.GetRoleList)
+	role.Post("/", roleController.CreateRole)
+	role.Get("/:id", roleController.GetRoleDetail)
+	role.Put("/:id", roleController.UpdateRole)
+	role.Delete("/:id", roleController.DeleteRole)
 
 	monitoring := api.Group("/monitoring")
 	monitoring.Get("/health", healthController.ComprehensiveHealthCheck)

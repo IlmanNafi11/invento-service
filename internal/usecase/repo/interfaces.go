@@ -27,3 +27,28 @@ type PasswordResetTokenRepository interface {
 	CleanupExpired() error
 }
 
+type RoleRepository interface {
+	Create(role *domain.Role) error
+	GetByID(id uint) (*domain.Role, error)
+	GetByName(name string) (*domain.Role, error)
+	Update(role *domain.Role) error
+	Delete(id uint) error
+	GetAll(search string, page, limit int) ([]domain.RoleListItem, int, error)
+}
+
+type PermissionRepository interface {
+	Create(permission *domain.Permission) error
+	GetByID(id uint) (*domain.Permission, error)
+	GetByResourceAndAction(resource, action string) (*domain.Permission, error)
+	GetAll() ([]domain.Permission, error)
+	GetAvailablePermissions() ([]domain.ResourcePermissions, error)
+	BulkCreate(permissions []domain.Permission) error
+}
+
+type RolePermissionRepository interface {
+	Create(rolePermission *domain.RolePermission) error
+	GetByRoleID(roleID uint) ([]domain.RolePermission, error)
+	DeleteByRoleID(roleID uint) error
+	GetPermissionsForRole(roleID uint) ([]domain.Permission, error)
+}
+

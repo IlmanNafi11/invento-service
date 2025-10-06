@@ -98,7 +98,12 @@ func (uc *authUsecase) RefreshToken(req domain.RefreshTokenRequest) (*domain.Ref
 		return nil, errors.New("gagal revoke refresh token lama")
 	}
 
-	accessToken, err := helper.GenerateAccessToken(user.ID, user.Email, uc.config.JWT.Secret, uc.config.JWT.ExpireHours)
+	roleName := ""
+	if user.Role != nil {
+		roleName = user.Role.NamaRole
+	}
+
+	accessToken, err := helper.GenerateAccessToken(user.ID, user.Email, user.RoleID, roleName, uc.config.JWT.Secret, uc.config.JWT.ExpireHours)
 	if err != nil {
 		return nil, errors.New("gagal generate access token")
 	}
@@ -170,7 +175,12 @@ func (uc *authUsecase) Logout(token string) error {
 }
 
 func (uc *authUsecase) generateAuthResponse(user *domain.User) (*domain.AuthResponse, error) {
-	accessToken, err := helper.GenerateAccessToken(user.ID, user.Email, uc.config.JWT.Secret, uc.config.JWT.ExpireHours)
+	roleName := ""
+	if user.Role != nil {
+		roleName = user.Role.NamaRole
+	}
+
+	accessToken, err := helper.GenerateAccessToken(user.ID, user.Email, user.RoleID, roleName, uc.config.JWT.Secret, uc.config.JWT.ExpireHours)
 	if err != nil {
 		return nil, errors.New("gagal generate access token")
 	}

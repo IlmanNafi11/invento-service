@@ -12,14 +12,18 @@ import (
 type JWTClaims struct {
 	UserID    uint   `json:"user_id"`
 	Email     string `json:"email"`
+	RoleID    *uint  `json:"role_id"`
+	Role      string `json:"role"`
 	TokenType string `json:"token_type"`
 	jwt.RegisteredClaims
 }
 
-func GenerateAccessToken(userID uint, email, secret string, expireHours int) (string, error) {
+func GenerateAccessToken(userID uint, email string, roleID *uint, role string, secret string, expireHours int) (string, error) {
 	claims := JWTClaims{
 		UserID:    userID,
 		Email:     email,
+		RoleID:    roleID,
+		Role:      role,
 		TokenType: "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expireHours))),
