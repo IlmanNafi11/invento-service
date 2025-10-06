@@ -1,0 +1,569 @@
+openapi: 3.0.3
+info:
+  title: Fiber Boilerplate API - User Management & Profile
+  description: API dokumentasi untuk sistem manajemen user dan profil pada fiber boilerplate
+  version: 1.0.0
+  contact:
+    name: Developer Team
+    email: developer@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.example.com/v1
+    description: Production server
+
+paths:
+  /user:
+    get:
+      tags:
+        - User Management
+      summary: Mendapatkan daftar user
+      description: Endpoint untuk mendapatkan daftar user dengan dukungan pencarian, filter, dan pagination
+      operationId: getUserList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Pencarian berdasarkan email
+          required: false
+          schema:
+            type: string
+            example: "john.doe"
+        - name: filter_role
+          in: query
+          description: Filter berdasarkan role
+          required: false
+          schema:
+            type: string
+            example: "admin"
+        - name: page
+          in: query
+          description: Nomor halaman untuk pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          description: Jumlah item per halaman
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+      responses:
+        '200':
+          description: Daftar user berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+              example:
+                success: true
+                message: "Daftar user berhasil diambil"
+                code: 200
+                data:
+                  items:
+                    - id: 1
+                      email: "admin@example.com"
+                      role: "Admin"
+                      dibuat_pada: "2024-01-01T10:00:00Z"
+                    - id: 2
+                      email: "dosen@example.com"
+                      role: "Dosen"
+                      dibuat_pada: "2024-01-02T14:30:00Z"
+                  pagination:
+                    page: 1
+                    limit: 10
+                    total_items: 25
+                    total_pages: 3
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Parameter query tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Tidak memiliki akses"
+                code: 401
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /user/{id}/role:
+    put:
+      tags:
+        - User Management
+      summary: Memperbarui role user
+      description: Endpoint untuk memperbarui role user
+      operationId: updateUserRole
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID user yang akan diperbarui
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRoleRequest'
+            example:
+              role: "Dosen"
+      responses:
+        '200':
+          description: Role user berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: "Role user berhasil diperbarui"
+                code: 200
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Data validasi tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "User tidak ditemukan"
+                code: 404
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /user/{id}:
+    delete:
+      tags:
+        - User Management
+      summary: Menghapus user
+      description: Endpoint untuk menghapus user
+      operationId: deleteUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID user yang akan dihapus
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: User berhasil dihapus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: "User berhasil dihapus"
+                code: 200
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "User tidak ditemukan"
+                code: 404
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /user/{id}/files:
+    get:
+      tags:
+        - User Management
+      summary: Mendapatkan daftar file milik user
+      description: Endpoint untuk mendapatkan daftar file (modul dan project) yang dimiliki oleh user tertentu
+      operationId: getUserFiles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID user
+          schema:
+            type: integer
+            example: 1
+        - name: search
+          in: query
+          description: Pencarian berdasarkan nama file
+          required: false
+          schema:
+            type: string
+            example: "materi kuliah"
+        - name: page
+          in: query
+          description: Nomor halaman untuk pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          description: Jumlah item per halaman
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+      responses:
+        '200':
+          description: Daftar file user berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserFilesResponse'
+              example:
+                success: true
+                message: "Daftar file user berhasil diambil"
+                code: 200
+                data:
+                  items:
+                    - id: 1
+                      nama_file: "Materi Kuliah 1.pdf"
+                      kategori: "modul"
+                      download_url: "/api/v1/download/1"
+                    - id: 2
+                      nama_file: "Project Akhir.zip"
+                      kategori: "project"
+                      download_url: "/api/v1/download/2"
+                  pagination:
+                    page: 1
+                    limit: 10
+                    total_items: 15
+                    total_pages: 2
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Parameter query tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "User tidak ditemukan"
+                code: 404
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /profile:
+    get:
+      tags:
+        - Profile
+      summary: Mendapatkan profil user saat ini
+      description: Endpoint untuk mendapatkan informasi profil user yang sedang login
+      operationId: getUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profil user berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+              example:
+                success: true
+                message: "Profil user berhasil diambil"
+                code: 200
+                data:
+                  email: "john.doe@example.com"
+                  role: "Mahasiswa"
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Tidak memiliki akses"
+                code: 401
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        role:
+          type: string
+          example: "Admin"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+
+    UserListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        role:
+          type: string
+          example: "Admin"
+        dibuat_pada:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+
+    UserFile:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nama_file:
+          type: string
+          example: "Materi Kuliah 1.pdf"
+        kategori:
+          type: string
+          enum: [modul, project]
+          example: "modul"
+        download_url:
+          type: string
+          example: "/api/v1/download/1"
+
+    Profile:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        role:
+          type: string
+          example: "Mahasiswa"
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total_items:
+          type: integer
+          example: 25
+        total_pages:
+          type: integer
+          example: 3
+
+    UserListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UserListItem'
+                pagination:
+                  $ref: '#/components/schemas/Pagination'
+
+    UserFilesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UserFile'
+                pagination:
+                  $ref: '#/components/schemas/Pagination'
+
+    ProfileResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Profile'
+
+    UpdateUserRoleRequest:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          example: "Dosen"
+
+    BaseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        code:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    SuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              nullable: true
+
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            errors:
+              type: object
+              nullable: true
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+          example: "role"
+        message:
+          type: string
+          example: "Role wajib diisi"
+
+    ValidationErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationError'
+
+tags:
+  - name: User Management
+    description: Endpoints untuk manajemen user
+  - name: Profile
+    description: Endpoints untuk profil user

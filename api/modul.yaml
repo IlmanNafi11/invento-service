@@ -1,0 +1,522 @@
+openapi: 3.0.3
+info:
+  title: Fiber Boilerplate API - Modul Management
+  description: API dokumentasi untuk sistem manajemen modul pada fiber boilerplate
+  version: 1.0.0
+  contact:
+    name: Developer Team
+    email: developer@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.example.com/v1
+    description: Production server
+
+paths:
+  /modul:
+    get:
+      tags:
+        - Modul
+      summary: Mendapatkan daftar modul
+      description: Endpoint untuk mendapatkan daftar modul dengan dukungan pencarian, filter, dan pagination
+      operationId: getModulList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Pencarian berdasarkan nama file
+          required: false
+          schema:
+            type: string
+            example: "materi kuliah"
+        - name: filter_type
+          in: query
+          description: Filter berdasarkan tipe file (pdf, docx, xlsx, pptx, jpg, png, dll)
+          required: false
+          schema:
+            type: string
+            example: "pdf"
+        - name: page
+          in: query
+          description: Nomor halaman untuk pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          description: Jumlah item per halaman
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+      responses:
+        '200':
+          description: Daftar modul berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModulListResponse'
+              example:
+                success: true
+                message: "Daftar modul berhasil diambil"
+                code: 200
+                data:
+                  items:
+                    - id: 1
+                      nama_file: "Materi Kuliah 1.pdf"
+                      tipe: "pdf"
+                      ukuran: "2.5MB"
+                      terakhir_diperbarui: "2024-01-01T10:00:00Z"
+                    - id: 2
+                      nama_file: "Presentasi Proyek.pptx"
+                      tipe: "pptx"
+                      ukuran: "5.1MB"
+                      terakhir_diperbarui: "2024-01-02T14:30:00Z"
+                  pagination:
+                    page: 1
+                    limit: 10
+                    total_items: 25
+                    total_pages: 3
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Parameter query tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Tidak memiliki akses"
+                code: 401
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Modul
+      summary: Membuat modul baru
+      description: Endpoint untuk membuat modul baru dengan dukungan upload multiple file
+      operationId: createModul
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                    description: File yang akan diupload (pdf, docx, xlsx, pptx, jpg, png)
+                  description: Array file untuk upload multiple
+                nama_file:
+                  type: array
+                  items:
+                    type: string
+                    description: Nama file yang sesuai dengan urutan file
+                  description: Array nama file
+            encoding:
+              files:
+                contentType: application/octet-stream
+      responses:
+        '201':
+          description: Modul berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModulCreateResponse'
+              example:
+                success: true
+                message: "Modul berhasil dibuat"
+                code: 201
+                data:
+                  items:
+                    - id: 1
+                      nama_file: "Materi Kuliah 1.pdf"
+                      tipe: "pdf"
+                      ukuran: "2.5MB"
+                      path_file: "/uploads/modul/1.pdf"
+                      created_at: "2024-01-01T10:00:00Z"
+                      updated_at: "2024-01-01T10:00:00Z"
+                    - id: 2
+                      nama_file: "Presentasi Proyek.pptx"
+                      tipe: "pptx"
+                      ukuran: "5.1MB"
+                      path_file: "/uploads/modul/2.pptx"
+                      created_at: "2024-01-01T10:00:00Z"
+                      updated_at: "2024-01-01T10:00:00Z"
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Data validasi tidak valid atau file tidak didukung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                success: false
+                message: "Data validasi tidak valid"
+                code: 400
+                errors:
+                  - field: "files"
+                    message: "File harus berupa pdf, docx, xlsx, pptx, jpg, atau png"
+                  - field: "nama_file"
+                    message: "Nama file wajib diisi"
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File terlalu besar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Ukuran file melebihi batas maksimal"
+                code: 413
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /modul/{id}:
+    put:
+      tags:
+        - Modul
+      summary: Memperbarui modul
+      description: Endpoint untuk memperbarui informasi modul
+      operationId: updateModul
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID modul yang akan diperbarui
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                nama_file:
+                  type: string
+                  description: Nama file baru
+                  example: "Materi Kuliah Updated.pdf"
+                file:
+                  type: string
+                  format: binary
+                  description: File baru (opsional, jika tidak diupload maka file lama tetap digunakan)
+            encoding:
+              file:
+                contentType: application/octet-stream
+      responses:
+        '200':
+          description: Modul berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModulUpdateResponse'
+              example:
+                success: true
+                message: "Modul berhasil diperbarui"
+                code: 200
+                data:
+                  id: 1
+                  nama_file: "Materi Kuliah Updated.pdf"
+                  tipe: "pdf"
+                  ukuran: "3.2MB"
+                  path_file: "/uploads/modul/1.pdf"
+                  created_at: "2024-01-01T10:00:00Z"
+                  updated_at: "2024-01-02T15:00:00Z"
+                timestamp: "2024-01-02T15:00:00Z"
+        '400':
+          description: Data validasi tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Modul tidak ditemukan"
+                code: 404
+                timestamp: "2024-01-01T10:00:00Z"
+        '413':
+          description: File terlalu besar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Modul
+      summary: Menghapus modul
+      description: Endpoint untuk menghapus modul
+      operationId: deleteModul
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID modul yang akan dihapus
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Modul berhasil dihapus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: "Modul berhasil dihapus"
+                code: 200
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Modul tidak ditemukan"
+                code: 404
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Modul:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nama_file:
+          type: string
+          example: "Materi Kuliah 1.pdf"
+        tipe:
+          type: string
+          enum: [pdf, docx, xlsx, pptx, jpg, png, jpeg, gif]
+          example: "pdf"
+        ukuran:
+          type: string
+          example: "2.5MB"
+        path_file:
+          type: string
+          example: "/uploads/modul/1.pdf"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+
+    ModulListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nama_file:
+          type: string
+          example: "Materi Kuliah 1.pdf"
+        tipe:
+          type: string
+          enum: [pdf, docx, xlsx, pptx, jpg, png, jpeg, gif]
+          example: "pdf"
+        ukuran:
+          type: string
+          example: "2.5MB"
+        terakhir_diperbarui:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total_items:
+          type: integer
+          example: 25
+        total_pages:
+          type: integer
+          example: 3
+
+    ModulListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ModulListItem'
+                pagination:
+                  $ref: '#/components/schemas/Pagination'
+
+    ModulCreateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Modul'
+
+    ModulUpdateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Modul'
+
+    BaseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        code:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    SuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              nullable: true
+
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            errors:
+              type: object
+              nullable: true
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+          example: "nama_file"
+        message:
+          type: string
+          example: "Nama file wajib diisi"
+
+    ValidationErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationError'
+
+tags:
+  - name: Modul
+    description: Endpoints untuk manajemen modul file

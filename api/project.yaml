@@ -1,0 +1,563 @@
+openapi: 3.0.3
+info:
+  title: Fiber Boilerplate API - Project Management
+  description: API dokumentasi untuk sistem manajemen project pada fiber boilerplate
+  version: 1.0.0
+  contact:
+    name: Developer Team
+    email: developer@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.example.com/v1
+    description: Production server
+
+paths:
+  /project:
+    get:
+      tags:
+        - Project
+      summary: Mendapatkan daftar project
+      description: Endpoint untuk mendapatkan daftar project dengan dukungan pencarian, filter, dan pagination
+      operationId: getProjectList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Pencarian berdasarkan nama project
+          required: false
+          schema:
+            type: string
+            example: "project website"
+        - name: filter_semester
+          in: query
+          description: Filter berdasarkan semester (1-8)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 8
+            example: 3
+        - name: filter_kategori
+          in: query
+          description: Filter berdasarkan kategori (website, mobile, iot, machine_learning, deep_learning)
+          required: false
+          schema:
+            type: string
+            enum: [website, mobile, iot, machine_learning, deep_learning]
+            example: "website"
+        - name: page
+          in: query
+          description: Nomor halaman untuk pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          description: Jumlah item per halaman
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+            example: 10
+      responses:
+        '200':
+          description: Daftar project berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListResponse'
+              example:
+                success: true
+                message: "Daftar project berhasil diambil"
+                code: 200
+                data:
+                  items:
+                    - id: 1
+                      nama_project: "Website E-commerce"
+                      kategori: "website"
+                      semester: 3
+                      ukuran: "15.2MB"
+                      terakhir_diperbarui: "2024-01-01T10:00:00Z"
+                    - id: 2
+                      nama_project: "Aplikasi Mobile Chat"
+                      kategori: "mobile"
+                      semester: 5
+                      ukuran: "8.7MB"
+                      terakhir_diperbarui: "2024-01-02T14:30:00Z"
+                  pagination:
+                    page: 1
+                    limit: 10
+                    total_items: 25
+                    total_pages: 3
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Parameter query tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Tidak memiliki akses"
+                code: 401
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Project
+      summary: Membuat project baru
+      description: Endpoint untuk membuat project baru dengan dukungan upload multiple file zip
+      operationId: createProject
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                    description: File zip project
+                  description: Array file zip untuk upload multiple
+                nama_project:
+                  type: array
+                  items:
+                    type: string
+                    description: Nama project yang sesuai dengan urutan file
+                  description: Array nama project
+                semester:
+                  type: array
+                  items:
+                    type: integer
+                    minimum: 1
+                    maximum: 8
+                    description: Semester project yang sesuai dengan urutan file
+                  description: Array semester project
+            encoding:
+              files:
+                contentType: application/zip
+      responses:
+        '201':
+          description: Project berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectCreateResponse'
+              example:
+                success: true
+                message: "Project berhasil dibuat"
+                code: 201
+                data:
+                  items:
+                    - id: 1
+                      nama_project: "Website E-commerce"
+                      kategori: "website"
+                      semester: 3
+                      ukuran: "15.2MB"
+                      path_file: "/uploads/project/1.zip"
+                      created_at: "2024-01-01T10:00:00Z"
+                      updated_at: "2024-01-01T10:00:00Z"
+                    - id: 2
+                      nama_project: "Aplikasi Mobile Chat"
+                      kategori: "mobile"
+                      semester: 5
+                      ukuran: "8.7MB"
+                      path_file: "/uploads/project/2.zip"
+                      created_at: "2024-01-01T10:00:00Z"
+                      updated_at: "2024-01-01T10:00:00Z"
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Data validasi tidak valid atau file tidak didukung
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                success: false
+                message: "Data validasi tidak valid"
+                code: 400
+                errors:
+                  - field: "files"
+                    message: "File harus berupa zip"
+                  - field: "nama_project"
+                    message: "Nama project wajib diisi"
+                  - field: "semester"
+                    message: "Semester harus antara 1 sampai 8"
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File terlalu besar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Ukuran file melebihi batas maksimal"
+                code: 413
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /project/{id}:
+    put:
+      tags:
+        - Project
+      summary: Memperbarui project
+      description: Endpoint untuk memperbarui informasi project
+      operationId: updateProject
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID project yang akan diperbarui
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                nama_project:
+                  type: string
+                  description: Nama project baru
+                  example: "Website E-commerce Updated"
+                semester:
+                  type: integer
+                  minimum: 1
+                  maximum: 8
+                  description: Semester project baru
+                  example: 4
+                file:
+                  type: string
+                  format: binary
+                  description: File zip baru (opsional, jika tidak diupload maka file lama tetap digunakan)
+            encoding:
+              file:
+                contentType: application/zip
+      responses:
+        '200':
+          description: Project berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectUpdateResponse'
+              example:
+                success: true
+                message: "Project berhasil diperbarui"
+                code: 200
+                data:
+                  id: 1
+                  nama_project: "Website E-commerce Updated"
+                  kategori: "website"
+                  semester: 4
+                  ukuran: "16.8MB"
+                  path_file: "/uploads/project/1.zip"
+                  created_at: "2024-01-01T10:00:00Z"
+                  updated_at: "2024-01-02T15:00:00Z"
+                timestamp: "2024-01-02T15:00:00Z"
+        '400':
+          description: Data validasi tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Project tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Project tidak ditemukan"
+                code: 404
+                timestamp: "2024-01-01T10:00:00Z"
+        '413':
+          description: File terlalu besar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Project
+      summary: Menghapus project
+      description: Endpoint untuk menghapus project
+      operationId: deleteProject
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID project yang akan dihapus
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Project berhasil dihapus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: "Project berhasil dihapus"
+                code: 200
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Project tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Project tidak ditemukan"
+                code: 404
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nama_project:
+          type: string
+          example: "Website E-commerce"
+        kategori:
+          type: string
+          enum: [website, mobile, iot, machine_learning, deep_learning]
+          example: "website"
+        semester:
+          type: integer
+          minimum: 1
+          maximum: 8
+          example: 3
+        ukuran:
+          type: string
+          example: "15.2MB"
+        path_file:
+          type: string
+          example: "/uploads/project/1.zip"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+
+    ProjectListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nama_project:
+          type: string
+          example: "Website E-commerce"
+        kategori:
+          type: string
+          enum: [website, mobile, iot, machine_learning, deep_learning]
+          example: "website"
+        semester:
+          type: integer
+          minimum: 1
+          maximum: 8
+          example: 3
+        ukuran:
+          type: string
+          example: "15.2MB"
+        terakhir_diperbarui:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total_items:
+          type: integer
+          example: 25
+        total_pages:
+          type: integer
+          example: 3
+
+    ProjectListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ProjectListItem'
+                pagination:
+                  $ref: '#/components/schemas/Pagination'
+
+    ProjectCreateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Project'
+
+    ProjectUpdateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Project'
+
+    BaseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        code:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    SuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              nullable: true
+
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            errors:
+              type: object
+              nullable: true
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+          example: "nama_project"
+        message:
+          type: string
+          example: "Nama project wajib diisi"
+
+    ValidationErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/ValidationError'
+
+tags:
+  - name: Project
+    description: Endpoints untuk manajemen project mahasiswa
