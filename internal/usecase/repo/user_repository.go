@@ -39,3 +39,54 @@ func (r *userRepository) Create(user *domain.User) error {
 func (r *userRepository) UpdatePassword(email, hashedPassword string) error {
 	return r.db.Model(&domain.User{}).Where("email = ?", email).Update("password", hashedPassword).Error
 }
+
+func (r *userRepository) GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error) {
+	var userListItems []domain.UserListItem
+	var total int64
+
+	countQuery := r.db.Table("users").
+		Joins("LEFT JOIN roles ON roles.id = users.role_id").
+		Where("users.is_active = ?", true)
+
+	if search != "" {
+		searchPattern := "%" + search + "%"
+		countQuery = countQuery.Where("users.email LIKE ?", searchPattern)
+	}
+
+	if filterRole != "" {
+		countQuery = countQuery.Where("roles.nama_role = ?", filterRole)
+	}
+
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	dataQuery := r.db.Table("users").
+		Select("users.id, users.email, users.created_at as dibuat_pada, COALESCE(roles.nama_role, '') as role").
+		Joins("LEFT JOIN roles ON roles.id = users.role_id").
+		Where("users.is_active = ?", true)
+
+	if search != "" {
+		searchPattern := "%" + search + "%"
+		dataQuery = dataQuery.Where("users.email LIKE ?", searchPattern)
+	}
+
+	if filterRole != "" {
+		dataQuery = dataQuery.Where("roles.nama_role = ?", filterRole)
+	}
+
+	offset := (page - 1) * limit
+	if err := dataQuery.Offset(offset).Limit(limit).Order("users.created_at DESC").Scan(&userListItems).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return userListItems, int(total), nil
+}
+
+func (r *userRepository) UpdateRole(userID uint, roleID *uint) error {
+	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("role_id", roleID).Error
+}
+
+func (r *userRepository) Delete(userID uint) error {
+	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
+}

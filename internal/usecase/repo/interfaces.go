@@ -10,6 +10,9 @@ type UserRepository interface {
 	GetByID(id uint) (*domain.User, error)
 	Create(user *domain.User) error
 	UpdatePassword(email, hashedPassword string) error
+	GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error)
+	UpdateRole(userID uint, roleID *uint) error
+	Delete(userID uint) error
 }
 
 type RefreshTokenRepository interface {
