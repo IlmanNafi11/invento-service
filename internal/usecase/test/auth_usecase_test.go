@@ -43,6 +43,24 @@ func (m *MockUserRepository) UpdatePassword(email, hashedPassword string) error 
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error) {
+	args := m.Called(search, filterRole, page, limit)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]domain.UserListItem), args.Int(1), args.Error(2)
+}
+
+func (m *MockUserRepository) UpdateRole(userID uint, roleID *uint) error {
+	args := m.Called(userID, roleID)
+	return args.Error(0)
+}
+
+func (m *MockUserRepository) Delete(userID uint) error {
+	args := m.Called(userID)
+	return args.Error(0)
+}
+
 type MockRefreshTokenRepository struct {
 	mock.Mock
 }
@@ -108,10 +126,54 @@ func (m *MockPasswordResetTokenRepository) CleanupExpired() error {
 	return args.Error(0)
 }
 
+type MockRoleRepository struct {
+	mock.Mock
+}
+
+func (m *MockRoleRepository) Create(role *domain.Role) error {
+	args := m.Called(role)
+	return args.Error(0)
+}
+
+func (m *MockRoleRepository) GetByID(id uint) (*domain.Role, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Role), args.Error(1)
+}
+
+func (m *MockRoleRepository) GetByName(name string) (*domain.Role, error) {
+	args := m.Called(name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Role), args.Error(1)
+}
+
+func (m *MockRoleRepository) Update(role *domain.Role) error {
+	args := m.Called(role)
+	return args.Error(0)
+}
+
+func (m *MockRoleRepository) Delete(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *MockRoleRepository) GetAll(search string, page, limit int) ([]domain.RoleListItem, int, error) {
+	args := m.Called(search, page, limit)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]domain.RoleListItem), args.Int(1), args.Error(2)
+}
+
 func TestAuthUsecase_Register_Success(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
 	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
+	mockRoleRepo := new(MockRoleRepository)
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
@@ -121,15 +183,21 @@ func TestAuthUsecase_Register_Success(t *testing.T) {
 		},
 	}
 
-	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, cfg)
+	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
 
 	req := domain.RegisterRequest{
 		Name:     "Test User",
-		Email:    "test@example.com",
+		Email:    "test@student.polije.ac.id",
 		Password: "password123",
 	}
 
+	role := &domain.Role{
+		ID:       1,
+		NamaRole: "mahasiswa",
+	}
+
 	mockUserRepo.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("GetByName", "mahasiswa").Return(role, nil)
 	mockUserRepo.On("Create", mock.AnythingOfType("*domain.User")).Return(nil)
 
 	refreshToken := &domain.RefreshToken{
@@ -158,13 +226,14 @@ func TestAuthUsecase_Register_EmailAlreadyExists(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
 	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
+	mockRoleRepo := new(MockRoleRepository)
 
 	cfg := &config.Config{}
-	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, cfg)
+	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
 
 	req := domain.RegisterRequest{
 		Name:     "Test User",
-		Email:    "test@example.com",
+		Email:    "test@student.polije.ac.id",
 		Password: "password123",
 	}
 
@@ -189,6 +258,7 @@ func TestAuthUsecase_Login_Success(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
 	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
+	mockRoleRepo := new(MockRoleRepository)
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
@@ -198,7 +268,7 @@ func TestAuthUsecase_Login_Success(t *testing.T) {
 		},
 	}
 
-	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, cfg)
+	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
 
 	password := "password123"
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -243,9 +313,10 @@ func TestAuthUsecase_Login_InvalidCredentials(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
 	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
+	mockRoleRepo := new(MockRoleRepository)
 
 	cfg := &config.Config{}
-	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, cfg)
+	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
 
 	req := domain.AuthRequest{
 		Email:    "test@example.com",
@@ -267,6 +338,7 @@ func TestAuthUsecase_RefreshToken_Success(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
 	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
+	mockRoleRepo := new(MockRoleRepository)
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
@@ -276,7 +348,7 @@ func TestAuthUsecase_RefreshToken_Success(t *testing.T) {
 		},
 	}
 
-	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, cfg)
+	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
 
 	refreshTokenString := "valid_refresh_token"
 	userID := uint(1)
@@ -328,9 +400,10 @@ func TestAuthUsecase_ResetPassword_Success(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
 	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
+	mockRoleRepo := new(MockRoleRepository)
 
 	cfg := &config.Config{}
-	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, cfg)
+	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
 
 	email := "test@example.com"
 	user := &domain.User{
@@ -365,9 +438,10 @@ func TestAuthUsecase_ConfirmResetPassword_Success(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
 	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
+	mockRoleRepo := new(MockRoleRepository)
 
 	cfg := &config.Config{}
-	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, cfg)
+	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
 
 	token := "valid_reset_token"
 	email := "test@example.com"
@@ -402,9 +476,10 @@ func TestAuthUsecase_Logout_Success(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
 	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
+	mockRoleRepo := new(MockRoleRepository)
 
 	cfg := &config.Config{}
-	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, cfg)
+	authUC := usecase.NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
 
 	token := "refresh_token_to_revoke"
 

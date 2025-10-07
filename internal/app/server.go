@@ -41,7 +41,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 		panic("Gagal inisialisasi Casbin enforcer: " + err.Error())
 	}
 
-	authUsecase := usecase.NewAuthUsecase(userRepo, refreshTokenRepo, resetTokenRepo, cfg)
+	authUsecase := usecase.NewAuthUsecase(userRepo, refreshTokenRepo, resetTokenRepo, roleRepo, cfg)
 	authController := http.NewAuthController(authUsecase)
 
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)

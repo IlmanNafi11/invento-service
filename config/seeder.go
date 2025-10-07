@@ -13,6 +13,7 @@ func RunSeeder(db *gorm.DB, cfg *Config) {
 
 	seedPermissions(db)
 	seedAdminRole(db)
+	seedMahasiswaDosenRoles(db)
 
 	if cfg.Database.SeedUsers {
 		seedUsers(db)
@@ -119,4 +120,37 @@ func seedAdminRole(db *gorm.DB) {
 	}
 
 	log.Printf("Admin role seed berhasil dibuat dengan %d permissions", len(rolePermissions))
+}
+
+func seedMahasiswaDosenRoles(db *gorm.DB) {
+	var mahasiswaCount int64
+	db.Model(&domain.Role{}).Where("nama_role = ?", "mahasiswa").Count(&mahasiswaCount)
+
+	var dosenCount int64
+	db.Model(&domain.Role{}).Where("nama_role = ?", "dosen").Count(&dosenCount)
+
+	if mahasiswaCount > 0 && dosenCount > 0 {
+		log.Println("Role mahasiswa dan dosen sudah ada, melewati seeding")
+		return
+	}
+
+	if mahasiswaCount == 0 {
+		mahasiswaRole := domain.Role{
+			NamaRole: "mahasiswa",
+		}
+		if err := db.Create(&mahasiswaRole).Error; err != nil {
+			log.Fatal("Gagal membuat role mahasiswa:", err)
+		}
+		log.Println("Role mahasiswa seed berhasil dibuat")
+	}
+
+	if dosenCount == 0 {
+		dosenRole := domain.Role{
+			NamaRole: "dosen",
+		}
+		if err := db.Create(&dosenRole).Error; err != nil {
+			log.Fatal("Gagal membuat role dosen:", err)
+		}
+		log.Println("Role dosen seed berhasil dibuat")
+	}
 }

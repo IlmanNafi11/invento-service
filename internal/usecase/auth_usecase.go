@@ -25,6 +25,7 @@ type authUsecase struct {
 	userRepo         repo.UserRepository
 	refreshTokenRepo repo.RefreshTokenRepository
 	resetTokenRepo   repo.PasswordResetTokenRepository
+	roleRepo         repo.RoleRepository
 	config           *config.Config
 }
 
@@ -32,20 +33,35 @@ func NewAuthUsecase(
 	userRepo repo.UserRepository,
 	refreshTokenRepo repo.RefreshTokenRepository,
 	resetTokenRepo repo.PasswordResetTokenRepository,
+	roleRepo repo.RoleRepository,
 	config *config.Config,
 ) AuthUsecase {
 	return &authUsecase{
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,
 		resetTokenRepo:   resetTokenRepo,
+		roleRepo:         roleRepo,
 		config:           config,
 	}
 }
 
 func (uc *authUsecase) Register(req domain.RegisterRequest) (*domain.AuthResponse, error) {
+	emailInfo, err := helper.ValidatePolijeEmail(req.Email)
+	if err != nil {
+		return nil, err
+	}
+
 	existingUser, _ := uc.userRepo.GetByEmail(req.Email)
 	if existingUser != nil {
 		return nil, errors.New("email sudah terdaftar")
+	}
+
+	role, err := uc.roleRepo.GetByName(emailInfo.RoleName)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("role tidak tersedia, silakan hubungi administrator")
+		}
+		return nil, errors.New("gagal mengambil data role")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -57,12 +73,15 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (*domain.AuthRespons
 		Name:     req.Name,
 		Email:    req.Email,
 		Password: string(hashedPassword),
+		RoleID:   &role.ID,
 		IsActive: true,
 	}
 
 	if err := uc.userRepo.Create(user); err != nil {
 		return nil, errors.New("gagal membuat user")
 	}
+
+	user.Role = role
 
 	return uc.generateAuthResponse(user)
 }

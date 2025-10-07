@@ -33,6 +33,10 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 		if err.Error() == "email sudah terdaftar" {
 			return helper.SendErrorResponse(c, fiber.StatusConflict, err.Error(), nil)
 		}
+		if err.Error() == "hanya email dengan domain polije.ac.id yang dapat digunakan" ||
+			err.Error() == "subdomain email tidak valid, gunakan student atau teacher" {
+			return helper.SendErrorResponse(c, fiber.StatusBadRequest, err.Error(), nil)
+		}
 		return helper.SendInternalServerErrorResponse(c)
 	}
 

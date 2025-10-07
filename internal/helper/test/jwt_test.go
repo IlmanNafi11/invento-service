@@ -11,10 +11,12 @@ import (
 func TestGenerateAccessToken_Success(t *testing.T) {
 	userID := uint(1)
 	email := "test@example.com"
+	var roleID *uint
+	role := "mahasiswa"
 	secret := "test-secret"
 	expireHours := 1
 
-	token, err := helper.GenerateAccessToken(userID, email, secret, expireHours)
+	token, err := helper.GenerateAccessToken(userID, email, roleID, role, secret, expireHours)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
@@ -40,10 +42,12 @@ func TestGenerateResetToken_Success(t *testing.T) {
 func TestValidateAccessToken_Success(t *testing.T) {
 	userID := uint(1)
 	email := "test@example.com"
+	var roleID *uint
+	role := "mahasiswa"
 	secret := "test-secret"
 	expireHours := 1
 
-	token, err := helper.GenerateAccessToken(userID, email, secret, expireHours)
+	token, err := helper.GenerateAccessToken(userID, email, roleID, role, secret, expireHours)
 	assert.NoError(t, err)
 
 	claims, err := helper.ValidateAccessToken(token, secret)
@@ -58,11 +62,13 @@ func TestValidateAccessToken_Success(t *testing.T) {
 func TestValidateAccessToken_InvalidSecret(t *testing.T) {
 	userID := uint(1)
 	email := "test@example.com"
+	var roleID *uint
+	role := "mahasiswa"
 	secret := "test-secret"
 	wrongSecret := "wrong-secret"
 	expireHours := 1
 
-	token, err := helper.GenerateAccessToken(userID, email, secret, expireHours)
+	token, err := helper.GenerateAccessToken(userID, email, roleID, role, secret, expireHours)
 	assert.NoError(t, err)
 
 	claims, err := helper.ValidateAccessToken(token, wrongSecret)
@@ -74,10 +80,12 @@ func TestValidateAccessToken_InvalidSecret(t *testing.T) {
 func TestValidateAccessToken_ExpiredToken(t *testing.T) {
 	userID := uint(1)
 	email := "test@example.com"
+	var roleID *uint
+	role := "mahasiswa"
 	secret := "test-secret"
 	expireHours := -1
 
-	token, err := helper.GenerateAccessToken(userID, email, secret, expireHours)
+	token, err := helper.GenerateAccessToken(userID, email, roleID, role, secret, expireHours)
 	assert.NoError(t, err)
 
 	time.Sleep(time.Second * 1)
@@ -103,9 +111,13 @@ func TestJWTClaims_Structure(t *testing.T) {
 func TestGenerateAccessToken_DifferentUsers(t *testing.T) {
 	secret := "test-secret"
 	expireHours := 1
+	var roleID1 *uint
+	var roleID2 *uint
+	role1 := "mahasiswa"
+	role2 := "dosen"
 
-	token1, err1 := helper.GenerateAccessToken(1, "user1@example.com", secret, expireHours)
-	token2, err2 := helper.GenerateAccessToken(2, "user2@example.com", secret, expireHours)
+	token1, err1 := helper.GenerateAccessToken(1, "user1@example.com", roleID1, role1, secret, expireHours)
+	token2, err2 := helper.GenerateAccessToken(2, "user2@example.com", roleID2, role2, secret, expireHours)
 
 	assert.NoError(t, err1)
 	assert.NoError(t, err2)
