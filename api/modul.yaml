@@ -77,11 +77,13 @@ paths:
                       nama_file: "Materi Kuliah 1.pdf"
                       tipe: "pdf"
                       ukuran: "2.5MB"
+                      path_file: "/uploads/modul/user-mahasiswa-1/materi1.pdf"
                       terakhir_diperbarui: "2024-01-01T10:00:00Z"
                     - id: 2
                       nama_file: "Presentasi Proyek.pptx"
                       tipe: "pptx"
                       ukuran: "5.1MB"
+                      path_file: "/uploads/modul/user-mahasiswa-1/presentasi.pptx"
                       terakhir_diperbarui: "2024-01-02T14:30:00Z"
                   pagination:
                     page: 1
@@ -204,6 +206,81 @@ paths:
                 success: false
                 message: "Ukuran file melebihi batas maksimal"
                 code: 413
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /modul/download:
+    post:
+      tags:
+        - Modul
+      summary: Download modul
+      description: Endpoint untuk download modul atau multiple modul dalam format zip
+      operationId: downloadModul
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: Array ID modul yang akan didownload
+                  example: [1, 2, 3]
+              required:
+                - ids
+      responses:
+        '200':
+          description: File berhasil didownload
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Parameter request tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "ID modul tidak boleh kosong"
+                code: 400
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Modul tidak ditemukan"
+                code: 404
                 timestamp: "2024-01-01T10:00:00Z"
         '500':
           description: Kesalahan server
@@ -409,6 +486,9 @@ components:
         ukuran:
           type: string
           example: "2.5MB"
+        path_file:
+          type: string
+          example: "/uploads/modul/username-mahasiswa-abc/materi.pdf"
         terakhir_diperbarui:
           type: string
           format: date-time

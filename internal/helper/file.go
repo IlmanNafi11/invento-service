@@ -33,6 +33,41 @@ func ValidateZipFile(fileHeader *multipart.FileHeader) error {
 	return nil
 }
 
+func ValidateModulFile(fileHeader *multipart.FileHeader) error {
+	ext := GetFileExtension(fileHeader.Filename)
+	allowedExtensions := []string{".pdf", ".docx", ".xlsx", ".pptx", ".jpg", ".jpeg", ".png", ".gif"}
+
+	for _, allowed := range allowedExtensions {
+		if ext == allowed {
+			return nil
+		}
+	}
+
+	return errors.New("file harus berupa pdf, docx, xlsx, pptx, jpg, jpeg, png, atau gif")
+}
+
+func GetFileType(filename string) string {
+	ext := GetFileExtension(filename)
+	switch ext {
+	case ".pdf":
+		return "pdf"
+	case ".docx":
+		return "docx"
+	case ".xlsx":
+		return "xlsx"
+	case ".pptx":
+		return "pptx"
+	case ".jpg", ".jpeg":
+		return "jpeg"
+	case ".png":
+		return "png"
+	case ".gif":
+		return "gif"
+	default:
+		return "unknown"
+	}
+}
+
 func GetFileSize(fileHeader *multipart.FileHeader) string {
 	size := fileHeader.Size
 	const (
@@ -88,6 +123,31 @@ func CreateUserDirectory(email string, role string) (string, error) {
 
 	baseDir := "./uploads/project"
 	userDir := filepath.Join(baseDir, dirName)
+
+	if err := os.MkdirAll(userDir, 0755); err != nil {
+		return "", err
+	}
+
+	return userDir, nil
+}
+
+func CreateModulDirectory(email string, role string, fileType string) (string, error) {
+	emailParts := strings.Split(email, "@")
+	if len(emailParts) != 2 {
+		return "", errors.New("format email tidak valid")
+	}
+
+	username := emailParts[0]
+
+	identifier, err := GenerateUniqueIdentifier(1)
+	if err != nil {
+		return "", err
+	}
+
+	dirName := fmt.Sprintf("%s-%s-%s", username, role, identifier)
+
+	baseDir := "./uploads/modul"
+	userDir := filepath.Join(baseDir, dirName, fileType)
 
 	if err := os.MkdirAll(userDir, 0755); err != nil {
 		return "", err

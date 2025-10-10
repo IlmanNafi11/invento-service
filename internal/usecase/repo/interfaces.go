@@ -63,3 +63,12 @@ type ProjectRepository interface {
 	Update(project *domain.Project) error
 	Delete(id uint) error
 }
+
+type ModulRepository interface {
+	Create(modul *domain.Modul) error
+	GetByID(id uint) (*domain.Modul, error)
+	GetByIDs(ids []uint, userID uint) ([]domain.Modul, error)
+	GetByUserID(userID uint, search string, filterType string, page, limit int) ([]domain.ModulListItem, int, error)
+	Update(modul *domain.Modul) error
+	Delete(id uint) error
+}
