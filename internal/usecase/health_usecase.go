@@ -128,7 +128,6 @@ func (uc *healthUsecase) getDatabaseStatus() domain.DatabaseStatus {
 	}
 }
 
-
 func (uc *healthUsecase) getDetailedDatabaseStatus() domain.DatabaseStatus {
 	dbStatus := uc.getDatabaseStatus()
 
@@ -251,4 +250,3 @@ func (uc *healthUsecase) formatDuration(d time.Duration) string {
 	}
 	return fmt.Sprintf("%ds", seconds)
 }
-

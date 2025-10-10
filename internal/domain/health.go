@@ -49,7 +49,6 @@ type DatabaseStatus struct {
 	Version         string        `json:"version,omitempty"`
 }
 
-
 type SystemInfo struct {
 	MemoryUsage string `json:"memory_usage"`
 	CPUCores    int    `json:"cpu_cores"`
@@ -103,7 +102,6 @@ type DatabaseService struct {
 	Version  string        `json:"version"`
 	PingTime string        `json:"ping_time"`
 }
-
 
 type Dependency struct {
 	Name    string        `json:"name"`

@@ -48,7 +48,6 @@ type MailConfig struct {
 	From     string
 }
 
-
 func LoadConfig() *Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Tidak dapat memuat file .env, menggunakan environment variables")

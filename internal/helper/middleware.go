@@ -25,6 +25,7 @@ func JWTAuthMiddleware(secret string) fiber.Handler {
 
 		c.Locals("user_id", claims.UserID)
 		c.Locals("user_email", claims.Email)
+		c.Locals("user_role", claims.Role)
 		return c.Next()
 	}
 }

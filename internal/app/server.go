@@ -35,6 +35,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	roleRepo := repo.NewRoleRepository(db)
 	permissionRepo := repo.NewPermissionRepository(db)
 	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	projectRepo := repo.NewProjectRepository(db)
 
 	casbinEnforcer, err := helper.NewCasbinEnforcer(db)
 	if err != nil {
@@ -49,6 +50,9 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo)
 	userController := http.NewUserController(userUsecase)
+
+	projectUsecase := usecase.NewProjectUsecase(projectRepo)
+	projectController := http.NewProjectController(projectUsecase)
 
 	healthUsecase := usecase.NewHealthUsecase(db, cfg)
 	healthController := http.NewHealthController(healthUsecase)
@@ -81,6 +85,13 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	profile := api.Group("/profile", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	profile.Get("/", userController.GetProfile)
+
+	project := api.Group("/project", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	project.Get("/", projectController.GetList)
+	project.Post("/", projectController.Create)
+	project.Post("/download", projectController.Download)
+	project.Put("/:id", projectController.Update)
+	project.Delete("/:id", projectController.Delete)
 
 	monitoring := api.Group("/monitoring")
 	monitoring.Get("/health", healthController.ComprehensiveHealthCheck)

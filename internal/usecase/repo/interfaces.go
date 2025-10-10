@@ -55,3 +55,11 @@ type RolePermissionRepository interface {
 	GetPermissionsForRole(roleID uint) ([]domain.Permission, error)
 }
 
+type ProjectRepository interface {
+	Create(project *domain.Project) error
+	GetByID(id uint) (*domain.Project, error)
+	GetByIDs(ids []uint, userID uint) ([]domain.Project, error)
+	GetByUserID(userID uint, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error)
+	Update(project *domain.Project) error
+	Delete(id uint) error
+}

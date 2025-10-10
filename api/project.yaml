@@ -88,12 +88,14 @@ paths:
                       kategori: "website"
                       semester: 3
                       ukuran: "15.2MB"
+                      path_file: "/uploads/project/user-mahasiswa-1/website.zip"
                       terakhir_diperbarui: "2024-01-01T10:00:00Z"
                     - id: 2
                       nama_project: "Aplikasi Mobile Chat"
                       kategori: "mobile"
                       semester: 5
                       ukuran: "8.7MB"
+                      path_file: "/uploads/project/user-mahasiswa-1/mobile.zip"
                       terakhir_diperbarui: "2024-01-02T14:30:00Z"
                   pagination:
                     page: 1
@@ -228,6 +230,73 @@ paths:
                 success: false
                 message: "Ukuran file melebihi batas maksimal"
                 code: 413
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /project/download:
+    post:
+      tags:
+        - Project
+      summary: Download project
+      description: Endpoint untuk download project atau multiple project dalam format zip
+      operationId: downloadProject
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: Array ID project yang akan didownload
+                  example: [1, 2, 3]
+              required:
+                - ids
+      responses:
+        '200':
+          description: File berhasil didownload
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Parameter request tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "ID project tidak boleh kosong"
+                code: 400
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Project tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Project tidak ditemukan"
+                code: 404
                 timestamp: "2024-01-01T10:00:00Z"
         '500':
           description: Kesalahan server
@@ -450,6 +519,9 @@ components:
         ukuran:
           type: string
           example: "15.2MB"
+        path_file:
+          type: string
+          example: "/uploads/project/username-mahasiswa-abc/website.zip"
         terakhir_diperbarui:
           type: string
           format: date-time

@@ -134,4 +134,3 @@ func TestConfig_StructureValidation(t *testing.T) {
 	assert.Equal(t, "smtp.gmail.com", cfg.Mail.Host)
 	assert.Equal(t, "587", cfg.Mail.Port)
 }
-

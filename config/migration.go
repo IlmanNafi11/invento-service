@@ -17,6 +17,7 @@ func RunMigration(db *gorm.DB) {
 		&domain.Role{},
 		&domain.Permission{},
 		&domain.RolePermission{},
+		&domain.Project{},
 	); err != nil {
 		log.Fatal("Gagal melakukan auto migrate:", err)
 	}

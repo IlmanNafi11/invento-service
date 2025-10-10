@@ -28,13 +28,13 @@ type RolePermission struct {
 }
 
 type RoleCreateRequest struct {
-	NamaRole    string                       `json:"nama_role" validate:"required,min=2,max=50"`
-	Permissions map[string][]string          `json:"permissions" validate:"required"`
+	NamaRole    string              `json:"nama_role" validate:"required,min=2,max=50"`
+	Permissions map[string][]string `json:"permissions" validate:"required"`
 }
 
 type RoleUpdateRequest struct {
-	NamaRole    string                       `json:"nama_role" validate:"required,min=2,max=50"`
-	Permissions map[string][]string          `json:"permissions" validate:"required"`
+	NamaRole    string              `json:"nama_role" validate:"required,min=2,max=50"`
+	Permissions map[string][]string `json:"permissions" validate:"required"`
 }
 
 type RoleListQueryParams struct {
@@ -44,10 +44,10 @@ type RoleListQueryParams struct {
 }
 
 type RoleListItem struct {
-	ID                 uint      `json:"id"`
-	NamaRole           string    `json:"nama_role"`
-	JumlahPermission   int       `json:"jumlah_permission"`
-	TanggalDiperbarui  time.Time `json:"tanggal_diperbarui"`
+	ID                uint      `json:"id"`
+	NamaRole          string    `json:"nama_role"`
+	JumlahPermission  int       `json:"jumlah_permission"`
+	TanggalDiperbarui time.Time `json:"tanggal_diperbarui"`
 }
 
 type RolePermissionDetail struct {

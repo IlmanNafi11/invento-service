@@ -50,7 +50,7 @@ func (r *permissionRepository) GetAvailablePermissions() ([]domain.ResourcePermi
 	if err := r.db.Order("resource ASC, action ASC").Find(&permissions).Error; err != nil {
 		return nil, err
 	}
-	
+
 	resourceMap := make(map[string][]domain.PermissionItem)
 	for _, perm := range permissions {
 		resourceMap[perm.Resource] = append(resourceMap[perm.Resource], domain.PermissionItem{
@@ -58,7 +58,7 @@ func (r *permissionRepository) GetAvailablePermissions() ([]domain.ResourcePermi
 			Label:  perm.Label,
 		})
 	}
-	
+
 	var result []domain.ResourcePermissions
 	for resource, perms := range resourceMap {
 		result = append(result, domain.ResourcePermissions{
@@ -66,7 +66,7 @@ func (r *permissionRepository) GetAvailablePermissions() ([]domain.ResourcePermi
 			Permissions: perms,
 		})
 	}
-	
+
 	return result, nil
 }
 
