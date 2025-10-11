@@ -15,20 +15,24 @@ type UserUsecase interface {
 	DeleteUser(userID uint) error
 	GetUserFiles(userID uint, params domain.UserFilesQueryParams) (*domain.UserFilesData, error)
 	GetProfile(userID uint) (*domain.ProfileData, error)
+	GetUserPermissions(userID uint) ([]domain.UserPermissionItem, error)
 }
 
 type userUsecase struct {
-	userRepo repo.UserRepository
-	roleRepo repo.RoleRepository
+	userRepo           repo.UserRepository
+	roleRepo           repo.RoleRepository
+	rolePermissionRepo repo.RolePermissionRepository
 }
 
 func NewUserUsecase(
 	userRepo repo.UserRepository,
 	roleRepo repo.RoleRepository,
+	rolePermissionRepo repo.RolePermissionRepository,
 ) UserUsecase {
 	return &userUsecase{
-		userRepo: userRepo,
-		roleRepo: roleRepo,
+		userRepo:           userRepo,
+		roleRepo:           roleRepo,
+		rolePermissionRepo: rolePermissionRepo,
 	}
 }
 
@@ -153,4 +157,38 @@ func (uc *userUsecase) GetProfile(userID uint) (*domain.ProfileData, error) {
 		Email: user.Email,
 		Role:  roleName,
 	}, nil
+}
+
+func (uc *userUsecase) GetUserPermissions(userID uint) ([]domain.UserPermissionItem, error) {
+	user, err := uc.userRepo.GetByID(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user tidak ditemukan")
+		}
+		return nil, errors.New("gagal mengambil data user")
+	}
+
+	if user.RoleID == nil {
+		return []domain.UserPermissionItem{}, nil
+	}
+
+	permissions, err := uc.rolePermissionRepo.GetPermissionsForRole(*user.RoleID)
+	if err != nil {
+		return nil, errors.New("gagal mengambil permissions user")
+	}
+
+	resourceMap := make(map[string][]string)
+	for _, perm := range permissions {
+		resourceMap[perm.Resource] = append(resourceMap[perm.Resource], perm.Action)
+	}
+
+	var result []domain.UserPermissionItem
+	for resource, actions := range resourceMap {
+		result = append(result, domain.UserPermissionItem{
+			Resource: resource,
+			Actions:  actions,
+		})
+	}
+
+	return result, nil
 }

@@ -145,28 +145,64 @@ func seedMahasiswaDosenRoles(db *gorm.DB) {
 	var dosenCount int64
 	db.Model(&domain.Role{}).Where("nama_role = ?", "dosen").Count(&dosenCount)
 
-	if mahasiswaCount > 0 && dosenCount > 0 {
-		log.Println("Role mahasiswa dan dosen sudah ada, melewati seeding")
-		return
-	}
-
+	var mahasiswaRole domain.Role
 	if mahasiswaCount == 0 {
-		mahasiswaRole := domain.Role{
+		mahasiswaRole = domain.Role{
 			NamaRole: "mahasiswa",
 		}
 		if err := db.Create(&mahasiswaRole).Error; err != nil {
 			log.Fatal("Gagal membuat role mahasiswa:", err)
 		}
 		log.Println("Role mahasiswa seed berhasil dibuat")
+	} else {
+		if err := db.Where("nama_role = ?", "mahasiswa").First(&mahasiswaRole).Error; err != nil {
+			log.Fatal("Gagal mengambil role mahasiswa:", err)
+		}
 	}
 
+	var dosenRole domain.Role
 	if dosenCount == 0 {
-		dosenRole := domain.Role{
+		dosenRole = domain.Role{
 			NamaRole: "dosen",
 		}
 		if err := db.Create(&dosenRole).Error; err != nil {
 			log.Fatal("Gagal membuat role dosen:", err)
 		}
 		log.Println("Role dosen seed berhasil dibuat")
+	} else {
+		if err := db.Where("nama_role = ?", "dosen").First(&dosenRole).Error; err != nil {
+			log.Fatal("Gagal mengambil role dosen:", err)
+		}
+	}
+
+	// Assign permissions to mahasiswa: Modul, Project
+	assignPermissionsToRole(db, mahasiswaRole.ID, []string{"modul", "Project"})
+
+	// Assign permissions to dosen: Modul, Project, user
+	assignPermissionsToRole(db, dosenRole.ID, []string{"modul", "Project", "user"})
+}
+
+func assignPermissionsToRole(db *gorm.DB, roleID uint, resources []string) {
+	for _, resource := range resources {
+		var permissions []domain.Permission
+		if err := db.Where("resource = ?", resource).Find(&permissions).Error; err != nil {
+			log.Printf("Gagal mengambil permissions untuk resource %s: %v", resource, err)
+			continue
+		}
+
+		for _, perm := range permissions {
+			rolePermission := &domain.RolePermission{
+				RoleID:       roleID,
+				PermissionID: perm.ID,
+			}
+
+			var count int64
+			db.Model(&domain.RolePermission{}).Where("role_id = ? AND permission_id = ?", roleID, perm.ID).Count(&count)
+			if count == 0 {
+				if err := db.Create(rolePermission).Error; err != nil {
+					log.Printf("Gagal assign permission %s %s ke role: %v", resource, perm.Action, err)
+				}
+			}
+		}
 	}
 }

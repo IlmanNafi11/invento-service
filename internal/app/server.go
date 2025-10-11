@@ -49,7 +49,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
 	roleController := http.NewRoleController(roleUsecase)
 
-	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, rolePermissionRepo)
 	userController := http.NewUserController(userUsecase)
 
 	projectUsecase := usecase.NewProjectUsecase(projectRepo)
@@ -86,6 +86,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	user.Put("/:id/role", helper.RBACMiddleware(casbinEnforcer, "User", "update"), userController.UpdateUserRole)
 	user.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "User", "delete"), userController.DeleteUser)
 	user.Get("/:id/files", helper.RBACMiddleware(casbinEnforcer, "User", "read"), userController.GetUserFiles)
+	user.Get("/permissions", userController.GetUserPermissions)
 
 	profile := api.Group("/profile", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	profile.Get("/", userController.GetProfile)

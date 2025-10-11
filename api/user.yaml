@@ -331,6 +331,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /user/permissions:
+    get:
+      tags:
+        - User Management
+      summary: Mendapatkan permissions user saat ini
+      description: Endpoint untuk mendapatkan daftar permissions yang dimiliki user yang sedang login
+      operationId: getUserPermissions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Permissions user berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPermissionsResponse'
+              example:
+                success: true
+                message: "Permissions user berhasil diambil"
+                code: 200
+                data:
+                  - resource: "modul"
+                    actions: ["create", "read", "update", "delete"]
+                  - resource: "Project"
+                    actions: ["create", "read", "update", "delete"]
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Tidak memiliki akses"
+                code: 401
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /profile:
     get:
       tags:
@@ -437,6 +481,18 @@ components:
           type: string
           example: "/api/v1/download/1"
 
+    PermissionItem:
+      type: object
+      properties:
+        resource:
+          type: string
+          example: "modul"
+        actions:
+          type: array
+          items:
+            type: string
+          example: ["create", "read", "update", "delete"]
+
     Profile:
       type: object
       properties:
@@ -501,6 +557,16 @@ components:
           properties:
             data:
               $ref: '#/components/schemas/Profile'
+
+    UserPermissionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/PermissionItem'
 
     UpdateUserRoleRequest:
       type: object

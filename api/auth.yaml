@@ -325,10 +325,18 @@ paths:
       tags:
         - Authentication
       summary: Logout pengguna
-      description: Endpoint untuk logout pengguna dan invalidate token
+      description: Endpoint untuk logout pengguna dan invalidate refresh token. Refresh token harus dikirim melalui header X-Refresh-Token.
       operationId: logout
       security:
         - BearerAuth: []
+      parameters:
+        - name: X-Refresh-Token
+          in: header
+          description: Refresh token yang akan di-invalidate saat logout
+          required: true
+          schema:
+            type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
           description: Logout berhasil

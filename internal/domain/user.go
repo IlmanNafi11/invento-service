@@ -47,3 +47,8 @@ type UserFilesData struct {
 	Items      []UserFileItem `json:"items"`
 	Pagination PaginationData `json:"pagination"`
 }
+
+type UserPermissionItem struct {
+	Resource string   `json:"resource"`
+	Actions  []string `json:"actions"`
+}

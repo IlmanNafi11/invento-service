@@ -114,3 +114,14 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 
 	return helper.SendSuccessResponse(c, fiber.StatusOK, "Profil user berhasil diambil", result)
 }
+
+func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
+	result, err := ctrl.userUsecase.GetUserPermissions(userID)
+	if err != nil {
+		return helper.SendInternalServerErrorResponse(c)
+	}
+
+	return helper.SendSuccessResponse(c, fiber.StatusOK, "Permissions user berhasil diambil", result)
+}
