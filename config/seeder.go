@@ -59,14 +59,6 @@ func seedUsers(db *gorm.DB) {
 }
 
 func seedPermissions(db *gorm.DB) {
-	var count int64
-	db.Model(&domain.Permission{}).Count(&count)
-
-	if count > 0 {
-		log.Println("Permissions sudah ada, melewati seeding permissions")
-		return
-	}
-
 	permissions := []domain.Permission{
 		{Resource: "Role", Action: "create", Label: "Buat role"},
 		{Resource: "Role", Action: "read", Label: "Lihat role"},
@@ -76,13 +68,37 @@ func seedPermissions(db *gorm.DB) {
 		{Resource: "Permission", Action: "read", Label: "Lihat permission"},
 		{Resource: "Permission", Action: "update", Label: "Perbarui permission"},
 		{Resource: "Permission", Action: "delete", Label: "Hapus permission"},
+		{Resource: "Project", Action: "create", Label: "Buat project"},
+		{Resource: "Project", Action: "update", Label: "Perbarui project"},
+		{Resource: "Project", Action: "read", Label: "Lihat project"},
+		{Resource: "Project", Action: "delete", Label: "Hapus project"},
+		{Resource: "modul", Action: "create", Label: "Buat modul"},
+		{Resource: "modul", Action: "update", Label: "Perbarui modul"},
+		{Resource: "modul", Action: "read", Label: "Lihat modul"},
+		{Resource: "modul", Action: "delete", Label: "Hapus modul"},
+		{Resource: "user", Action: "update", Label: "Perbarui user"},
+		{Resource: "user", Action: "read", Label: "Lihat user"},
+		{Resource: "user", Action: "delete", Label: "Hapus user"},
 	}
 
-	if err := db.Create(&permissions).Error; err != nil {
-		log.Fatal("Gagal membuat permissions seed:", err)
+	var createdCount int
+	for _, perm := range permissions {
+		var existing domain.Permission
+		result := db.Where("resource = ? AND action = ?", perm.Resource, perm.Action).First(&existing)
+		if result.Error == gorm.ErrRecordNotFound {
+			if err := db.Create(&perm).Error; err != nil {
+				log.Printf("Gagal membuat permission %s %s: %v", perm.Resource, perm.Action, err)
+			} else {
+				createdCount++
+			}
+		}
 	}
 
-	log.Printf("Permissions seed berhasil dibuat: %d permissions", len(permissions))
+	if createdCount > 0 {
+		log.Printf("Permissions seed berhasil dibuat: %d permissions baru", createdCount)
+	} else {
+		log.Println("Tidak ada permission baru yang perlu dibuat")
+	}
 }
 
 func seedAdminRole(db *gorm.DB) {
