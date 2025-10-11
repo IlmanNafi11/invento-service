@@ -29,3 +29,28 @@ func JWTAuthMiddleware(secret string) fiber.Handler {
 		return c.Next()
 	}
 }
+
+func RBACMiddleware(casbinEnforcer *CasbinEnforcer, resource string, action string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		roleVal := c.Locals("user_role")
+		if roleVal == nil {
+			return SendForbiddenResponse(c)
+		}
+
+		role, ok := roleVal.(string)
+		if !ok || role == "" {
+			return SendForbiddenResponse(c)
+		}
+
+		allowed, err := casbinEnforcer.CheckPermission(role, resource, action)
+		if err != nil {
+			return SendInternalServerErrorResponse(c)
+		}
+
+		if !allowed {
+			return SendForbiddenResponse(c)
+		}
+
+		return c.Next()
+	}
+}
