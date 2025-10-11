@@ -21,6 +21,8 @@ func RunSeeder(db *gorm.DB, cfg *Config) {
 		log.Println("Seeder users dinonaktifkan melalui konfigurasi")
 	}
 
+	assignRoleToExistingUsers(db)
+
 	log.Println("Database seeder selesai")
 }
 
@@ -72,13 +74,13 @@ func seedPermissions(db *gorm.DB) {
 		{Resource: "Project", Action: "update", Label: "Perbarui project"},
 		{Resource: "Project", Action: "read", Label: "Lihat project"},
 		{Resource: "Project", Action: "delete", Label: "Hapus project"},
-		{Resource: "modul", Action: "create", Label: "Buat modul"},
-		{Resource: "modul", Action: "update", Label: "Perbarui modul"},
-		{Resource: "modul", Action: "read", Label: "Lihat modul"},
-		{Resource: "modul", Action: "delete", Label: "Hapus modul"},
-		{Resource: "user", Action: "update", Label: "Perbarui user"},
-		{Resource: "user", Action: "read", Label: "Lihat user"},
-		{Resource: "user", Action: "delete", Label: "Hapus user"},
+		{Resource: "Modul", Action: "create", Label: "Buat modul"},
+		{Resource: "Modul", Action: "update", Label: "Perbarui modul"},
+		{Resource: "Modul", Action: "read", Label: "Lihat modul"},
+		{Resource: "Modul", Action: "delete", Label: "Hapus modul"},
+		{Resource: "User", Action: "update", Label: "Perbarui user"},
+		{Resource: "User", Action: "read", Label: "Lihat user"},
+		{Resource: "User", Action: "delete", Label: "Hapus user"},
 	}
 
 	var createdCount int
@@ -119,7 +121,7 @@ func seedAdminRole(db *gorm.DB) {
 	}
 
 	var permissions []domain.Permission
-	if err := db.Where("resource IN ?", []string{"Role", "Permission"}).Find(&permissions).Error; err != nil {
+	if err := db.Find(&permissions).Error; err != nil {
 		log.Fatal("Gagal mengambil permissions:", err)
 	}
 
@@ -175,11 +177,8 @@ func seedMahasiswaDosenRoles(db *gorm.DB) {
 		}
 	}
 
-	// Assign permissions to mahasiswa: Modul, Project
-	assignPermissionsToRole(db, mahasiswaRole.ID, []string{"modul", "Project"})
-
-	// Assign permissions to dosen: Modul, Project, user
-	assignPermissionsToRole(db, dosenRole.ID, []string{"modul", "Project", "user"})
+	assignPermissionsToRole(db, mahasiswaRole.ID, []string{"Modul", "Project"})
+	assignPermissionsToRole(db, dosenRole.ID, []string{"Modul", "Project", "User"})
 }
 
 func assignPermissionsToRole(db *gorm.DB, roleID uint, resources []string) {
@@ -204,5 +203,20 @@ func assignPermissionsToRole(db *gorm.DB, roleID uint, resources []string) {
 				}
 			}
 		}
+	}
+}
+
+func assignRoleToExistingUsers(db *gorm.DB) {
+	var adminRole domain.Role
+	if err := db.Where("nama_role = ?", "admin").First(&adminRole).Error; err != nil {
+		log.Printf("Admin role tidak ditemukan, skip assign role ke existing users: %v", err)
+		return
+	}
+
+	result := db.Model(&domain.User{}).Where("email = ? AND role_id IS NULL", "user@example.com").Update("role_id", adminRole.ID)
+	if result.Error != nil {
+		log.Printf("Gagal assign role ke user@example.com: %v", result.Error)
+	} else if result.RowsAffected > 0 {
+		log.Println("Berhasil assign role admin ke user@example.com")
 	}
 }

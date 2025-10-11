@@ -49,7 +49,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
 	roleController := http.NewRoleController(roleUsecase)
 
-	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, rolePermissionRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, rolePermissionRepo, casbinEnforcer)
 	userController := http.NewUserController(userUsecase)
 
 	projectUsecase := usecase.NewProjectUsecase(projectRepo)

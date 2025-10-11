@@ -1,0 +1,1 @@
+UPDATE users SET role_id = (SELECT id FROM roles WHERE nama_role = 'admin') WHERE email = 'user@example.com' AND role_id IS NULL;

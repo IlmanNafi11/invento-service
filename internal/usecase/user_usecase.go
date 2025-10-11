@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"fiber-boiler-plate/internal/domain"
+	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
 	"math"
 
@@ -22,17 +23,20 @@ type userUsecase struct {
 	userRepo           repo.UserRepository
 	roleRepo           repo.RoleRepository
 	rolePermissionRepo repo.RolePermissionRepository
+	casbinEnforcer     *helper.CasbinEnforcer
 }
 
 func NewUserUsecase(
 	userRepo repo.UserRepository,
 	roleRepo repo.RoleRepository,
 	rolePermissionRepo repo.RolePermissionRepository,
+	casbinEnforcer *helper.CasbinEnforcer,
 ) UserUsecase {
 	return &userUsecase{
 		userRepo:           userRepo,
 		roleRepo:           roleRepo,
 		rolePermissionRepo: rolePermissionRepo,
+		casbinEnforcer:     casbinEnforcer,
 	}
 }
 
@@ -168,18 +172,22 @@ func (uc *userUsecase) GetUserPermissions(userID uint) ([]domain.UserPermissionI
 		return nil, errors.New("gagal mengambil data user")
 	}
 
-	if user.RoleID == nil {
+	if user.Role == nil {
 		return []domain.UserPermissionItem{}, nil
 	}
 
-	permissions, err := uc.rolePermissionRepo.GetPermissionsForRole(*user.RoleID)
+	permissions, err := uc.casbinEnforcer.GetPermissionsForRole(user.Role.NamaRole)
 	if err != nil {
 		return nil, errors.New("gagal mengambil permissions user")
 	}
 
 	resourceMap := make(map[string][]string)
 	for _, perm := range permissions {
-		resourceMap[perm.Resource] = append(resourceMap[perm.Resource], perm.Action)
+		if len(perm) >= 3 {
+			resource := perm[1]
+			action := perm[2]
+			resourceMap[resource] = append(resourceMap[resource], action)
+		}
 	}
 
 	var result []domain.UserPermissionItem
