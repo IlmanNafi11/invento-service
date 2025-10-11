@@ -77,6 +77,12 @@ func (r *modulRepository) GetByUserID(userID uint, search string, filterType str
 	return modulListItems, int(total), nil
 }
 
+func (r *modulRepository) CountByUserID(userID uint) (int, error) {
+	var count int64
+	err := r.db.Model(&domain.Modul{}).Where("user_id = ?", userID).Count(&count).Error
+	return int(count), err
+}
+
 func (r *modulRepository) Update(modul *domain.Modul) error {
 	return r.db.Save(modul).Error
 }

@@ -26,8 +26,19 @@ type UpdateUserRoleRequest struct {
 }
 
 type ProfileData struct {
-	Email string `json:"email"`
-	Role  string `json:"role"`
+	Name          string    `json:"name"`
+	Email         string    `json:"email"`
+	JenisKelamin  *string   `json:"jenis_kelamin,omitempty"`
+	FotoProfil    *string   `json:"foto_profil,omitempty"`
+	Role          string    `json:"role"`
+	CreatedAt     time.Time `json:"created_at"`
+	JumlahProject int       `json:"jumlah_project"`
+	JumlahModul   int       `json:"jumlah_modul"`
+}
+
+type UpdateProfileRequest struct {
+	Name         string `form:"name" validate:"required,min=2,max=100"`
+	JenisKelamin string `form:"jenis_kelamin" validate:"omitempty,oneof=Laki-laki Perempuan"`
 }
 
 type UserFileItem struct {

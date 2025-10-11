@@ -1,0 +1,2 @@
+ALTER TABLE users ADD COLUMN jenis_kelamin VARCHAR(20) NULL;
+ALTER TABLE users ADD COLUMN foto_profil VARCHAR(500) NULL;

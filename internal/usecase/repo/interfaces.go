@@ -12,6 +12,7 @@ type UserRepository interface {
 	UpdatePassword(email, hashedPassword string) error
 	GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error)
 	UpdateRole(userID uint, roleID *uint) error
+	UpdateProfile(userID uint, name string, jenisKelamin *string, fotoProfil *string) error
 	Delete(userID uint) error
 }
 
@@ -60,6 +61,7 @@ type ProjectRepository interface {
 	GetByID(id uint) (*domain.Project, error)
 	GetByIDs(ids []uint, userID uint) ([]domain.Project, error)
 	GetByUserID(userID uint, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error)
+	CountByUserID(userID uint) (int, error)
 	Update(project *domain.Project) error
 	Delete(id uint) error
 }
@@ -69,6 +71,7 @@ type ModulRepository interface {
 	GetByID(id uint) (*domain.Modul, error)
 	GetByIDs(ids []uint, userID uint) ([]domain.Modul, error)
 	GetByUserID(userID uint, search string, filterType string, page, limit int) ([]domain.ModulListItem, int, error)
+	CountByUserID(userID uint) (int, error)
 	Update(modul *domain.Modul) error
 	Delete(id uint) error
 }

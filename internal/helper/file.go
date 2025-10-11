@@ -156,6 +156,48 @@ func CreateModulDirectory(email string, role string, fileType string) (string, e
 	return userDir, nil
 }
 
+func CreateProfilDirectory(email string, role string) (string, error) {
+	emailParts := strings.Split(email, "@")
+	if len(emailParts) != 2 {
+		return "", errors.New("format email tidak valid")
+	}
+
+	username := emailParts[0]
+
+	identifier, err := GenerateUniqueIdentifier(1)
+	if err != nil {
+		return "", err
+	}
+
+	dirName := fmt.Sprintf("%s-%s-%s", username, role, identifier)
+
+	baseDir := "./uploads/profil"
+	profilDir := filepath.Join(baseDir, dirName)
+
+	if err := os.MkdirAll(profilDir, 0755); err != nil {
+		return "", err
+	}
+
+	return profilDir, nil
+}
+
+func ValidateImageFile(fileHeader *multipart.FileHeader) error {
+	ext := GetFileExtension(fileHeader.Filename)
+	allowedExtensions := []string{".png", ".jpg", ".jpeg"}
+
+	for _, allowed := range allowedExtensions {
+		if ext == allowed {
+			maxSize := int64(2 * 1024 * 1024)
+			if fileHeader.Size > maxSize {
+				return errors.New("ukuran foto profil tidak boleh lebih dari 2MB")
+			}
+			return nil
+		}
+	}
+
+	return errors.New("format foto profil harus png, jpg, atau jpeg")
+}
+
 func SaveUploadedFile(fileHeader *multipart.FileHeader, destPath string) error {
 	file, err := fileHeader.Open()
 	if err != nil {

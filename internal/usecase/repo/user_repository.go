@@ -87,6 +87,22 @@ func (r *userRepository) UpdateRole(userID uint, roleID *uint) error {
 	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("role_id", roleID).Error
 }
 
+func (r *userRepository) UpdateProfile(userID uint, name string, jenisKelamin *string, fotoProfil *string) error {
+	updates := map[string]interface{}{
+		"name": name,
+	}
+
+	if jenisKelamin != nil {
+		updates["jenis_kelamin"] = jenisKelamin
+	}
+
+	if fotoProfil != nil {
+		updates["foto_profil"] = fotoProfil
+	}
+
+	return r.db.Model(&domain.User{}).Where("id = ?", userID).Updates(updates).Error
+}
+
 func (r *userRepository) Delete(userID uint) error {
 	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
 }

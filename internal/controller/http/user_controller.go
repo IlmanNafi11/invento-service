@@ -115,6 +115,38 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 	return helper.SendSuccessResponse(c, fiber.StatusOK, "Profil user berhasil diambil", result)
 }
 
+func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
+	userEmail := c.Locals("user_email").(string)
+
+	userRole := c.Locals("user_role").(string)
+
+	var req domain.UpdateProfileRequest
+	if err := c.BodyParser(&req); err != nil {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
+	}
+
+	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
+		return helper.SendValidationErrorResponse(c, validationErrors)
+	}
+
+	fotoProfil, _ := c.FormFile("foto_profil")
+
+	result, err := ctrl.userUsecase.UpdateProfile(userID, userEmail, userRole, req, fotoProfil)
+	if err != nil {
+		if err.Error() == "format foto profil harus png, jpg, atau jpeg" {
+			return helper.SendErrorResponse(c, fiber.StatusBadRequest, err.Error(), nil)
+		}
+		if err.Error() == "ukuran foto profil tidak boleh lebih dari 2MB" {
+			return helper.SendErrorResponse(c, fiber.StatusBadRequest, err.Error(), nil)
+		}
+		return helper.SendInternalServerErrorResponse(c)
+	}
+
+	return helper.SendSuccessResponse(c, fiber.StatusOK, "Profil berhasil diperbarui", result)
+}
+
 func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint)
 

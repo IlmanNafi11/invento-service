@@ -29,6 +29,8 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
 
+	app.Static("/uploads", "./uploads")
+
 	userRepo := repo.NewUserRepository(db)
 	refreshTokenRepo := repo.NewRefreshTokenRepository(db)
 	resetTokenRepo := repo.NewPasswordResetTokenRepository(db)
@@ -49,7 +51,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
 	roleController := http.NewRoleController(roleUsecase)
 
-	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, rolePermissionRepo, casbinEnforcer)
+	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, rolePermissionRepo, projectRepo, modulRepo, casbinEnforcer)
 	userController := http.NewUserController(userUsecase)
 
 	projectUsecase := usecase.NewProjectUsecase(projectRepo)
@@ -90,6 +92,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	profile := api.Group("/profile", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	profile.Get("/", userController.GetProfile)
+	profile.Put("/", userController.UpdateProfile)
 
 	project := api.Group("/project", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	project.Get("/", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.GetList)

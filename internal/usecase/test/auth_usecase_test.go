@@ -43,6 +43,11 @@ func (m *MockUserRepository) UpdatePassword(email, hashedPassword string) error 
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) UpdateProfile(userID uint, name string, jenisKelamin *string, fotoProfil *string) error {
+	args := m.Called(userID, name, jenisKelamin, fotoProfil)
+	return args.Error(0)
+}
+
 func (m *MockUserRepository) GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error) {
 	args := m.Called(search, filterRole, page, limit)
 	if args.Get(0) == nil {

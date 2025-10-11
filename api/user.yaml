@@ -396,8 +396,14 @@ paths:
                 message: "Profil user berhasil diambil"
                 code: 200
                 data:
+                  name: "John Doe"
                   email: "john.doe@example.com"
+                  jenis_kelamin: "Laki-laki"
+                  foto_profil: "/uploads/profil/john-mahasiswa-a5/profil.png"
                   role: "Mahasiswa"
+                  created_at: "2024-01-01T10:00:00Z"
+                  jumlah_project: 5
+                  jumlah_modul: 12
                 timestamp: "2024-01-01T10:00:00Z"
         '401':
           description: Token tidak valid atau sudah expired
@@ -409,6 +415,88 @@ paths:
                 success: false
                 message: "Tidak memiliki akses"
                 code: 401
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Profile
+      summary: Memperbarui profil user saat ini
+      description: Endpoint untuk memperbarui informasi profil user yang sedang login (nama, jenis kelamin, foto profil)
+      operationId: updateUserProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+            encoding:
+              foto_profil:
+                contentType: image/png, image/jpeg, image/jpg
+      responses:
+        '200':
+          description: Profil berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+              example:
+                success: true
+                message: "Profil berhasil diperbarui"
+                code: 200
+                data:
+                  name: "John Doe Updated"
+                  email: "john.doe@example.com"
+                  jenis_kelamin: "Laki-laki"
+                  foto_profil: "/uploads/profil/john-mahasiswa-b3/profil.png"
+                  role: "Mahasiswa"
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Data validasi tidak valid atau file tidak sesuai
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                success: false
+                message: "Data validasi tidak valid"
+                code: 400
+                errors:
+                  - field: "name"
+                    message: "Nama wajib diisi"
+                  - field: "foto_profil"
+                    message: "Format foto profil harus png, jpg, atau jpeg"
+                  - field: "foto_profil"
+                    message: "Ukuran foto profil tidak boleh lebih dari 2MB"
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Tidak memiliki akses"
+                code: 401
+                timestamp: "2024-01-01T10:00:00Z"
+        '413':
+          description: File terlalu besar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Ukuran foto profil tidak boleh lebih dari 2MB"
+                code: 413
                 timestamp: "2024-01-01T10:00:00Z"
         '500':
           description: Kesalahan server
@@ -496,13 +584,38 @@ components:
     Profile:
       type: object
       properties:
+        name:
+          type: string
+          example: "John Doe"
         email:
           type: string
           format: email
           example: "john.doe@example.com"
+        jenis_kelamin:
+          type: string
+          enum: [Laki-laki, Perempuan]
+          example: "Laki-laki"
+          nullable: true
+        foto_profil:
+          type: string
+          example: "/uploads/profil/john-mahasiswa-a5/profil.png"
+          nullable: true
         role:
           type: string
           example: "Mahasiswa"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+          description: Tanggal user terdaftar
+        jumlah_project:
+          type: integer
+          example: 5
+          description: Jumlah project yang dimiliki user
+        jumlah_modul:
+          type: integer
+          example: 12
+          description: Jumlah modul yang dimiliki user
 
     Pagination:
       type: object
@@ -576,6 +689,27 @@ components:
         role:
           type: string
           example: "Dosen"
+
+    UpdateProfileRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: "John Doe"
+          description: Nama lengkap user (wajib diisi)
+        jenis_kelamin:
+          type: string
+          enum: [Laki-laki, Perempuan]
+          example: "Laki-laki"
+          description: Jenis kelamin user (opsional)
+        foto_profil:
+          type: string
+          format: binary
+          description: Foto profil user (opsional, max 2MB, format png/jpg/jpeg)
 
     BaseResponse:
       type: object

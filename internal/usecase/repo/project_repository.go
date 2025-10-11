@@ -85,6 +85,12 @@ func (r *projectRepository) GetByUserID(userID uint, search string, filterSemest
 	return projectListItems, int(total), nil
 }
 
+func (r *projectRepository) CountByUserID(userID uint) (int, error) {
+	var count int64
+	err := r.db.Model(&domain.Project{}).Where("user_id = ?", userID).Count(&count).Error
+	return int(count), err
+}
+
 func (r *projectRepository) Update(project *domain.Project) error {
 	return r.db.Save(project).Error
 }
