@@ -14,10 +14,10 @@ import (
 )
 
 type ProjectUsecase interface {
-	Create(userID uint, userEmail string, userRole string, files []*multipart.FileHeader, namaProjects []string, semesters []int) (*domain.ProjectCreateResponse, error)
+	Create(userID uint, userEmail string, userRole string, files []*multipart.FileHeader, namaProjects []string, kategori []string, semesters []int) (*domain.ProjectCreateResponse, error)
 	GetList(userID uint, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error)
 	GetByID(projectID, userID uint) (*domain.ProjectResponse, error)
-	Update(projectID, userID uint, namaProject string, semester int, file *multipart.FileHeader) (*domain.ProjectResponse, error)
+	Update(projectID, userID uint, namaProject string, kategori string, semester int, file *multipart.FileHeader) (*domain.ProjectResponse, error)
 	Delete(projectID, userID uint) error
 	Download(userID uint, projectIDs []uint) (string, error)
 }
@@ -32,7 +32,7 @@ func NewProjectUsecase(projectRepo repo.ProjectRepository) ProjectUsecase {
 	}
 }
 
-func (uc *projectUsecase) Create(userID uint, userEmail string, userRole string, files []*multipart.FileHeader, namaProjects []string, semesters []int) (*domain.ProjectCreateResponse, error) {
+func (uc *projectUsecase) Create(userID uint, userEmail string, userRole string, files []*multipart.FileHeader, namaProjects []string, kategori []string, semesters []int) (*domain.ProjectCreateResponse, error) {
 	if len(files) == 0 {
 		return nil, errors.New("file wajib diupload")
 	}
@@ -53,7 +53,12 @@ func (uc *projectUsecase) Create(userID uint, userEmail string, userRole string,
 			return nil, err
 		}
 
-		kategori := helper.DetectProjectCategory(fileHeader.Filename)
+		kategoriInput := kategori
+		projectKategori := "website"
+		if i < len(kategoriInput) && kategoriInput[i] != "" {
+			projectKategori = kategoriInput[i]
+		}
+
 		ukuran := helper.GetFileSize(fileHeader)
 
 		filename := fileHeader.Filename
@@ -66,7 +71,7 @@ func (uc *projectUsecase) Create(userID uint, userEmail string, userRole string,
 		project := &domain.Project{
 			UserID:      userID,
 			NamaProject: namaProjects[i],
-			Kategori:    kategori,
+			Kategori:    projectKategori,
 			Semester:    semesters[i],
 			Ukuran:      ukuran,
 			PathFile:    destPath,
@@ -80,7 +85,7 @@ func (uc *projectUsecase) Create(userID uint, userEmail string, userRole string,
 		projectResponses = append(projectResponses, domain.ProjectResponse{
 			ID:          project.ID,
 			NamaProject: project.NamaProject,
-			Kategori:    project.Kategori,
+			Kategori:    projectKategori,
 			Semester:    project.Semester,
 			Ukuran:      project.Ukuran,
 			PathFile:    project.PathFile,
@@ -145,7 +150,7 @@ func (uc *projectUsecase) GetByID(projectID, userID uint) (*domain.ProjectRespon
 	}, nil
 }
 
-func (uc *projectUsecase) Update(projectID, userID uint, namaProject string, semester int, file *multipart.FileHeader) (*domain.ProjectResponse, error) {
+func (uc *projectUsecase) Update(projectID, userID uint, namaProject string, kategori string, semester int, file *multipart.FileHeader) (*domain.ProjectResponse, error) {
 	project, err := uc.projectRepo.GetByID(projectID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -162,6 +167,10 @@ func (uc *projectUsecase) Update(projectID, userID uint, namaProject string, sem
 		project.NamaProject = namaProject
 	}
 
+	if kategori != "" {
+		project.Kategori = kategori
+	}
+
 	if semester > 0 {
 		project.Semester = semester
 	}
@@ -173,7 +182,6 @@ func (uc *projectUsecase) Update(projectID, userID uint, namaProject string, sem
 
 		oldPath := project.PathFile
 
-		kategori := helper.DetectProjectCategory(file.Filename)
 		ukuran := helper.GetFileSize(file)
 
 		filename := file.Filename
@@ -185,7 +193,6 @@ func (uc *projectUsecase) Update(projectID, userID uint, namaProject string, sem
 
 		helper.DeleteFile(oldPath)
 
-		project.Kategori = kategori
 		project.Ukuran = ukuran
 		project.PathFile = destPath
 	}

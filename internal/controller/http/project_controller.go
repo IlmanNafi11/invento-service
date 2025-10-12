@@ -58,6 +58,7 @@ func (ctrl *ProjectController) Create(c *fiber.Ctx) error {
 	}
 
 	namaProjectsStr := form.Value["nama_project"]
+	kategoriStr := form.Value["kategori"]
 	semestersStr := form.Value["semester"]
 
 	if len(namaProjectsStr) != len(files) || len(semestersStr) != len(files) {
@@ -79,7 +80,7 @@ func (ctrl *ProjectController) Create(c *fiber.Ctx) error {
 		}
 	}
 
-	result, err := ctrl.projectUsecase.Create(userID, userEmail, userRole, files, namaProjectsStr, semesters)
+	result, err := ctrl.projectUsecase.Create(userID, userEmail, userRole, files, namaProjectsStr, kategoriStr, semesters)
 	if err != nil {
 		if err.Error() == "file harus berupa zip" {
 			return helper.SendErrorResponse(c, fiber.StatusBadRequest, err.Error(), nil)
@@ -136,6 +137,7 @@ func (ctrl *ProjectController) Update(c *fiber.Ctx) error {
 	}
 
 	namaProject := c.FormValue("nama_project")
+	kategori := c.FormValue("kategori")
 	semesterStr := c.FormValue("semester")
 
 	var semester int
@@ -148,7 +150,7 @@ func (ctrl *ProjectController) Update(c *fiber.Ctx) error {
 
 	file, _ := c.FormFile("file")
 
-	result, err := ctrl.projectUsecase.Update(uint(projectID), userID, namaProject, semester, file)
+	result, err := ctrl.projectUsecase.Update(uint(projectID), userID, namaProject, kategori, semester, file)
 	if err != nil {
 		if err.Error() == "project tidak ditemukan" {
 			return helper.SendNotFoundResponse(c, err.Error())

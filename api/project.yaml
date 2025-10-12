@@ -155,6 +155,13 @@ paths:
                     type: string
                     description: Nama project yang sesuai dengan urutan file
                   description: Array nama project
+                kategori:
+                  type: array
+                  items:
+                    type: string
+                    enum: [website, mobile, iot, machine_learning, deep_learning]
+                    description: Kategori project yang sesuai dengan urutan file
+                  description: "Array kategori project (default: website)"
                 semester:
                   type: array
                   items:
@@ -333,6 +340,11 @@ paths:
                   type: string
                   description: Nama project baru
                   example: "Website E-commerce Updated"
+                kategori:
+                  type: string
+                  enum: [website, mobile, iot, machine_learning, deep_learning]
+                  description: Kategori project baru
+                  example: "website"
                 semester:
                   type: integer
                   minimum: 1

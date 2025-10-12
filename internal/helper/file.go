@@ -114,7 +114,7 @@ func CreateUserDirectory(email string, role string) (string, error) {
 
 	username := emailParts[0]
 
-	identifier, err := GenerateUniqueIdentifier(1)
+	identifier, err := GenerateUniqueIdentifier(5)
 	if err != nil {
 		return "", err
 	}
