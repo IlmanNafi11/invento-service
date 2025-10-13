@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"log"
+	"reflect"
 	"fiber-boiler-plate/internal/domain"
 	"time"
 
@@ -18,7 +20,28 @@ func NewTusUploadRepository(db *gorm.DB) TusUploadRepository {
 }
 
 func (r *tusUploadRepository) Create(upload *domain.TusUpload) error {
-	return r.db.Create(upload).Error
+	log.Printf("DEBUG: Repository Create() called")
+	log.Printf("DEBUG: Upload struct: %+v", upload)
+	
+	// Debug field values
+	v := reflect.ValueOf(*upload)
+	t := reflect.TypeOf(*upload)
+	for i := 0; i < v.NumField(); i++ {
+		field := t.Field(i)
+		value := v.Field(i)
+		log.Printf("DEBUG: Field %s (%s) = %v", field.Name, field.Type, value.Interface())
+	}
+	
+	// Debug SQL query
+	result := r.db.Create(upload)
+	if result.Error != nil {
+		log.Printf("ERROR: GORM Create() failed - Error: %v", result.Error)
+		return result.Error
+	}
+	
+	log.Printf("DEBUG: Repository Create() success - Rows affected: %d", result.RowsAffected)
+	log.Printf("DEBUG: Created upload ID: %s", upload.ID)
+	return nil
 }
 
 func (r *tusUploadRepository) GetByID(id string) (*domain.TusUpload, error) {

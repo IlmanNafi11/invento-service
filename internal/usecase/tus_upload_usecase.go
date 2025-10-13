@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"time"
 
 	"fiber-boiler-plate/config"
@@ -102,9 +103,19 @@ func (uc *tusUploadUsecase) InitiateUpload(userID uint, userEmail string, userRo
 		ExpiresAt:      expiresAt,
 	}
 
+	log.Printf("DEBUG: Creating upload record - ID: %s, UserID: %d, FileSize: %d, UploadType: %s", 
+		tusUpload.ID, tusUpload.UserID, tusUpload.FileSize, tusUpload.UploadType)
+	log.Printf("DEBUG: UploadMetadata: %+v", tusUpload.UploadMetadata)
+	log.Printf("DEBUG: ExpiresAt: %s", tusUpload.ExpiresAt.Format("2006-01-02 15:04:05"))
+	
 	if err := uc.tusUploadRepo.Create(tusUpload); err != nil {
-		return nil, errors.New("gagal membuat upload record")
+		log.Printf("ERROR: Failed to create upload record - ID: %s", tusUpload.ID)
+		log.Printf("ERROR: Repository Create() error: %v", err)
+		log.Printf("ERROR: Error type: %T", err)
+		return nil, fmt.Errorf("gagal membuat upload record: %v", err)
 	}
+	
+	log.Printf("DEBUG: Upload record created successfully - ID: %s", tusUpload.ID)
 
 	metadataMap := make(map[string]string)
 	metadataMap["nama_project"] = metadata.NamaProject
