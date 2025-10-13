@@ -14,6 +14,7 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	Mail     MailConfig
+	Upload   UploadConfig
 }
 
 type AppConfig struct {
@@ -46,6 +47,20 @@ type MailConfig struct {
 	Username string
 	Password string
 	From     string
+}
+
+type UploadConfig struct {
+	MaxSize             int64
+	ChunkSize           int64
+	MaxConcurrent       int
+	IdleTimeout         int
+	CleanupInterval     int
+	PathProduction      string
+	PathDevelopment     string
+	TempPathProduction  string
+	TempPathDevelopment string
+	TusVersion          string
+	MaxResumeAttempts   int
 }
 
 func LoadConfig() *Config {
@@ -84,6 +99,19 @@ func LoadConfig() *Config {
 			Password: getEnv("MAIL_PASSWORD", ""),
 			From:     getEnv("MAIL_FROM", "noreply@example.com"),
 		},
+		Upload: UploadConfig{
+			MaxSize:             getEnvAsInt64("UPLOAD_MAX_SIZE", 524288000),
+			ChunkSize:           getEnvAsInt64("UPLOAD_CHUNK_SIZE", 1048576),
+			MaxConcurrent:       getEnvAsInt("UPLOAD_MAX_CONCURRENT", 1),
+			IdleTimeout:         getEnvAsInt("UPLOAD_IDLE_TIMEOUT", 600),
+			CleanupInterval:     getEnvAsInt("UPLOAD_CLEANUP_INTERVAL", 300),
+			PathProduction:      getEnv("UPLOAD_PATH_PRODUCTION", "/volume1/data-invento/"),
+			PathDevelopment:     getEnv("UPLOAD_PATH_DEVELOPMENT", "./uploads/"),
+			TempPathProduction:  getEnv("UPLOAD_TEMP_PATH_PRODUCTION", "/volume1/data-invento/temp/"),
+			TempPathDevelopment: getEnv("UPLOAD_TEMP_PATH_DEVELOPMENT", "./uploads/temp/"),
+			TusVersion:          getEnv("TUS_RESUMABLE_VERSION", "1.0.0"),
+			MaxResumeAttempts:   getEnvAsInt("TUS_MAX_RESUME_ATTEMPTS", 10),
+		},
 	}
 
 	return config
@@ -107,6 +135,14 @@ func getEnvAsInt(key string, defaultValue int) int {
 func getEnvAsBool(key string, defaultValue bool) bool {
 	valueStr := getEnv(key, "")
 	if value, err := strconv.ParseBool(valueStr); err == nil {
+		return value
+	}
+	return defaultValue
+}
+
+func getEnvAsInt64(key string, defaultValue int64) int64 {
+	valueStr := getEnv(key, "")
+	if value, err := strconv.ParseInt(valueStr, 10, 64); err == nil {
 		return value
 	}
 	return defaultValue

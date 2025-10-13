@@ -17,6 +17,11 @@ import (
 func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			tusVersion := c.Get("Tus-Resumable")
+			if tusVersion != "" && (c.Method() == "PATCH" || c.Method() == "HEAD" || c.Method() == "DELETE") {
+				c.Set("Tus-Resumable", cfg.Upload.TusVersion)
+				return c.SendStatus(fiber.StatusInternalServerError)
+			}
 			return helper.SendInternalServerErrorResponse(c)
 		},
 	})
@@ -24,9 +29,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	app.Use(logger.New())
 	app.Use(recover.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Refresh-Token",
-		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
+		AllowOrigins:  "*",
+		AllowHeaders:  "Origin, Content-Type, Accept, Authorization, X-Refresh-Token, Tus-Resumable, Upload-Length, Upload-Metadata, Upload-Offset, Content-Length",
+		AllowMethods:  "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS",
+		ExposeHeaders: "Tus-Resumable, Tus-Version, Tus-Extension, Tus-Max-Size, Upload-Offset, Upload-Length, Location",
 	}))
 
 	app.Static("/uploads", "./uploads")
@@ -39,11 +45,18 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	rolePermissionRepo := repo.NewRolePermissionRepository(db)
 	projectRepo := repo.NewProjectRepository(db)
 	modulRepo := repo.NewModulRepository(db)
+	tusUploadRepo := repo.NewTusUploadRepository(db)
 
 	casbinEnforcer, err := helper.NewCasbinEnforcer(db)
 	if err != nil {
 		panic("Gagal inisialisasi Casbin enforcer: " + err.Error())
 	}
+
+	pathResolver := helper.NewPathResolver(cfg)
+	tusStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	tusQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrent)
+	tusCleanup := helper.NewTusCleanup(tusUploadRepo, tusStore, cfg.Upload.CleanupInterval, cfg.Upload.IdleTimeout)
+	tusCleanup.Start()
 
 	authUsecase := usecase.NewAuthUsecase(userRepo, refreshTokenRepo, resetTokenRepo, roleRepo, cfg)
 	authController := http.NewAuthController(authUsecase)
@@ -56,6 +69,9 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	projectUsecase := usecase.NewProjectUsecase(projectRepo)
 	projectController := http.NewProjectController(projectUsecase)
+
+	tusUploadUsecase := usecase.NewTusUploadUsecase(tusUploadRepo, projectRepo, projectUsecase, tusStore, tusQueue, pathResolver, cfg)
+	tusController := http.NewTusController(tusUploadUsecase, cfg)
 
 	modulUsecase := usecase.NewModulUsecase(modulRepo)
 	modulController := http.NewModulController(modulUsecase)
@@ -100,6 +116,17 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	project.Post("/download", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.Download)
 	project.Put("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "update"), projectController.Update)
 	project.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "delete"), projectController.Delete)
+
+	tusUploadCheck := api.Group("/project/upload", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	tusUploadCheck.Get("/check-slot", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.CheckUploadSlot)
+	tusUploadCheck.Post("/reset-queue", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.ResetUploadQueue)
+
+	tusUpload := api.Group("/project/upload", helper.JWTAuthMiddleware(cfg.JWT.Secret), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
+	tusUpload.Post("/", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.InitiateUpload)
+	tusUpload.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.UploadChunk)
+	tusUpload.Head("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetUploadStatus)
+	tusUpload.Get("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetUploadInfo)
+	tusUpload.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "delete"), tusController.CancelUpload)
 
 	modul := api.Group("/modul", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	modul.Get("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetList)

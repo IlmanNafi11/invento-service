@@ -226,6 +226,48 @@ func DeleteFile(path string) error {
 	return nil
 }
 
+func MoveFile(src, dst string) error {
+	if err := os.Rename(src, dst); err != nil {
+		srcFile, err := os.Open(src)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		dstFile, err := os.Create(dst)
+		if err != nil {
+			return err
+		}
+		defer dstFile.Close()
+
+		if _, err := io.Copy(dstFile, srcFile); err != nil {
+			return err
+		}
+
+		return os.Remove(src)
+	}
+	return nil
+}
+
+func FormatFileSize(size int64) string {
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+	)
+
+	switch {
+	case size >= GB:
+		return fmt.Sprintf("%.2fGB", float64(size)/float64(GB))
+	case size >= MB:
+		return fmt.Sprintf("%.2fMB", float64(size)/float64(MB))
+	case size >= KB:
+		return fmt.Sprintf("%.2fKB", float64(size)/float64(KB))
+	default:
+		return fmt.Sprintf("%dB", size)
+	}
+}
+
 func CreateZipArchive(filePaths []string, outputPath string) error {
 	zipFile, err := os.Create(outputPath)
 	if err != nil {

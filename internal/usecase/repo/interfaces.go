@@ -75,3 +75,15 @@ type ModulRepository interface {
 	Update(modul *domain.Modul) error
 	Delete(id uint) error
 }
+
+type TusUploadRepository interface {
+	Create(upload *domain.TusUpload) error
+	GetByID(id string) (*domain.TusUpload, error)
+	GetByUserID(userID uint) ([]domain.TusUpload, error)
+	UpdateOffset(id string, offset int64, progress float64) error
+	UpdateStatus(id string, status string) error
+	GetExpired(before time.Time) ([]domain.TusUpload, error)
+	GetByUserIDAndStatus(userID uint, status string) ([]domain.TusUpload, error)
+	Delete(id string) error
+	ListActive() ([]domain.TusUpload, error)
+}

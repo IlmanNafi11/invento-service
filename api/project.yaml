@@ -467,6 +467,498 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /project/upload/check-slot:
+    get:
+      tags:
+        - Project
+      summary: Cek ketersediaan slot upload
+      description: |
+        Endpoint untuk mengecek apakah slot upload tersedia sebelum memulai upload project.
+        **PENTING: Panggil endpoint ini terlebih dahulu sebelum inisiasi upload untuk memastikan slot tersedia.**
+        
+        Alur upload yang benar:
+        1. Panggil GET /project/upload/check-slot untuk mengecek ketersediaan slot
+        2. Jika available=false dan active_upload=true tapi queue_length=0, panggil POST /project/upload/reset-queue
+        3. Jika available=true, lanjutkan dengan POST /project/upload untuk inisiasi
+        4. Lakukan upload chunk dengan PATCH /project/upload/:id
+      operationId: checkUploadSlot
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Status slot upload berhasil didapat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadSlotResponse'
+              example:
+                success: true
+                message: "Pengecekan slot upload berhasil"
+                code: 200
+                data:
+                  available: true
+                  message: "Slot upload tersedia"
+                  queue_length: 0
+                  active_upload: false
+                  max_concurrent: 1
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /project/upload/reset-queue:
+    post:
+      tags:
+        - Project
+      summary: Reset antrian upload
+      description: |
+        Endpoint untuk mereset antrian upload yang stuck atau error.
+        **Gunakan endpoint ini jika:**
+        - check-slot menunjukkan available=false padahal tidak ada upload aktif
+        - active_upload=true tapi queue_length=0
+        - Upload sebelumnya gagal dan slot tidak ter-release
+        
+        **WARNING**: Endpoint ini akan membatalkan semua upload yang sedang berjalan!
+      operationId: resetUploadQueue
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Queue berhasil direset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: "Queue upload berhasil direset"
+                code: 200
+                data: null
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /project/upload:
+    post:
+      tags:
+        - Project
+      summary: Inisiasi upload project dengan Tus
+      description: |
+        Endpoint untuk inisiasi resumable upload project menggunakan protokol Tus.
+        **PENTING: Pastikan sudah mengecek slot dengan GET /project/upload/check-slot terlebih dahulu.**
+        
+        Endpoint ini akan gagal jika tidak ada slot upload yang tersedia.
+      operationId: initiateProjectUpload
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Tus-Resumable
+          in: header
+          required: true
+          description: Versi protokol Tus (1.0.0)
+          schema:
+            type: string
+            example: "1.0.0"
+        - name: Upload-Length
+          in: header
+          required: true
+          description: Total ukuran file dalam bytes
+          schema:
+            type: integer
+            format: int64
+            example: 104857600
+        - name: Upload-Metadata
+          in: header
+          required: true
+          description: Metadata upload dalam format base64 encoded
+          schema:
+            type: string
+            example: "nama_project V2Vic2l0ZSBFLWNvbW1lcmNl,name kategori d2Vic2l0ZQ==,semester Mwo="
+      responses:
+        '201':
+          description: Upload berhasil diinisiasi
+          headers:
+            Location:
+              description: URL untuk upload chunk
+              schema:
+                type: string
+                example: "/api/v1/project/upload/123e4567-e89b-12d3-a456-426614174000"
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+              example:
+                success: true
+                message: "Upload project berhasil diinisiasi"
+                code: 201
+                data:
+                  upload_id: "123e4567-e89b-12d3-a456-426614174000"
+                  upload_url: "/api/v1/project/upload/123e4567-e89b-12d3-a456-426614174000"
+                  offset: 0
+                  length: 104857600
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Header tidak valid atau metadata tidak lengkap
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Ukuran file melebihi batas maksimal 500MB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Ukuran file melebihi batas maksimal 500MB"
+                code: 413
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /project/upload/{upload_id}:
+    parameters:
+      - name: upload_id
+        in: path
+        required: true
+        description: ID upload yang didapat dari inisiasi
+        schema:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    patch:
+      tags:
+        - Project
+      summary: Upload chunk project
+      description: |
+        Endpoint untuk upload chunk file project menggunakan protokol Tus.
+        **PENTING: Endpoint ini mengikuti protokol TUS sepenuhnya.**
+        
+        - Semua response mengikuti standar TUS protocol (tanpa JSON body)
+        - Error dikembalikan via HTTP status code dan TUS headers
+        - Client harus menangani response sesuai dengan spesifikasi TUS protocol
+      operationId: uploadProjectChunk
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Tus-Resumable
+          in: header
+          required: true
+          description: Versi protokol Tus (1.0.0)
+          schema:
+            type: string
+            example: "1.0.0"
+        - name: Content-Type
+          in: header
+          required: true
+          description: Tipe konten (application/offset+octet-stream)
+          schema:
+            type: string
+            example: "application/offset+octet-stream"
+        - name: Upload-Offset
+          in: header
+          required: true
+          description: Offset byte dimana chunk akan ditulis
+          schema:
+            type: integer
+            format: int64
+            example: 0
+        - name: Content-Length
+          in: header
+          required: true
+          description: Ukuran chunk dalam bytes
+          schema:
+            type: integer
+            format: int64
+            example: 1048576
+      requestBody:
+        required: true
+        content:
+          application/offset+octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Chunk binary data
+      responses:
+        '204':
+          description: Chunk berhasil diupload
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+            Upload-Offset:
+              description: Offset baru setelah upload chunk
+              schema:
+                type: integer
+                format: int64
+                example: 1048576
+        '400':
+          description: Header atau offset tidak valid (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '401':
+          description: Token tidak valid atau sudah expired (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '403':
+          description: Tidak memiliki akses ke upload ini (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '404':
+          description: Upload ID tidak ditemukan (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '409':
+          description: Offset tidak cocok dengan server state (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+            Upload-Offset:
+              description: Offset yang benar dari server
+              schema:
+                type: integer
+                format: int64
+                example: 52428800
+        '412':
+          description: Versi TUS tidak didukung (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '413':
+          description: Chunk terlalu besar (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '415':
+          description: Content-Type tidak valid (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '423':
+          description: Upload tidak aktif, silakan cek slot terlebih dahulu (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '500':
+          description: Kesalahan server (TUS protocol response, tanpa JSON body)
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+
+    head:
+      tags:
+        - Project
+      summary: Cek status upload project
+      description: Endpoint untuk mengecek status dan progress upload project
+      operationId: getProjectUploadStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Tus-Resumable
+          in: header
+          required: true
+          description: Versi protokol Tus (1.0.0)
+          schema:
+            type: string
+            example: "1.0.0"
+      responses:
+        '200':
+          description: Status upload berhasil didapat
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+            Upload-Offset:
+              description: Offset saat ini dalam bytes
+              schema:
+                type: integer
+                format: int64
+                example: 52428800
+            Upload-Length:
+              description: Total ukuran file dalam bytes
+              schema:
+                type: integer
+                format: int64
+                example: 104857600
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Upload ID tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Project
+      summary: Mendapatkan informasi upload project
+      description: Endpoint untuk mendapatkan informasi detail upload project
+      operationId: getProjectUploadInfo
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Informasi upload berhasil didapat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadInfoResponse'
+              example:
+                success: true
+                message: "Informasi upload berhasil didapat"
+                code: 200
+                data:
+                  upload_id: "123e4567-e89b-12d3-a456-426614174000"
+                  nama_project: "Website E-commerce"
+                  kategori: "website"
+                  semester: 3
+                  status: "uploading"
+                  progress: 50.5
+                  offset: 52428800
+                  length: 104857600
+                  created_at: "2024-01-01T10:00:00Z"
+                  updated_at: "2024-01-01T10:15:00Z"
+                timestamp: "2024-01-01T10:15:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Upload ID tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Project
+      summary: Membatalkan upload project
+      description: Endpoint untuk membatalkan upload project yang sedang berlangsung
+      operationId: cancelProjectUpload
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Tus-Resumable
+          in: header
+          required: true
+          description: Versi protokol Tus (1.0.0)
+          schema:
+            type: string
+            example: "1.0.0"
+      responses:
+        '204':
+          description: Upload berhasil dibatalkan
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Upload ID tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Upload sudah selesai dan tidak bisa dibatalkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Upload sudah selesai dan tidak bisa dibatalkan"
+                code: 409
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -641,6 +1133,116 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ValidationError'
+
+    UploadResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                upload_id:
+                  type: string
+                  format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                upload_url:
+                  type: string
+                  example: "/api/v1/project/upload/123e4567-e89b-12d3-a456-426614174000"
+                offset:
+                  type: integer
+                  format: int64
+                  example: 0
+                length:
+                  type: integer
+                  format: int64
+                  example: 104857600
+
+    UploadInfo:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        nama_project:
+          type: string
+          example: "Website E-commerce"
+        kategori:
+          type: string
+          enum: [website, mobile, iot, machine_learning, deep_learning]
+          example: "website"
+        semester:
+          type: integer
+          minimum: 1
+          maximum: 8
+          example: 3
+        status:
+          type: string
+          enum: [uploading, completed, cancelled, failed]
+          example: "uploading"
+        progress:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 50.5
+        offset:
+          type: integer
+          format: int64
+          example: 52428800
+        length:
+          type: integer
+          format: int64
+          example: 104857600
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:15:00Z"
+
+    UploadInfoResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/UploadInfo'
+
+    UploadSlot:
+      type: object
+      properties:
+        available:
+          type: boolean
+          description: Apakah slot upload tersedia
+          example: true
+        message:
+          type: string
+          description: Pesan status slot upload
+          example: "Slot upload tersedia"
+        queue_length:
+          type: integer
+          description: Jumlah upload dalam antrian
+          example: 0
+        active_upload:
+          type: boolean
+          description: Apakah ada upload yang sedang aktif
+          example: false
+        max_concurrent:
+          type: integer
+          description: Maksimal upload concurrent yang diizinkan
+          example: 1
+
+    UploadSlotResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/UploadSlot'
 
 tags:
   - name: Project
