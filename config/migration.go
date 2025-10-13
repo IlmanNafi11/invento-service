@@ -52,11 +52,11 @@ func migrateTusUploadsTable(db *gorm.DB) error {
 	// Jika masih ada kolom lama, migrasi ke struktur baru
 	if count > 0 {
 		log.Println("Mendapatkan struktur lama tus_uploads, melakukan migrasi ke struktur baru...")
-		
+
 		// Backup data lama jika ada
 		var hasData int
 		db.Raw("SELECT COUNT(*) FROM tus_uploads").Scan(&hasData)
-		
+
 		if hasData > 0 {
 			log.Printf(" WARNING: Ada %d data di tabel lama, akan di-backup dan migrasi", hasData)
 		}
@@ -70,7 +70,7 @@ func migrateTusUploadsTable(db *gorm.DB) error {
 		if err := db.AutoMigrate(&domain.TusUpload{}); err != nil {
 			return err
 		}
-		
+
 		log.Println("Migrasi tabel tus_uploads berhasil")
 	} else {
 		log.Println("Tabel tus_uploads sudah menggunakan struktur baru")

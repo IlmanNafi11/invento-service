@@ -6,8 +6,6 @@ import (
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
 	"fiber-boiler-plate/internal/usecase/repo"
-	"log"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -30,31 +28,6 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	app.Use(logger.New())
 	app.Use(recover.New())
-	
-	// Custom logging middleware for debugging - LOG ALL REQUESTS
-	app.Use(func(c *fiber.Ctx) error {
-		// Log ALL requests to /api/v1/project/* endpoints
-		if strings.HasPrefix(c.Path(), "/api/v1/project/") {
-			log.Printf("=== ALL REQUEST DEBUG ===")
-			log.Printf("Method: %s", c.Method())
-			log.Printf("Path: %s", c.Path())
-			log.Printf("Origin: %s", c.Get("Origin"))
-			log.Printf("Content-Type: %s", c.Get("Content-Type"))
-			
-			authHeader := c.Get("Authorization")
-			if len(authHeader) > 20 {
-				log.Printf("Authorization: %s...", authHeader[:20])
-			} else if len(authHeader) > 0 {
-				log.Printf("Authorization: %s", authHeader)
-			} else {
-				log.Printf("Authorization: (empty)")
-			}
-			
-			log.Printf("========================")
-		}
-		return c.Next()
-	})
-	
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:  "*",
 		AllowHeaders:  "Origin, Content-Type, Accept, Authorization, X-Refresh-Token, Tus-Resumable, Upload-Length, Upload-Metadata, Upload-Offset, Content-Length",
@@ -142,6 +115,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	project := api.Group("/project", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	project.Get("/", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.GetList)
 	project.Get("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.GetByID)
+	project.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "update"), projectController.UpdateMetadata)
 	project.Post("/download", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.Download)
 	project.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "delete"), projectController.Delete)
 
@@ -156,12 +130,12 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	tusUpload.Get("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetUploadInfo)
 	tusUpload.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "delete"), tusController.CancelUpload)
 
-	tusUpdate := api.Group("/project/:id", helper.JWTAuthMiddleware(cfg.JWT.Secret), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
-	tusUpdate.Post("/upload", helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.InitiateProjectUpdateUpload)
-	tusUpdate.Patch("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.UploadProjectUpdateChunk)
-	tusUpdate.Head("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetProjectUpdateUploadStatus)
-	tusUpdate.Get("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetProjectUpdateUploadInfo)
-	tusUpdate.Delete("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.CancelProjectUpdateUpload)
+	projectUpdate := api.Group("/project/:id", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	projectUpdate.Post("/upload", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.InitiateProjectUpdateUpload)
+	projectUpdate.Patch("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.UploadProjectUpdateChunk)
+	projectUpdate.Head("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetProjectUpdateUploadStatus)
+	projectUpdate.Get("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetProjectUpdateUploadInfo)
+	projectUpdate.Delete("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.CancelProjectUpdateUpload)
 
 	modul := api.Group("/modul", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	modul.Get("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetList)

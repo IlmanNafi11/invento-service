@@ -3,10 +3,10 @@ package helper
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fiber-boiler-plate/config"
 	"fmt"
 	"os"
 	"path/filepath"
-	"fiber-boiler-plate/config"
 )
 
 type FileManager struct {
@@ -29,7 +29,7 @@ func (fm *FileManager) GenerateRandomDirectory() (string, error) {
 
 func (fm *FileManager) GetUserUploadPath(userID uint) (string, error) {
 	var basePath string
-	
+
 	if fm.config.App.Env == "production" {
 		basePath = fm.config.Upload.PathProduction
 	} else {
@@ -37,7 +37,7 @@ func (fm *FileManager) GetUserUploadPath(userID uint) (string, error) {
 	}
 
 	userDirPath := filepath.Join(basePath, fmt.Sprintf("%d", userID))
-	
+
 	if err := os.MkdirAll(userDirPath, 0755); err != nil {
 		return "", fmt.Errorf("gagal membuat direktori user: %w", err)
 	}
@@ -57,7 +57,7 @@ func (fm *FileManager) CreateProjectUploadDirectory(userID uint) (string, string
 	}
 
 	projectDirPath := filepath.Join(userUploadPath, randomDir)
-	
+
 	if err := os.MkdirAll(projectDirPath, 0755); err != nil {
 		return "", "", fmt.Errorf("gagal membuat direktori project: %w", err)
 	}
@@ -67,7 +67,7 @@ func (fm *FileManager) CreateProjectUploadDirectory(userID uint) (string, string
 
 func (fm *FileManager) GetProjectFilePath(userID uint, randomDir, filename string) string {
 	var basePath string
-	
+
 	if fm.config.App.Env == "production" {
 		basePath = fm.config.Upload.PathProduction
 	} else {
@@ -79,7 +79,7 @@ func (fm *FileManager) GetProjectFilePath(userID uint, randomDir, filename strin
 
 func (fm *FileManager) DeleteUserDirectory(userID uint) error {
 	var basePath string
-	
+
 	if fm.config.App.Env == "production" {
 		basePath = fm.config.Upload.PathProduction
 	} else {
@@ -87,13 +87,13 @@ func (fm *FileManager) DeleteUserDirectory(userID uint) error {
 	}
 
 	userDirPath := filepath.Join(basePath, fmt.Sprintf("%d", userID))
-	
+
 	return os.RemoveAll(userDirPath)
 }
 
 func (fm *FileManager) DeleteProjectDirectory(userID uint, randomDir string) error {
 	var basePath string
-	
+
 	if fm.config.App.Env == "production" {
 		basePath = fm.config.Upload.PathProduction
 	} else {
@@ -101,13 +101,13 @@ func (fm *FileManager) DeleteProjectDirectory(userID uint, randomDir string) err
 	}
 
 	projectDirPath := filepath.Join(basePath, fmt.Sprintf("%d", userID), randomDir)
-	
+
 	return os.RemoveAll(projectDirPath)
 }
 
 func (fm *FileManager) GetUploadFilePath(uploadID string) string {
 	var basePath string
-	
+
 	if fm.config.App.Env == "production" {
 		basePath = fm.config.Upload.TempPathProduction
 	} else {

@@ -190,6 +190,96 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+    patch:
+      tags:
+        - Project
+      summary: Update metadata project (tanpa file)
+      description: |
+        Endpoint untuk update metadata project (nama, kategori, semester) **TANPA mengubah file**.
+        
+        **Use Case:** User hanya ingin mengubah nama/kategori/semester tanpa re-upload file.
+        
+        **PENTING:**
+        - Endpoint ini **TIDAK** untuk update file project
+        - Jika ingin update file, gunakan TUS protocol: POST /project/{id}/upload
+        - File project tetap sama, hanya metadata yang berubah
+      operationId: updateProjectMetadata
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID project yang akan diupdate
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nama_project
+                - kategori
+                - semester
+              properties:
+                nama_project:
+                  type: string
+                  minLength: 3
+                  maxLength: 255
+                  description: Nama project baru
+                  example: "Website E-commerce Terbaru"
+                kategori:
+                  type: string
+                  enum: [website, mobile, iot, machine_learning, deep_learning]
+                  description: Kategori project baru
+                  example: "website"
+                semester:
+                  type: integer
+                  minimum: 1
+                  maximum: 8
+                  description: Semester baru
+                  example: 5
+      responses:
+        '200':
+          description: Metadata project berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Parameter request tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke project ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Project tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     delete:
       tags:
         - Project

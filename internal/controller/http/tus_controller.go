@@ -8,7 +8,6 @@ import (
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -143,54 +142,43 @@ func (ctrl *TusController) InitiateUpload(c *fiber.Ctx) error {
 }
 
 func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
-	log.Printf("=== UPLOAD CHUNK CONTROLLER START ===")
-	log.Printf("Upload ID from params: %s", c.Params("id"))
-	
+
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
-		log.Printf("ERROR: user_id not found in context")
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 	userID, ok := userIDVal.(uint)
 	if !ok {
-		log.Printf("ERROR: user_id type assertion failed")
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
-	log.Printf("User ID: %d", userID)
 
 	uploadID := c.Params("id")
 	if uploadID == "" {
-		log.Printf("ERROR: Upload ID is empty")
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	tusVersion := c.Get("Tus-Resumable")
 	if tusVersion == "" {
-		log.Printf("DEBUG PATCH: Missing Tus-Resumable header. Headers: Content-Type=%s, Upload-Offset=%s, Content-Length=%s\n", 
-			c.Get("Content-Type"), c.Get("Upload-Offset"), c.Get("Content-Length"))
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
-	
+
 	if tusVersion != ctrl.config.Upload.TusVersion {
-		log.Printf("DEBUG PATCH: Invalid Tus-Resumable version: got %s, expected %s\n", tusVersion, ctrl.config.Upload.TusVersion)
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusPreconditionFailed)
 	}
 
 	contentType := c.Get("Content-Type")
 	if contentType != "application/offset+octet-stream" {
-		log.Printf("DEBUG PATCH: Invalid Content-Type: got '%s', expected 'application/offset+octet-stream'\n", contentType)
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusUnsupportedMediaType)
 	}
 
 	offsetStr := c.Get("Upload-Offset")
 	if offsetStr == "" {
-		log.Printf("DEBUG PATCH: Missing Upload-Offset header\n")
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
@@ -203,54 +191,38 @@ func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
 
 	contentLengthStr := c.Get("Content-Length")
 	if contentLengthStr == "" {
-		log.Printf("ERROR: Missing Content-Length header")
-		log.Printf("Available headers:")
-		c.Request().Header.VisitAll(func(key, value []byte) {
-			log.Printf("  %s: %s", string(key), string(value))
-		})
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
-	log.Printf("Content-Length: %s", contentLengthStr)
 
 	chunkSize, err := strconv.ParseInt(contentLengthStr, 10, 64)
 	if err != nil || chunkSize <= 0 {
-		log.Printf("ERROR: Invalid Content-Length: %s (error: %v)", contentLengthStr, err)
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
-	log.Printf("Chunk size parsed: %d bytes", chunkSize)
 
 	if chunkSize > ctrl.config.Upload.ChunkSize*2 {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusRequestEntityTooLarge)
 	}
 
-	// Get request body as byte slice
 	bodyBytes := c.Body()
 	if bodyBytes == nil || len(bodyBytes) == 0 {
-		log.Printf("ERROR: Request body is empty")
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
-	
+
 	if int64(len(bodyBytes)) != chunkSize {
-		log.Printf("ERROR: Body size mismatch - Content-Length: %d, Actual: %d", chunkSize, len(bodyBytes))
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
-	
-	log.Printf("Body size OK: %d bytes, creating reader...", len(bodyBytes))
-	
-	// Create a reader from the byte slice
+
 	bodyReader := bytes.NewReader(bodyBytes)
-	log.Printf("Reader created, calling usecase.HandleChunk...")
 
 	newOffset, err := ctrl.tusUsecase.HandleChunk(uploadID, userID, offset, bodyReader)
 	if err != nil {
-		log.Printf("ERROR from HandleChunk: %v", err)
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		
+
 		if strings.Contains(err.Error(), "tidak ditemukan") {
 			return c.SendStatus(fiber.StatusNotFound)
 		}
@@ -264,15 +236,13 @@ func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
 		if strings.Contains(err.Error(), "tidak aktif") {
 			return c.SendStatus(fiber.StatusLocked)
 		}
-		
+
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 	c.Set("Upload-Offset", fmt.Sprintf("%d", newOffset))
 
-	log.Printf("SUCCESS: Chunk uploaded, new offset: %d", newOffset)
-	log.Printf("=== UPLOAD CHUNK CONTROLLER END ===")
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
@@ -424,6 +394,7 @@ func (ctrl *TusController) parseMetadata(metadataHeader string) (domain.TusUploa
 }
 
 func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
+
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
 		return helper.SendUnauthorizedResponse(c)
@@ -459,16 +430,17 @@ func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
 	}
 
 	uploadMetadata := c.Get("Upload-Metadata")
+
 	var metadata domain.TusUploadInitRequest
 	if uploadMetadata != "" {
 		metadata, err = ctrl.parseMetadata(uploadMetadata)
 		if err != nil {
 			return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format Upload-Metadata tidak valid", nil)
 		}
-	}
-
-	if err := ctrl.validator.Struct(metadata); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Data validasi tidak valid", nil)
+		if err := ctrl.validator.Struct(metadata); err != nil {
+			return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Data validasi tidak valid", nil)
+		}
+	} else {
 	}
 
 	result, err := ctrl.tusUsecase.InitiateProjectUpdateUpload(uint(projectID), userID, fileSize, metadata)
@@ -569,7 +541,7 @@ func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
 	newOffset, err := ctrl.tusUsecase.HandleProjectUpdateChunk(uint(projectID), uploadID, userID, offset, bodyReader)
 	if err != nil {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		
+
 		if strings.Contains(err.Error(), "tidak ditemukan") {
 			return c.SendStatus(fiber.StatusNotFound)
 		}
@@ -583,7 +555,7 @@ func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
 		if strings.Contains(err.Error(), "tidak aktif") {
 			return c.SendStatus(fiber.StatusLocked)
 		}
-		
+
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 

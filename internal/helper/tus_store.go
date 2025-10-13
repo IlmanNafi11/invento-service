@@ -86,41 +86,28 @@ func (ts *TusStore) WriteChunk(uploadID string, offset int64, src io.Reader) (in
 	lock.Lock()
 	defer lock.Unlock()
 
-	info, err := ts.GetInfo(uploadID)
-	if err != nil {
-		return 0, err
-	}
-
-	if offset != info.Offset {
-		return 0, fmt.Errorf("offset tidak valid: expected %d, got %d", info.Offset, offset)
-	}
-
 	filePath := ts.pathResolver.GetUploadFilePath(uploadID)
 	file, err := os.OpenFile(filePath, os.O_WRONLY, 0644)
 	if err != nil {
-		return 0, fmt.Errorf("gagal membuka file: %w", err)
+		return offset, fmt.Errorf("gagal membuka file: %w", err)
 	}
 	defer file.Close()
 
 	if _, err := file.Seek(offset, 0); err != nil {
-		return 0, fmt.Errorf("gagal seek ke offset: %w", err)
+		return offset, fmt.Errorf("gagal seek ke offset: %w", err)
 	}
 
 	bytesWritten, err := io.Copy(file, src)
 	if err != nil {
-		return bytesWritten, fmt.Errorf("gagal menulis chunk: %w", err)
+		return offset + bytesWritten, fmt.Errorf("gagal menulis chunk: %w", err)
 	}
 
 	if err := file.Sync(); err != nil {
-		return bytesWritten, fmt.Errorf("gagal sync file: %w", err)
+		return offset + bytesWritten, fmt.Errorf("gagal sync file: %w", err)
 	}
 
-	info.Offset += bytesWritten
-	if err := ts.saveInfo(info); err != nil {
-		return bytesWritten, err
-	}
-
-	return bytesWritten, nil
+	newOffset := offset + bytesWritten
+	return newOffset, nil
 }
 
 func (ts *TusStore) GetInfo(uploadID string) (TusFileInfo, error) {

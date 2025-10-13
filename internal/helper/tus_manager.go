@@ -60,15 +60,15 @@ func (tm *TusManager) CheckUploadSlot() *UploadSlotResponse {
 
 func (tm *TusManager) ResetUploadQueue() error {
 	activeUploadID := tm.queue.GetActiveUpload()
-	
+
 	if activeUploadID != "" {
 		if err := tm.store.Terminate(activeUploadID); err != nil {
 			log.Printf("Warning: gagal menghapus upload aktif: %v", err)
 		}
 	}
-	
+
 	tm.queue.Clear()
-	
+
 	return nil
 }
 

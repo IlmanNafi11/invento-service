@@ -19,6 +19,40 @@ func NewProjectController(projectUsecase usecase.ProjectUsecase) *ProjectControl
 	}
 }
 
+func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return helper.SendUnauthorizedResponse(c)
+	}
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		return helper.SendUnauthorizedResponse(c)
+	}
+
+	projectID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
+	}
+
+	var req domain.ProjectUpdateMetadataRequest
+	if err := c.BodyParser(&req); err != nil {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
+	}
+
+	err = ctrl.projectUsecase.UpdateMetadata(uint(projectID), userID, req)
+	if err != nil {
+		if err.Error() == "project tidak ditemukan" {
+			return helper.SendNotFoundResponse(c, err.Error())
+		}
+		if err.Error() == "tidak memiliki akses ke project ini" {
+			return helper.SendForbiddenResponse(c)
+		}
+		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, "Gagal update project: "+err.Error(), nil)
+	}
+
+	return helper.SendSuccessResponse(c, fiber.StatusOK, "Metadata project berhasil diperbarui", nil)
+}
+
 func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
@@ -77,8 +111,6 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 
 	return helper.SendSuccessResponse(c, fiber.StatusOK, "Daftar project berhasil diambil", result)
 }
-
-
 
 func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")

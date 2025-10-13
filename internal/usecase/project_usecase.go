@@ -15,6 +15,7 @@ import (
 type ProjectUsecase interface {
 	GetList(userID uint, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error)
 	GetByID(projectID, userID uint) (*domain.ProjectResponse, error)
+	UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateMetadataRequest) error
 	Delete(projectID, userID uint) error
 	Download(userID uint, projectIDs []uint) (string, error)
 }
@@ -30,8 +31,6 @@ func NewProjectUsecase(projectRepo repo.ProjectRepository, fileManager *helper.F
 		fileManager: fileManager,
 	}
 }
-
-
 
 func (uc *projectUsecase) GetList(userID uint, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error) {
 	if page <= 0 {
@@ -84,7 +83,29 @@ func (uc *projectUsecase) GetByID(projectID, userID uint) (*domain.ProjectRespon
 	}, nil
 }
 
+func (uc *projectUsecase) UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateMetadataRequest) error {
+	project, err := uc.projectRepo.GetByID(projectID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("project tidak ditemukan")
+		}
+		return errors.New("gagal mengambil data project")
+	}
 
+	if project.UserID != userID {
+		return errors.New("tidak memiliki akses ke project ini")
+	}
+
+	project.NamaProject = req.NamaProject
+	project.Kategori = req.Kategori
+	project.Semester = req.Semester
+
+	if err := uc.projectRepo.Update(project); err != nil {
+		return errors.New("gagal update metadata project")
+	}
+
+	return nil
+}
 
 func (uc *projectUsecase) Delete(projectID, userID uint) error {
 	project, err := uc.projectRepo.GetByID(projectID)
