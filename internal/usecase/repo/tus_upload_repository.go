@@ -48,6 +48,19 @@ func (r *tusUploadRepository) UpdateOffset(id string, offset int64, progress flo
 		}).Error
 }
 
+func (r *tusUploadRepository) UpdateOffsetOnly(id string, offset int64) error {
+	return r.db.Model(&domain.TusUpload{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"current_offset": offset,
+			"updated_at":     time.Now(),
+		}).Error
+}
+
+func (r *tusUploadRepository) UpdateUpload(upload *domain.TusUpload) error {
+	return r.db.Where("id = ?", upload.ID).Updates(upload).Error
+}
+
 func (r *tusUploadRepository) UpdateStatus(id string, status string) error {
 	return r.db.Model(&domain.TusUpload{}).
 		Where("id = ?", id).

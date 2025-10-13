@@ -19,15 +19,10 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 		cfg.Database.Name,
 	)
 
-	var logLevel logger.LogLevel
-	if cfg.App.Env == "development" {
-		logLevel = logger.Info
-	} else {
-		logLevel = logger.Error
-	}
-
+	// Disable SQL query logging untuk log yang lebih bersih
+	// Hanya tampilkan error jika ada masalah database
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logLevel),
+		Logger: logger.Default.LogMode(logger.Silent),
 	})
 
 	if err != nil {

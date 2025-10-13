@@ -246,7 +246,7 @@ func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
 	bodyReader := bytes.NewReader(bodyBytes)
 	log.Printf("Reader created, calling usecase.HandleChunk...")
 
-	newOffset, err := ctrl.tusUsecase.HandleChunk(uploadID, userID, offset, bodyReader, chunkSize)
+	newOffset, err := ctrl.tusUsecase.HandleChunk(uploadID, userID, offset, bodyReader)
 	if err != nil {
 		log.Printf("ERROR from HandleChunk: %v", err)
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
@@ -421,4 +421,296 @@ func (ctrl *TusController) parseMetadata(metadataHeader string) (domain.TusUploa
 	}
 
 	return metadata, nil
+}
+
+func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return helper.SendUnauthorizedResponse(c)
+	}
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		return helper.SendUnauthorizedResponse(c)
+	}
+
+	projectIDStr := c.Params("id")
+	projectID, err := strconv.Atoi(projectIDStr)
+	if err != nil {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
+	}
+
+	tusVersion := c.Get("Tus-Resumable")
+	if tusVersion == "" {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Tus-Resumable wajib diisi", nil)
+	}
+
+	if tusVersion != ctrl.config.Upload.TusVersion {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Versi Tus tidak didukung, gunakan %s", ctrl.config.Upload.TusVersion), nil)
+	}
+
+	uploadLengthStr := c.Get("Upload-Length")
+	if uploadLengthStr == "" {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Upload-Length wajib diisi", nil)
+	}
+
+	fileSize, err := strconv.ParseInt(uploadLengthStr, 10, 64)
+	if err != nil || fileSize <= 0 {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Upload-Length tidak valid", nil)
+	}
+
+	uploadMetadata := c.Get("Upload-Metadata")
+	var metadata domain.TusUploadInitRequest
+	if uploadMetadata != "" {
+		metadata, err = ctrl.parseMetadata(uploadMetadata)
+		if err != nil {
+			return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format Upload-Metadata tidak valid", nil)
+		}
+	}
+
+	if err := ctrl.validator.Struct(metadata); err != nil {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Data validasi tidak valid", nil)
+	}
+
+	result, err := ctrl.tusUsecase.InitiateProjectUpdateUpload(uint(projectID), userID, fileSize, metadata)
+	if err != nil {
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			return helper.SendErrorResponse(c, fiber.StatusNotFound, err.Error(), nil)
+		}
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			return helper.SendErrorResponse(c, fiber.StatusForbidden, err.Error(), nil)
+		}
+		if strings.Contains(err.Error(), "melebihi batas maksimal") {
+			return helper.SendErrorResponse(c, fiber.StatusRequestEntityTooLarge, err.Error(), nil)
+		}
+		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
+	}
+
+	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+	c.Set("Location", result.UploadURL)
+	c.Set("Upload-Offset", "0")
+
+	return helper.SendSuccessResponse(c, fiber.StatusCreated, "Update upload project berhasil diinisiasi", result)
+}
+
+func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	projectIDStr := c.Params("id")
+	projectID, err := strconv.Atoi(projectIDStr)
+	if err != nil {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	uploadID := c.Params("upload_id")
+	if uploadID == "" {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	tusVersion := c.Get("Tus-Resumable")
+	if tusVersion == "" || tusVersion != ctrl.config.Upload.TusVersion {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusPreconditionFailed)
+	}
+
+	contentType := c.Get("Content-Type")
+	if contentType != "application/offset+octet-stream" {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusUnsupportedMediaType)
+	}
+
+	offsetStr := c.Get("Upload-Offset")
+	if offsetStr == "" {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	offset, err := strconv.ParseInt(offsetStr, 10, 64)
+	if err != nil || offset < 0 {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	contentLengthStr := c.Get("Content-Length")
+	if contentLengthStr == "" {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	chunkSize, err := strconv.ParseInt(contentLengthStr, 10, 64)
+	if err != nil || chunkSize <= 0 {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	if chunkSize > ctrl.config.Upload.ChunkSize*2 {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusRequestEntityTooLarge)
+	}
+
+	bodyBytes := c.Body()
+	if bodyBytes == nil || len(bodyBytes) == 0 || int64(len(bodyBytes)) != chunkSize {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	bodyReader := bytes.NewReader(bodyBytes)
+
+	newOffset, err := ctrl.tusUsecase.HandleProjectUpdateChunk(uint(projectID), uploadID, userID, offset, bodyReader)
+	if err != nil {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			return c.SendStatus(fiber.StatusNotFound)
+		}
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			return c.SendStatus(fiber.StatusForbidden)
+		}
+		if strings.Contains(err.Error(), "offset tidak valid") {
+			c.Set("Upload-Offset", fmt.Sprintf("%d", newOffset))
+			return c.SendStatus(fiber.StatusConflict)
+		}
+		if strings.Contains(err.Error(), "tidak aktif") {
+			return c.SendStatus(fiber.StatusLocked)
+		}
+		
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+	c.Set("Upload-Offset", fmt.Sprintf("%d", newOffset))
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (ctrl *TusController) GetProjectUpdateUploadStatus(c *fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return helper.SendUnauthorizedResponse(c)
+	}
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		return helper.SendUnauthorizedResponse(c)
+	}
+
+	projectIDStr := c.Params("id")
+	projectID, err := strconv.Atoi(projectIDStr)
+	if err != nil {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
+	}
+
+	uploadID := c.Params("upload_id")
+	if uploadID == "" {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
+	}
+
+	tusVersion := c.Get("Tus-Resumable")
+	if tusVersion != ctrl.config.Upload.TusVersion {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Versi Tus tidak didukung", nil)
+	}
+
+	offset, length, err := ctrl.tusUsecase.GetProjectUpdateUploadStatus(uint(projectID), uploadID, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			return helper.SendErrorResponse(c, fiber.StatusNotFound, err.Error(), nil)
+		}
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			return helper.SendForbiddenResponse(c)
+		}
+		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
+	}
+
+	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+	c.Set("Upload-Offset", fmt.Sprintf("%d", offset))
+	c.Set("Upload-Length", fmt.Sprintf("%d", length))
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func (ctrl *TusController) GetProjectUpdateUploadInfo(c *fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return helper.SendUnauthorizedResponse(c)
+	}
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		return helper.SendUnauthorizedResponse(c)
+	}
+
+	projectIDStr := c.Params("id")
+	projectID, err := strconv.Atoi(projectIDStr)
+	if err != nil {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
+	}
+
+	uploadID := c.Params("upload_id")
+	if uploadID == "" {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
+	}
+
+	result, err := ctrl.tusUsecase.GetProjectUpdateUploadInfo(uint(projectID), uploadID, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			return helper.SendNotFoundResponse(c, err.Error())
+		}
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			return helper.SendForbiddenResponse(c)
+		}
+		return helper.SendInternalServerErrorResponse(c)
+	}
+
+	return helper.SendSuccessResponse(c, fiber.StatusOK, "Informasi update upload berhasil didapat", result)
+}
+
+func (ctrl *TusController) CancelProjectUpdateUpload(c *fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return helper.SendUnauthorizedResponse(c)
+	}
+	userID, ok := userIDVal.(uint)
+	if !ok {
+		return helper.SendUnauthorizedResponse(c)
+	}
+
+	projectIDStr := c.Params("id")
+	projectID, err := strconv.Atoi(projectIDStr)
+	if err != nil {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
+	}
+
+	uploadID := c.Params("upload_id")
+	if uploadID == "" {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
+	}
+
+	tusVersion := c.Get("Tus-Resumable")
+	if tusVersion != ctrl.config.Upload.TusVersion {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Versi Tus tidak didukung", nil)
+	}
+
+	err = ctrl.tusUsecase.CancelProjectUpdateUpload(uint(projectID), uploadID, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			return helper.SendErrorResponse(c, fiber.StatusNotFound, err.Error(), nil)
+		}
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			return helper.SendForbiddenResponse(c)
+		}
+		if strings.Contains(err.Error(), "sudah selesai") {
+			return helper.SendErrorResponse(c, fiber.StatusConflict, err.Error(), nil)
+		}
+		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
 }

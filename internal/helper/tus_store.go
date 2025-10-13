@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 )
 
@@ -139,6 +140,68 @@ func (ts *TusStore) GetInfo(uploadID string) (TusFileInfo, error) {
 	}
 
 	return info, nil
+}
+
+func (ts *TusStore) InitiateUpload(uploadID string, fileSize int64) error {
+	if fileSize > ts.maxFileSize {
+		return fmt.Errorf("ukuran file melebihi batas maksimal %d bytes", ts.maxFileSize)
+	}
+
+	if fileSize <= 0 {
+		return errors.New("ukuran file tidak valid")
+	}
+
+	uploadPath := ts.pathResolver.GetUploadPath(uploadID)
+	if err := os.MkdirAll(uploadPath, 0755); err != nil {
+		return fmt.Errorf("gagal membuat direktori upload: %w", err)
+	}
+
+	filePath := ts.pathResolver.GetUploadFilePath(uploadID)
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("gagal membuat file upload: %w", err)
+	}
+	defer file.Close()
+
+	if err := file.Truncate(fileSize); err != nil {
+		return fmt.Errorf("gagal alokasi file size: %w", err)
+	}
+
+	info := TusFileInfo{
+		ID:       uploadID,
+		Size:     fileSize,
+		Offset:   0,
+		Metadata: make(map[string]string),
+	}
+
+	return ts.saveInfo(info)
+}
+
+func (ts *TusStore) FinalizeUpload(uploadID string, finalPath string) error {
+	lock := ts.getLock(uploadID)
+	lock.Lock()
+	defer lock.Unlock()
+
+	tempFilePath := ts.pathResolver.GetUploadFilePath(uploadID)
+
+	if _, err := os.Stat(tempFilePath); err != nil {
+		return fmt.Errorf("file temporary tidak ditemukan: %w", err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(finalPath), 0755); err != nil {
+		return fmt.Errorf("gagal membuat direktori final: %w", err)
+	}
+
+	if err := MoveFile(tempFilePath, finalPath); err != nil {
+		return fmt.Errorf("gagal memindahkan file: %w", err)
+	}
+
+	if err := os.RemoveAll(ts.pathResolver.GetUploadPath(uploadID)); err != nil {
+		return fmt.Errorf("gagal membersihkan temporary files: %w", err)
+	}
+
+	ts.removeLock(uploadID)
+	return nil
 }
 
 func (ts *TusStore) saveInfo(info TusFileInfo) error {

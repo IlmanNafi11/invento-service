@@ -86,4 +86,6 @@ type TusUploadRepository interface {
 	GetByUserIDAndStatus(userID uint, status string) ([]domain.TusUpload, error)
 	Delete(id string) error
 	ListActive() ([]domain.TusUpload, error)
+	UpdateOffsetOnly(id string, offset int64) error
+	UpdateUpload(upload *domain.TusUpload) error
 }

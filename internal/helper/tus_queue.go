@@ -158,3 +158,22 @@ func (tq *TusQueue) StartUpload(uploadID string) error {
 
 	return nil
 }
+
+func (tq *TusQueue) Add(uploadID string) {
+	tq.mutex.Lock()
+	defer tq.mutex.Unlock()
+
+	if tq.activeUpload == "" {
+		tq.activeUpload = uploadID
+		return
+	}
+
+	tq.queue = append(tq.queue, uploadID)
+}
+
+func (tq *TusQueue) IsActiveUpload(uploadID string) bool {
+	tq.mutex.RLock()
+	defer tq.mutex.RUnlock()
+
+	return tq.activeUpload == uploadID
+}
