@@ -21,6 +21,18 @@ func GenerateUniqueIdentifier(length int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
+func GenerateRandomString(length int) (string, error) {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	bytes := make([]byte, length)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	for i := range bytes {
+		bytes[i] = charset[int(bytes[i])%len(charset)]
+	}
+	return string(bytes), nil
+}
+
 func GetFileExtension(filename string) string {
 	return strings.ToLower(filepath.Ext(filename))
 }

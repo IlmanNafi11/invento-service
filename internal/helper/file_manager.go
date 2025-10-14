@@ -1,8 +1,6 @@
 package helper
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fiber-boiler-plate/config"
 	"fmt"
 	"os"
@@ -20,11 +18,7 @@ func NewFileManager(cfg *config.Config) *FileManager {
 }
 
 func (fm *FileManager) GenerateRandomDirectory() (string, error) {
-	bytes := make([]byte, 5)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes), nil
+	return GenerateRandomString(10)
 }
 
 func (fm *FileManager) GetUserUploadPath(userID uint) (string, error) {
@@ -36,7 +30,7 @@ func (fm *FileManager) GetUserUploadPath(userID uint) (string, error) {
 		basePath = fm.config.Upload.PathDevelopment
 	}
 
-	userDirPath := filepath.Join(basePath, fmt.Sprintf("%d", userID))
+	userDirPath := filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID))
 
 	if err := os.MkdirAll(userDirPath, 0755); err != nil {
 		return "", fmt.Errorf("gagal membuat direktori user: %w", err)
@@ -74,7 +68,7 @@ func (fm *FileManager) GetProjectFilePath(userID uint, randomDir, filename strin
 		basePath = fm.config.Upload.PathDevelopment
 	}
 
-	return filepath.Join(basePath, fmt.Sprintf("%d", userID), randomDir, filename)
+	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), randomDir, filename)
 }
 
 func (fm *FileManager) DeleteUserDirectory(userID uint) error {
@@ -86,7 +80,7 @@ func (fm *FileManager) DeleteUserDirectory(userID uint) error {
 		basePath = fm.config.Upload.PathDevelopment
 	}
 
-	userDirPath := filepath.Join(basePath, fmt.Sprintf("%d", userID))
+	userDirPath := filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID))
 
 	return os.RemoveAll(userDirPath)
 }
@@ -100,7 +94,7 @@ func (fm *FileManager) DeleteProjectDirectory(userID uint, randomDir string) err
 		basePath = fm.config.Upload.PathDevelopment
 	}
 
-	projectDirPath := filepath.Join(basePath, fmt.Sprintf("%d", userID), randomDir)
+	projectDirPath := filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), randomDir)
 
 	return os.RemoveAll(projectDirPath)
 }

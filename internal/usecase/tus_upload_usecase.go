@@ -94,7 +94,7 @@ func (uc *tusUploadUsecase) InitiateUpload(userID uint, userEmail string, userRo
 		ID:             uploadID,
 		UserID:         userID,
 		UploadType:     domain.UploadTypeProjectCreate,
-		UploadURL:      fmt.Sprintf("/api/v1/project/upload/%s", uploadID),
+		UploadURL:      fmt.Sprintf("/project/upload/%s", uploadID),
 		UploadMetadata: metadata,
 		FileSize:       fileSize,
 		CurrentOffset:  0,
@@ -120,7 +120,7 @@ func (uc *tusUploadUsecase) InitiateUpload(userID uint, userEmail string, userRo
 
 	uc.tusManager.AddToQueue(uploadID)
 
-	uploadURL := fmt.Sprintf("/api/v1/project/upload/%s", uploadID)
+	uploadURL := fmt.Sprintf("/project/upload/%s", uploadID)
 
 	return &domain.TusUploadResponse{
 		UploadID:  uploadID,
@@ -322,7 +322,7 @@ func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID u
 		UserID:         userID,
 		ProjectID:      &projectID,
 		UploadType:     domain.UploadTypeProjectUpdate,
-		UploadURL:      fmt.Sprintf("/api/v1/project/%d/update/%s", projectID, uploadID),
+		UploadURL:      fmt.Sprintf("/project/%d/update/%s", projectID, uploadID),
 		UploadMetadata: metadata,
 		FileSize:       fileSize,
 		CurrentOffset:  0,
@@ -349,7 +349,7 @@ func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID u
 
 	uc.tusManager.AddToQueue(uploadID)
 
-	uploadURL := fmt.Sprintf("/api/v1/project/%d/update/%s", projectID, uploadID)
+	uploadURL := fmt.Sprintf("/project/%d/update/%s", projectID, uploadID)
 
 	return &domain.TusUploadResponse{
 		UploadID:  uploadID,

@@ -15,7 +15,7 @@ import (
 type ProjectUsecase interface {
 	GetList(userID uint, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error)
 	GetByID(projectID, userID uint) (*domain.ProjectResponse, error)
-	UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateMetadataRequest) error
+	UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateRequest) error
 	Delete(projectID, userID uint) error
 	Download(userID uint, projectIDs []uint) (string, error)
 }
@@ -83,7 +83,7 @@ func (uc *projectUsecase) GetByID(projectID, userID uint) (*domain.ProjectRespon
 	}, nil
 }
 
-func (uc *projectUsecase) UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateMetadataRequest) error {
+func (uc *projectUsecase) UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateRequest) error {
 	project, err := uc.projectRepo.GetByID(projectID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -96,9 +96,15 @@ func (uc *projectUsecase) UpdateMetadata(projectID, userID uint, req domain.Proj
 		return errors.New("tidak memiliki akses ke project ini")
 	}
 
-	project.NamaProject = req.NamaProject
-	project.Kategori = req.Kategori
-	project.Semester = req.Semester
+	if req.NamaProject != "" {
+		project.NamaProject = req.NamaProject
+	}
+	if req.Kategori != "" {
+		project.Kategori = req.Kategori
+	}
+	if req.Semester > 0 {
+		project.Semester = req.Semester
+	}
 
 	if err := uc.projectRepo.Update(project); err != nil {
 		return errors.New("gagal update metadata project")

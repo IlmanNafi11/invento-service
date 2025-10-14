@@ -41,7 +41,17 @@ func (pr *PathResolver) GetTempPath() string {
 
 func (pr *PathResolver) GetProjectPath(userID uint) string {
 	basePath := pr.GetBasePath()
-	return filepath.Join(basePath, "project")
+	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID))
+}
+
+func (pr *PathResolver) GetProjectFilePath(userID uint, identifier string, filename string) string {
+	basePath := pr.GetBasePath()
+	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), identifier, filename)
+}
+
+func (pr *PathResolver) GetProjectDirectory(userID uint, identifier string) string {
+	basePath := pr.GetBasePath()
+	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), identifier)
 }
 
 func (pr *PathResolver) GetUploadPath(uploadID string) string {

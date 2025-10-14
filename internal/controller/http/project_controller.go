@@ -34,9 +34,13 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
 	}
 
-	var req domain.ProjectUpdateMetadataRequest
+	var req domain.ProjectUpdateRequest
 	if err := c.BodyParser(&req); err != nil {
 		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
+	}
+
+	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
+		return helper.SendValidationErrorResponse(c, validationErrors)
 	}
 
 	err = ctrl.projectUsecase.UpdateMetadata(uint(projectID), userID, req)

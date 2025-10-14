@@ -21,8 +21,9 @@ type ProjectCreateRequest struct {
 }
 
 type ProjectUpdateRequest struct {
-	NamaProject string `form:"nama_project" validate:"omitempty"`
-	Semester    int    `form:"semester" validate:"omitempty,min=1,max=8"`
+	NamaProject string `json:"nama_project" validate:"omitempty,min=3,max=255"`
+	Kategori    string `json:"kategori" validate:"omitempty,oneof=website mobile iot machine_learning deep_learning"`
+	Semester    int    `json:"semester" validate:"omitempty,min=1,max=8"`
 }
 
 type ProjectListQueryParams struct {

@@ -404,6 +404,11 @@ paths:
         Endpoint untuk inisiasi resumable upload project menggunakan protokol Tus.
         **PENTING: Pastikan sudah mengecek slot dengan GET /project/upload/check-slot terlebih dahulu.**
         
+        **Persyaratan File:**
+        - File harus berformat ZIP
+        - Maksimal ukuran file: 500MB (dikonfigurasi via UPLOAD_MAX_SIZE di .env)
+        - File akan disimpan dengan struktur: [ENV]/projects/[USER_ID]/[10_DIGIT_ID]/[filename]
+        
         Endpoint ini akan gagal jika tidak ada slot upload yang tersedia.
       operationId: initiateProjectUpload
       security:
@@ -436,10 +441,10 @@ paths:
           description: Upload berhasil diinisiasi
           headers:
             Location:
-              description: URL untuk upload chunk
+              description: URL untuk upload chunk (relatif, tanpa base URL)
               schema:
                 type: string
-                example: "/api/v1/project/upload/123e4567-e89b-12d3-a456-426614174000"
+                example: "/project/upload/123e4567-e89b-12d3-a456-426614174000"
             Tus-Resumable:
               schema:
                 type: string
@@ -1240,7 +1245,8 @@ components:
                   example: "123e4567-e89b-12d3-a456-426614174000"
                 upload_url:
                   type: string
-                  example: "/api/v1/project/upload/123e4567-e89b-12d3-a456-426614174000"
+                  description: URL relatif untuk upload chunk (tanpa base URL /api/v1/)
+                  example: "/project/upload/123e4567-e89b-12d3-a456-426614174000"
                 offset:
                   type: integer
                   format: int64

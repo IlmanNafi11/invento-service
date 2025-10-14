@@ -40,45 +40,40 @@ func (r *projectRepository) GetByUserID(userID uint, search string, filterSemest
 	var projectListItems []domain.ProjectListItem
 	var total int64
 
-	countQuery := r.db.Table("projects").
-		Where("user_id = ?", userID)
+	offset := (page - 1) * limit
 
-	if search != "" {
-		searchPattern := "%" + search + "%"
-		countQuery = countQuery.Where("nama_project LIKE ?", searchPattern)
-	}
+	countQuery := `
+		SELECT COUNT(*) as total
+		FROM projects
+		WHERE user_id = ?
+			AND (? = '' OR nama_project LIKE CONCAT('%', ?, '%'))
+			AND (? = 0 OR semester = ?)
+			AND (? = '' OR kategori = ?)
+	`
 
-	if filterSemester > 0 {
-		countQuery = countQuery.Where("semester = ?", filterSemester)
-	}
-
-	if filterKategori != "" {
-		countQuery = countQuery.Where("kategori = ?", filterKategori)
-	}
-
-	if err := countQuery.Count(&total).Error; err != nil {
+	if err := r.db.Raw(countQuery, userID, search, search, filterSemester, filterSemester, filterKategori, filterKategori).Scan(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	dataQuery := r.db.Table("projects").
-		Select("id, nama_project, kategori, semester, ukuran, path_file, updated_at as terakhir_diperbarui").
-		Where("user_id = ?", userID)
+	dataQuery := `
+		SELECT 
+			id,
+			nama_project,
+			kategori,
+			semester,
+			ukuran,
+			path_file,
+			updated_at as terakhir_diperbarui
+		FROM projects
+		WHERE user_id = ?
+			AND (? = '' OR nama_project LIKE CONCAT('%', ?, '%'))
+			AND (? = 0 OR semester = ?)
+			AND (? = '' OR kategori = ?)
+		ORDER BY updated_at DESC
+		LIMIT ? OFFSET ?
+	`
 
-	if search != "" {
-		searchPattern := "%" + search + "%"
-		dataQuery = dataQuery.Where("nama_project LIKE ?", searchPattern)
-	}
-
-	if filterSemester > 0 {
-		dataQuery = dataQuery.Where("semester = ?", filterSemester)
-	}
-
-	if filterKategori != "" {
-		dataQuery = dataQuery.Where("kategori = ?", filterKategori)
-	}
-
-	offset := (page - 1) * limit
-	if err := dataQuery.Offset(offset).Limit(limit).Order("updated_at DESC").Scan(&projectListItems).Error; err != nil {
+	if err := r.db.Raw(dataQuery, userID, search, search, filterSemester, filterSemester, filterKategori, filterKategori, limit, offset).Scan(&projectListItems).Error; err != nil {
 		return nil, 0, err
 	}
 
