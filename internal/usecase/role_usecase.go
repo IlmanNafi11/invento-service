@@ -5,7 +5,6 @@ import (
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
-	"math"
 
 	"gorm.io/gorm"
 )
@@ -24,6 +23,7 @@ type roleUsecase struct {
 	permissionRepo     repo.PermissionRepository
 	rolePermissionRepo repo.RolePermissionRepository
 	casbinEnforcer     *helper.CasbinEnforcer
+	rbacHelper         *helper.RBACHelper
 }
 
 func NewRoleUsecase(
@@ -32,11 +32,14 @@ func NewRoleUsecase(
 	rolePermissionRepo repo.RolePermissionRepository,
 	casbinEnforcer *helper.CasbinEnforcer,
 ) RoleUsecase {
+	rbacHelper := helper.NewRBACHelper(casbinEnforcer)
+
 	return &roleUsecase{
 		roleRepo:           roleRepo,
 		permissionRepo:     permissionRepo,
 		rolePermissionRepo: rolePermissionRepo,
 		casbinEnforcer:     casbinEnforcer,
+		rbacHelper:         rbacHelper,
 	}
 }
 
@@ -49,35 +52,26 @@ func (uc *roleUsecase) GetAvailablePermissions() ([]domain.ResourcePermissions, 
 }
 
 func (uc *roleUsecase) GetRoleList(params domain.RoleListQueryParams) (*domain.RoleListData, error) {
-	if params.Page <= 0 {
-		params.Page = 1
-	}
-	if params.Limit <= 0 {
-		params.Limit = 10
-	}
-	if params.Limit > 100 {
-		params.Limit = 100
-	}
+	paginationParams := helper.NormalizePaginationParams(params.Page, params.Limit)
 
-	roles, total, err := uc.roleRepo.GetAll(params.Search, params.Page, params.Limit)
+	roles, total, err := uc.roleRepo.GetAll(params.Search, paginationParams.Page, paginationParams.Limit)
 	if err != nil {
 		return nil, errors.New("gagal mengambil daftar role")
 	}
 
-	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+	pagination := helper.CalculatePagination(paginationParams.Page, paginationParams.Limit, total)
 
 	return &domain.RoleListData{
-		Items: roles,
-		Pagination: domain.PaginationData{
-			Page:       params.Page,
-			Limit:      params.Limit,
-			TotalItems: total,
-			TotalPages: totalPages,
-		},
+		Items:      roles,
+		Pagination: pagination,
 	}, nil
 }
 
 func (uc *roleUsecase) CreateRole(req domain.RoleCreateRequest) (*domain.RoleDetailResponse, error) {
+	if err := uc.rbacHelper.ValidatePermissionFormat(req.Permissions); err != nil {
+		return nil, err
+	}
+
 	existingRole, _ := uc.roleRepo.GetByName(req.NamaRole)
 	if existingRole != nil {
 		return nil, errors.New("nama role sudah ada")
@@ -91,43 +85,26 @@ func (uc *roleUsecase) CreateRole(req domain.RoleCreateRequest) (*domain.RoleDet
 		return nil, errors.New("gagal membuat role")
 	}
 
-	var permissionDetails []domain.RolePermissionDetail
-	permissionCount := 0
-
-	for resource, actions := range req.Permissions {
-		var resourceActions []string
-		for _, action := range actions {
-			permission, err := uc.permissionRepo.GetByResourceAndAction(resource, action)
-			if err != nil {
-				continue
-			}
-
-			rolePermission := &domain.RolePermission{
-				RoleID:       role.ID,
-				PermissionID: permission.ID,
-			}
-
-			if err := uc.rolePermissionRepo.Create(rolePermission); err != nil {
-				continue
-			}
-
-			if err := uc.casbinEnforcer.AddPermissionForRole(role.NamaRole, resource, action); err != nil {
-				continue
-			}
-
-			resourceActions = append(resourceActions, action)
-			permissionCount++
-		}
-
-		if len(resourceActions) > 0 {
-			permissionDetails = append(permissionDetails, domain.RolePermissionDetail{
-				Resource: resource,
-				Actions:  resourceActions,
-			})
-		}
+	permissionDetails, permissionCount, err := uc.rbacHelper.CreateRolePermissions(
+		role.ID,
+		req.Permissions,
+		uc.permissionRepo,
+		uc.rolePermissionRepo,
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := uc.casbinEnforcer.SavePolicy(); err != nil {
+	_, _, err = uc.rbacHelper.SyncPermissionsToRole(
+		role.NamaRole,
+		req.Permissions,
+		uc.permissionRepo,
+	)
+	if err != nil {
+		return nil, errors.New("gagal sync permissions ke casbin")
+	}
+
+	if err := uc.rbacHelper.SavePolicy(); err != nil {
 		return nil, errors.New("gagal menyimpan policy casbin")
 	}
 
@@ -155,30 +132,14 @@ func (uc *roleUsecase) GetRoleDetail(id uint) (*domain.RoleDetailResponse, error
 		return nil, errors.New("gagal mengambil permission role")
 	}
 
-	resourceMap := make(map[string][]string)
-	for _, perm := range permissions {
-		resourceMap[perm.Resource] = append(resourceMap[perm.Resource], perm.Action)
-	}
-
-	var permissionDetails []domain.RolePermissionDetail
-	for resource, actions := range resourceMap {
-		permissionDetails = append(permissionDetails, domain.RolePermissionDetail{
-			Resource: resource,
-			Actions:  actions,
-		})
-	}
-
-	return &domain.RoleDetailResponse{
-		ID:               role.ID,
-		NamaRole:         role.NamaRole,
-		Permissions:      permissionDetails,
-		JumlahPermission: len(permissions),
-		CreatedAt:        role.CreatedAt,
-		UpdatedAt:        role.UpdatedAt,
-	}, nil
+	return uc.rbacHelper.BuildRoleDetailResponse(role, permissions), nil
 }
 
 func (uc *roleUsecase) UpdateRole(id uint, req domain.RoleUpdateRequest) (*domain.RoleDetailResponse, error) {
+	if err := uc.rbacHelper.ValidatePermissionFormat(req.Permissions); err != nil {
+		return nil, err
+	}
+
 	role, err := uc.roleRepo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -201,51 +162,30 @@ func (uc *roleUsecase) UpdateRole(id uint, req domain.RoleUpdateRequest) (*domai
 		return nil, errors.New("gagal memperbarui role")
 	}
 
-	if err := uc.rolePermissionRepo.DeleteByRoleID(id); err != nil {
-		return nil, errors.New("gagal menghapus permission lama")
+	if err := uc.rbacHelper.RemoveAllRolePermissions(id, oldRoleName, uc.rolePermissionRepo); err != nil {
+		return nil, err
 	}
 
-	if err := uc.casbinEnforcer.RemoveAllPermissionsForRole(oldRoleName); err != nil {
-		return nil, errors.New("gagal menghapus policy casbin lama")
+	permissionDetails, permissionCount, err := uc.rbacHelper.CreateRolePermissions(
+		role.ID,
+		req.Permissions,
+		uc.permissionRepo,
+		uc.rolePermissionRepo,
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	var permissionDetails []domain.RolePermissionDetail
-	permissionCount := 0
-
-	for resource, actions := range req.Permissions {
-		var resourceActions []string
-		for _, action := range actions {
-			permission, err := uc.permissionRepo.GetByResourceAndAction(resource, action)
-			if err != nil {
-				continue
-			}
-
-			rolePermission := &domain.RolePermission{
-				RoleID:       role.ID,
-				PermissionID: permission.ID,
-			}
-
-			if err := uc.rolePermissionRepo.Create(rolePermission); err != nil {
-				continue
-			}
-
-			if err := uc.casbinEnforcer.AddPermissionForRole(role.NamaRole, resource, action); err != nil {
-				continue
-			}
-
-			resourceActions = append(resourceActions, action)
-			permissionCount++
-		}
-
-		if len(resourceActions) > 0 {
-			permissionDetails = append(permissionDetails, domain.RolePermissionDetail{
-				Resource: resource,
-				Actions:  resourceActions,
-			})
-		}
+	_, _, err = uc.rbacHelper.SyncPermissionsToRole(
+		role.NamaRole,
+		req.Permissions,
+		uc.permissionRepo,
+	)
+	if err != nil {
+		return nil, errors.New("gagal sync permissions ke casbin")
 	}
 
-	if err := uc.casbinEnforcer.SavePolicy(); err != nil {
+	if err := uc.rbacHelper.SavePolicy(); err != nil {
 		return nil, errors.New("gagal menyimpan policy casbin")
 	}
 
@@ -268,8 +208,8 @@ func (uc *roleUsecase) DeleteRole(id uint) error {
 		return errors.New("gagal mengambil role")
 	}
 
-	if err := uc.rolePermissionRepo.DeleteByRoleID(id); err != nil {
-		return errors.New("gagal menghapus permission role")
+	if err := uc.rbacHelper.RemoveAllRolePermissions(id, role.NamaRole, uc.rolePermissionRepo); err != nil {
+		return err
 	}
 
 	if err := uc.casbinEnforcer.DeleteRole(role.NamaRole); err != nil {
@@ -280,7 +220,7 @@ func (uc *roleUsecase) DeleteRole(id uint) error {
 		return errors.New("gagal menghapus role")
 	}
 
-	if err := uc.casbinEnforcer.SavePolicy(); err != nil {
+	if err := uc.rbacHelper.SavePolicy(); err != nil {
 		return errors.New("gagal menyimpan policy casbin")
 	}
 

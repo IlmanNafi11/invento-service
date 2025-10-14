@@ -114,3 +114,31 @@ func (ce *CasbinEnforcer) DeleteRole(roleName string) error {
 	}
 	return nil
 }
+
+func (ce *CasbinEnforcer) GetEnforcer() *casbin.Enforcer {
+	return ce.enforcer
+}
+
+func (ce *CasbinEnforcer) GetAllRoles() ([]string, error) {
+	roles, err := ce.enforcer.GetAllRoles()
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil semua role: %w", err)
+	}
+	return roles, nil
+}
+
+func (ce *CasbinEnforcer) GetAllPolicies() ([][]string, error) {
+	policies, err := ce.enforcer.GetPolicy()
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil semua policy: %w", err)
+	}
+	return policies, nil
+}
+
+func (ce *CasbinEnforcer) HasPolicy(roleName, resource, action string) (bool, error) {
+	hasPolicy, err := ce.enforcer.HasPolicy(roleName, resource, action)
+	if err != nil {
+		return false, fmt.Errorf("gagal memeriksa policy: %w", err)
+	}
+	return hasPolicy, nil
+}
