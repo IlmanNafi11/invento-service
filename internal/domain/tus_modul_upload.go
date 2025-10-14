@@ -40,6 +40,7 @@ const (
 type TusModulUploadInitRequest struct {
 	NamaFile string `json:"nama_file" validate:"required,min=3,max=255"`
 	Tipe     string `json:"tipe" validate:"required,oneof=docx xlsx pdf pptx"`
+	Semester int    `json:"semester" validate:"required,min=1,max=8"`
 }
 
 type TusModulUploadResponse struct {
@@ -54,6 +55,7 @@ type TusModulUploadInfoResponse struct {
 	ModulID   uint      `json:"modul_id,omitempty"`
 	NamaFile  string    `json:"nama_file"`
 	Tipe      string    `json:"tipe"`
+	Semester  int       `json:"semester"`
 	Status    string    `json:"status"`
 	Progress  float64   `json:"progress"`
 	Offset    int64     `json:"offset"`
@@ -71,4 +73,5 @@ type TusModulUploadSlotResponse struct {
 
 type ModulUpdateMetadataRequest struct {
 	NamaFile string `json:"nama_file" validate:"required,min=3,max=255"`
+	Semester int    `json:"semester" validate:"required,min=1,max=8"`
 }

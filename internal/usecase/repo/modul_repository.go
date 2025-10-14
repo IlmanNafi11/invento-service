@@ -36,7 +36,7 @@ func (r *modulRepository) GetByIDs(ids []uint, userID uint) ([]domain.Modul, err
 	return moduls, nil
 }
 
-func (r *modulRepository) GetByUserID(userID uint, search string, filterType string, page, limit int) ([]domain.ModulListItem, int, error) {
+func (r *modulRepository) GetByUserID(userID uint, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error) {
 	var modulListItems []domain.ModulListItem
 	var total int64
 
@@ -52,12 +52,16 @@ func (r *modulRepository) GetByUserID(userID uint, search string, filterType str
 		countQuery = countQuery.Where("tipe = ?", filterType)
 	}
 
+	if filterSemester > 0 {
+		countQuery = countQuery.Where("semester = ?", filterSemester)
+	}
+
 	if err := countQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	dataQuery := r.db.Table("moduls").
-		Select("id, nama_file, tipe, ukuran, path_file, updated_at as terakhir_diperbarui").
+		Select("id, nama_file, tipe, ukuran, semester, path_file, updated_at as terakhir_diperbarui").
 		Where("user_id = ?", userID)
 
 	if search != "" {
@@ -67,6 +71,10 @@ func (r *modulRepository) GetByUserID(userID uint, search string, filterType str
 
 	if filterType != "" {
 		dataQuery = dataQuery.Where("tipe = ?", filterType)
+	}
+
+	if filterSemester > 0 {
+		dataQuery = dataQuery.Where("semester = ?", filterSemester)
 	}
 
 	offset := (page - 1) * limit
@@ -94,5 +102,8 @@ func (r *modulRepository) Delete(id uint) error {
 func (r *modulRepository) UpdateMetadata(modul *domain.Modul) error {
 	return r.db.Model(&domain.Modul{}).
 		Where("id = ?", modul.ID).
-		Update("nama_file", modul.NamaFile).Error
+		Updates(map[string]interface{}{
+			"nama_file": modul.NamaFile,
+			"semester":  modul.Semester,
+		}).Error
 }

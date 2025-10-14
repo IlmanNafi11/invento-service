@@ -57,6 +57,15 @@ paths:
             type: string
             enum: [pdf, docx, xlsx, pptx]
             example: "pdf"
+        - name: filter_semester
+          in: query
+          description: Filter berdasarkan semester (1-8)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 8
+            example: 1
         - name: page
           in: query
           description: Nomor halaman untuk pagination
@@ -93,12 +102,14 @@ paths:
                       nama_file: "Materi Kuliah 1"
                       tipe: "pdf"
                       ukuran: "2.50 MB"
+                      semester: 1
                       path_file: "/uploads/moduls/1/abc1234567/materi1.pdf"
                       terakhir_diperbarui: "2024-01-01T10:00:00Z"
                     - id: 2
                       nama_file: "Presentasi Proyek"
                       tipe: "pptx"
                       ukuran: "5.10 MB"
+                      semester: 2
                       path_file: "/uploads/moduls/1/def7890123/presentasi.pptx"
                       terakhir_diperbarui: "2024-01-02T14:30:00Z"
                   pagination:
@@ -154,6 +165,7 @@ paths:
               type: object
               required:
                 - nama_file
+                - semester
               properties:
                 nama_file:
                   type: string
@@ -161,6 +173,12 @@ paths:
                   maxLength: 255
                   description: Nama file baru
                   example: "Materi Kuliah Updated"
+                semester:
+                  type: integer
+                  minimum: 1
+                  maximum: 8
+                  description: Semester (1-8)
+                  example: 1
       responses:
         '200':
           description: Metadata modul berhasil diperbarui
@@ -177,6 +195,7 @@ paths:
                   nama_file: "Materi Kuliah Updated"
                   tipe: "pdf"
                   ukuran: "3.20 MB"
+                  semester: 1
                   path_file: "/uploads/moduls/1/abc1234567/materi.pdf"
                   created_at: "2024-01-01T10:00:00Z"
                   updated_at: "2024-01-02T15:00:00Z"
@@ -460,10 +479,10 @@ paths:
           description: |
             Metadata upload dalam format base64 encoded.
             Format: `key1 base64value1,key2 base64value2`
-            Required keys: nama_file, tipe
+            Required keys: nama_file, tipe, semester
           schema:
             type: string
-            example: "nama_file TWF0ZXJpIEt1bGlhaA==,tipe cGRm"
+            example: "nama_file TWF0ZXJpIEt1bGlhaA==,tipe cGRm,semester MQ=="
       responses:
         '201':
           description: Upload berhasil diinisiasi
@@ -596,10 +615,10 @@ paths:
           description: |
             Metadata upload dalam format base64 encoded.
             Format: `key1 base64value1,key2 base64value2`
-            Required keys: nama_file, tipe
+            Required keys: nama_file, tipe, semester
           schema:
             type: string
-            example: "nama_file TWF0ZXJpIEt1bGlhaA==,tipe cGRm"
+            example: "nama_file TWF0ZXJpIEt1bGlhaA==,tipe cGRm,semester MQ=="
       responses:
         '201':
           description: Update upload berhasil diinisiasi
@@ -1253,6 +1272,7 @@ paths:
                   upload_id: "123e4567-e89b-12d3-a456-426614174000"
                   nama_file: "Materi Kuliah 1"
                   tipe: "pdf"
+                  semester: 1
                   status: "uploading"
                   progress: 50.5
                   offset: 2621440
@@ -1364,6 +1384,11 @@ components:
         ukuran:
           type: string
           example: "2.50 MB"
+        semester:
+          type: integer
+          minimum: 1
+          maximum: 8
+          example: 1
         path_file:
           type: string
           example: "/uploads/moduls/1/abc1234567/materi.pdf"
@@ -1393,6 +1418,11 @@ components:
         ukuran:
           type: string
           example: "2.50 MB"
+        semester:
+          type: integer
+          minimum: 1
+          maximum: 8
+          example: 1
         path_file:
           type: string
           example: "/uploads/moduls/1/abc1234567/materi.pdf"
@@ -1497,6 +1527,11 @@ components:
           type: string
           enum: [pdf, docx, xlsx, pptx]
           example: "pdf"
+        semester:
+          type: integer
+          minimum: 1
+          maximum: 8
+          example: 1
         status:
           type: string
           enum: [queued, pending, uploading, completed, cancelled, failed, expired]

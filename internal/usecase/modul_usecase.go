@@ -13,7 +13,7 @@ import (
 )
 
 type ModulUsecase interface {
-	GetList(userID uint, search string, filterType string, page, limit int) (*domain.ModulListData, error)
+	GetList(userID uint, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error)
 	GetByID(modulID, userID uint) (*domain.ModulResponse, error)
 	Delete(modulID, userID uint) error
 	Download(userID uint, modulIDs []uint) (string, error)
@@ -32,7 +32,7 @@ func NewModulUsecase(modulRepo repo.ModulRepository) ModulUsecase {
 
 
 
-func (uc *modulUsecase) GetList(userID uint, search string, filterType string, page, limit int) (*domain.ModulListData, error) {
+func (uc *modulUsecase) GetList(userID uint, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -40,7 +40,7 @@ func (uc *modulUsecase) GetList(userID uint, search string, filterType string, p
 		limit = 10
 	}
 
-	moduls, total, err := uc.modulRepo.GetByUserID(userID, search, filterType, page, limit)
+	moduls, total, err := uc.modulRepo.GetByUserID(userID, search, filterType, filterSemester, page, limit)
 	if err != nil {
 		return nil, errors.New("gagal mengambil data modul")
 	}
@@ -76,6 +76,7 @@ func (uc *modulUsecase) GetByID(modulID, userID uint) (*domain.ModulResponse, er
 		NamaFile:  modul.NamaFile,
 		Tipe:      modul.Tipe,
 		Ukuran:    modul.Ukuran,
+		Semester:  modul.Semester,
 		PathFile:  modul.PathFile,
 		CreatedAt: modul.CreatedAt,
 		UpdatedAt: modul.UpdatedAt,

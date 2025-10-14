@@ -127,9 +127,20 @@ func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*domain.Tu
 		return nil, errors.New("tipe file harus salah satu dari: docx, xlsx, pdf, pptx")
 	}
 
+	semesterStr, ok := metadataMap["semester"]
+	if !ok || semesterStr == "" {
+		return nil, errors.New("semester wajib diisi")
+	}
+
+	semester, err := strconv.Atoi(semesterStr)
+	if err != nil || semester < 1 || semester > 8 {
+		return nil, errors.New("semester harus berupa angka antara 1-8")
+	}
+
 	return &domain.TusModulUploadInitRequest{
 		NamaFile: namaFile,
 		Tipe:     tipe,
+		Semester: semester,
 	}, nil
 }
 
@@ -188,6 +199,7 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID uint, fileSize int64, uplo
 	metadataMap := make(map[string]string)
 	metadataMap["nama_file"] = metadata.NamaFile
 	metadataMap["tipe"] = metadata.Tipe
+	metadataMap["semester"] = strconv.Itoa(metadata.Semester)
 	metadataMap["user_id"] = fmt.Sprintf("%d", userID)
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
@@ -274,6 +286,7 @@ func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID uint) err
 		NamaFile: tusUpload.UploadMetadata.NamaFile,
 		Tipe:     tusUpload.UploadMetadata.Tipe,
 		Ukuran:   fileSize,
+		Semester: tusUpload.UploadMetadata.Semester,
 		PathFile: finalPath,
 	}
 
@@ -307,6 +320,7 @@ func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID uint) (*do
 		UploadID:  tusUpload.ID,
 		NamaFile:  tusUpload.UploadMetadata.NamaFile,
 		Tipe:      tusUpload.UploadMetadata.Tipe,
+		Semester:  tusUpload.UploadMetadata.Semester,
 		Status:    tusUpload.Status,
 		Progress:  tusUpload.Progress,
 		Offset:    tusUpload.CurrentOffset,
@@ -422,6 +436,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID, userID uint, fileS
 	metadataMap := make(map[string]string)
 	metadataMap["nama_file"] = metadata.NamaFile
 	metadataMap["tipe"] = metadata.Tipe
+	metadataMap["semester"] = strconv.Itoa(metadata.Semester)
 	metadataMap["user_id"] = fmt.Sprintf("%d", userID)
 	metadataMap["modul_id"] = strconv.FormatUint(uint64(modulID), 10)
 
@@ -516,6 +531,7 @@ func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID uint) err
 	modul.NamaFile = tusUpload.UploadMetadata.NamaFile
 	modul.Tipe = tusUpload.UploadMetadata.Tipe
 	modul.Ukuran = helper.FormatFileSize(tusUpload.FileSize)
+	modul.Semester = tusUpload.UploadMetadata.Semester
 	modul.PathFile = finalPath
 
 	if err := uc.modulRepo.Update(modul); err != nil {

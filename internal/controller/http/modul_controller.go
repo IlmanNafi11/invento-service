@@ -51,7 +51,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 		params.Limit = 10
 	}
 
-	result, err := ctrl.modulUsecase.GetList(userID, params.Search, params.FilterType, params.Page, params.Limit)
+	result, err := ctrl.modulUsecase.GetList(userID, params.Search, params.FilterType, params.FilterSemester, params.Page, params.Limit)
 	if err != nil {
 		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, "Gagal mengambil daftar modul: "+err.Error(), nil)
 	}
@@ -410,6 +410,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 		NamaFile: req.NamaFile,
 		Tipe:     modul.Tipe,
 		Ukuran:   modul.Ukuran,
+		Semester: req.Semester,
 		PathFile: modul.PathFile,
 	}
 
@@ -418,6 +419,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 	}
 
 	modul.NamaFile = req.NamaFile
+	modul.Semester = req.Semester
 
 	return helper.SendSuccessResponse(c, fiber.StatusOK, "Metadata modul berhasil diperbarui", modul)
 }
