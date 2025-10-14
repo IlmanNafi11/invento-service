@@ -20,6 +20,7 @@ func RunMigration(db *gorm.DB) {
 		&domain.Project{},
 		&domain.Modul{},
 		&domain.TusUpload{},
+		&domain.TusModulUpload{},
 	); err != nil {
 		log.Fatal("Gagal melakukan auto migrate:", err)
 	}

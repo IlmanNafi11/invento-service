@@ -2,10 +2,7 @@ package http
 
 import (
 	"bytes"
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
-	"fiber-boiler-plate/internal/usecase"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,102 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type ModulController struct {
-	modulUsecase    usecase.ModulUsecase
-	tusModulUsecase usecase.TusModulUsecase
-	config          *config.Config
-}
-
-func NewModulController(modulUsecase usecase.ModulUsecase, tusModulUsecase usecase.TusModulUsecase, config *config.Config) *ModulController {
-	return &ModulController{
-		modulUsecase:    modulUsecase,
-		tusModulUsecase: tusModulUsecase,
-		config:          config,
-	}
-}
-
-
-
-func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	var params domain.ModulListQueryParams
-	if err := c.QueryParser(&params); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Parameter query tidak valid", nil)
-	}
-
-	if params.Page <= 0 {
-		params.Page = 1
-	}
-	if params.Limit <= 0 {
-		params.Limit = 10
-	}
-
-	result, err := ctrl.modulUsecase.GetList(userID, params.Search, params.FilterType, params.Page, params.Limit)
-	if err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, "Gagal mengambil daftar modul: "+err.Error(), nil)
-	}
-
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Daftar modul berhasil diambil", result)
-}
-
-
-
-func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	modulID, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID modul tidak valid", nil)
-	}
-
-	err = ctrl.modulUsecase.Delete(uint(modulID), userID)
-	if err != nil {
-		if err.Error() == "modul tidak ditemukan" {
-			return helper.SendNotFoundResponse(c, err.Error())
-		}
-		if err.Error() == "tidak memiliki akses ke modul ini" {
-			return helper.SendForbiddenResponse(c)
-		}
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Modul berhasil dihapus", nil)
-}
-
-func (ctrl *ModulController) CheckUploadSlot(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	response, err := ctrl.tusModulUsecase.CheckModulUploadSlot(userID)
-	if err != nil {
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Status slot upload berhasil didapat", response)
-}
-
-func (ctrl *ModulController) InitiateUpload(c *fiber.Ctx) error {
+// InitiateModulUpdateUpload handles POST /modul/:id/upload
+func (ctrl *ModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
@@ -118,6 +21,13 @@ func (ctrl *ModulController) InitiateUpload(c *fiber.Ctx) error {
 	if !ok {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	modulIDStr := c.Params("id")
+	modulID, err := strconv.Atoi(modulIDStr)
+	if err != nil {
+		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	tusVersion := c.Get("Tus-Resumable")
@@ -144,9 +54,15 @@ func (ctrl *ModulController) InitiateUpload(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	result, err := ctrl.tusModulUsecase.InitiateModulUpload(userID, fileSize, uploadMetadata)
+	result, err := ctrl.tusModulUsecase.InitiateModulUpdateUpload(uint(modulID), userID, fileSize, uploadMetadata)
 	if err != nil {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			return c.SendStatus(fiber.StatusNotFound)
+		}
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			return c.SendStatus(fiber.StatusForbidden)
+		}
 		if strings.Contains(err.Error(), "antrian penuh") {
 			return c.SendStatus(fiber.StatusTooManyRequests)
 		}
@@ -163,10 +79,11 @@ func (ctrl *ModulController) InitiateUpload(c *fiber.Ctx) error {
 	c.Set("Location", result.UploadURL)
 	c.Set("Upload-Offset", "0")
 
-	return helper.SendSuccessResponse(c, fiber.StatusCreated, "Upload modul berhasil diinisiasi", result)
+	return helper.SendSuccessResponse(c, fiber.StatusCreated, "Update upload modul berhasil diinisiasi", result)
 }
 
-func (ctrl *ModulController) UploadChunk(c *fiber.Ctx) error {
+// UploadModulUpdateChunk handles PATCH /modul/:id/update/:upload_id
+func (ctrl *ModulController) UploadModulUpdateChunk(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
@@ -243,7 +160,7 @@ func (ctrl *ModulController) UploadChunk(c *fiber.Ctx) error {
 
 	bodyReader := bytes.NewReader(bodyBytes)
 
-	newOffset, err := ctrl.tusModulUsecase.HandleModulChunk(uploadID, userID, offset, bodyReader)
+	newOffset, err := ctrl.tusModulUsecase.HandleModulUpdateChunk(uploadID, userID, offset, bodyReader)
 	if err != nil {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
 
@@ -270,7 +187,8 @@ func (ctrl *ModulController) UploadChunk(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-func (ctrl *ModulController) GetUploadStatus(c *fiber.Ctx) error {
+// GetModulUpdateUploadStatus handles HEAD /modul/:id/update/:upload_id
+func (ctrl *ModulController) GetModulUpdateUploadStatus(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
@@ -307,7 +225,8 @@ func (ctrl *ModulController) GetUploadStatus(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-func (ctrl *ModulController) GetUploadInfo(c *fiber.Ctx) error {
+// GetModulUpdateUploadInfo handles GET /modul/:id/update/:upload_id
+func (ctrl *ModulController) GetModulUpdateUploadInfo(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
 		return helper.SendUnauthorizedResponse(c)
@@ -333,10 +252,11 @@ func (ctrl *ModulController) GetUploadInfo(c *fiber.Ctx) error {
 		return helper.SendInternalServerErrorResponse(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Informasi upload berhasil didapat", info)
+	return helper.SendSuccessResponse(c, fiber.StatusOK, "Informasi update upload berhasil didapat", info)
 }
 
-func (ctrl *ModulController) CancelUpload(c *fiber.Ctx) error {
+// CancelModulUpdateUpload handles DELETE /modul/:id/update/:upload_id
+func (ctrl *ModulController) CancelModulUpdateUpload(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
 		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
@@ -370,84 +290,6 @@ func (ctrl *ModulController) CancelUpload(c *fiber.Ctx) error {
 	}
 
 	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
+
 	return c.SendStatus(fiber.StatusNoContent)
-}
-
-func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	modulID, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID modul tidak valid", nil)
-	}
-
-	var req domain.ModulUpdateMetadataRequest
-	if err := c.BodyParser(&req); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
-	}
-
-	modul, err := ctrl.modulUsecase.GetByID(uint(modulID), userID)
-	if err != nil {
-		if err.Error() == "modul tidak ditemukan" {
-			return helper.SendNotFoundResponse(c, err.Error())
-		}
-		if err.Error() == "tidak memiliki akses ke modul ini" {
-			return helper.SendForbiddenResponse(c)
-		}
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	modulDomain := &domain.Modul{
-		ID:       modul.ID,
-		UserID:   userID,
-		NamaFile: req.NamaFile,
-		Tipe:     modul.Tipe,
-		Ukuran:   modul.Ukuran,
-		PathFile: modul.PathFile,
-	}
-
-	if err := ctrl.modulUsecase.UpdateMetadataOnly(modulDomain); err != nil {
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	modul.NamaFile = req.NamaFile
-
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Metadata modul berhasil diperbarui", modul)
-}
-
-func (ctrl *ModulController) Download(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	var req domain.ModulDownloadRequest
-	if err := c.BodyParser(&req); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
-	}
-
-	if len(req.IDs) == 0 {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID modul tidak boleh kosong", nil)
-	}
-
-	filePath, err := ctrl.modulUsecase.Download(userID, req.IDs)
-	if err != nil {
-		if err.Error() == "modul tidak ditemukan" {
-			return helper.SendNotFoundResponse(c, err.Error())
-		}
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	return c.Download(filePath)
 }

@@ -1,8 +1,23 @@
 openapi: 3.0.3
 info:
   title: Fiber Boilerplate API - Modul Management
-  description: API dokumentasi untuk sistem manajemen modul pada fiber boilerplate
-  version: 1.0.0
+  description: |
+    API dokumentasi untuk sistem manajemen modul pada fiber boilerplate.
+    
+    **BREAKING CHANGES (v2.0.0):**
+    - ❌ Endpoint multipart `/modul` (POST) dihapus
+    - ❌ Endpoint multipart `/modul/{id}` (PUT) dihapus
+    - ✅ Diganti dengan TUS Protocol untuk resumable upload
+    - ✅ Tambah endpoint PATCH `/modul/{id}` untuk update metadata saja
+    
+    **TUS Protocol Features:**
+    - Resumable upload (dapat dilanjutkan jika terputus)
+    - Chunked upload (chunk 1MB)
+    - Multiple file support (max 5 files per user queue)
+    - Real-time progress tracking
+    - File type: docx, xlsx, pdf, pptx
+    - Max size: 50MB per file
+  version: 2.0.0
   contact:
     name: Developer Team
     email: developer@example.com
@@ -36,10 +51,11 @@ paths:
             example: "materi kuliah"
         - name: filter_type
           in: query
-          description: Filter berdasarkan tipe file (pdf, docx, xlsx, pptx, jpg, png, dll)
+          description: Filter berdasarkan tipe file (pdf, docx, xlsx, pptx)
           required: false
           schema:
             type: string
+            enum: [pdf, docx, xlsx, pptx]
             example: "pdf"
         - name: page
           in: query
@@ -74,16 +90,16 @@ paths:
                 data:
                   items:
                     - id: 1
-                      nama_file: "Materi Kuliah 1.pdf"
+                      nama_file: "Materi Kuliah 1"
                       tipe: "pdf"
-                      ukuran: "2.5MB"
-                      path_file: "/uploads/modul/user-mahasiswa-1/materi1.pdf"
+                      ukuran: "2.50 MB"
+                      path_file: "/uploads/moduls/1/abc1234567/materi1.pdf"
                       terakhir_diperbarui: "2024-01-01T10:00:00Z"
                     - id: 2
-                      nama_file: "Presentasi Proyek.pptx"
+                      nama_file: "Presentasi Proyek"
                       tipe: "pptx"
-                      ukuran: "5.1MB"
-                      path_file: "/uploads/modul/user-mahasiswa-1/presentasi.pptx"
+                      ukuran: "5.10 MB"
+                      path_file: "/uploads/moduls/1/def7890123/presentasi.pptx"
                       terakhir_diperbarui: "2024-01-02T14:30:00Z"
                   pagination:
                     page: 1
@@ -96,192 +112,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Token tidak valid atau sudah expired
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "Tidak memiliki akses"
-                code: 401
-                timestamp: "2024-01-01T10:00:00Z"
-        '500':
-          description: Kesalahan server
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-    post:
-      tags:
-        - Modul
-      summary: Membuat modul baru
-      description: Endpoint untuk membuat modul baru dengan dukungan upload multiple file
-      operationId: createModul
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                files:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-                    description: File yang akan diupload (pdf, docx, xlsx, pptx, jpg, png)
-                  description: Array file untuk upload multiple
-                nama_file:
-                  type: array
-                  items:
-                    type: string
-                    description: Nama file yang sesuai dengan urutan file
-                  description: Array nama file
-            encoding:
-              files:
-                contentType: application/octet-stream
-      responses:
-        '201':
-          description: Modul berhasil dibuat
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModulCreateResponse'
-              example:
-                success: true
-                message: "Modul berhasil dibuat"
-                code: 201
-                data:
-                  items:
-                    - id: 1
-                      nama_file: "Materi Kuliah 1.pdf"
-                      tipe: "pdf"
-                      ukuran: "2.5MB"
-                      path_file: "/uploads/modul/1.pdf"
-                      created_at: "2024-01-01T10:00:00Z"
-                      updated_at: "2024-01-01T10:00:00Z"
-                    - id: 2
-                      nama_file: "Presentasi Proyek.pptx"
-                      tipe: "pptx"
-                      ukuran: "5.1MB"
-                      path_file: "/uploads/modul/2.pptx"
-                      created_at: "2024-01-01T10:00:00Z"
-                      updated_at: "2024-01-01T10:00:00Z"
-                timestamp: "2024-01-01T10:00:00Z"
-        '400':
-          description: Data validasi tidak valid atau file tidak didukung
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-              example:
-                success: false
-                message: "Data validasi tidak valid"
-                code: 400
-                errors:
-                  - field: "files"
-                    message: "File harus berupa pdf, docx, xlsx, pptx, jpg, atau png"
-                  - field: "nama_file"
-                    message: "Nama file wajib diisi"
-                timestamp: "2024-01-01T10:00:00Z"
-        '401':
-          description: Token tidak valid atau sudah expired
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '413':
-          description: File terlalu besar
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "Ukuran file melebihi batas maksimal"
-                code: 413
-                timestamp: "2024-01-01T10:00:00Z"
-        '500':
-          description: Kesalahan server
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /modul/download:
-    post:
-      tags:
-        - Modul
-      summary: Download modul
-      description: Endpoint untuk download modul atau multiple modul dalam format zip
-      operationId: downloadModul
-      security:
-        - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                ids:
-                  type: array
-                  items:
-                    type: integer
-                  description: Array ID modul yang akan didownload
-                  example: [1, 2, 3]
-              required:
-                - ids
-      responses:
-        '200':
-          description: File berhasil didownload
-          content:
-            application/zip:
-              schema:
-                type: string
-                format: binary
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-        '400':
-          description: Parameter request tidak valid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "ID modul tidak boleh kosong"
-                code: 400
-                timestamp: "2024-01-01T10:00:00Z"
-        '401':
-          description: Token tidak valid atau sudah expired
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Modul tidak ditemukan
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "Modul tidak ditemukan"
-                code: 404
-                timestamp: "2024-01-01T10:00:00Z"
         '500':
           description: Kesalahan server
           content:
@@ -290,12 +127,15 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
   /modul/{id}:
-    put:
+    patch:
       tags:
         - Modul
-      summary: Memperbarui modul
-      description: Endpoint untuk memperbarui informasi modul
-      operationId: updateModul
+      summary: Memperbarui metadata modul (tanpa file)
+      description: |
+        Endpoint untuk memperbarui metadata modul tanpa mengupload file baru.
+        Gunakan endpoint ini jika hanya ingin mengubah nama file.
+        Untuk update file, gunakan TUS Protocol endpoint.
+      operationId: updateModulMetadata
       security:
         - BearerAuth: []
       parameters:
@@ -309,38 +149,35 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
               type: object
+              required:
+                - nama_file
               properties:
                 nama_file:
                   type: string
+                  minLength: 3
+                  maxLength: 255
                   description: Nama file baru
-                  example: "Materi Kuliah Updated.pdf"
-                file:
-                  type: string
-                  format: binary
-                  description: File baru (opsional, jika tidak diupload maka file lama tetap digunakan)
-            encoding:
-              file:
-                contentType: application/octet-stream
+                  example: "Materi Kuliah Updated"
       responses:
         '200':
-          description: Modul berhasil diperbarui
+          description: Metadata modul berhasil diperbarui
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ModulUpdateResponse'
+                $ref: '#/components/schemas/ModulResponse'
               example:
                 success: true
-                message: "Modul berhasil diperbarui"
+                message: "Metadata modul berhasil diperbarui"
                 code: 200
                 data:
                   id: 1
-                  nama_file: "Materi Kuliah Updated.pdf"
+                  nama_file: "Materi Kuliah Updated"
                   tipe: "pdf"
-                  ukuran: "3.2MB"
-                  path_file: "/uploads/modul/1.pdf"
+                  ukuran: "3.20 MB"
+                  path_file: "/uploads/moduls/1/abc1234567/materi.pdf"
                   created_at: "2024-01-01T10:00:00Z"
                   updated_at: "2024-01-02T15:00:00Z"
                 timestamp: "2024-01-02T15:00:00Z"
@@ -349,26 +186,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Token tidak valid atau sudah expired
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Modul tidak ditemukan
+        '403':
+          description: Tidak memiliki akses ke modul ini
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "Modul tidak ditemukan"
-                code: 404
-                timestamp: "2024-01-01T10:00:00Z"
-        '413':
-          description: File terlalu besar
+        '404':
+          description: Modul tidak ditemukan
           content:
             application/json:
               schema:
@@ -384,7 +216,7 @@ paths:
       tags:
         - Modul
       summary: Menghapus modul
-      description: Endpoint untuk menghapus modul
+      description: Endpoint untuk menghapus modul beserta filenya
       operationId: deleteModul
       security:
         - BearerAuth: []
@@ -414,17 +246,164 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke modul ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Modul tidak ditemukan
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "Modul tidak ditemukan"
-                code: 404
-                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /modul/download:
+    post:
+      tags:
+        - Modul
+      summary: Download modul
+      description: Endpoint untuk download satu atau multiple modul. Jika lebih dari satu modul, akan didownload dalam format zip
+      operationId: downloadModul
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                  minItems: 1
+                  description: Array ID modul yang akan didownload
+                  example: [1, 2, 3]
+      responses:
+        '200':
+          description: File berhasil didownload
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.presentationml.presentation:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Parameter request tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /modul/upload/check-slot:
+    get:
+      tags:
+        - Modul Upload (TUS)
+      summary: Cek ketersediaan slot upload
+      description: |
+        Endpoint untuk mengecek ketersediaan slot upload queue.
+        Setiap user dapat memiliki maksimal 5 file dalam antrian upload.
+        Frontend harus mengecek slot sebelum initiate upload.
+      operationId: checkModulUploadSlot
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Status slot berhasil didapat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Status slot upload berhasil didapat"
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/UploadSlotResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
+              examples:
+                available:
+                  summary: Slot tersedia
+                  value:
+                    success: true
+                    message: "Status slot upload berhasil didapat"
+                    code: 200
+                    data:
+                      available: true
+                      message: "Slot tersedia (2/5)"
+                      queue_length: 2
+                      max_queue: 5
+                    timestamp: "2024-01-01T10:00:00Z"
+                full:
+                  summary: Antrian penuh
+                  value:
+                    success: true
+                    message: "Status slot upload berhasil didapat"
+                    code: 200
+                    data:
+                      available: false
+                      message: "Antrian penuh (5/5), silakan tunggu upload selesai"
+                      queue_length: 5
+                      max_queue: 5
+                    timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Kesalahan server
           content:
@@ -435,9 +414,25 @@ paths:
   /modul/upload:
     post:
       tags:
-        - Modul
-      summary: Inisiasi upload modul dengan Tus
-      description: Endpoint untuk inisiasi resumable upload modul menggunakan protokol Tus
+        - Modul Upload (TUS)
+      summary: Inisiasi upload modul dengan TUS Protocol
+      description: |
+        Endpoint untuk inisiasi resumable upload modul menggunakan TUS Protocol.
+        
+        **Flow:**
+        1. Frontend cek slot dengan GET /modul/upload/check-slot
+        2. Jika slot tersedia, inisiasi upload dengan POST /modul/upload
+        3. Upload chunk dengan PATCH /modul/upload/{upload_id}
+        4. Ulangi sampai selesai
+        
+        **Metadata Format:**
+        - Base64 encoded: `key value,key2 value2`
+        - Example: `nama_file bWF0ZXJp,tipe cGRm`
+        
+        **Constraints:**
+        - Max 5 files per user queue
+        - Max 50MB per file
+        - File type: docx, xlsx, pdf, pptx only
       operationId: initiateModulUpload
       security:
         - BearerAuth: []
@@ -445,7 +440,7 @@ paths:
         - name: Tus-Resumable
           in: header
           required: true
-          description: Versi protokol Tus (1.0.0)
+          description: Versi protokol TUS (1.0.0)
           schema:
             type: string
             example: "1.0.0"
@@ -456,47 +451,68 @@ paths:
           schema:
             type: integer
             format: int64
-            example: 52428800
+            minimum: 1
+            maximum: 52428800
+            example: 5242880
         - name: Upload-Metadata
           in: header
           required: true
-          description: Metadata upload dalam format base64 encoded
+          description: |
+            Metadata upload dalam format base64 encoded.
+            Format: `key1 base64value1,key2 base64value2`
+            Required keys: nama_file, tipe
           schema:
             type: string
-            example: "nama_file bWF0ZXJpLmtwZGY=,tipe cGRm"
+            example: "nama_file TWF0ZXJpIEt1bGlhaA==,tipe cGRm"
       responses:
         '201':
           description: Upload berhasil diinisiasi
           headers:
             Location:
-              description: URL untuk upload chunk
+              description: URL untuk upload chunk (relative path, concat dengan base URL)
               schema:
                 type: string
-                example: "/api/v1/modul/upload/123e4567-e89b-12d3-a456-426614174000"
+                example: "/modul/upload/123e4567-e89b-12d3-a456-426614174000"
             Tus-Resumable:
               schema:
                 type: string
                 example: "1.0.0"
+            Upload-Offset:
+              schema:
+                type: string
+                example: "0"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UploadResponse'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/UploadInitResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
               example:
                 success: true
                 message: "Upload modul berhasil diinisiasi"
                 code: 201
                 data:
                   upload_id: "123e4567-e89b-12d3-a456-426614174000"
-                  upload_url: "/api/v1/modul/upload/123e4567-e89b-12d3-a456-426614174000"
+                  upload_url: "/modul/upload/123e4567-e89b-12d3-a456-426614174000"
                   offset: 0
-                  length: 52428800
+                  length: 5242880
                 timestamp: "2024-01-01T10:00:00Z"
         '400':
           description: Header tidak valid atau metadata tidak lengkap
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Token tidak valid atau sudah expired
           content:
@@ -504,16 +520,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '413':
-          description: Ukuran file melebihi batas maksimal 100MB
+          description: Ukuran file melebihi batas maksimal 50MB
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "Ukuran file melebihi batas maksimal 100MB"
-                code: 413
-                timestamp: "2024-01-01T10:00:00Z"
+        '429':
+          description: Antrian penuh (max 5 files per user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Kesalahan server
           content:
@@ -521,8 +538,163 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /modul/upload/{upload_id}:
+  /modul/{id}/upload:
+    post:
+      tags:
+        - Modul Upload (TUS)
+      summary: Inisiasi update modul dengan TUS Protocol (dengan file baru)
+      description: |
+        Endpoint untuk inisiasi resumable upload file baru untuk modul existing menggunakan TUS Protocol.
+        Berbeda dengan PATCH /modul/{id} yang hanya update metadata, endpoint ini untuk update file modul.
+        
+        **Use Case:**
+        - User ingin mengganti file modul dengan file baru
+        - File dan metadata modul akan diupdate
+        
+        **Flow:**
+        1. Frontend cek slot dengan GET /modul/upload/check-slot
+        2. Jika slot tersedia, inisiasi update upload dengan POST /modul/{id}/upload
+        3. Upload chunk dengan PATCH /modul/{id}/update/{upload_id}
+        4. Ulangi sampai selesai
+        
+        **Constraints:**
+        - Modul harus exist dan user memiliki akses
+        - Max 5 files per user queue
+        - Max 50MB per file
+        - File type: docx, xlsx, pdf, pptx only
+      operationId: initiateModulUpdateUpload
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID modul yang akan diupdate
+          schema:
+            type: integer
+            example: 1
+        - name: Tus-Resumable
+          in: header
+          required: true
+          description: Versi protokol TUS (1.0.0)
+          schema:
+            type: string
+            example: "1.0.0"
+        - name: Upload-Length
+          in: header
+          required: true
+          description: Total ukuran file baru dalam bytes
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 52428800
+            example: 5242880
+        - name: Upload-Metadata
+          in: header
+          required: true
+          description: |
+            Metadata upload dalam format base64 encoded.
+            Format: `key1 base64value1,key2 base64value2`
+            Required keys: nama_file, tipe
+          schema:
+            type: string
+            example: "nama_file TWF0ZXJpIEt1bGlhaA==,tipe cGRm"
+      responses:
+        '201':
+          description: Update upload berhasil diinisiasi
+          headers:
+            Location:
+              description: URL untuk upload chunk (relative path)
+              schema:
+                type: string
+                example: "/modul/1/update/123e4567-e89b-12d3-a456-426614174000"
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+            Upload-Offset:
+              schema:
+                type: string
+                example: "0"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/UploadInitResponse'
+                  timestamp:
+                    type: string
+                    format: date-time
+              example:
+                success: true
+                message: "Update upload modul berhasil diinisiasi"
+                code: 201
+                data:
+                  upload_id: "123e4567-e89b-12d3-a456-426614174000"
+                  upload_url: "/modul/1/update/123e4567-e89b-12d3-a456-426614174000"
+                  offset: 0
+                  length: 5242880
+                timestamp: "2024-01-01T10:00:00Z"
+        '400':
+          description: Header tidak valid atau metadata tidak lengkap
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke modul ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Ukuran file melebihi batas maksimal 50MB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Antrian penuh (max 5 files per user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /modul/{id}/update/{upload_id}:
     parameters:
+      - name: id
+        in: path
+        required: true
+        description: ID modul yang sedang diupdate
+        schema:
+          type: integer
+          example: 1
       - name: upload_id
         in: path
         required: true
@@ -534,24 +706,35 @@ paths:
 
     patch:
       tags:
-        - Modul
-      summary: Upload chunk modul
-      description: Endpoint untuk upload chunk file modul menggunakan protokol Tus
-      operationId: uploadModulChunk
+        - Modul Upload (TUS)
+      summary: Upload chunk untuk update modul
+      description: |
+        Endpoint untuk upload chunk file baru modul menggunakan TUS Protocol.
+        Identik dengan upload modul baru, tapi untuk update existing modul.
+        
+        **Chunk Size:** 1MB (1048576 bytes)
+        
+        **Cara Kerja:**
+        1. Ambil chunk dari file (offset sampai offset+1MB)
+        2. Set header Upload-Offset ke offset saat ini
+        3. Set Content-Length ke ukuran chunk
+        4. Kirim binary chunk sebagai body
+        5. Server return offset baru di header Upload-Offset
+        6. Ulangi sampai offset = file size
+      operationId: uploadModulUpdateChunk
       security:
         - BearerAuth: []
       parameters:
         - name: Tus-Resumable
           in: header
           required: true
-          description: Versi protokol Tus (1.0.0)
           schema:
             type: string
             example: "1.0.0"
         - name: Content-Type
           in: header
           required: true
-          description: Tipe konten (application/offset+octet-stream)
+          description: Harus application/offset+octet-stream untuk TUS
           schema:
             type: string
             example: "application/offset+octet-stream"
@@ -566,10 +749,12 @@ paths:
         - name: Content-Length
           in: header
           required: true
-          description: Ukuran chunk dalam bytes
+          description: Ukuran chunk dalam bytes (max 2MB)
           schema:
             type: integer
             format: int64
+            minimum: 1
+            maximum: 2097152
             example: 1048576
       requestBody:
         required: true
@@ -578,7 +763,7 @@ paths:
             schema:
               type: string
               format: binary
-              description: Chunk binary data
+              description: Binary chunk data
       responses:
         '204':
           description: Chunk berhasil diupload
@@ -605,30 +790,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke upload ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Upload ID tidak ditemukan
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "Upload tidak ditemukan"
-                code: 404
-                timestamp: "2024-01-01T10:00:00Z"
         '409':
           description: Offset tidak cocok dengan server state
+          headers:
+            Upload-Offset:
+              description: Offset yang benar dari server
+              schema:
+                type: integer
+                format: int64
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                success: false
-                message: "Offset upload tidak valid"
-                code: 409
-                timestamp: "2024-01-01T10:00:00Z"
         '413':
-          description: Chunk terlalu besar
+          description: Chunk terlalu besar (max 2MB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '423':
+          description: Upload tidak aktif
           content:
             application/json:
               schema:
@@ -642,17 +835,18 @@ paths:
 
     head:
       tags:
-        - Modul
-      summary: Cek status upload modul
-      description: Endpoint untuk mengecek status dan progress upload modul
-      operationId: getModulUploadStatus
+        - Modul Upload (TUS)
+      summary: Cek status upload update modul
+      description: |
+        Endpoint untuk mengecek status dan progress upload update modul.
+        Digunakan untuk resume upload jika terputus.
+      operationId: getModulUpdateUploadStatus
       security:
         - BearerAuth: []
       parameters:
         - name: Tus-Resumable
           in: header
           required: true
-          description: Versi protokol Tus (1.0.0)
           schema:
             type: string
             example: "1.0.0"
@@ -669,15 +863,21 @@ paths:
               schema:
                 type: integer
                 format: int64
-                example: 26214400
+                example: 2621440
             Upload-Length:
               description: Total ukuran file dalam bytes
               schema:
                 type: integer
                 format: int64
-                example: 52428800
+                example: 5242880
         '401':
           description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke upload ini
           content:
             application/json:
               schema:
@@ -697,10 +897,10 @@ paths:
 
     get:
       tags:
-        - Modul
-      summary: Mendapatkan informasi upload modul
-      description: Endpoint untuk mendapatkan informasi detail upload modul
-      operationId: getModulUploadInfo
+        - Modul Upload (TUS)
+      summary: Mendapatkan informasi upload update modul
+      description: Endpoint untuk mendapatkan informasi detail upload update modul termasuk progress
+      operationId: getModulUpdateUploadInfo
       security:
         - BearerAuth: []
       responses:
@@ -709,24 +909,43 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UploadInfoResponse'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/UploadInfo'
+                  timestamp:
+                    type: string
+                    format: date-time
               example:
                 success: true
-                message: "Informasi upload berhasil didapat"
+                message: "Informasi update upload berhasil didapat"
                 code: 200
                 data:
                   upload_id: "123e4567-e89b-12d3-a456-426614174000"
-                  nama_file: "Materi Kuliah 1.pdf"
+                  modul_id: 1
+                  nama_file: "Materi Kuliah Updated"
                   tipe: "pdf"
                   status: "uploading"
                   progress: 50.5
-                  offset: 26214400
-                  length: 52428800
+                  offset: 2621440
+                  length: 5242880
                   created_at: "2024-01-01T10:00:00Z"
                   updated_at: "2024-01-01T10:15:00Z"
                 timestamp: "2024-01-01T10:15:00Z"
         '401':
           description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke upload ini
           content:
             application/json:
               schema:
@@ -746,25 +965,35 @@ paths:
 
     delete:
       tags:
-        - Modul
-      summary: Membatalkan upload modul
-      description: Endpoint untuk membatalkan upload modul yang sedang berlangsung
-      operationId: cancelModulUpload
+        - Modul Upload (TUS)
+      summary: Membatalkan upload update modul
+      description: Endpoint untuk membatalkan upload update modul yang sedang berlangsung. File partial akan dihapus.
+      operationId: cancelModulUpdateUpload
       security:
         - BearerAuth: []
       parameters:
         - name: Tus-Resumable
           in: header
           required: true
-          description: Versi protokol Tus (1.0.0)
           schema:
             type: string
             example: "1.0.0"
       responses:
         '204':
           description: Upload berhasil dibatalkan
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
         '401':
           description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke upload ini
           content:
             application/json:
               schema:
@@ -781,11 +1010,328 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /modul/upload/{upload_id}:
+    parameters:
+      - name: upload_id
+        in: path
+        required: true
+        description: ID upload yang didapat dari inisiasi
+        schema:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    patch:
+      tags:
+        - Modul Upload (TUS)
+      summary: Upload chunk modul
+      description: |
+        Endpoint untuk upload chunk file modul menggunakan TUS Protocol.
+        
+        **Chunk Size:** 1MB (1048576 bytes)
+        
+        **Cara Kerja:**
+        1. Ambil chunk dari file (offset sampai offset+1MB)
+        2. Set header Upload-Offset ke offset saat ini
+        3. Set Content-Length ke ukuran chunk
+        4. Kirim binary chunk sebagai body
+        5. Server return offset baru di header Upload-Offset
+        6. Ulangi sampai offset = file size
+      operationId: uploadModulChunk
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Tus-Resumable
+          in: header
+          required: true
+          schema:
+            type: string
+            example: "1.0.0"
+        - name: Content-Type
+          in: header
+          required: true
+          description: Harus application/offset+octet-stream untuk TUS
+          schema:
+            type: string
+            example: "application/offset+octet-stream"
+        - name: Upload-Offset
+          in: header
+          required: true
+          description: Offset byte dimana chunk akan ditulis
+          schema:
+            type: integer
+            format: int64
+            example: 0
+        - name: Content-Length
+          in: header
+          required: true
+          description: Ukuran chunk dalam bytes (max 2MB)
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 2097152
+            example: 1048576
+      requestBody:
+        required: true
+        content:
+          application/offset+octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Binary chunk data
+      responses:
+        '204':
+          description: Chunk berhasil diupload
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+            Upload-Offset:
+              description: Offset baru setelah upload chunk
+              schema:
+                type: integer
+                format: int64
+                example: 1048576
+        '400':
+          description: Header atau offset tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke upload ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Upload ID tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Offset tidak cocok dengan server state
+          headers:
+            Upload-Offset:
+              description: Offset yang benar dari server
+              schema:
+                type: integer
+                format: int64
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Chunk terlalu besar (max 2MB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '423':
+          description: Upload tidak aktif
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    head:
+      tags:
+        - Modul Upload (TUS)
+      summary: Cek status upload modul
+      description: |
+        Endpoint untuk mengecek status dan progress upload modul.
+        Digunakan untuk resume upload jika terputus.
+      operationId: getModulUploadStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Tus-Resumable
+          in: header
+          required: true
+          schema:
+            type: string
+            example: "1.0.0"
+      responses:
+        '200':
+          description: Status upload berhasil didapat
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+            Upload-Offset:
+              description: Offset saat ini dalam bytes
+              schema:
+                type: integer
+                format: int64
+                example: 2621440
+            Upload-Length:
+              description: Total ukuran file dalam bytes
+              schema:
+                type: integer
+                format: int64
+                example: 5242880
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke upload ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Upload ID tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Modul Upload (TUS)
+      summary: Mendapatkan informasi upload modul
+      description: Endpoint untuk mendapatkan informasi detail upload modul termasuk progress
+      operationId: getModulUploadInfo
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Informasi upload berhasil didapat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/UploadInfo'
+                  timestamp:
+                    type: string
+                    format: date-time
               example:
-                success: false
-                message: "Upload sudah selesai dan tidak bisa dibatalkan"
-                code: 409
-                timestamp: "2024-01-01T10:00:00Z"
+                success: true
+                message: "Informasi upload berhasil didapat"
+                code: 200
+                data:
+                  upload_id: "123e4567-e89b-12d3-a456-426614174000"
+                  nama_file: "Materi Kuliah 1"
+                  tipe: "pdf"
+                  status: "uploading"
+                  progress: 50.5
+                  offset: 2621440
+                  length: 5242880
+                  created_at: "2024-01-01T10:00:00Z"
+                  updated_at: "2024-01-01T10:15:00Z"
+                timestamp: "2024-01-01T10:15:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke upload ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Upload ID tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Modul Upload (TUS)
+      summary: Membatalkan upload modul
+      description: Endpoint untuk membatalkan upload modul yang sedang berlangsung. File partial akan dihapus.
+      operationId: cancelModulUpload
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Tus-Resumable
+          in: header
+          required: true
+          schema:
+            type: string
+            example: "1.0.0"
+      responses:
+        '204':
+          description: Upload berhasil dibatalkan
+          headers:
+            Tus-Resumable:
+              schema:
+                type: string
+                example: "1.0.0"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Tidak memiliki akses ke upload ini
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Upload ID tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Upload sudah selesai dan tidak bisa dibatalkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Kesalahan server
           content:
@@ -810,17 +1356,17 @@ components:
           example: 1
         nama_file:
           type: string
-          example: "Materi Kuliah 1.pdf"
+          example: "Materi Kuliah 1"
         tipe:
           type: string
-          enum: [pdf, docx, xlsx, pptx, jpg, png, jpeg, gif]
+          enum: [pdf, docx, xlsx, pptx]
           example: "pdf"
         ukuran:
           type: string
-          example: "2.5MB"
+          example: "2.50 MB"
         path_file:
           type: string
-          example: "/uploads/modul/1.pdf"
+          example: "/uploads/moduls/1/abc1234567/materi.pdf"
         created_at:
           type: string
           format: date-time
@@ -839,17 +1385,17 @@ components:
           example: 1
         nama_file:
           type: string
-          example: "Materi Kuliah 1.pdf"
+          example: "Materi Kuliah 1"
         tipe:
           type: string
-          enum: [pdf, docx, xlsx, pptx, jpg, png, jpeg, gif]
+          enum: [pdf, docx, xlsx, pptx]
           example: "pdf"
         ukuran:
           type: string
-          example: "2.5MB"
+          example: "2.50 MB"
         path_file:
           type: string
-          example: "/uploads/modul/username-mahasiswa-abc/materi.pdf"
+          example: "/uploads/moduls/1/abc1234567/materi.pdf"
         terakhir_diperbarui:
           type: string
           format: date-time
@@ -886,26 +1432,97 @@ components:
                 pagination:
                   $ref: '#/components/schemas/Pagination'
 
-    ModulCreateResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              type: object
-              properties:
-                items:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Modul'
-
-    ModulUpdateResponse:
+    ModulResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
         - type: object
           properties:
             data:
               $ref: '#/components/schemas/Modul'
+
+    UploadSlotResponse:
+      type: object
+      properties:
+        available:
+          type: boolean
+          description: Apakah slot tersedia
+          example: true
+        message:
+          type: string
+          description: Pesan status slot
+          example: "Slot tersedia (2/5)"
+        queue_length:
+          type: integer
+          description: Jumlah file dalam antrian
+          example: 2
+        max_queue:
+          type: integer
+          description: Maksimal file dalam antrian
+          example: 5
+
+    UploadInitResponse:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        upload_url:
+          type: string
+          example: "/api/v1/modul/upload/123e4567-e89b-12d3-a456-426614174000"
+        offset:
+          type: integer
+          format: int64
+          example: 0
+        length:
+          type: integer
+          format: int64
+          example: 5242880
+
+    UploadInfo:
+      type: object
+      properties:
+        upload_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        modul_id:
+          type: integer
+          description: ID modul (hanya ada jika upload selesai)
+          example: 1
+        nama_file:
+          type: string
+          example: "Materi Kuliah 1"
+        tipe:
+          type: string
+          enum: [pdf, docx, xlsx, pptx]
+          example: "pdf"
+        status:
+          type: string
+          enum: [queued, pending, uploading, completed, cancelled, failed, expired]
+          example: "uploading"
+        progress:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 50.5
+        offset:
+          type: integer
+          format: int64
+          example: 2621440
+        length:
+          type: integer
+          format: int64
+          example: 5242880
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:15:00Z"
 
     BaseResponse:
       type: object
@@ -938,99 +1555,8 @@ components:
               type: object
               nullable: true
 
-    ValidationError:
-      type: object
-      properties:
-        field:
-          type: string
-          example: "nama_file"
-        message:
-          type: string
-          example: "Nama file wajib diisi"
-
-    ValidationErrorResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            errors:
-              type: array
-              items:
-                $ref: '#/components/schemas/ValidationError'
-
-    UploadResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              type: object
-              properties:
-                upload_id:
-                  type: string
-                  format: uuid
-                  example: "123e4567-e89b-12d3-a456-426614174000"
-                upload_url:
-                  type: string
-                  example: "/api/v1/modul/upload/123e4567-e89b-12d3-a456-426614174000"
-                offset:
-                  type: integer
-                  format: int64
-                  example: 0
-                length:
-                  type: integer
-                  format: int64
-                  example: 52428800
-
-    ModulUploadInfo:
-      type: object
-      properties:
-        upload_id:
-          type: string
-          format: uuid
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        nama_file:
-          type: string
-          example: "Materi Kuliah 1.pdf"
-        tipe:
-          type: string
-          enum: [pdf, docx, xlsx, pptx, jpg, png, jpeg, gif]
-          example: "pdf"
-        status:
-          type: string
-          enum: [uploading, completed, cancelled, failed]
-          example: "uploading"
-        progress:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 100
-          example: 50.5
-        offset:
-          type: integer
-          format: int64
-          example: 26214400
-        length:
-          type: integer
-          format: int64
-          example: 52428800
-        created_at:
-          type: string
-          format: date-time
-          example: "2024-01-01T10:00:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          example: "2024-01-01T10:15:00Z"
-
-    UploadInfoResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-        - type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/ModulUploadInfo'
-
 tags:
   - name: Modul
-    description: Endpoints untuk manajemen modul file
+    description: Endpoints untuk manajemen modul file (REST API)
+  - name: Modul Upload (TUS)
+    description: Endpoints untuk upload modul menggunakan TUS Protocol

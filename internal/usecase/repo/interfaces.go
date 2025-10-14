@@ -74,6 +74,7 @@ type ModulRepository interface {
 	CountByUserID(userID uint) (int, error)
 	Update(modul *domain.Modul) error
 	Delete(id uint) error
+	UpdateMetadata(modul *domain.Modul) error
 }
 
 type TusUploadRepository interface {

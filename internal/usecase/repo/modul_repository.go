@@ -90,3 +90,9 @@ func (r *modulRepository) Update(modul *domain.Modul) error {
 func (r *modulRepository) Delete(id uint) error {
 	return r.db.Delete(&domain.Modul{}, id).Error
 }
+
+func (r *modulRepository) UpdateMetadata(modul *domain.Modul) error {
+	return r.db.Model(&domain.Modul{}).
+		Where("id = ?", modul.ID).
+		Update("nama_file", modul.NamaFile).Error
+}

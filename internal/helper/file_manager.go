@@ -116,3 +116,58 @@ func (fm *FileManager) GetUploadFilePath(uploadID string) string {
 
 	return filepath.Join(basePath, "uploads", uploadID)
 }
+
+func (fm *FileManager) GetModulBasePath() string {
+	if fm.config.App.Env == "production" {
+		return fm.config.Upload.PathProduction
+	}
+	return fm.config.Upload.PathDevelopment
+}
+
+func (fm *FileManager) GetUserModulPath(userID uint) (string, error) {
+	basePath := fm.GetModulBasePath()
+	userModulPath := filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID))
+
+	if err := os.MkdirAll(userModulPath, 0755); err != nil {
+		return "", fmt.Errorf("gagal membuat direktori modul user: %w", err)
+	}
+
+	return userModulPath, nil
+}
+
+func (fm *FileManager) CreateModulUploadDirectory(userID uint) (string, string, error) {
+	randomDir, err := fm.GenerateRandomDirectory()
+	if err != nil {
+		return "", "", fmt.Errorf("gagal generate random directory: %w", err)
+	}
+
+	userModulPath, err := fm.GetUserModulPath(userID)
+	if err != nil {
+		return "", "", err
+	}
+
+	modulDirPath := filepath.Join(userModulPath, randomDir)
+
+	if err := os.MkdirAll(modulDirPath, 0755); err != nil {
+		return "", "", fmt.Errorf("gagal membuat direktori modul: %w", err)
+	}
+
+	return modulDirPath, randomDir, nil
+}
+
+func (fm *FileManager) GetModulFilePath(userID uint, randomDir, filename string) string {
+	basePath := fm.GetModulBasePath()
+	return filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), randomDir, filename)
+}
+
+func (fm *FileManager) DeleteModulDirectory(userID uint, randomDir string) error {
+	basePath := fm.GetModulBasePath()
+	modulDirPath := filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), randomDir)
+	return os.RemoveAll(modulDirPath)
+}
+
+func (fm *FileManager) DeleteUserModulDirectory(userID uint) error {
+	basePath := fm.GetModulBasePath()
+	userModulPath := filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID))
+	return os.RemoveAll(userModulPath)
+}

@@ -75,8 +75,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	tusUploadUsecase := usecase.NewTusUploadUsecase(tusUploadRepo, projectRepo, projectUsecase, tusManager, fileManager, cfg)
 	tusController := http.NewTusController(tusUploadUsecase, cfg)
 
+	tusModulUploadRepo := repo.NewTusModulUploadRepository(db)
 	modulUsecase := usecase.NewModulUsecase(modulRepo)
-	modulController := http.NewModulController(modulUsecase)
+	tusModulUsecase := usecase.NewTusModulUsecase(tusModulUploadRepo, modulRepo, tusManager, fileManager, cfg)
+	modulController := http.NewModulController(modulUsecase, tusModulUsecase, cfg)
 
 	healthUsecase := usecase.NewHealthUsecase(db, cfg)
 	healthController := http.NewHealthController(healthUsecase)
@@ -139,10 +141,26 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	modul := api.Group("/modul", helper.JWTAuthMiddleware(cfg.JWT.Secret))
 	modul.Get("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetList)
-	modul.Post("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "create"), modulController.Create)
+	modul.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.UpdateMetadata)
 	modul.Post("/download", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.Download)
-	modul.Put("/:id", helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.Update)
 	modul.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Modul", "delete"), modulController.Delete)
+
+	tusModulCheck := api.Group("/modul/upload", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	tusModulCheck.Get("/check-slot", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.CheckUploadSlot)
+
+	tusModul := api.Group("/modul/upload", helper.JWTAuthMiddleware(cfg.JWT.Secret), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
+	tusModul.Post("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "create"), modulController.InitiateUpload)
+	tusModul.Patch("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "create"), modulController.UploadChunk)
+	tusModul.Head("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetUploadStatus)
+	tusModul.Get("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetUploadInfo)
+	tusModul.Delete("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "delete"), modulController.CancelUpload)
+
+	modulUpdate := api.Group("/modul/:id", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	modulUpdate.Post("/upload", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.InitiateModulUpdateUpload)
+	modulUpdate.Patch("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.UploadModulUpdateChunk)
+	modulUpdate.Head("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetModulUpdateUploadStatus)
+	modulUpdate.Get("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetModulUpdateUploadInfo)
+	modulUpdate.Delete("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.CancelModulUpdateUpload)
 
 	monitoring := api.Group("/monitoring")
 	monitoring.Get("/health", healthController.ComprehensiveHealthCheck)
