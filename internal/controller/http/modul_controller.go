@@ -388,12 +388,16 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID modul tidak valid", nil)
 	}
 
-	var req domain.ModulUpdateMetadataRequest
+	var req domain.ModulUpdateRequest
 	if err := c.BodyParser(&req); err != nil {
 		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
 	}
 
-	modul, err := ctrl.modulUsecase.GetByID(uint(modulID), userID)
+	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
+		return helper.SendValidationErrorResponse(c, validationErrors)
+	}
+
+	err = ctrl.modulUsecase.UpdateMetadata(uint(modulID), userID, req)
 	if err != nil {
 		if err.Error() == "modul tidak ditemukan" {
 			return helper.SendNotFoundResponse(c, err.Error())
@@ -401,27 +405,10 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 		if err.Error() == "tidak memiliki akses ke modul ini" {
 			return helper.SendForbiddenResponse(c)
 		}
-		return helper.SendInternalServerErrorResponse(c)
+		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, "Gagal update modul: "+err.Error(), nil)
 	}
 
-	modulDomain := &domain.Modul{
-		ID:       modul.ID,
-		UserID:   userID,
-		NamaFile: req.NamaFile,
-		Tipe:     modul.Tipe,
-		Ukuran:   modul.Ukuran,
-		Semester: req.Semester,
-		PathFile: modul.PathFile,
-	}
-
-	if err := ctrl.modulUsecase.UpdateMetadataOnly(modulDomain); err != nil {
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	modul.NamaFile = req.NamaFile
-	modul.Semester = req.Semester
-
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Metadata modul berhasil diperbarui", modul)
+	return helper.SendSuccessResponse(c, fiber.StatusOK, "Metadata modul berhasil diperbarui", nil)
 }
 
 func (ctrl *ModulController) Download(c *fiber.Ctx) error {

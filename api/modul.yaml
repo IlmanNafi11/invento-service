@@ -17,6 +17,10 @@ info:
     - Real-time progress tracking
     - File type: docx, xlsx, pdf, pptx
     - Max size: 50MB per file
+    
+    **File Storage Structure:**
+    - Pattern: [ENV]/moduls/[USER_ID]/[10_DIGIT_ID]/[filename]
+    - Example: ./uploads/moduls/7/abc123defg/materi.pdf
   version: 2.0.0
   contact:
     name: Developer Team
@@ -1499,7 +1503,8 @@ components:
           example: "123e4567-e89b-12d3-a456-426614174000"
         upload_url:
           type: string
-          example: "/api/v1/modul/upload/123e4567-e89b-12d3-a456-426614174000"
+          description: URL relatif untuk upload chunk (tanpa base URL /api/v1/)
+          example: "/modul/upload/123e4567-e89b-12d3-a456-426614174000"
         offset:
           type: integer
           format: int64

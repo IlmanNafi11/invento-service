@@ -20,7 +20,8 @@ type ModulCreateRequest struct {
 }
 
 type ModulUpdateRequest struct {
-	NamaFile string `form:"nama_file" validate:"omitempty"`
+	NamaFile string `json:"nama_file" validate:"omitempty,min=3,max=255"`
+	Semester int    `json:"semester" validate:"omitempty,min=1,max=8"`
 }
 
 type ModulListQueryParams struct {

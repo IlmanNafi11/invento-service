@@ -40,45 +40,40 @@ func (r *modulRepository) GetByUserID(userID uint, search string, filterType str
 	var modulListItems []domain.ModulListItem
 	var total int64
 
-	countQuery := r.db.Table("moduls").
-		Where("user_id = ?", userID)
+	offset := (page - 1) * limit
 
-	if search != "" {
-		searchPattern := "%" + search + "%"
-		countQuery = countQuery.Where("nama_file LIKE ?", searchPattern)
-	}
+	countQuery := `
+		SELECT COUNT(*) as total
+		FROM moduls
+		WHERE user_id = ?
+			AND (? = '' OR nama_file LIKE CONCAT('%', ?, '%'))
+			AND (? = '' OR tipe = ?)
+			AND (? = 0 OR semester = ?)
+	`
 
-	if filterType != "" {
-		countQuery = countQuery.Where("tipe = ?", filterType)
-	}
-
-	if filterSemester > 0 {
-		countQuery = countQuery.Where("semester = ?", filterSemester)
-	}
-
-	if err := countQuery.Count(&total).Error; err != nil {
+	if err := r.db.Raw(countQuery, userID, search, search, filterType, filterType, filterSemester, filterSemester).Scan(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	dataQuery := r.db.Table("moduls").
-		Select("id, nama_file, tipe, ukuran, semester, path_file, updated_at as terakhir_diperbarui").
-		Where("user_id = ?", userID)
+	dataQuery := `
+		SELECT 
+			id,
+			nama_file,
+			tipe,
+			ukuran,
+			semester,
+			path_file,
+			updated_at as terakhir_diperbarui
+		FROM moduls
+		WHERE user_id = ?
+			AND (? = '' OR nama_file LIKE CONCAT('%', ?, '%'))
+			AND (? = '' OR tipe = ?)
+			AND (? = 0 OR semester = ?)
+		ORDER BY updated_at DESC
+		LIMIT ? OFFSET ?
+	`
 
-	if search != "" {
-		searchPattern := "%" + search + "%"
-		dataQuery = dataQuery.Where("nama_file LIKE ?", searchPattern)
-	}
-
-	if filterType != "" {
-		dataQuery = dataQuery.Where("tipe = ?", filterType)
-	}
-
-	if filterSemester > 0 {
-		dataQuery = dataQuery.Where("semester = ?", filterSemester)
-	}
-
-	offset := (page - 1) * limit
-	if err := dataQuery.Offset(offset).Limit(limit).Order("updated_at DESC").Scan(&modulListItems).Error; err != nil {
+	if err := r.db.Raw(dataQuery, userID, search, search, filterType, filterType, filterSemester, filterSemester, limit, offset).Scan(&modulListItems).Error; err != nil {
 		return nil, 0, err
 	}
 

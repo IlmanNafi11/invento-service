@@ -15,9 +15,9 @@ import (
 type ModulUsecase interface {
 	GetList(userID uint, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error)
 	GetByID(modulID, userID uint) (*domain.ModulResponse, error)
+	UpdateMetadata(modulID, userID uint, req domain.ModulUpdateRequest) error
 	Delete(modulID, userID uint) error
 	Download(userID uint, modulIDs []uint) (string, error)
-	UpdateMetadataOnly(modul *domain.Modul) error
 }
 
 type modulUsecase struct {
@@ -150,6 +150,29 @@ func (uc *modulUsecase) Download(userID uint, modulIDs []uint) (string, error) {
 	return zipFilePath, nil
 }
 
-func (uc *modulUsecase) UpdateMetadataOnly(modul *domain.Modul) error {
-	return uc.modulRepo.UpdateMetadata(modul)
+func (uc *modulUsecase) UpdateMetadata(modulID, userID uint, req domain.ModulUpdateRequest) error {
+	modul, err := uc.modulRepo.GetByID(modulID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("modul tidak ditemukan")
+		}
+		return errors.New("gagal mengambil data modul")
+	}
+
+	if modul.UserID != userID {
+		return errors.New("tidak memiliki akses ke modul ini")
+	}
+
+	if req.NamaFile != "" {
+		modul.NamaFile = req.NamaFile
+	}
+	if req.Semester > 0 {
+		modul.Semester = req.Semester
+	}
+
+	if err := uc.modulRepo.Update(modul); err != nil {
+		return errors.New("gagal update metadata modul")
+	}
+
+	return nil
 }

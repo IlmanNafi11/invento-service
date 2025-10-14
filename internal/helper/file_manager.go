@@ -130,7 +130,7 @@ func (fm *FileManager) GetUserModulPath(userID uint) (string, error) {
 }
 
 func (fm *FileManager) CreateModulUploadDirectory(userID uint) (string, string, error) {
-	randomDir, err := fm.GenerateRandomDirectory()
+	randomDir, err := GenerateRandomString(10)
 	if err != nil {
 		return "", "", fmt.Errorf("gagal generate random directory: %w", err)
 	}
