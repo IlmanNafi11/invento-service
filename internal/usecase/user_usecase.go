@@ -5,9 +5,6 @@ import (
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
-	"math"
-	"mime/multipart"
-	"path/filepath"
 
 	"gorm.io/gorm"
 )
@@ -23,58 +20,49 @@ type UserUsecase interface {
 }
 
 type userUsecase struct {
-	userRepo           repo.UserRepository
-	roleRepo           repo.RoleRepository
-	rolePermissionRepo repo.RolePermissionRepository
-	projectRepo        repo.ProjectRepository
-	modulRepo          repo.ModulRepository
-	casbinEnforcer     *helper.CasbinEnforcer
+	userRepo       repo.UserRepository
+	roleRepo       repo.RoleRepository
+	projectRepo    repo.ProjectRepository
+	modulRepo      repo.ModulRepository
+	casbinEnforcer *helper.CasbinEnforcer
+	userHelper     *helper.UserHelper
+	db             *gorm.DB
 }
 
 func NewUserUsecase(
 	userRepo repo.UserRepository,
 	roleRepo repo.RoleRepository,
-	rolePermissionRepo repo.RolePermissionRepository,
 	projectRepo repo.ProjectRepository,
 	modulRepo repo.ModulRepository,
 	casbinEnforcer *helper.CasbinEnforcer,
+	db *gorm.DB,
 ) UserUsecase {
 	return &userUsecase{
-		userRepo:           userRepo,
-		roleRepo:           roleRepo,
-		rolePermissionRepo: rolePermissionRepo,
-		projectRepo:        projectRepo,
-		modulRepo:          modulRepo,
-		casbinEnforcer:     casbinEnforcer,
+		userRepo:       userRepo,
+		roleRepo:       roleRepo,
+		projectRepo:    projectRepo,
+		modulRepo:      modulRepo,
+		casbinEnforcer: casbinEnforcer,
+		userHelper:     helper.NewUserHelper(),
+		db:             db,
 	}
 }
 
 func (uc *userUsecase) GetUserList(params domain.UserListQueryParams) (*domain.UserListData, error) {
-	if params.Page <= 0 {
-		params.Page = 1
-	}
-	if params.Limit <= 0 {
-		params.Limit = 10
-	}
-	if params.Limit > 100 {
-		params.Limit = 100
-	}
+	normalizedParams := helper.NormalizePaginationParams(params.Page, params.Limit)
+	params.Page = normalizedParams.Page
+	params.Limit = normalizedParams.Limit
 
 	users, total, err := uc.userRepo.GetAll(params.Search, params.FilterRole, params.Page, params.Limit)
 	if err != nil {
 		return nil, errors.New("gagal mengambil daftar user")
 	}
 
-	totalPages := int(math.Ceil(float64(total) / float64(params.Limit)))
+	pagination := helper.CalculatePagination(params.Page, params.Limit, total)
 
 	return &domain.UserListData{
-		Items: users,
-		Pagination: domain.PaginationData{
-			Page:       params.Page,
-			Limit:      params.Limit,
-			TotalItems: total,
-			TotalPages: totalPages,
-		},
+		Items:      users,
+		Pagination: pagination,
 	}, nil
 }
 
@@ -131,24 +119,89 @@ func (uc *userUsecase) GetUserFiles(userID uint, params domain.UserFilesQueryPar
 		return nil, errors.New("gagal mengambil data user")
 	}
 
-	if params.Page <= 0 {
-		params.Page = 1
-	}
-	if params.Limit <= 0 {
-		params.Limit = 10
-	}
-	if params.Limit > 100 {
-		params.Limit = 100
+	normalizedParams := helper.NormalizePaginationParams(params.Page, params.Limit)
+	params.Page = normalizedParams.Page
+	params.Limit = normalizedParams.Limit
+
+	var allFiles []domain.UserFileItem
+	var projectFiles []struct {
+		ID          uint
+		NamaFile    string
+		Kategori    string
+		DownloadURL string
 	}
 
+	search := params.Search
+	if err := uc.db.Raw(`
+		SELECT 
+			p.id,
+			p.nama_project as nama_file,
+			'Project' as kategori,
+			p.path_file as download_url
+		FROM projects p
+		WHERE p.user_id = ?
+			AND (? = '' OR p.nama_project LIKE CONCAT('%', ?, '%'))
+		ORDER BY p.updated_at DESC
+	`, userID, search, search).Scan(&projectFiles).Error; err != nil {
+		return nil, errors.New("gagal mengambil data project")
+	}
+
+	for _, pf := range projectFiles {
+		allFiles = append(allFiles, domain.UserFileItem{
+			ID:          pf.ID,
+			NamaFile:    pf.NamaFile,
+			Kategori:    pf.Kategori,
+			DownloadURL: pf.DownloadURL,
+		})
+	}
+
+	var modulFiles []struct {
+		ID          uint
+		NamaFile    string
+		Kategori    string
+		DownloadURL string
+	}
+
+	if err := uc.db.Raw(`
+		SELECT 
+			m.id,
+			m.nama_file,
+			'Modul' as kategori,
+			m.path_file as download_url
+		FROM moduls m
+		WHERE m.user_id = ?
+			AND (? = '' OR m.nama_file LIKE CONCAT('%', ?, '%'))
+		ORDER BY m.updated_at DESC
+	`, userID, search, search).Scan(&modulFiles).Error; err != nil {
+		return nil, errors.New("gagal mengambil data modul")
+	}
+
+	for _, mf := range modulFiles {
+		allFiles = append(allFiles, domain.UserFileItem{
+			ID:          mf.ID,
+			NamaFile:    mf.NamaFile,
+			Kategori:    mf.Kategori,
+			DownloadURL: mf.DownloadURL,
+		})
+	}
+
+	total := len(allFiles)
+	offset := (params.Page - 1) * params.Limit
+	end := offset + params.Limit
+
+	if offset > total {
+		offset = total
+	}
+	if end > total {
+		end = total
+	}
+
+	paginatedFiles := allFiles[offset:end]
+	pagination := helper.CalculatePagination(params.Page, params.Limit, total)
+
 	return &domain.UserFilesData{
-		Items: []domain.UserFileItem{},
-		Pagination: domain.PaginationData{
-			Page:       params.Page,
-			Limit:      params.Limit,
-			TotalItems: 0,
-			TotalPages: 0,
-		},
+		Items:      paginatedFiles,
+		Pagination: pagination,
 	}, nil
 }
 
@@ -161,11 +214,6 @@ func (uc *userUsecase) GetProfile(userID uint) (*domain.ProfileData, error) {
 		return nil, errors.New("gagal mengambil data user")
 	}
 
-	roleName := ""
-	if user.Role != nil {
-		roleName = user.Role.NamaRole
-	}
-
 	jumlahProject, err := uc.projectRepo.CountByUserID(userID)
 	if err != nil {
 		jumlahProject = 0
@@ -176,16 +224,7 @@ func (uc *userUsecase) GetProfile(userID uint) (*domain.ProfileData, error) {
 		jumlahModul = 0
 	}
 
-	return &domain.ProfileData{
-		Name:          user.Name,
-		Email:         user.Email,
-		JenisKelamin:  user.JenisKelamin,
-		FotoProfil:    user.FotoProfil,
-		Role:          roleName,
-		CreatedAt:     user.CreatedAt,
-		JumlahProject: jumlahProject,
-		JumlahModul:   jumlahModul,
-	}, nil
+	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
 func (uc *userUsecase) UpdateProfile(userID uint, userEmail string, userRole string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error) {
@@ -197,43 +236,11 @@ func (uc *userUsecase) UpdateProfile(userID uint, userEmail string, userRole str
 		return nil, errors.New("gagal mengambil data user")
 	}
 
-	var jenisKelaminPtr *string
-	if req.JenisKelamin != "" {
-		jenisKelaminPtr = &req.JenisKelamin
-	}
+	jenisKelaminPtr := uc.userHelper.NormalizeJenisKelamin(req.JenisKelamin)
 
-	var fotoProfilPath *string
-	if fotoProfil != nil {
-		fileHeader, ok := fotoProfil.(*multipart.FileHeader)
-		if ok {
-			if err := helper.ValidateImageFile(fileHeader); err != nil {
-				return nil, err
-			}
-
-			var profilDir string
-			if user.FotoProfil != nil && *user.FotoProfil != "" {
-				profilDir = filepath.Dir(*user.FotoProfil)
-				if user.FotoProfil != nil && *user.FotoProfil != "" {
-					helper.DeleteFile(*user.FotoProfil)
-				}
-			} else {
-				var err error
-				profilDir, err = helper.CreateProfilDirectory(userEmail, userRole)
-				if err != nil {
-					return nil, errors.New("gagal membuat direktori profil")
-				}
-			}
-
-			ext := helper.GetFileExtension(fileHeader.Filename)
-			filename := "profil" + ext
-			destPath := filepath.Join(profilDir, filename)
-
-			if err := helper.SaveUploadedFile(fileHeader, destPath); err != nil {
-				return nil, errors.New("gagal menyimpan foto profil")
-			}
-
-			fotoProfilPath = &destPath
-		}
+	fotoProfilPath, err := uc.userHelper.SaveProfilePhoto(fotoProfil, user.FotoProfil, userEmail, userRole)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := uc.userRepo.UpdateProfile(userID, req.Name, jenisKelaminPtr, fotoProfilPath); err != nil {
@@ -261,22 +268,5 @@ func (uc *userUsecase) GetUserPermissions(userID uint) ([]domain.UserPermissionI
 		return nil, errors.New("gagal mengambil permissions user")
 	}
 
-	resourceMap := make(map[string][]string)
-	for _, perm := range permissions {
-		if len(perm) >= 3 {
-			resource := perm[1]
-			action := perm[2]
-			resourceMap[resource] = append(resourceMap[resource], action)
-		}
-	}
-
-	var result []domain.UserPermissionItem
-	for resource, actions := range resourceMap {
-		result = append(result, domain.UserPermissionItem{
-			Resource: resource,
-			Actions:  actions,
-		})
-	}
-
-	return result, nil
+	return uc.userHelper.AggregateUserPermissions(permissions), nil
 }
