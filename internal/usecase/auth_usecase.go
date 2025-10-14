@@ -8,7 +8,6 @@ import (
 	"fiber-boiler-plate/internal/usecase/repo"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -26,6 +25,7 @@ type authUsecase struct {
 	refreshTokenRepo repo.RefreshTokenRepository
 	resetTokenRepo   repo.PasswordResetTokenRepository
 	roleRepo         repo.RoleRepository
+	authHelper       *helper.AuthHelper
 	config           *config.Config
 }
 
@@ -36,11 +36,14 @@ func NewAuthUsecase(
 	roleRepo repo.RoleRepository,
 	config *config.Config,
 ) AuthUsecase {
+	authHelper := helper.NewAuthHelper(refreshTokenRepo, config)
+
 	return &authUsecase{
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,
 		resetTokenRepo:   resetTokenRepo,
 		roleRepo:         roleRepo,
+		authHelper:       authHelper,
 		config:           config,
 	}
 }
@@ -64,15 +67,15 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (*domain.AuthRespons
 		return nil, errors.New("gagal mengambil data role")
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hashedPassword, err := helper.HashPassword(req.Password)
 	if err != nil {
-		return nil, errors.New("gagal mengenkripsi password")
+		return nil, err
 	}
 
 	user := &domain.User{
 		Name:     req.Name,
 		Email:    req.Email,
-		Password: string(hashedPassword),
+		Password: hashedPassword,
 		RoleID:   &role.ID,
 		IsActive: true,
 	}
@@ -83,7 +86,7 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (*domain.AuthRespons
 
 	user.Role = role
 
-	return uc.generateAuthResponse(user)
+	return uc.authHelper.GenerateAuthResponse(user)
 }
 
 func (uc *authUsecase) Login(req domain.AuthRequest) (*domain.AuthResponse, error) {
@@ -95,11 +98,11 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (*domain.AuthResponse, erro
 		return nil, errors.New("gagal mengambil data user")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return nil, errors.New("email atau password salah")
+	if err := helper.ComparePassword(user.Password, req.Password); err != nil {
+		return nil, err
 	}
 
-	return uc.generateAuthResponse(user)
+	return uc.authHelper.GenerateAuthResponse(user)
 }
 
 func (uc *authUsecase) RefreshToken(req domain.RefreshTokenRequest) (*domain.RefreshTokenResponse, error) {
@@ -113,36 +116,7 @@ func (uc *authUsecase) RefreshToken(req domain.RefreshTokenRequest) (*domain.Ref
 		return nil, errors.New("user tidak ditemukan")
 	}
 
-	if err := uc.refreshTokenRepo.RevokeToken(req.RefreshToken); err != nil {
-		return nil, errors.New("gagal revoke refresh token lama")
-	}
-
-	roleName := ""
-	if user.Role != nil {
-		roleName = user.Role.NamaRole
-	}
-
-	accessToken, err := helper.GenerateAccessToken(user.ID, user.Email, user.RoleID, roleName, uc.config.JWT.Secret, uc.config.JWT.ExpireHours)
-	if err != nil {
-		return nil, errors.New("gagal generate access token")
-	}
-
-	newRefreshToken, err := helper.GenerateRefreshToken()
-	if err != nil {
-		return nil, errors.New("gagal generate refresh token")
-	}
-
-	refreshTokenExpiry := time.Now().Add(time.Hour * time.Duration(uc.config.JWT.RefreshTokenExpireHours))
-	if _, err := uc.refreshTokenRepo.Create(user.ID, newRefreshToken, refreshTokenExpiry); err != nil {
-		return nil, errors.New("gagal simpan refresh token")
-	}
-
-	return &domain.RefreshTokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: newRefreshToken,
-		TokenType:    "Bearer",
-		ExpiresIn:    uc.config.JWT.ExpireHours * 3600,
-	}, nil
+	return uc.authHelper.RevokeAndGenerateNewTokens(req.RefreshToken, user)
 }
 
 func (uc *authUsecase) ResetPassword(req domain.ResetPasswordRequest) error {
@@ -173,12 +147,12 @@ func (uc *authUsecase) ConfirmResetPassword(req domain.NewPasswordRequest) error
 		return errors.New("token reset password tidak valid atau sudah expired")
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	hashedPassword, err := helper.HashPassword(req.NewPassword)
 	if err != nil {
-		return errors.New("gagal mengenkripsi password")
+		return err
 	}
 
-	if err := uc.userRepo.UpdatePassword(resetToken.Email, string(hashedPassword)); err != nil {
+	if err := uc.userRepo.UpdatePassword(resetToken.Email, hashedPassword); err != nil {
 		return errors.New("gagal update password")
 	}
 
@@ -190,35 +164,9 @@ func (uc *authUsecase) ConfirmResetPassword(req domain.NewPasswordRequest) error
 }
 
 func (uc *authUsecase) Logout(token string) error {
-	return uc.refreshTokenRepo.RevokeToken(token)
-}
-
-func (uc *authUsecase) generateAuthResponse(user *domain.User) (*domain.AuthResponse, error) {
-	roleName := ""
-	if user.Role != nil {
-		roleName = user.Role.NamaRole
+	if err := uc.refreshTokenRepo.RevokeToken(token); err != nil {
+		return errors.New("refresh token tidak valid")
 	}
 
-	accessToken, err := helper.GenerateAccessToken(user.ID, user.Email, user.RoleID, roleName, uc.config.JWT.Secret, uc.config.JWT.ExpireHours)
-	if err != nil {
-		return nil, errors.New("gagal generate access token")
-	}
-
-	refreshToken, err := helper.GenerateRefreshToken()
-	if err != nil {
-		return nil, errors.New("gagal generate refresh token")
-	}
-
-	refreshTokenExpiry := time.Now().Add(time.Hour * time.Duration(uc.config.JWT.RefreshTokenExpireHours))
-	if _, err := uc.refreshTokenRepo.Create(user.ID, refreshToken, refreshTokenExpiry); err != nil {
-		return nil, errors.New("gagal simpan refresh token")
-	}
-
-	return &domain.AuthResponse{
-		User:         *user,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		TokenType:    "Bearer",
-		ExpiresIn:    uc.config.JWT.ExpireHours * 3600,
-	}, nil
+	return nil
 }

@@ -59,21 +59,42 @@ paths:
                   expires_in: 3600
                 timestamp: "2024-01-01T00:00:00Z"
         '400':
-          description: Data validasi tidak valid
+          description: Data validasi tidak valid atau email domain tidak sesuai
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
-              example:
-                success: false
-                message: "Data validasi tidak valid"
-                code: 400
-                errors:
-                  - field: "email"
-                    message: "Format email tidak valid"
-                  - field: "password"
-                    message: "Password minimal 8 karakter"
-                timestamp: "2024-01-01T00:00:00Z"
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationErrorResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationError:
+                  summary: Validation error
+                  value:
+                    success: false
+                    message: "Data validasi tidak valid"
+                    code: 400
+                    errors:
+                      - field: "email"
+                        message: "Format email tidak valid"
+                      - field: "password"
+                        message: "Password minimal 8 karakter"
+                    timestamp: "2024-01-01T00:00:00Z"
+                domainError:
+                  summary: Email domain error
+                  value:
+                    success: false
+                    message: "Hanya email dengan domain polije.ac.id yang dapat digunakan"
+                    code: 400
+                    errors: null
+                    timestamp: "2024-01-01T00:00:00Z"
+                subdomainError:
+                  summary: Email subdomain error
+                  value:
+                    success: false
+                    message: "Subdomain email tidak valid, gunakan student atau teacher"
+                    code: 400
+                    errors: null
+                    timestamp: "2024-01-01T00:00:00Z"
         '409':
           description: Email sudah terdaftar
           content:
@@ -348,6 +369,19 @@ paths:
                 success: true
                 message: "Logout berhasil"
                 code: 200
+                data: null
+                timestamp: "2024-01-01T00:00:00Z"
+        '400':
+          description: Refresh token diperlukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Refresh token diperlukan"
+                code: 400
+                errors: null
                 timestamp: "2024-01-01T00:00:00Z"
         '401':
           description: Token tidak valid atau sudah expired
@@ -359,6 +393,19 @@ paths:
                 success: false
                 message: "Tidak memiliki akses"
                 code: 401
+                errors: null
+                timestamp: "2024-01-01T00:00:00Z"
+        '404':
+          description: Refresh token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Refresh token tidak valid"
+                code: 404
+                errors: null
                 timestamp: "2024-01-01T00:00:00Z"
         '500':
           description: Kesalahan server

@@ -21,7 +21,7 @@ func NewAuthController(authUsecase usecase.AuthUsecase) *AuthController {
 func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 	var req domain.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
+		return helper.SendBadRequestResponse(c, "Format request tidak valid")
 	}
 
 	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
@@ -30,23 +30,25 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 
 	result, err := ctrl.authUsecase.Register(req)
 	if err != nil {
-		if err.Error() == "email sudah terdaftar" {
-			return helper.SendErrorResponse(c, fiber.StatusConflict, err.Error(), nil)
+		switch err.Error() {
+		case "email sudah terdaftar":
+			return helper.SendConflictResponse(c, err.Error())
+		case "hanya email dengan domain polije.ac.id yang dapat digunakan",
+			"subdomain email tidak valid, gunakan student atau teacher",
+			"role tidak tersedia, silakan hubungi administrator":
+			return helper.SendBadRequestResponse(c, err.Error())
+		default:
+			return helper.SendInternalServerErrorResponse(c)
 		}
-		if err.Error() == "hanya email dengan domain polije.ac.id yang dapat digunakan" ||
-			err.Error() == "subdomain email tidak valid, gunakan student atau teacher" {
-			return helper.SendErrorResponse(c, fiber.StatusBadRequest, err.Error(), nil)
-		}
-		return helper.SendInternalServerErrorResponse(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusCreated, "Registrasi berhasil", result)
+	return helper.SendSuccessResponse(c, helper.StatusCreated, "Registrasi berhasil", result)
 }
 
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	var req domain.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
+		return helper.SendBadRequestResponse(c, "Format request tidak valid")
 	}
 
 	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
@@ -56,18 +58,18 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
 		if err.Error() == "email atau password salah" {
-			return helper.SendErrorResponse(c, fiber.StatusUnauthorized, err.Error(), nil)
+			return helper.SendUnauthorizedResponse(c)
 		}
 		return helper.SendInternalServerErrorResponse(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Login berhasil", result)
+	return helper.SendSuccessResponse(c, helper.StatusOK, "Login berhasil", result)
 }
 
 func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 	var req domain.RefreshTokenRequest
 	if err := c.BodyParser(&req); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
+		return helper.SendBadRequestResponse(c, "Format request tidak valid")
 	}
 
 	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
@@ -76,19 +78,21 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 
 	result, err := ctrl.authUsecase.RefreshToken(req)
 	if err != nil {
-		if err.Error() == "refresh token tidak valid atau sudah expired" {
-			return helper.SendErrorResponse(c, fiber.StatusUnauthorized, err.Error(), nil)
+		switch err.Error() {
+		case "refresh token tidak valid atau sudah expired", "user tidak ditemukan":
+			return helper.SendUnauthorizedResponse(c)
+		default:
+			return helper.SendInternalServerErrorResponse(c)
 		}
-		return helper.SendInternalServerErrorResponse(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Token berhasil diperbarui", result)
+	return helper.SendSuccessResponse(c, helper.StatusOK, "Token berhasil diperbarui", result)
 }
 
 func (ctrl *AuthController) ResetPassword(c *fiber.Ctx) error {
 	var req domain.ResetPasswordRequest
 	if err := c.BodyParser(&req); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
+		return helper.SendBadRequestResponse(c, "Format request tidak valid")
 	}
 
 	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
@@ -103,13 +107,13 @@ func (ctrl *AuthController) ResetPassword(c *fiber.Ctx) error {
 		return helper.SendInternalServerErrorResponse(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Link reset password telah dikirim ke email Anda", nil)
+	return helper.SendSuccessResponse(c, helper.StatusOK, "Link reset password telah dikirim ke email Anda", nil)
 }
 
 func (ctrl *AuthController) ConfirmResetPassword(c *fiber.Ctx) error {
 	var req domain.NewPasswordRequest
 	if err := c.BodyParser(&req); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format request tidak valid", nil)
+		return helper.SendBadRequestResponse(c, "Format request tidak valid")
 	}
 
 	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
@@ -124,19 +128,22 @@ func (ctrl *AuthController) ConfirmResetPassword(c *fiber.Ctx) error {
 		return helper.SendInternalServerErrorResponse(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Password berhasil direset", nil)
+	return helper.SendSuccessResponse(c, helper.StatusOK, "Password berhasil direset", nil)
 }
 
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 	token := c.Get("X-Refresh-Token")
 	if token == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Refresh token diperlukan", nil)
+		return helper.SendBadRequestResponse(c, "Refresh token diperlukan")
 	}
 
 	err := ctrl.authUsecase.Logout(token)
 	if err != nil {
+		if err.Error() == "refresh token tidak valid" {
+			return helper.SendNotFoundResponse(c, err.Error())
+		}
 		return helper.SendInternalServerErrorResponse(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Logout berhasil", nil)
+	return helper.SendSuccessResponse(c, helper.StatusOK, "Logout berhasil", nil)
 }
