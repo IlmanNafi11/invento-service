@@ -107,6 +107,17 @@ func (ts *TusStore) WriteChunk(uploadID string, offset int64, src io.Reader) (in
 	}
 
 	newOffset := offset + bytesWritten
+
+	info, err := ts.GetInfo(uploadID)
+	if err != nil {
+		return newOffset, fmt.Errorf("gagal membaca info: %w", err)
+	}
+
+	info.Offset = newOffset
+	if err := ts.saveInfo(info); err != nil {
+		return newOffset, fmt.Errorf("gagal update offset: %w", err)
+	}
+
 	return newOffset, nil
 }
 
@@ -245,4 +256,30 @@ func (ts *TusStore) GetProgress(uploadID string) (float64, error) {
 
 	progress := (float64(info.Offset) / float64(info.Size)) * 100
 	return progress, nil
+}
+
+func (ts *TusStore) GetOffset(uploadID string) (int64, error) {
+	info, err := ts.GetInfo(uploadID)
+	if err != nil {
+		return 0, err
+	}
+
+	return info.Offset, nil
+}
+
+func (ts *TusStore) UpdateMetadata(uploadID string, metadata map[string]string) error {
+	lock := ts.getLock(uploadID)
+	lock.Lock()
+	defer lock.Unlock()
+
+	info, err := ts.GetInfo(uploadID)
+	if err != nil {
+		return err
+	}
+
+	for key, value := range metadata {
+		info.Metadata[key] = value
+	}
+
+	return ts.saveInfo(info)
 }

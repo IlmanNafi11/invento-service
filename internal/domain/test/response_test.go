@@ -65,53 +65,44 @@ func TestErrorResponse_Structure(t *testing.T) {
 	assert.Equal(t, now, response.Timestamp)
 }
 
-func TestPaginationMeta_Structure(t *testing.T) {
-	meta := domain.PaginationMeta{
-		CurrentPage:  1,
-		TotalPages:   10,
-		TotalRecords: 100,
-		PerPage:      10,
+func TestPaginationData_Structure(t *testing.T) {
+	pagination := domain.PaginationData{
+		Page:       1,
+		Limit:      10,
+		TotalItems: 100,
+		TotalPages: 10,
 	}
 
-	assert.Equal(t, 1, meta.CurrentPage)
-	assert.Equal(t, 10, meta.TotalPages)
-	assert.Equal(t, 100, meta.TotalRecords)
-	assert.Equal(t, 10, meta.PerPage)
+	assert.Equal(t, 1, pagination.Page)
+	assert.Equal(t, 10, pagination.Limit)
+	assert.Equal(t, 100, pagination.TotalItems)
+	assert.Equal(t, 10, pagination.TotalPages)
 }
 
-func TestPaginatedResponse_Structure(t *testing.T) {
-	now := time.Now()
-	data := []map[string]interface{}{
+func TestListData_Structure(t *testing.T) {
+	items := []map[string]interface{}{
 		{"id": 1, "name": "Item 1"},
 		{"id": 2, "name": "Item 2"},
 	}
 
-	meta := domain.PaginationMeta{
-		CurrentPage:  1,
-		TotalPages:   5,
-		TotalRecords: 50,
-		PerPage:      10,
+	pagination := domain.PaginationData{
+		Page:       1,
+		Limit:      10,
+		TotalItems: 50,
+		TotalPages: 5,
 	}
 
-	response := domain.PaginatedResponse{
-		SuccessResponse: domain.SuccessResponse{
-			BaseResponse: domain.BaseResponse{
-				Success: true,
-				Message: "Data berhasil diambil",
-				Code:    200,
-			},
-			Data:      data,
-			Timestamp: now,
-		},
-		Meta: meta,
+	listData := domain.ListData{
+		Items:      items,
+		Pagination: pagination,
 	}
 
-	assert.True(t, response.Success)
-	assert.Equal(t, "Data berhasil diambil", response.Message)
-	assert.Equal(t, 200, response.Code)
-	assert.Equal(t, data, response.Data)
-	assert.Equal(t, meta, response.Meta)
-	assert.Equal(t, now, response.Timestamp)
+	assert.Equal(t, items, listData.Items)
+	assert.Equal(t, pagination, listData.Pagination)
+	assert.Equal(t, 1, listData.Pagination.Page)
+	assert.Equal(t, 10, listData.Pagination.Limit)
+	assert.Equal(t, 50, listData.Pagination.TotalItems)
+	assert.Equal(t, 5, listData.Pagination.TotalPages)
 }
 
 func TestValidationError_Structure(t *testing.T) {

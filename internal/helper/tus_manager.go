@@ -100,7 +100,7 @@ func (tm *TusManager) ParseMetadata(metadataHeader string) (map[string]string, e
 	return metadataMap, nil
 }
 
-func (tm *TusManager) ValidateMetadata(metadata map[string]string) error {
+func (tm *TusManager) ValidateProjectMetadata(metadata map[string]string) error {
 	if namaProject, ok := metadata["nama_project"]; !ok || namaProject == "" {
 		return errors.New("nama_project wajib diisi")
 	}
@@ -123,6 +123,42 @@ func (tm *TusManager) ValidateMetadata(metadata map[string]string) error {
 		}
 	} else {
 		metadata["kategori"] = "website"
+	}
+
+	if semesterStr, ok := metadata["semester"]; ok && semesterStr != "" {
+		semester, err := strconv.Atoi(semesterStr)
+		if err != nil || semester < 1 || semester > 8 {
+			return errors.New("semester harus antara 1-8")
+		}
+		metadata["semester"] = semesterStr
+	}
+
+	return nil
+}
+
+func (tm *TusManager) ValidateModulMetadata(metadata map[string]string) error {
+	if namaFile, ok := metadata["nama_file"]; !ok || namaFile == "" {
+		return errors.New("nama_file wajib diisi")
+	}
+
+	if len(metadata["nama_file"]) < 3 || len(metadata["nama_file"]) > 255 {
+		return errors.New("nama_file harus antara 3-255 karakter")
+	}
+
+	if tipe, ok := metadata["tipe"]; ok && tipe != "" {
+		validTipe := []string{"docx", "xlsx", "pdf", "pptx"}
+		isValid := false
+		for _, valid := range validTipe {
+			if tipe == valid {
+				isValid = true
+				break
+			}
+		}
+		if !isValid {
+			return errors.New("tipe file tidak valid, harus salah satu dari: docx, xlsx, pdf, pptx")
+		}
+	} else {
+		return errors.New("tipe wajib diisi")
 	}
 
 	if semesterStr, ok := metadata["semester"]; ok && semesterStr != "" {
@@ -229,17 +265,44 @@ func (tm *TusManager) GetDefaultTusHeaders() map[string]string {
 	}
 }
 
-func (tm *TusManager) RespondWithTusHeaders(c interface{}, statusCode int, headers map[string]string) {
-	type Context interface {
-		Set(key string, value string)
-		Status(statusCode int) error
-		SendStatus(statusCode int) error
+func (tm *TusManager) ValidateFileSize(fileSize int64, maxSize int64) error {
+	if fileSize <= 0 {
+		return errors.New("ukuran file tidak valid")
 	}
 
-	if ctx, ok := c.(Context); ok {
-		for key, value := range headers {
-			ctx.Set(key, value)
-		}
-		ctx.SendStatus(statusCode)
+	if fileSize > maxSize {
+		maxSizeMB := maxSize / (1024 * 1024)
+		return fmt.Errorf("ukuran file melebihi batas maksimal %d MB", maxSizeMB)
 	}
+
+	return nil
+}
+
+func (tm *TusManager) ValidateTusVersion(version string) error {
+	if version != tm.config.Upload.TusVersion {
+		return fmt.Errorf("versi TUS protocol tidak didukung, gunakan %s", tm.config.Upload.TusVersion)
+	}
+
+	return nil
+}
+
+func (tm *TusManager) ValidateOffset(uploadID string, clientOffset int64) (int64, error) {
+	serverOffset, err := tm.store.GetOffset(uploadID)
+	if err != nil {
+		return 0, err
+	}
+
+	if clientOffset != serverOffset {
+		return serverOffset, fmt.Errorf("offset tidak cocok, client: %d, server: %d", clientOffset, serverOffset)
+	}
+
+	return serverOffset, nil
+}
+
+func (tm *TusManager) ValidateContentType(contentType string) error {
+	if contentType != "application/offset+octet-stream" {
+		return errors.New("Content-Type harus application/offset+octet-stream")
+	}
+
+	return nil
 }

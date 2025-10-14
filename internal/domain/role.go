@@ -74,13 +74,6 @@ type ResourcePermissions struct {
 	Permissions []PermissionItem `json:"permissions"`
 }
 
-type PaginationData struct {
-	Page       int `json:"page"`
-	Limit      int `json:"limit"`
-	TotalItems int `json:"total_items"`
-	TotalPages int `json:"total_pages"`
-}
-
 type RoleListData struct {
 	Items      []RoleListItem `json:"items"`
 	Pagination PaginationData `json:"pagination"`

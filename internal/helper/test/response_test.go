@@ -92,20 +92,20 @@ func TestSendNotFoundResponse(t *testing.T) {
 	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 }
 
-func TestSendPaginatedResponse(t *testing.T) {
+func TestSendListResponse(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		data := []map[string]interface{}{
+		items := []map[string]interface{}{
 			{"id": 1, "name": "Item 1"},
 			{"id": 2, "name": "Item 2"},
 		}
-		meta := domain.PaginationMeta{
-			CurrentPage:  1,
-			TotalPages:   5,
-			TotalRecords: 50,
-			PerPage:      10,
+		pagination := domain.PaginationData{
+			Page:       1,
+			Limit:      10,
+			TotalItems: 50,
+			TotalPages: 5,
 		}
-		return helper.SendPaginatedResponse(c, fiber.StatusOK, "Data berhasil diambil", data, meta)
+		return helper.SendListResponse(c, fiber.StatusOK, "Data berhasil diambil", items, pagination)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)

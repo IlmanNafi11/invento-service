@@ -20,16 +20,16 @@ type ErrorResponse struct {
 	Timestamp time.Time   `json:"timestamp"`
 }
 
-type PaginationMeta struct {
-	CurrentPage  int `json:"current_page"`
-	TotalPages   int `json:"total_pages"`
-	TotalRecords int `json:"total_records"`
-	PerPage      int `json:"per_page"`
+type PaginationData struct {
+	Page       int `json:"page"`
+	Limit      int `json:"limit"`
+	TotalItems int `json:"total_items"`
+	TotalPages int `json:"total_pages"`
 }
 
-type PaginatedResponse struct {
-	SuccessResponse
-	Meta PaginationMeta `json:"meta"`
+type ListData struct {
+	Items      interface{}    `json:"items"`
+	Pagination PaginationData `json:"pagination"`
 }
 
 type ValidationError struct {

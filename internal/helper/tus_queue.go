@@ -20,44 +20,22 @@ func NewTusQueue(maxConcurrent int) *TusQueue {
 	}
 }
 
-func (tq *TusQueue) Enqueue(uploadID string) error {
+func (tq *TusQueue) Add(uploadID string) {
 	tq.mutex.Lock()
 	defer tq.mutex.Unlock()
+
+	if tq.activeUpload == "" {
+		tq.activeUpload = uploadID
+		return
+	}
 
 	for _, id := range tq.queue {
 		if id == uploadID {
-			return errors.New("upload sudah ada dalam antrian")
+			return
 		}
 	}
 
-	if tq.activeUpload == uploadID {
-		return errors.New("upload sedang diproses")
-	}
-
 	tq.queue = append(tq.queue, uploadID)
-	return nil
-}
-
-func (tq *TusQueue) Dequeue() (string, error) {
-	tq.mutex.Lock()
-	defer tq.mutex.Unlock()
-
-	if len(tq.queue) == 0 {
-		return "", errors.New("antrian kosong")
-	}
-
-	uploadID := tq.queue[0]
-	tq.queue = tq.queue[1:]
-	tq.activeUpload = uploadID
-
-	return uploadID, nil
-}
-
-func (tq *TusQueue) IsActive(uploadID string) bool {
-	tq.mutex.RLock()
-	defer tq.mutex.RUnlock()
-
-	return tq.activeUpload == uploadID
 }
 
 func (tq *TusQueue) GetActiveUpload() string {
@@ -139,41 +117,19 @@ func (tq *TusQueue) CanAcceptUpload() bool {
 	return tq.activeUpload == ""
 }
 
-func (tq *TusQueue) StartUpload(uploadID string) error {
-	tq.mutex.Lock()
-	defer tq.mutex.Unlock()
-
-	if tq.activeUpload != "" && tq.activeUpload != uploadID {
-		return errors.New("sudah ada upload yang sedang diproses")
-	}
-
-	tq.activeUpload = uploadID
-
-	for i, id := range tq.queue {
-		if id == uploadID {
-			tq.queue = append(tq.queue[:i], tq.queue[i+1:]...)
-			break
-		}
-	}
-
-	return nil
-}
-
-func (tq *TusQueue) Add(uploadID string) {
-	tq.mutex.Lock()
-	defer tq.mutex.Unlock()
-
-	if tq.activeUpload == "" {
-		tq.activeUpload = uploadID
-		return
-	}
-
-	tq.queue = append(tq.queue, uploadID)
-}
-
 func (tq *TusQueue) IsActiveUpload(uploadID string) bool {
 	tq.mutex.RLock()
 	defer tq.mutex.RUnlock()
 
 	return tq.activeUpload == uploadID
+}
+
+func (tq *TusQueue) GetCurrentQueue() []string {
+	tq.mutex.RLock()
+	defer tq.mutex.RUnlock()
+
+	queueCopy := make([]string, len(tq.queue))
+	copy(queueCopy, tq.queue)
+
+	return queueCopy
 }
