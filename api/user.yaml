@@ -375,6 +375,94 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /user/{id}/download:
+    post:
+      tags:
+        - User Management
+      summary: Download file (project dan modul) milik user lain
+      description: Endpoint untuk download satu atau lebih file (project dan/atau modul) yang dimiliki oleh user tertentu. Memerlukan permission User download. Jika hanya satu file, akan langsung mendownload file tersebut. Jika lebih dari satu file, akan mendownload dalam bentuk zip.
+      operationId: downloadUserFiles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID user pemilik file
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DownloadUserFilesRequest'
+            example:
+              project_ids: [1, 2]
+              modul_ids: [3, 4, 5]
+      responses:
+        '200':
+          description: File berhasil didownload
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Data validasi tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                success: false
+                message: "Data validasi tidak valid"
+                code: 400
+                errors:
+                  - field: "project_ids"
+                    message: "Project IDs atau Modul IDs harus diisi minimal salah satu"
+                timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Tidak memiliki akses"
+                code: 401
+                timestamp: "2024-01-01T10:00:00Z"
+        '403':
+          description: Tidak memiliki permission untuk download file user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Akses ditolak"
+                code: 403
+                timestamp: "2024-01-01T10:00:00Z"
+        '404':
+          description: User atau file tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "User tidak ditemukan"
+                code: 404
+                timestamp: "2024-01-01T10:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /profile:
     get:
       tags:
@@ -710,6 +798,22 @@ components:
           type: string
           format: binary
           description: Foto profil user (opsional, max 2MB, format png/jpg/jpeg)
+
+    DownloadUserFilesRequest:
+      type: object
+      properties:
+        project_ids:
+          type: array
+          items:
+            type: integer
+          example: [1, 2]
+          description: Array ID project yang akan didownload (opsional)
+        modul_ids:
+          type: array
+          items:
+            type: integer
+          example: [3, 4, 5]
+          description: Array ID modul yang akan didownload (opsional)
 
     BaseResponse:
       type: object

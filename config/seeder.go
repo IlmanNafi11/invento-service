@@ -81,6 +81,7 @@ func seedPermissions(db *gorm.DB) {
 		{Resource: "User", Action: "update", Label: "Perbarui user"},
 		{Resource: "User", Action: "read", Label: "Lihat user"},
 		{Resource: "User", Action: "delete", Label: "Hapus user"},
+		{Resource: "User", Action: "download", Label: "Download file user"},
 	}
 
 	var createdCount int

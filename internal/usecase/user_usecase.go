@@ -17,6 +17,7 @@ type UserUsecase interface {
 	GetProfile(userID uint) (*domain.ProfileData, error)
 	UpdateProfile(userID uint, userEmail string, userRole string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error)
 	GetUserPermissions(userID uint) ([]domain.UserPermissionItem, error)
+	DownloadUserFiles(ownerUserID uint, projectIDs, modulIDs []uint) (string, error)
 }
 
 type userUsecase struct {
@@ -26,6 +27,7 @@ type userUsecase struct {
 	modulRepo      repo.ModulRepository
 	casbinEnforcer *helper.CasbinEnforcer
 	userHelper     *helper.UserHelper
+	downloadHelper *helper.DownloadHelper
 	db             *gorm.DB
 }
 
@@ -44,6 +46,7 @@ func NewUserUsecase(
 		modulRepo:      modulRepo,
 		casbinEnforcer: casbinEnforcer,
 		userHelper:     helper.NewUserHelper(),
+		downloadHelper: helper.NewDownloadHelper(),
 		db:             db,
 	}
 }
@@ -269,4 +272,44 @@ func (uc *userUsecase) GetUserPermissions(userID uint) ([]domain.UserPermissionI
 	}
 
 	return uc.userHelper.AggregateUserPermissions(permissions), nil
+}
+
+func (uc *userUsecase) DownloadUserFiles(ownerUserID uint, projectIDs, modulIDs []uint) (string, error) {
+	if err := uc.downloadHelper.ValidateDownloadRequest(projectIDs, modulIDs); err != nil {
+		return "", err
+	}
+
+	_, err := uc.userRepo.GetByID(ownerUserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", errors.New("user tidak ditemukan")
+		}
+		return "", errors.New("gagal mengambil data user")
+	}
+
+	projects, err := uc.projectRepo.GetByIDsForUser(projectIDs, ownerUserID)
+	if err != nil {
+		return "", errors.New("gagal mengambil data project")
+	}
+
+	moduls, err := uc.modulRepo.GetByIDsForUser(modulIDs, ownerUserID)
+	if err != nil {
+		return "", errors.New("gagal mengambil data modul")
+	}
+
+	if len(projects)+len(moduls) == 0 {
+		return "", errors.New("file tidak ditemukan")
+	}
+
+	filePaths, _, err := uc.downloadHelper.PrepareFilesForDownload(projects, moduls)
+	if err != nil {
+		return "", err
+	}
+
+	zipPath, err := uc.downloadHelper.CreateDownloadZip(filePaths, ownerUserID)
+	if err != nil {
+		return "", err
+	}
+
+	return zipPath, nil
 }

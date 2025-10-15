@@ -108,6 +108,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	user.Put("/:id/role", helper.RBACMiddleware(casbinEnforcer, "User", "update"), userController.UpdateUserRole)
 	user.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "User", "delete"), userController.DeleteUser)
 	user.Get("/:id/files", helper.RBACMiddleware(casbinEnforcer, "User", "read"), userController.GetUserFiles)
+	user.Post("/:id/download", helper.RBACMiddleware(casbinEnforcer, "User", "download"), userController.DownloadUserFiles)
 	user.Get("/permissions", userController.GetUserPermissions)
 
 	profile := api.Group("/profile", helper.JWTAuthMiddleware(cfg.JWT.Secret))

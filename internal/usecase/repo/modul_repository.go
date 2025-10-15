@@ -36,6 +36,18 @@ func (r *modulRepository) GetByIDs(ids []uint, userID uint) ([]domain.Modul, err
 	return moduls, nil
 }
 
+func (r *modulRepository) GetByIDsForUser(ids []uint, ownerUserID uint) ([]domain.Modul, error) {
+	var moduls []domain.Modul
+	if len(ids) == 0 {
+		return moduls, nil
+	}
+	err := r.db.Where("id IN ? AND user_id = ?", ids, ownerUserID).Find(&moduls).Error
+	if err != nil {
+		return nil, err
+	}
+	return moduls, nil
+}
+
 func (r *modulRepository) GetByUserID(userID uint, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error) {
 	var modulListItems []domain.ModulListItem
 	var total int64

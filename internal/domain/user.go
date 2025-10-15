@@ -63,3 +63,8 @@ type UserPermissionItem struct {
 	Resource string   `json:"resource"`
 	Actions  []string `json:"actions"`
 }
+
+type DownloadUserFilesRequest struct {
+	ProjectIDs []uint `json:"project_ids" validate:"omitempty"`
+	ModulIDs   []uint `json:"modul_ids" validate:"omitempty"`
+}

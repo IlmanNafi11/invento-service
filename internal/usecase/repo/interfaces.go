@@ -60,6 +60,7 @@ type ProjectRepository interface {
 	Create(project *domain.Project) error
 	GetByID(id uint) (*domain.Project, error)
 	GetByIDs(ids []uint, userID uint) ([]domain.Project, error)
+	GetByIDsForUser(ids []uint, ownerUserID uint) ([]domain.Project, error)
 	GetByUserID(userID uint, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error)
 	CountByUserID(userID uint) (int, error)
 	Update(project *domain.Project) error
@@ -70,6 +71,7 @@ type ModulRepository interface {
 	Create(modul *domain.Modul) error
 	GetByID(id uint) (*domain.Modul, error)
 	GetByIDs(ids []uint, userID uint) ([]domain.Modul, error)
+	GetByIDsForUser(ids []uint, ownerUserID uint) ([]domain.Modul, error)
 	GetByUserID(userID uint, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error)
 	CountByUserID(userID uint) (int, error)
 	Update(modul *domain.Modul) error

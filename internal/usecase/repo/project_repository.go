@@ -36,6 +36,18 @@ func (r *projectRepository) GetByIDs(ids []uint, userID uint) ([]domain.Project,
 	return projects, nil
 }
 
+func (r *projectRepository) GetByIDsForUser(ids []uint, ownerUserID uint) ([]domain.Project, error) {
+	var projects []domain.Project
+	if len(ids) == 0 {
+		return projects, nil
+	}
+	err := r.db.Where("id IN ? AND user_id = ?", ids, ownerUserID).Find(&projects).Error
+	if err != nil {
+		return nil, err
+	}
+	return projects, nil
+}
+
 func (r *projectRepository) GetByUserID(userID uint, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error) {
 	var projectListItems []domain.ProjectListItem
 	var total int64

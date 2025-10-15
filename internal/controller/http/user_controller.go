@@ -153,3 +153,33 @@ func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 
 	return helper.SendSuccessResponse(c, helper.StatusOK, "Permissions user berhasil diambil", result)
 }
+
+func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	ownerUserID, err := strconv.ParseUint(idParam, 10, 32)
+	if err != nil {
+		return helper.SendBadRequestResponse(c, "ID tidak valid")
+	}
+
+	var req domain.DownloadUserFilesRequest
+	if err := c.BodyParser(&req); err != nil {
+		return helper.SendBadRequestResponse(c, "Format request tidak valid")
+	}
+
+	if len(req.ProjectIDs) == 0 && len(req.ModulIDs) == 0 {
+		return helper.SendBadRequestResponse(c, "Project IDs atau Modul IDs harus diisi minimal salah satu")
+	}
+
+	filePath, err := ctrl.userUsecase.DownloadUserFiles(uint(ownerUserID), req.ProjectIDs, req.ModulIDs)
+	if err != nil {
+		if err.Error() == "user tidak ditemukan" {
+			return helper.SendNotFoundResponse(c, err.Error())
+		}
+		if err.Error() == "file tidak ditemukan" {
+			return helper.SendNotFoundResponse(c, err.Error())
+		}
+		return helper.SendInternalServerErrorResponse(c)
+	}
+
+	return c.Download(filePath)
+}
