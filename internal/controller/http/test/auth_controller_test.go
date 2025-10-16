@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/controller/http"
 	"fiber-boiler-plate/internal/domain"
 	"net/http/httptest"
@@ -18,28 +19,28 @@ type MockAuthUsecase struct {
 	mock.Mock
 }
 
-func (m *MockAuthUsecase) Register(req domain.RegisterRequest) (*domain.AuthResponse, error) {
+func (m *MockAuthUsecase) Register(req domain.RegisterRequest) (string, *domain.AuthResponse, error) {
 	args := m.Called(req)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return "", nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.AuthResponse), args.Error(1)
+	return args.String(0), args.Get(1).(*domain.AuthResponse), args.Error(2)
 }
 
-func (m *MockAuthUsecase) Login(req domain.AuthRequest) (*domain.AuthResponse, error) {
+func (m *MockAuthUsecase) Login(req domain.AuthRequest) (string, *domain.AuthResponse, error) {
 	args := m.Called(req)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return "", nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.AuthResponse), args.Error(1)
+	return args.String(0), args.Get(1).(*domain.AuthResponse), args.Error(2)
 }
 
-func (m *MockAuthUsecase) RefreshToken(req domain.RefreshTokenRequest) (*domain.RefreshTokenResponse, error) {
-	args := m.Called(req)
+func (m *MockAuthUsecase) RefreshToken(refreshToken string) (string, *domain.RefreshTokenResponse, error) {
+	args := m.Called(refreshToken)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return "", nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.RefreshTokenResponse), args.Error(1)
+	return args.String(0), args.Get(1).(*domain.RefreshTokenResponse), args.Error(2)
 }
 
 func (m *MockAuthUsecase) ResetPassword(req domain.ResetPasswordRequest) error {
@@ -57,9 +58,23 @@ func (m *MockAuthUsecase) Logout(token string) error {
 	return args.Error(0)
 }
 
+func getTestConfig() *config.Config {
+	return &config.Config{
+		App: config.AppConfig{
+			Env:            "development",
+			CorsOriginDev:  "http://localhost:5173",
+			CorsOriginProd: "https://yourdomain.com",
+		},
+		JWT: config.JWTConfig{
+			RefreshTokenExpireHours: 168,
+		},
+	}
+}
+
 func TestAuthController_Register_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/register", controller.Register)
@@ -76,13 +91,12 @@ func TestAuthController_Register_Success(t *testing.T) {
 			Name:  reqBody.Name,
 			Email: reqBody.Email,
 		},
-		AccessToken:  "access_token",
-		RefreshToken: "refresh_token",
-		TokenType:    "Bearer",
-		ExpiresIn:    3600,
+		AccessToken: "access_token",
+		TokenType:   "Bearer",
+		ExpiresIn:   3600,
 	}
 
-	mockAuthUC.On("Register", reqBody).Return(expectedResponse, nil)
+	mockAuthUC.On("Register", reqBody).Return("refresh_token", expectedResponse, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/register", bytes.NewReader(bodyBytes))
@@ -98,7 +112,8 @@ func TestAuthController_Register_Success(t *testing.T) {
 
 func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/register", controller.Register)
@@ -125,7 +140,8 @@ func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
 
 func TestAuthController_Login_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/login", controller.Login)
@@ -140,13 +156,12 @@ func TestAuthController_Login_Success(t *testing.T) {
 			ID:    1,
 			Email: reqBody.Email,
 		},
-		AccessToken:  "access_token",
-		RefreshToken: "refresh_token",
-		TokenType:    "Bearer",
-		ExpiresIn:    3600,
+		AccessToken: "access_token",
+		TokenType:   "Bearer",
+		ExpiresIn:   3600,
 	}
 
-	mockAuthUC.On("Login", reqBody).Return(expectedResponse, nil)
+	mockAuthUC.On("Login", reqBody).Return("refresh_token", expectedResponse, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/login", bytes.NewReader(bodyBytes))
@@ -162,7 +177,8 @@ func TestAuthController_Login_Success(t *testing.T) {
 
 func TestAuthController_Login_InvalidCredentials(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/login", controller.Login)
@@ -188,27 +204,24 @@ func TestAuthController_Login_InvalidCredentials(t *testing.T) {
 
 func TestAuthController_RefreshToken_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/refresh", controller.RefreshToken)
 
-	reqBody := domain.RefreshTokenRequest{
-		RefreshToken: "valid_refresh_token",
-	}
+	refreshToken := "valid_refresh_token"
 
 	expectedResponse := &domain.RefreshTokenResponse{
-		AccessToken:  "new_access_token",
-		RefreshToken: "new_refresh_token",
-		TokenType:    "Bearer",
-		ExpiresIn:    3600,
+		AccessToken: "new_access_token",
+		TokenType:   "Bearer",
+		ExpiresIn:   3600,
 	}
 
-	mockAuthUC.On("RefreshToken", reqBody).Return(expectedResponse, nil)
+	mockAuthUC.On("RefreshToken", refreshToken).Return("new_refresh_token", expectedResponse, nil)
 
-	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("POST", "/refresh", bytes.NewReader(bodyBytes))
-	req.Header.Set("Content-Type", "application/json")
+	req := httptest.NewRequest("POST", "/refresh", nil)
+	req.Header.Set("Cookie", "refresh_token="+refreshToken)
 
 	resp, err := app.Test(req)
 
@@ -220,7 +233,8 @@ func TestAuthController_RefreshToken_Success(t *testing.T) {
 
 func TestAuthController_ResetPassword_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/reset-password", controller.ResetPassword)
@@ -245,7 +259,8 @@ func TestAuthController_ResetPassword_Success(t *testing.T) {
 
 func TestAuthController_ConfirmResetPassword_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/confirm-reset", controller.ConfirmResetPassword)
@@ -271,7 +286,8 @@ func TestAuthController_ConfirmResetPassword_Success(t *testing.T) {
 
 func TestAuthController_Logout_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/logout", controller.Logout)
@@ -281,7 +297,7 @@ func TestAuthController_Logout_Success(t *testing.T) {
 	mockAuthUC.On("Logout", refreshToken).Return(nil)
 
 	req := httptest.NewRequest("POST", "/logout", nil)
-	req.Header.Set("X-Refresh-Token", refreshToken)
+	req.Header.Set("Cookie", "refresh_token="+refreshToken)
 
 	resp, err := app.Test(req)
 
@@ -293,7 +309,8 @@ func TestAuthController_Logout_Success(t *testing.T) {
 
 func TestAuthController_Logout_MissingToken(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
-	controller := http.NewAuthController(mockAuthUC)
+	cfg := getTestConfig()
+	controller := http.NewAuthController(mockAuthUC, cfg)
 
 	app := fiber.New()
 	app.Post("/logout", controller.Logout)

@@ -1,8 +1,19 @@
 openapi: 3.0.3
 info:
   title: Fiber Boilerplate API
-  description: API dokumentasi untuk sistem authentication pada fiber boilerplate
-  version: 1.0.0
+  description: |
+    API dokumentasi untuk sistem authentication pada fiber boilerplate
+    
+    **Keamanan Authentication:**
+    - Menggunakan algoritma RS256 (RSA 2048-bit) untuk signing token
+    - Access token menggunakan JWT dengan expired 1 jam
+    - Refresh token disimpan sebagai httpOnly cookie (tidak di response body)
+    - Refresh token di-hash sebelum disimpan di database (SHA-256)
+    - Token rotation - refresh token berubah setiap kali di-refresh
+    - Key rotation support untuk enhanced security
+    - CORS dengan domain eksplisit (bukan wildcard)
+    - Cookie: httpOnly, secure, sameSite=Strict
+  version: 2.0.0
   contact:
     name: Developer Team
     email: developer@example.com
@@ -22,7 +33,12 @@ paths:
       tags:
         - Authentication
       summary: Registrasi pengguna baru
-      description: Endpoint untuk mendaftarkan pengguna baru ke dalam sistem
+      description: |
+        Endpoint untuk mendaftarkan pengguna baru ke dalam sistem.
+        
+        **Keamanan:**
+        - Refresh token dikirim via httpOnly cookie
+        - Tidak ada refresh token di response body
       operationId: register
       requestBody:
         required: true
@@ -37,6 +53,12 @@ paths:
       responses:
         '201':
           description: Registrasi berhasil
+          headers:
+            Set-Cookie:
+              description: Refresh token sebagai httpOnly cookie
+              schema:
+                type: string
+                example: refresh_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800
           content:
             application/json:
               schema:
@@ -53,8 +75,7 @@ paths:
                     is_active: true
                     created_at: "2024-01-01T00:00:00Z"
                     updated_at: "2024-01-01T00:00:00Z"
-                  access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
                   token_type: "Bearer"
                   expires_in: 3600
                 timestamp: "2024-01-01T00:00:00Z"
@@ -123,7 +144,13 @@ paths:
       tags:
         - Authentication
       summary: Login pengguna
-      description: Endpoint untuk autentikasi pengguna dengan email dan password
+      description: |
+        Endpoint untuk autentikasi pengguna dengan email dan password.
+        
+        **Keamanan:**
+        - Refresh token dikirim via httpOnly cookie
+        - Tidak ada refresh token di response body
+        - Access token menggunakan RS256 dengan expired 1 jam
       operationId: login
       requestBody:
         required: true
@@ -137,6 +164,12 @@ paths:
       responses:
         '200':
           description: Login berhasil
+          headers:
+            Set-Cookie:
+              description: Refresh token sebagai httpOnly cookie
+              schema:
+                type: string
+                example: refresh_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800
           content:
             application/json:
               schema:
@@ -153,8 +186,7 @@ paths:
                     is_active: true
                     created_at: "2024-01-01T00:00:00Z"
                     updated_at: "2024-01-01T00:00:00Z"
-                  access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
                   token_type: "Bearer"
                   expires_in: 3600
                 timestamp: "2024-01-01T00:00:00Z"
@@ -187,19 +219,32 @@ paths:
       tags:
         - Authentication
       summary: Refresh access token
-      description: Endpoint untuk memperbarui access token menggunakan refresh token
+      description: |
+        Endpoint untuk memperbarui access token menggunakan refresh token.
+        
+        **Keamanan:**
+        - Refresh token dibaca dari httpOnly cookie (bukan request body)
+        - Token rotation: refresh token lama di-revoke, token baru di-generate
+        - New refresh token dikirim via httpOnly cookie yang baru
+        - Tidak ada token di response body
       operationId: refreshToken
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RefreshTokenRequest'
-            example:
-              refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      parameters:
+        - name: Cookie
+          in: header
+          description: Refresh token cookie
+          required: true
+          schema:
+            type: string
+            example: refresh_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
       responses:
         '200':
           description: Refresh token berhasil
+          headers:
+            Set-Cookie:
+              description: New refresh token sebagai httpOnly cookie
+              schema:
+                type: string
+                example: refresh_token=newTokenValue; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800
           content:
             application/json:
               schema:
@@ -209,17 +254,21 @@ paths:
                 message: "Token berhasil diperbarui"
                 code: 200
                 data:
-                  access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
                   token_type: "Bearer"
                   expires_in: 3600
                 timestamp: "2024-01-01T00:00:00Z"
         '400':
-          description: Data validasi tidak valid
+          description: Refresh token tidak ditemukan di cookie
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Refresh token diperlukan"
+                code: 400
+                timestamp: "2024-01-01T00:00:00Z"
         '401':
           description: Refresh token tidak valid atau expired
           content:
@@ -346,21 +395,33 @@ paths:
       tags:
         - Authentication
       summary: Logout pengguna
-      description: Endpoint untuk logout pengguna dan invalidate refresh token. Refresh token harus dikirim melalui header X-Refresh-Token.
+      description: |
+        Endpoint untuk logout pengguna dan invalidate refresh token.
+        
+        **Keamanan:**
+        - Refresh token dibaca dari httpOnly cookie
+        - Token di-revoke dari database
+        - Cookie di-clear (Max-Age=-1)
       operationId: logout
       security:
         - BearerAuth: []
       parameters:
-        - name: X-Refresh-Token
+        - name: Cookie
           in: header
-          description: Refresh token yang akan di-invalidate saat logout
+          description: Refresh token cookie yang akan di-invalidate
           required: true
           schema:
             type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            example: refresh_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
       responses:
         '200':
           description: Logout berhasil
+          headers:
+            Set-Cookie:
+              description: Clear refresh token cookie
+              schema:
+                type: string
+                example: refresh_token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=-1
           content:
             application/json:
               schema:
@@ -420,6 +481,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        RS256 JWT token. Algoritma: RSA 2048-bit.
+        Expired: 1 jam.
+        Format: Bearer {access_token}
 
   schemas:
     User:
@@ -486,15 +551,6 @@ components:
           minLength: 8
           example: "password123"
 
-    RefreshTokenRequest:
-      type: object
-      required:
-        - refresh_token
-      properties:
-        refresh_token:
-          type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-
     ResetPasswordRequest:
       type: object
       required:
@@ -522,36 +578,36 @@ components:
 
     AuthResponse:
       type: object
+      description: Response tidak mengandung refresh_token di body. Refresh token dikirim via httpOnly cookie.
       properties:
         user:
           $ref: '#/components/schemas/User'
         access_token:
           type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        refresh_token:
-          type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          description: RS256 JWT token dengan expired 1 jam
+          example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
         token_type:
           type: string
           example: "Bearer"
         expires_in:
           type: integer
+          description: Access token expiration dalam detik (3600 = 1 jam)
           example: 3600
 
     RefreshTokenResponse:
       type: object
+      description: Response tidak mengandung refresh_token di body. New refresh token dikirim via httpOnly cookie.
       properties:
         access_token:
           type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        refresh_token:
-          type: string
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          description: RS256 JWT token dengan expired 1 jam
+          example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
         token_type:
           type: string
           example: "Bearer"
         expires_in:
           type: integer
+          description: Access token expiration dalam detik (3600 = 1 jam)
           example: 3600
 
     BaseResponse:
@@ -623,4 +679,11 @@ components:
 
 tags:
   - name: Authentication
-    description: Endpoint untuk sistem autentikasi pengguna
+    description: |
+      Endpoint untuk sistem autentikasi pengguna dengan enhanced security:
+      - RS256 (RSA 2048-bit) signing algorithm
+      - Cookie-based refresh token (httpOnly, secure, sameSite=Strict)
+      - Token rotation pada setiap refresh
+      - Hash storage untuk refresh token di database (SHA-256)
+      - Key rotation capability
+      - CORS dengan domain eksplisit

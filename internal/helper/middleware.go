@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func JWTAuthMiddleware(secret string) fiber.Handler {
+func JWTAuthMiddleware(jwtManager *JWTManager) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
@@ -18,7 +18,7 @@ func JWTAuthMiddleware(secret string) fiber.Handler {
 			return SendErrorResponse(c, fiber.StatusUnauthorized, "Format token tidak valid", nil)
 		}
 
-		claims, err := ValidateAccessToken(tokenParts[1], secret)
+		claims, err := jwtManager.ValidateAccessToken(tokenParts[1])
 		if err != nil {
 			return SendErrorResponse(c, fiber.StatusUnauthorized, "Token tidak valid", nil)
 		}

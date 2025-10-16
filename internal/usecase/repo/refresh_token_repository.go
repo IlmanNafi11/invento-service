@@ -30,7 +30,7 @@ func (r *refreshTokenRepository) Create(userID uint, token string, expiresAt tim
 
 func (r *refreshTokenRepository) GetByToken(token string) (*domain.RefreshToken, error) {
 	var refreshToken domain.RefreshToken
-	err := r.db.Where("token = ? AND is_revoked = ? AND expires_at > ?", token, false, time.Now()).First(&refreshToken).Error
+	err := r.db.Where("token = ? AND expires_at > ?", token, time.Now()).First(&refreshToken).Error
 	if err != nil {
 		return nil, err
 	}

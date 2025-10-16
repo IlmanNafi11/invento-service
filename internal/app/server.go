@@ -21,7 +21,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 			if c.Path() != "" && len(c.Path()) >= 8 && c.Path()[:8] == "/uploads" {
 				return err
 			}
-			
+
 			if err != nil {
 				if e, ok := err.(*fiber.Error); ok {
 					if e.Code == fiber.StatusNotFound {
@@ -34,7 +34,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 					}
 				}
 			}
-			
+
 			tusVersion := c.Get("Tus-Resumable")
 			if tusVersion != "" && (c.Method() == "PATCH" || c.Method() == "HEAD" || c.Method() == "DELETE") {
 				c.Set("Tus-Resumable", cfg.Upload.TusVersion)
@@ -46,11 +46,18 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	app.Use(logger.New())
 	app.Use(recover.New())
+
+	corsOrigin := cfg.App.CorsOriginDev
+	if cfg.App.Env == "production" {
+		corsOrigin = cfg.App.CorsOriginProd
+	}
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:  "*",
-		AllowHeaders:  "Origin, Content-Type, Accept, Authorization, X-Refresh-Token, Tus-Resumable, Upload-Length, Upload-Metadata, Upload-Offset, Content-Length",
-		AllowMethods:  "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS",
-		ExposeHeaders: "Tus-Resumable, Tus-Version, Tus-Extension, Tus-Max-Size, Upload-Offset, Upload-Length, Location",
+		AllowOrigins:     corsOrigin,
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, Tus-Resumable, Upload-Length, Upload-Metadata, Upload-Offset, Content-Length",
+		AllowMethods:     "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS",
+		AllowCredentials: true,
+		ExposeHeaders:    "Tus-Resumable, Tus-Version, Tus-Extension, Tus-Max-Size, Upload-Offset, Upload-Length, Location",
 	}))
 
 	pathResolver := helper.NewPathResolver(cfg)
@@ -66,6 +73,11 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	modulRepo := repo.NewModulRepository(db)
 	tusUploadRepo := repo.NewTusUploadRepository(db)
 
+	jwtManager, err := helper.NewJWTManager(cfg)
+	if err != nil {
+		panic("Gagal inisialisasi JWT Manager: " + err.Error())
+	}
+
 	casbinEnforcer, err := helper.NewCasbinEnforcer(db)
 	if err != nil {
 		panic("Gagal inisialisasi Casbin enforcer: " + err.Error())
@@ -77,8 +89,14 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	tusCleanup := helper.NewTusCleanup(tusUploadRepo, tusStore, cfg.Upload.CleanupInterval, cfg.Upload.IdleTimeout)
 	tusCleanup.Start()
 
+	keyRotation := helper.NewKeyRotationScheduler(jwtManager, cfg.JWT.KeyRotationHours)
+	keyRotation.Start()
+
+	refreshTokenCleanup := helper.NewRefreshTokenCleanup(refreshTokenRepo, 24)
+	refreshTokenCleanup.Start()
+
 	authUsecase := usecase.NewAuthUsecase(userRepo, refreshTokenRepo, resetTokenRepo, roleRepo, cfg)
-	authController := http.NewAuthController(authUsecase)
+	authController := http.NewAuthController(authUsecase, cfg)
 
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
 	roleController := http.NewRoleController(roleUsecase)
@@ -109,10 +127,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	auth.Post("/reset-password", authController.ResetPassword)
 	auth.Post("/reset-password/confirm", authController.ConfirmResetPassword)
 
-	protected := auth.Group("/", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	protected := auth.Group("/", helper.JWTAuthMiddleware(jwtManager))
 	protected.Post("logout", authController.Logout)
 
-	role := api.Group("/role", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	role := api.Group("/role", helper.JWTAuthMiddleware(jwtManager))
 	role.Get("/permissions", helper.RBACMiddleware(casbinEnforcer, "Permission", "read"), roleController.GetAvailablePermissions)
 	role.Get("/", helper.RBACMiddleware(casbinEnforcer, "Role", "read"), roleController.GetRoleList)
 	role.Post("/", helper.RBACMiddleware(casbinEnforcer, "Role", "create"), roleController.CreateRole)
@@ -120,7 +138,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	role.Put("/:id", helper.RBACMiddleware(casbinEnforcer, "Role", "update"), roleController.UpdateRole)
 	role.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Role", "delete"), roleController.DeleteRole)
 
-	user := api.Group("/user", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	user := api.Group("/user", helper.JWTAuthMiddleware(jwtManager))
 	user.Get("/", helper.RBACMiddleware(casbinEnforcer, "User", "read"), userController.GetUserList)
 	user.Put("/:id/role", helper.RBACMiddleware(casbinEnforcer, "User", "update"), userController.UpdateUserRole)
 	user.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "User", "delete"), userController.DeleteUser)
@@ -128,52 +146,52 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	user.Post("/:id/download", helper.RBACMiddleware(casbinEnforcer, "User", "download"), userController.DownloadUserFiles)
 	user.Get("/permissions", userController.GetUserPermissions)
 
-	profile := api.Group("/profile", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	profile := api.Group("/profile", helper.JWTAuthMiddleware(jwtManager))
 	profile.Get("/", userController.GetProfile)
 	profile.Put("/", userController.UpdateProfile)
 
-	project := api.Group("/project", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	project := api.Group("/project", helper.JWTAuthMiddleware(jwtManager))
 	project.Get("/", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.GetList)
 	project.Get("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.GetByID)
 	project.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "update"), projectController.UpdateMetadata)
 	project.Post("/download", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.Download)
 	project.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "delete"), projectController.Delete)
 
-	tusUploadCheck := api.Group("/project/upload", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	tusUploadCheck := api.Group("/project/upload", helper.JWTAuthMiddleware(jwtManager))
 	tusUploadCheck.Get("/check-slot", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.CheckUploadSlot)
 	tusUploadCheck.Post("/reset-queue", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.ResetUploadQueue)
 
-	tusUpload := api.Group("/project/upload", helper.JWTAuthMiddleware(cfg.JWT.Secret), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
+	tusUpload := api.Group("/project/upload", helper.JWTAuthMiddleware(jwtManager), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
 	tusUpload.Post("/", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.InitiateUpload)
 	tusUpload.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.UploadChunk)
 	tusUpload.Head("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetUploadStatus)
 	tusUpload.Get("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetUploadInfo)
 	tusUpload.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "delete"), tusController.CancelUpload)
 
-	projectUpdate := api.Group("/project/:id", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	projectUpdate := api.Group("/project/:id", helper.JWTAuthMiddleware(jwtManager))
 	projectUpdate.Post("/upload", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.InitiateProjectUpdateUpload)
 	projectUpdate.Patch("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.UploadProjectUpdateChunk)
 	projectUpdate.Head("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetProjectUpdateUploadStatus)
 	projectUpdate.Get("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetProjectUpdateUploadInfo)
 	projectUpdate.Delete("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.CancelProjectUpdateUpload)
 
-	modul := api.Group("/modul", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	modul := api.Group("/modul", helper.JWTAuthMiddleware(jwtManager))
 	modul.Get("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetList)
 	modul.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.UpdateMetadata)
 	modul.Post("/download", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.Download)
 	modul.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Modul", "delete"), modulController.Delete)
 
-	tusModulCheck := api.Group("/modul/upload", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	tusModulCheck := api.Group("/modul/upload", helper.JWTAuthMiddleware(jwtManager))
 	tusModulCheck.Get("/check-slot", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.CheckUploadSlot)
 
-	tusModul := api.Group("/modul/upload", helper.JWTAuthMiddleware(cfg.JWT.Secret), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
+	tusModul := api.Group("/modul/upload", helper.JWTAuthMiddleware(jwtManager), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
 	tusModul.Post("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "create"), modulController.InitiateUpload)
 	tusModul.Patch("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "create"), modulController.UploadChunk)
 	tusModul.Head("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetUploadStatus)
 	tusModul.Get("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetUploadInfo)
 	tusModul.Delete("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "delete"), modulController.CancelUpload)
 
-	modulUpdate := api.Group("/modul/:id", helper.JWTAuthMiddleware(cfg.JWT.Secret))
+	modulUpdate := api.Group("/modul/:id", helper.JWTAuthMiddleware(jwtManager))
 	modulUpdate.Post("/upload", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.InitiateModulUpdateUpload)
 	modulUpdate.Patch("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.UploadModulUpdateChunk)
 	modulUpdate.Head("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetModulUpdateUploadStatus)

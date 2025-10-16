@@ -12,12 +12,14 @@ import (
 
 type AuthHelper struct {
 	refreshTokenRepo repo.RefreshTokenRepository
+	jwtManager       *JWTManager
 	config           *config.Config
 }
 
-func NewAuthHelper(refreshTokenRepo repo.RefreshTokenRepository, config *config.Config) *AuthHelper {
+func NewAuthHelper(refreshTokenRepo repo.RefreshTokenRepository, jwtManager *JWTManager, config *config.Config) *AuthHelper {
 	return &AuthHelper{
 		refreshTokenRepo: refreshTokenRepo,
+		jwtManager:       jwtManager,
 		config:           config,
 	}
 }
@@ -39,13 +41,13 @@ func ComparePassword(hashedPassword, password string) error {
 	return nil
 }
 
-func GenerateTokenPair(user *domain.User, secret string, expireHours int, refreshExpireHours int, refreshTokenRepo repo.RefreshTokenRepository) (string, string, error) {
+func GenerateTokenPair(user *domain.User, jwtManager *JWTManager, refreshExpireHours int, refreshTokenRepo repo.RefreshTokenRepository) (string, string, error) {
 	roleName := ""
 	if user.Role != nil {
 		roleName = user.Role.NamaRole
 	}
 
-	accessToken, err := GenerateAccessToken(user.ID, user.Email, user.RoleID, roleName, secret, expireHours)
+	accessToken, err := jwtManager.GenerateAccessToken(user.ID, user.Email, user.RoleID, roleName)
 	if err != nil {
 		return "", "", errors.New("gagal generate access token")
 	}
@@ -55,65 +57,65 @@ func GenerateTokenPair(user *domain.User, secret string, expireHours int, refres
 		return "", "", errors.New("gagal generate refresh token")
 	}
 
+	hashedRefreshToken := HashRefreshToken(refreshToken)
 	refreshTokenExpiry := time.Now().Add(time.Hour * time.Duration(refreshExpireHours))
-	if _, err := refreshTokenRepo.Create(user.ID, refreshToken, refreshTokenExpiry); err != nil {
+	if _, err := refreshTokenRepo.Create(user.ID, hashedRefreshToken, refreshTokenExpiry); err != nil {
 		return "", "", errors.New("gagal simpan refresh token")
 	}
 
 	return accessToken, refreshToken, nil
 }
 
-func BuildAuthResponse(user *domain.User, accessToken string, refreshToken string, expiresIn int) *domain.AuthResponse {
+func BuildAuthResponse(user *domain.User, accessToken string, expiresIn int) *domain.AuthResponse {
 	return &domain.AuthResponse{
-		User:         *user,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		TokenType:    "Bearer",
-		ExpiresIn:    expiresIn,
+		User:        *user,
+		AccessToken: accessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   expiresIn,
 	}
 }
 
-func BuildRefreshTokenResponse(accessToken string, refreshToken string, expiresIn int) *domain.RefreshTokenResponse {
+func BuildRefreshTokenResponse(accessToken string, expiresIn int) *domain.RefreshTokenResponse {
 	return &domain.RefreshTokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		TokenType:    "Bearer",
-		ExpiresIn:    expiresIn,
+		AccessToken: accessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   expiresIn,
 	}
 }
 
-func (ah *AuthHelper) GenerateAuthResponse(user *domain.User) (*domain.AuthResponse, error) {
+func (ah *AuthHelper) GenerateAuthResponse(user *domain.User) (string, *domain.AuthResponse, error) {
 	accessToken, refreshToken, err := GenerateTokenPair(
 		user,
-		ah.config.JWT.Secret,
-		ah.config.JWT.ExpireHours,
+		ah.jwtManager,
 		ah.config.JWT.RefreshTokenExpireHours,
 		ah.refreshTokenRepo,
 	)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	expiresIn := ah.config.JWT.ExpireHours * 3600
-	return BuildAuthResponse(user, accessToken, refreshToken, expiresIn), nil
+	response := BuildAuthResponse(user, accessToken, expiresIn)
+
+	return refreshToken, response, nil
 }
 
-func (ah *AuthHelper) RevokeAndGenerateNewTokens(oldRefreshToken string, user *domain.User) (*domain.RefreshTokenResponse, error) {
-	if err := ah.refreshTokenRepo.RevokeToken(oldRefreshToken); err != nil {
-		return nil, errors.New("gagal revoke refresh token lama")
+func (ah *AuthHelper) RevokeAndGenerateNewTokens(oldRefreshToken string, user *domain.User) (string, *domain.RefreshTokenResponse, error) {
+	hashedOldToken := HashRefreshToken(oldRefreshToken)
+	if err := ah.refreshTokenRepo.RevokeToken(hashedOldToken); err != nil {
+		return "", nil, errors.New("gagal revoke refresh token lama")
 	}
 
 	accessToken, refreshToken, err := GenerateTokenPair(
 		user,
-		ah.config.JWT.Secret,
-		ah.config.JWT.ExpireHours,
+		ah.jwtManager,
 		ah.config.JWT.RefreshTokenExpireHours,
 		ah.refreshTokenRepo,
 	)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	expiresIn := ah.config.JWT.ExpireHours * 3600
-	return BuildRefreshTokenResponse(accessToken, refreshToken, expiresIn), nil
+	return refreshToken, BuildRefreshTokenResponse(accessToken, expiresIn), nil
 }

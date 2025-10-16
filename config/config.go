@@ -18,9 +18,11 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Name string
-	Port string
-	Env  string
+	Name           string
+	Port           string
+	Env            string
+	CorsOriginDev  string
+	CorsOriginProd string
 }
 
 type DatabaseConfig struct {
@@ -36,9 +38,13 @@ type DatabaseConfig struct {
 }
 
 type JWTConfig struct {
-	Secret                  string
+	PrivateKeyPath          string
+	PublicKeyPath           string
+	PrivateKeyRotationPath  string
+	PublicKeyRotationPath   string
 	ExpireHours             int
 	RefreshTokenExpireHours int
+	KeyRotationHours        int
 }
 
 type MailConfig struct {
@@ -72,9 +78,11 @@ func LoadConfig() *Config {
 
 	config := &Config{
 		App: AppConfig{
-			Name: getEnv("APP_NAME", "Fiber Boilerplate"),
-			Port: getEnv("APP_PORT", "3000"),
-			Env:  getEnv("APP_ENV", "development"),
+			Name:           getEnv("APP_NAME", "Fiber Boilerplate"),
+			Port:           getEnv("APP_PORT", "3000"),
+			Env:            getEnv("APP_ENV", "development"),
+			CorsOriginDev:  getEnv("CORS_ORIGIN_DEVELOPMENT", "http://localhost:5173"),
+			CorsOriginProd: getEnv("CORS_ORIGIN_PRODUCTION", "https://yourdomain.com"),
 		},
 		Database: DatabaseConfig{
 			Host:           getEnv("DB_HOST", "localhost"),
@@ -88,9 +96,13 @@ func LoadConfig() *Config {
 			MigrateOnStart: getEnvAsBool("DB_MIGRATE_ON_START", true),
 		},
 		JWT: JWTConfig{
-			Secret:                  getEnv("JWT_SECRET", "your-jwt-secret"),
-			ExpireHours:             getEnvAsInt("JWT_EXPIRE_HOURS", 24),
+			PrivateKeyPath:          getEnv("JWT_PRIVATE_KEY_PATH", "./keys/private.pem"),
+			PublicKeyPath:           getEnv("JWT_PUBLIC_KEY_PATH", "./keys/public.pem"),
+			PrivateKeyRotationPath:  getEnv("JWT_PRIVATE_KEY_ROTATION_PATH", "./keys/private_rotation.pem"),
+			PublicKeyRotationPath:   getEnv("JWT_PUBLIC_KEY_ROTATION_PATH", "./keys/public_rotation.pem"),
+			ExpireHours:             getEnvAsInt("JWT_EXPIRE_HOURS", 1),
 			RefreshTokenExpireHours: getEnvAsInt("REFRESH_TOKEN_EXPIRE_HOURS", 168),
+			KeyRotationHours:        getEnvAsInt("JWT_KEY_ROTATION_HOURS", 168),
 		},
 		Mail: MailConfig{
 			Host:     getEnv("MAIL_HOST", "localhost"),

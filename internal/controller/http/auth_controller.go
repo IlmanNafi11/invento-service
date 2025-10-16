@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
@@ -9,12 +10,14 @@ import (
 )
 
 type AuthController struct {
-	authUsecase usecase.AuthUsecase
+	authUsecase  usecase.AuthUsecase
+	cookieHelper *helper.CookieHelper
 }
 
-func NewAuthController(authUsecase usecase.AuthUsecase) *AuthController {
+func NewAuthController(authUsecase usecase.AuthUsecase, cfg *config.Config) *AuthController {
 	return &AuthController{
-		authUsecase: authUsecase,
+		authUsecase:  authUsecase,
+		cookieHelper: helper.NewCookieHelper(cfg),
 	}
 }
 
@@ -28,7 +31,7 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 		return helper.SendValidationErrorResponse(c, validationErrors)
 	}
 
-	result, err := ctrl.authUsecase.Register(req)
+	refreshToken, result, err := ctrl.authUsecase.Register(req)
 	if err != nil {
 		switch err.Error() {
 		case "email sudah terdaftar":
@@ -41,6 +44,8 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 			return helper.SendInternalServerErrorResponse(c)
 		}
 	}
+
+	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
 
 	return helper.SendSuccessResponse(c, helper.StatusCreated, "Registrasi berhasil", result)
 }
@@ -55,7 +60,7 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 		return helper.SendValidationErrorResponse(c, validationErrors)
 	}
 
-	result, err := ctrl.authUsecase.Login(req)
+	refreshToken, result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
 		if err.Error() == "email atau password salah" {
 			return helper.SendUnauthorizedResponse(c)
@@ -63,20 +68,18 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 		return helper.SendInternalServerErrorResponse(c)
 	}
 
+	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
+
 	return helper.SendSuccessResponse(c, helper.StatusOK, "Login berhasil", result)
 }
 
 func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
-	var req domain.RefreshTokenRequest
-	if err := c.BodyParser(&req); err != nil {
-		return helper.SendBadRequestResponse(c, "Format request tidak valid")
+	oldRefreshToken := helper.GetRefreshTokenFromCookie(c)
+	if oldRefreshToken == "" {
+		return helper.SendBadRequestResponse(c, "Refresh token diperlukan")
 	}
 
-	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
-		return helper.SendValidationErrorResponse(c, validationErrors)
-	}
-
-	result, err := ctrl.authUsecase.RefreshToken(req)
+	newRefreshToken, result, err := ctrl.authUsecase.RefreshToken(oldRefreshToken)
 	if err != nil {
 		switch err.Error() {
 		case "refresh token tidak valid atau sudah expired", "user tidak ditemukan":
@@ -85,6 +88,8 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 			return helper.SendInternalServerErrorResponse(c)
 		}
 	}
+
+	ctrl.cookieHelper.SetRefreshTokenCookie(c, newRefreshToken)
 
 	return helper.SendSuccessResponse(c, helper.StatusOK, "Token berhasil diperbarui", result)
 }
@@ -132,7 +137,7 @@ func (ctrl *AuthController) ConfirmResetPassword(c *fiber.Ctx) error {
 }
 
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
-	token := c.Get("X-Refresh-Token")
+	token := helper.GetRefreshTokenFromCookie(c)
 	if token == "" {
 		return helper.SendBadRequestResponse(c, "Refresh token diperlukan")
 	}
@@ -144,6 +149,8 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 		}
 		return helper.SendInternalServerErrorResponse(c)
 	}
+
+	ctrl.cookieHelper.ClearRefreshTokenCookie(c)
 
 	return helper.SendSuccessResponse(c, helper.StatusOK, "Logout berhasil", nil)
 }

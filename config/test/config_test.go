@@ -19,7 +19,11 @@ func TestLoadConfig_DefaultValues(t *testing.T) {
 	os.Setenv("DB_USER", "testuser")
 	os.Setenv("DB_PASSWORD", "testpass")
 	os.Setenv("DB_NAME", "testdb")
-	os.Setenv("JWT_SECRET", "testsecret")
+	os.Setenv("JWT_PRIVATE_KEY_PATH", "./keys/test_private.pem")
+	os.Setenv("JWT_PUBLIC_KEY_PATH", "./keys/test_public.pem")
+	os.Setenv("JWT_PRIVATE_KEY_ROTATION_PATH", "./keys/test_private_rotation.pem")
+	os.Setenv("JWT_PUBLIC_KEY_ROTATION_PATH", "./keys/test_public_rotation.pem")
+	os.Setenv("JWT_EXPIRE_HOURS", "2")
 
 	cfg := config.LoadConfig()
 
@@ -31,7 +35,11 @@ func TestLoadConfig_DefaultValues(t *testing.T) {
 	assert.Equal(t, "testuser", cfg.Database.User)
 	assert.Equal(t, "testpass", cfg.Database.Password)
 	assert.Equal(t, "testdb", cfg.Database.Name)
-	assert.Equal(t, "testsecret", cfg.JWT.Secret)
+	assert.Equal(t, "./keys/test_private.pem", cfg.JWT.PrivateKeyPath)
+	assert.Equal(t, "./keys/test_public.pem", cfg.JWT.PublicKeyPath)
+	assert.Equal(t, "./keys/test_private_rotation.pem", cfg.JWT.PrivateKeyRotationPath)
+	assert.Equal(t, "./keys/test_public_rotation.pem", cfg.JWT.PublicKeyRotationPath)
+	assert.Equal(t, 2, cfg.JWT.ExpireHours)
 }
 
 func TestLoadConfig_DatabaseBooleanValues(t *testing.T) {
@@ -55,15 +63,21 @@ func TestLoadConfig_JWTConfiguration(t *testing.T) {
 	os.Clearenv()
 
 	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("JWT_SECRET", "test-jwt-secret")
+	os.Setenv("JWT_PRIVATE_KEY_PATH", "./keys/test_private.pem")
+	os.Setenv("JWT_PUBLIC_KEY_PATH", "./keys/test_public.pem")
+	os.Setenv("JWT_PRIVATE_KEY_ROTATION_PATH", "./keys/test_private_rotation.pem")
+	os.Setenv("JWT_PUBLIC_KEY_ROTATION_PATH", "./keys/test_public_rotation.pem")
 	os.Setenv("JWT_EXPIRE_HOURS", "2")
-	os.Setenv("JWT_REFRESH_TOKEN_EXPIRE_HOURS", "48")
+	os.Setenv("REFRESH_TOKEN_EXPIRE_HOURS", "48")
 
 	cfg := config.LoadConfig()
 
-	assert.Equal(t, "test-jwt-secret", cfg.JWT.Secret)
+	assert.Equal(t, "./keys/test_private.pem", cfg.JWT.PrivateKeyPath)
+	assert.Equal(t, "./keys/test_public.pem", cfg.JWT.PublicKeyPath)
+	assert.Equal(t, "./keys/test_private_rotation.pem", cfg.JWT.PrivateKeyRotationPath)
+	assert.Equal(t, "./keys/test_public_rotation.pem", cfg.JWT.PublicKeyRotationPath)
 	assert.Equal(t, 2, cfg.JWT.ExpireHours)
-	assert.Equal(t, 168, cfg.JWT.RefreshTokenExpireHours)
+	assert.Equal(t, 48, cfg.JWT.RefreshTokenExpireHours)
 }
 
 func TestLoadConfig_MailConfiguration(t *testing.T) {
@@ -104,7 +118,10 @@ func TestConfig_StructureValidation(t *testing.T) {
 			MigrateOnStart: true,
 		},
 		JWT: config.JWTConfig{
-			Secret:                  "secret",
+			PrivateKeyPath:          "./keys/private.pem",
+			PublicKeyPath:           "./keys/public.pem",
+			PrivateKeyRotationPath:  "./keys/private_rotation.pem",
+			PublicKeyRotationPath:   "./keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
@@ -127,7 +144,10 @@ func TestConfig_StructureValidation(t *testing.T) {
 	assert.True(t, cfg.Database.AutoMigrate)
 	assert.False(t, cfg.Database.RunSeeder)
 
-	assert.Equal(t, "secret", cfg.JWT.Secret)
+	assert.Equal(t, "./keys/private.pem", cfg.JWT.PrivateKeyPath)
+	assert.Equal(t, "./keys/public.pem", cfg.JWT.PublicKeyPath)
+	assert.Equal(t, "./keys/private_rotation.pem", cfg.JWT.PrivateKeyRotationPath)
+	assert.Equal(t, "./keys/public_rotation.pem", cfg.JWT.PublicKeyRotationPath)
 	assert.Equal(t, 1, cfg.JWT.ExpireHours)
 	assert.Equal(t, 24, cfg.JWT.RefreshTokenExpireHours)
 

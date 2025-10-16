@@ -187,30 +187,26 @@ func TestAuthResponse_Structure(t *testing.T) {
 	}
 
 	authResponse := domain.AuthResponse{
-		User:         user,
-		AccessToken:  "access_token_123",
-		RefreshToken: "refresh_token_123",
-		TokenType:    "Bearer",
-		ExpiresIn:    3600,
+		User:        user,
+		AccessToken: "access_token_123",
+		TokenType:   "Bearer",
+		ExpiresIn:   3600,
 	}
 
 	assert.Equal(t, user, authResponse.User)
 	assert.Equal(t, "access_token_123", authResponse.AccessToken)
-	assert.Equal(t, "refresh_token_123", authResponse.RefreshToken)
 	assert.Equal(t, "Bearer", authResponse.TokenType)
 	assert.Equal(t, 3600, authResponse.ExpiresIn)
 }
 
 func TestRefreshTokenResponse_Structure(t *testing.T) {
 	response := domain.RefreshTokenResponse{
-		AccessToken:  "new_access_token",
-		RefreshToken: "new_refresh_token",
-		TokenType:    "Bearer",
-		ExpiresIn:    3600,
+		AccessToken: "new_access_token",
+		TokenType:   "Bearer",
+		ExpiresIn:   3600,
 	}
 
 	assert.Equal(t, "new_access_token", response.AccessToken)
-	assert.Equal(t, "new_refresh_token", response.RefreshToken)
 	assert.Equal(t, "Bearer", response.TokenType)
 	assert.Equal(t, 3600, response.ExpiresIn)
 }
