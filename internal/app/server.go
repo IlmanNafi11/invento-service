@@ -6,6 +6,7 @@ import (
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
 	"fiber-boiler-plate/internal/usecase/repo"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -17,6 +18,23 @@ import (
 func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			if c.Path() != "" && len(c.Path()) >= 8 && c.Path()[:8] == "/uploads" {
+				return err
+			}
+			
+			if err != nil {
+				if e, ok := err.(*fiber.Error); ok {
+					if e.Code == fiber.StatusNotFound {
+						return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+							"success":   false,
+							"message":   "Endpoint tidak ditemukan",
+							"code":      404,
+							"timestamp": time.Now().Format(time.RFC3339),
+						})
+					}
+				}
+			}
+			
 			tusVersion := c.Get("Tus-Resumable")
 			if tusVersion != "" && (c.Method() == "PATCH" || c.Method() == "HEAD" || c.Method() == "DELETE") {
 				c.Set("Tus-Resumable", cfg.Upload.TusVersion)
@@ -35,7 +53,8 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 		ExposeHeaders: "Tus-Resumable, Tus-Version, Tus-Extension, Tus-Max-Size, Upload-Offset, Upload-Length, Location",
 	}))
 
-	app.Static("/uploads", "./uploads")
+	pathResolver := helper.NewPathResolver(cfg)
+	app.Static("/uploads", pathResolver.GetBasePath())
 
 	userRepo := repo.NewUserRepository(db)
 	refreshTokenRepo := repo.NewRefreshTokenRepository(db)
@@ -51,8 +70,6 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	if err != nil {
 		panic("Gagal inisialisasi Casbin enforcer: " + err.Error())
 	}
-
-	pathResolver := helper.NewPathResolver(cfg)
 	tusStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	tusQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrent)
 	fileManager := helper.NewFileManager(cfg)
@@ -66,7 +83,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
 	roleController := http.NewRoleController(roleUsecase)
 
-	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, projectRepo, modulRepo, casbinEnforcer, db)
+	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, projectRepo, modulRepo, casbinEnforcer, pathResolver, cfg, db)
 	userController := http.NewUserController(userUsecase)
 
 	projectUsecase := usecase.NewProjectUsecase(projectRepo, fileManager)

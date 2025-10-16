@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
@@ -15,7 +16,7 @@ type UserUsecase interface {
 	DeleteUser(userID uint) error
 	GetUserFiles(userID uint, params domain.UserFilesQueryParams) (*domain.UserFilesData, error)
 	GetProfile(userID uint) (*domain.ProfileData, error)
-	UpdateProfile(userID uint, userEmail string, userRole string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error)
+	UpdateProfile(userID uint, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error)
 	GetUserPermissions(userID uint) ([]domain.UserPermissionItem, error)
 	DownloadUserFiles(ownerUserID uint, projectIDs, modulIDs []uint) (string, error)
 }
@@ -28,6 +29,8 @@ type userUsecase struct {
 	casbinEnforcer *helper.CasbinEnforcer
 	userHelper     *helper.UserHelper
 	downloadHelper *helper.DownloadHelper
+	pathResolver   *helper.PathResolver
+	config         *config.Config
 	db             *gorm.DB
 }
 
@@ -37,6 +40,8 @@ func NewUserUsecase(
 	projectRepo repo.ProjectRepository,
 	modulRepo repo.ModulRepository,
 	casbinEnforcer *helper.CasbinEnforcer,
+	pathResolver *helper.PathResolver,
+	cfg *config.Config,
 	db *gorm.DB,
 ) UserUsecase {
 	return &userUsecase{
@@ -45,8 +50,10 @@ func NewUserUsecase(
 		projectRepo:    projectRepo,
 		modulRepo:      modulRepo,
 		casbinEnforcer: casbinEnforcer,
-		userHelper:     helper.NewUserHelper(),
+		userHelper:     helper.NewUserHelper(pathResolver, cfg),
 		downloadHelper: helper.NewDownloadHelper(),
+		pathResolver:   pathResolver,
+		config:         cfg,
 		db:             db,
 	}
 }
@@ -150,11 +157,15 @@ func (uc *userUsecase) GetUserFiles(userID uint, params domain.UserFilesQueryPar
 	}
 
 	for _, pf := range projectFiles {
+		normalizedURL := pf.DownloadURL
+		if normalizedPath := uc.pathResolver.ConvertToAPIPath(&pf.DownloadURL); normalizedPath != nil {
+			normalizedURL = *normalizedPath
+		}
 		allFiles = append(allFiles, domain.UserFileItem{
 			ID:          pf.ID,
 			NamaFile:    pf.NamaFile,
 			Kategori:    pf.Kategori,
-			DownloadURL: pf.DownloadURL,
+			DownloadURL: normalizedURL,
 		})
 	}
 
@@ -180,11 +191,15 @@ func (uc *userUsecase) GetUserFiles(userID uint, params domain.UserFilesQueryPar
 	}
 
 	for _, mf := range modulFiles {
+		normalizedURL := mf.DownloadURL
+		if normalizedPath := uc.pathResolver.ConvertToAPIPath(&mf.DownloadURL); normalizedPath != nil {
+			normalizedURL = *normalizedPath
+		}
 		allFiles = append(allFiles, domain.UserFileItem{
 			ID:          mf.ID,
 			NamaFile:    mf.NamaFile,
 			Kategori:    mf.Kategori,
-			DownloadURL: mf.DownloadURL,
+			DownloadURL: normalizedURL,
 		})
 	}
 
@@ -230,7 +245,7 @@ func (uc *userUsecase) GetProfile(userID uint) (*domain.ProfileData, error) {
 	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
-func (uc *userUsecase) UpdateProfile(userID uint, userEmail string, userRole string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error) {
+func (uc *userUsecase) UpdateProfile(userID uint, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error) {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -241,7 +256,7 @@ func (uc *userUsecase) UpdateProfile(userID uint, userEmail string, userRole str
 
 	jenisKelaminPtr := uc.userHelper.NormalizeJenisKelamin(req.JenisKelamin)
 
-	fotoProfilPath, err := uc.userHelper.SaveProfilePhoto(fotoProfil, user.FotoProfil, userEmail, userRole)
+	fotoProfilPath, err := uc.userHelper.SaveProfilePhoto(fotoProfil, userID, user.FotoProfil)
 	if err != nil {
 		return nil, err
 	}

@@ -2,15 +2,22 @@ package helper
 
 import (
 	"errors"
+	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
+	"fmt"
 	"mime/multipart"
-	"path/filepath"
 )
 
-type UserHelper struct{}
+type UserHelper struct{
+	pathResolver *PathResolver
+	config       *config.Config
+}
 
-func NewUserHelper() *UserHelper {
-	return &UserHelper{}
+func NewUserHelper(pathResolver *PathResolver, cfg *config.Config) *UserHelper {
+	return &UserHelper{
+		pathResolver: pathResolver,
+		config:       cfg,
+	}
 }
 
 func (uh *UserHelper) BuildProfileData(user *domain.User, jumlahProject, jumlahModul int) *domain.ProfileData {
@@ -23,7 +30,7 @@ func (uh *UserHelper) BuildProfileData(user *domain.User, jumlahProject, jumlahM
 		Name:          user.Name,
 		Email:         user.Email,
 		JenisKelamin:  user.JenisKelamin,
-		FotoProfil:    user.FotoProfil,
+		FotoProfil:    uh.pathResolver.ConvertToAPIPath(user.FotoProfil),
 		Role:          roleName,
 		CreatedAt:     user.CreatedAt,
 		JumlahProject: jumlahProject,
@@ -53,7 +60,7 @@ func (uh *UserHelper) AggregateUserPermissions(permissions [][]string) []domain.
 	return result
 }
 
-func (uh *UserHelper) SaveProfilePhoto(fotoProfil interface{}, currentPhotoPath *string, userEmail, userRole string) (*string, error) {
+func (uh *UserHelper) SaveProfilePhoto(fotoProfil interface{}, userID uint, currentPhotoPath *string) (*string, error) {
 	if fotoProfil == nil {
 		return nil, nil
 	}
@@ -67,23 +74,20 @@ func (uh *UserHelper) SaveProfilePhoto(fotoProfil interface{}, currentPhotoPath 
 		return nil, err
 	}
 
-	var profilDir string
 	if currentPhotoPath != nil && *currentPhotoPath != "" {
-		profilDir = filepath.Dir(*currentPhotoPath)
 		if err := DeleteFile(*currentPhotoPath); err != nil {
 			return nil, errors.New("gagal menghapus foto profil lama")
 		}
-	} else {
-		var err error
-		profilDir, err = CreateProfilDirectory(userEmail, userRole)
-		if err != nil {
-			return nil, errors.New("gagal membuat direktori profil")
-		}
+	}
+
+	profilDir := uh.pathResolver.GetProfilDirectory(userID)
+	if err := uh.pathResolver.EnsureDirectoryExists(profilDir); err != nil {
+		return nil, errors.New("gagal membuat direktori profil")
 	}
 
 	ext := GetFileExtension(fileHeader.Filename)
-	filename := "profil" + ext
-	destPath := filepath.Join(profilDir, filename)
+	filename := fmt.Sprintf("profil%s", ext)
+	destPath := uh.pathResolver.GetProfilFilePath(userID, filename)
 
 	if err := SaveUploadedFile(fileHeader, destPath); err != nil {
 		return nil, errors.New("gagal menyimpan foto profil")

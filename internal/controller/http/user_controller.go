@@ -116,8 +116,6 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 
 func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint)
-	userEmail := c.Locals("user_email").(string)
-	userRole := c.Locals("user_role").(string)
 
 	var req domain.UpdateProfileRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -130,7 +128,7 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 
 	fotoProfil, _ := c.FormFile("foto_profil")
 
-	result, err := ctrl.userUsecase.UpdateProfile(userID, userEmail, userRole, req, fotoProfil)
+	result, err := ctrl.userUsecase.UpdateProfile(userID, req, fotoProfil)
 	if err != nil {
 		switch err.Error() {
 		case "format foto profil harus png, jpg, atau jpeg", "ukuran foto profil tidak boleh lebih dari 2MB":

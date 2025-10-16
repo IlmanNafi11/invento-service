@@ -91,3 +91,55 @@ func (pr *PathResolver) FileExists(path string) bool {
 	}
 	return !info.IsDir()
 }
+
+func (pr *PathResolver) GetProfilPath(userID uint) string {
+	basePath := pr.GetBasePath()
+	return filepath.Join(basePath, "profil", fmt.Sprintf("%d", userID))
+}
+
+func (pr *PathResolver) GetProfilFilePath(userID uint, filename string) string {
+	basePath := pr.GetBasePath()
+	return filepath.Join(basePath, "profil", fmt.Sprintf("%d", userID), filename)
+}
+
+func (pr *PathResolver) GetProfilDirectory(userID uint) string {
+	basePath := pr.GetBasePath()
+	return filepath.Join(basePath, "profil", fmt.Sprintf("%d", userID))
+}
+
+func (pr *PathResolver) GetModulPath(userID uint, identifier string) string {
+	basePath := pr.GetBasePath()
+	return filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), identifier)
+}
+
+func (pr *PathResolver) GetModulFilePath(userID uint, identifier string, filename string) string {
+	basePath := pr.GetBasePath()
+	return filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), identifier, filename)
+}
+
+func (pr *PathResolver) ConvertToAPIPath(absolutePath *string) *string {
+	if absolutePath == nil || *absolutePath == "" {
+		return absolutePath
+	}
+
+	basePath := pr.GetBasePath()
+	path := *absolutePath
+	
+	path = filepath.Clean(path)
+	basePath = filepath.Clean(basePath)
+	
+	if len(path) > len(basePath) && filepath.HasPrefix(path, basePath) {
+		relativePath := path[len(basePath):]
+		
+		relativePath = filepath.ToSlash(relativePath)
+		
+		if len(relativePath) > 0 && relativePath[0] != '/' {
+			relativePath = "/" + relativePath
+		}
+		
+		apiPath := "/uploads" + relativePath
+		return &apiPath
+	}
+	
+	return absolutePath
+}
