@@ -51,7 +51,7 @@ func NewUserUsecase(
 		modulRepo:      modulRepo,
 		casbinEnforcer: casbinEnforcer,
 		userHelper:     helper.NewUserHelper(pathResolver, cfg),
-		downloadHelper: helper.NewDownloadHelper(),
+		downloadHelper: helper.NewDownloadHelper(pathResolver),
 		pathResolver:   pathResolver,
 		config:         cfg,
 		db:             db,

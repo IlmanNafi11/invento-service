@@ -6,12 +6,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
-type DownloadHelper struct{}
+type DownloadHelper struct {
+	pathResolver *PathResolver
+}
 
-func NewDownloadHelper() *DownloadHelper {
-	return &DownloadHelper{}
+func NewDownloadHelper(pathResolver *PathResolver) *DownloadHelper {
+	return &DownloadHelper{
+		pathResolver: pathResolver,
+	}
 }
 
 func (dh *DownloadHelper) ValidateDownloadRequest(projectIDs, modulIDs []uint) error {
@@ -21,21 +26,59 @@ func (dh *DownloadHelper) ValidateDownloadRequest(projectIDs, modulIDs []uint) e
 	return nil
 }
 
+func (dh *DownloadHelper) resolvePath(relativePath string) string {
+	if filepath.IsAbs(relativePath) {
+		return relativePath
+	}
+	
+	if dh.pathResolver == nil {
+		logger := NewLogger()
+		logger.Error("resolvePath - pathResolver is nil!")
+		return relativePath
+	}
+	
+	basePath := dh.pathResolver.GetBasePath()
+	cleanBasePath := strings.TrimRight(basePath, "/")
+	
+	pathToJoin := relativePath
+	if strings.HasPrefix(relativePath, "uploads/") {
+		pathToJoin = strings.TrimPrefix(relativePath, "uploads/")
+	}
+	if strings.HasPrefix(relativePath, "temp/") {
+		pathToJoin = strings.TrimPrefix(relativePath, "temp/")
+	}
+	
+	resolved := filepath.Join(cleanBasePath, pathToJoin)
+	
+	absPath, err := filepath.Abs(resolved)
+	if err != nil {
+		logger := NewLogger()
+		logger.Warn("resolvePath - Failed to get absolute path: %v, using relative path", err)
+		return resolved
+	}
+	
+	return absPath
+}
+
 func (dh *DownloadHelper) PrepareFilesForDownload(projects []domain.Project, moduls []domain.Modul) ([]string, []string, error) {
 	var filePaths []string
 	var notFoundFiles []string
 
 	for _, project := range projects {
-		if _, err := os.Stat(project.PathFile); err == nil {
-			filePaths = append(filePaths, project.PathFile)
+		resolvedPath := dh.resolvePath(project.PathFile)
+
+		if _, err := os.Stat(resolvedPath); err == nil {
+			filePaths = append(filePaths, resolvedPath)
 		} else {
 			notFoundFiles = append(notFoundFiles, fmt.Sprintf("Project ID %d: %s", project.ID, project.PathFile))
 		}
 	}
 
 	for _, modul := range moduls {
-		if _, err := os.Stat(modul.PathFile); err == nil {
-			filePaths = append(filePaths, modul.PathFile)
+		resolvedPath := dh.resolvePath(modul.PathFile)
+
+		if _, err := os.Stat(resolvedPath); err == nil {
+			filePaths = append(filePaths, resolvedPath)
 		} else {
 			notFoundFiles = append(notFoundFiles, fmt.Sprintf("Modul ID %d: %s", modul.ID, modul.PathFile))
 		}
@@ -57,7 +100,9 @@ func (dh *DownloadHelper) CreateDownloadZip(filePaths []string, userID uint) (st
 		return filePaths[0], nil
 	}
 
-	tempDir := "./uploads/temp"
+	basePath := dh.pathResolver.GetBasePath()
+	tempDir := filepath.Join(basePath, "temp")
+
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
 		return "", errors.New("gagal membuat direktori temp")
 	}
@@ -105,3 +150,5 @@ func (dh *DownloadHelper) GetFilesByIDs(projectIDs, modulIDs []uint, projects []
 
 	return selectedProjects, selectedModuls
 }
+
+
