@@ -12,12 +12,14 @@ import (
 type AuthController struct {
 	authUsecase  usecase.AuthUsecase
 	cookieHelper *helper.CookieHelper
+	logger       *helper.Logger
 }
 
 func NewAuthController(authUsecase usecase.AuthUsecase, cfg *config.Config) *AuthController {
 	return &AuthController{
 		authUsecase:  authUsecase,
 		cookieHelper: helper.NewCookieHelper(cfg),
+		logger:       helper.NewLogger(),
 	}
 }
 
@@ -51,29 +53,42 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 }
 
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
+	ctrl.logger.Debugf("[Controller] Login request dimulai dari IP: %s", c.IP())
+
 	var req domain.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
+		ctrl.logger.Warnf("[Controller] Error parsing request body: %v", err)
 		return helper.SendBadRequestResponse(c, "Format request tidak valid")
 	}
 
+	ctrl.logger.Debugf("[Controller] Request parsed - Email: %s, Password length: %d", req.Email, len(req.Password))
+
 	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
+		ctrl.logger.Warnf("[Controller] Validasi request gagal - Errors: %v", validationErrors)
 		return helper.SendValidationErrorResponse(c, validationErrors)
 	}
 
+	ctrl.logger.Debugf("[Controller] Memanggil authUsecase.Login untuk email: %s", req.Email)
 	refreshToken, result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
+		ctrl.logger.Warnf("[Controller] Login failed untuk email: %s, error: %s", req.Email, err.Error())
 		switch err.Error() {
 		case "email atau password salah":
+			ctrl.logger.Infof("[Controller] 401 Unauthorized - Email/Password salah untuk: %s", req.Email)
 			return helper.SendUnauthorizedResponse(c)
 		case "akun belum diaktifkan":
+			ctrl.logger.Infof("[Controller] 403 Forbidden - Akun belum diaktifkan untuk: %s", req.Email)
 			return helper.SendErrorResponse(c, fiber.StatusForbidden, err.Error(), nil)
 		default:
+			ctrl.logger.Errorf("[Controller] 500 Server Error - Unexpected error: %v", err)
 			return helper.SendInternalServerErrorResponse(c)
 		}
 	}
 
+	ctrl.logger.Debugf("[Controller] Login berhasil, menyetting refresh token cookie")
 	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
 
+	ctrl.logger.Infof("[Controller] 200 OK - Login berhasil untuk: %s (User ID: %d)", req.Email, result.User.ID)
 	return helper.SendSuccessResponse(c, helper.StatusOK, "Login berhasil", result)
 }
 

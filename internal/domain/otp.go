@@ -13,6 +13,7 @@ type OTP struct {
 	ID           uint       `json:"id" gorm:"primaryKey"`
 	Email        string     `json:"email" gorm:"not null;index"`
 	UserName     string     `json:"user_name" gorm:"default:''"`
+	PasswordHash string     `json:"password_hash" gorm:"default:''"`
 	Code         string     `json:"code" gorm:"not null"`
 	CodeHash     string     `json:"-" gorm:"not null"`
 	Type         OTPType    `json:"type" gorm:"not null;index"`

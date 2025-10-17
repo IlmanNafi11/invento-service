@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fiber-boiler-plate/internal/domain"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -15,11 +16,21 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 }
 
 func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
+	log.Printf("[Repository] GetByEmail: Mencari user dengan email: %s (status is_active = true)", email)
+
 	var user domain.User
 	err := r.db.Where("email = ? AND is_active = ?", email, true).Preload("Role").First(&user).Error
+
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			log.Printf("[Repository] GetByEmail: User TIDAK DITEMUKAN dengan email: %s (status is_active = true)", email)
+		} else {
+			log.Printf("[Repository] GetByEmail: ERROR query - Email: %s, Error: %v", email, err)
+		}
 		return nil, err
 	}
+
+	log.Printf("[Repository] GetByEmail: User DITEMUKAN - ID: %d, Email: %s, IsActive: %v", user.ID, user.Email, user.IsActive)
 	return &user, nil
 }
 

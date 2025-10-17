@@ -28,6 +28,7 @@ type authUsecase struct {
 	authHelper       *helper.AuthHelper
 	jwtManager       *helper.JWTManager
 	config           *config.Config
+	logger           *helper.Logger
 }
 
 func NewAuthUsecase(
@@ -52,6 +53,7 @@ func NewAuthUsecase(
 		authHelper:       authHelper,
 		jwtManager:       jwtManager,
 		config:           config,
+		logger:           helper.NewLogger(),
 	}
 }
 
@@ -97,23 +99,43 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 }
 
 func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthResponse, error) {
+	uc.logger.Debugf("=== LOGIN START === Email: %s", req.Email)
+
+	uc.logger.Debugf("[Step 1] Mencari user dengan email: %s", req.Email)
 	user, err := uc.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			uc.logger.Warnf("[Step 1] User tidak ditemukan dengan email: %s, error: %v", req.Email, err)
 			return "", nil, errors.New("email atau password salah")
 		}
+		uc.logger.Errorf("[Step 1] Error saat mengambil data user: %v", err)
 		return "", nil, errors.New("gagal mengambil data user")
 	}
 
+	uc.logger.Debugf("[Step 2] User ditemukan - ID: %d, Email: %s, IsActive: %v, HasPassword: %v",
+		user.ID, user.Email, user.IsActive, user.Password != "")
+
 	if !user.IsActive {
+		uc.logger.Warnf("[Step 2] User tidak aktif - ID: %d, Email: %s, IsActive: %v", user.ID, user.Email, user.IsActive)
 		return "", nil, errors.New("akun belum diaktifkan")
 	}
 
+	uc.logger.Debugf("[Step 3] Memverifikasi password untuk user: %s", user.Email)
 	if err := helper.ComparePassword(user.Password, req.Password); err != nil {
+		uc.logger.Warnf("[Step 3] Password tidak cocok untuk user: %s, error: %v", user.Email, err)
 		return "", nil, err
 	}
 
-	return uc.authHelper.GenerateAuthResponse(user)
+	uc.logger.Debugf("[Step 4] Password cocok, melakukan generate token untuk user: %s", user.Email)
+	refreshToken, authResponse, err := uc.authHelper.GenerateAuthResponse(user)
+	if err != nil {
+		uc.logger.Errorf("[Step 4] Error saat generate auth response: %v", err)
+		return "", nil, err
+	}
+
+	uc.logger.Infof("=== LOGIN SUCCESS === User: %s (ID: %d), Token: %s...", user.Email, user.ID, authResponse.AccessToken[:20])
+
+	return refreshToken, authResponse, nil
 }
 
 func (uc *authUsecase) RefreshToken(refreshToken string) (string, *domain.RefreshTokenResponse, error) {

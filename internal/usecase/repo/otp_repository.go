@@ -8,7 +8,7 @@ import (
 )
 
 type OTPRepository interface {
-	Create(email string, userName string, codeHash string, otpType domain.OTPType, expiresAt time.Time, maxAttempts int) (*domain.OTP, error)
+	Create(email string, userName string, passwordHash string, codeHash string, otpType domain.OTPType, expiresAt time.Time, maxAttempts int) (*domain.OTP, error)
 	GetByEmail(email string, otpType domain.OTPType) (*domain.OTP, error)
 	IncrementAttempts(id uint) error
 	MarkAsUsed(id uint) error
@@ -27,16 +27,17 @@ func NewOTPRepository(db *gorm.DB) OTPRepository {
 	}
 }
 
-func (r *otpRepository) Create(email string, userName string, codeHash string, otpType domain.OTPType, expiresAt time.Time, maxAttempts int) (*domain.OTP, error) {
+func (r *otpRepository) Create(email string, userName string, passwordHash string, codeHash string, otpType domain.OTPType, expiresAt time.Time, maxAttempts int) (*domain.OTP, error) {
 	otp := &domain.OTP{
-		Email:       email,
-		UserName:    userName,
-		CodeHash:    codeHash,
-		Type:        otpType,
-		ExpiresAt:   expiresAt,
-		MaxAttempts: maxAttempts,
-		Attempts:    0,
-		IsUsed:      false,
+		Email:        email,
+		UserName:     userName,
+		PasswordHash: passwordHash,
+		CodeHash:     codeHash,
+		Type:         otpType,
+		ExpiresAt:    expiresAt,
+		MaxAttempts:  maxAttempts,
+		Attempts:     0,
+		IsUsed:       false,
 	}
 
 	err := r.db.Create(otp).Error

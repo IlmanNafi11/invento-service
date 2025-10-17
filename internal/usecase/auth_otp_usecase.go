@@ -85,9 +85,14 @@ func (uc *authOTPUsecase) RegisterWithOTP(req domain.RegisterRequest) (*domain.O
 	}
 
 	otpHash := helper.HashOTP(otp)
+	hashedPassword, err := helper.HashPassword(req.Password)
+	if err != nil {
+		return nil, errors.New("gagal mengenkripsi password")
+	}
+
 	expiresAt := time.Now().Add(time.Duration(uc.config.OTP.ExpiryMinutes) * time.Minute)
 
-	otpRecord, err := uc.otpRepo.Create(req.Email, req.Name, otpHash, domain.OTPTypeRegister, expiresAt, uc.config.OTP.MaxAttempts)
+	otpRecord, err := uc.otpRepo.Create(req.Email, req.Name, hashedPassword, otpHash, domain.OTPTypeRegister, expiresAt, uc.config.OTP.MaxAttempts)
 	if err != nil {
 		return nil, errors.New("gagal menyimpan kode otp")
 	}
@@ -137,15 +142,10 @@ func (uc *authOTPUsecase) VerifyRegisterOTP(req domain.VerifyOTPRequest) (string
 		return "", nil, errors.New("gagal mengambil data role")
 	}
 
-	hashedPassword, err := helper.HashPassword(req.Email + "temp")
-	if err != nil {
-		return "", nil, err
-	}
-
 	user := &domain.User{
 		Name:     otpRecord.UserName,
 		Email:    req.Email,
-		Password: hashedPassword,
+		Password: otpRecord.PasswordHash,
 		RoleID:   &role.ID,
 		IsActive: true,
 	}
@@ -194,7 +194,7 @@ func (uc *authOTPUsecase) ResendRegisterOTP(req domain.ResendOTPRequest) (*domai
 	otpHash := helper.HashOTP(otp)
 	expiresAt := time.Now().Add(time.Duration(uc.config.OTP.ExpiryMinutes) * time.Minute)
 
-	newOTPRecord, err := uc.otpRepo.Create(req.Email, otpRecord.UserName, otpHash, domain.OTPTypeRegister, expiresAt, uc.config.OTP.MaxAttempts)
+	newOTPRecord, err := uc.otpRepo.Create(req.Email, otpRecord.UserName, otpRecord.PasswordHash, otpHash, domain.OTPTypeRegister, expiresAt, uc.config.OTP.MaxAttempts)
 	if err != nil {
 		return nil, errors.New("gagal menyimpan kode otp")
 	}
@@ -236,7 +236,7 @@ func (uc *authOTPUsecase) InitiateResetPassword(req domain.ResetPasswordRequest)
 	expiresAt := time.Now().Add(time.Duration(uc.config.OTP.ExpiryMinutes) * time.Minute)
 
 	// Step 5: Save OTP to database
-	otpRecord, err := uc.otpRepo.Create(req.Email, "", otpHash, domain.OTPTypeResetPassword, expiresAt, uc.config.OTP.MaxAttempts)
+	otpRecord, err := uc.otpRepo.Create(req.Email, "", "", otpHash, domain.OTPTypeResetPassword, expiresAt, uc.config.OTP.MaxAttempts)
 	if err != nil {
 		return nil, errors.New("gagal menyimpan kode otp")
 	}
@@ -342,7 +342,7 @@ func (uc *authOTPUsecase) ResendResetPasswordOTP(req domain.ResendOTPRequest) (*
 	otpHash := helper.HashOTP(otp)
 	expiresAt := time.Now().Add(time.Duration(uc.config.OTP.ExpiryMinutes) * time.Minute)
 
-	newOTPRecord, err := uc.otpRepo.Create(req.Email, "", otpHash, domain.OTPTypeResetPassword, expiresAt, uc.config.OTP.MaxAttempts)
+	newOTPRecord, err := uc.otpRepo.Create(req.Email, "", "", otpHash, domain.OTPTypeResetPassword, expiresAt, uc.config.OTP.MaxAttempts)
 	if err != nil {
 		return nil, errors.New("gagal menyimpan kode otp")
 	}
