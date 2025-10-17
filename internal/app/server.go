@@ -123,6 +123,9 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	tusModulUsecase := usecase.NewTusModulUsecase(tusModulUploadRepo, modulRepo, tusManager, fileManager, cfg)
 	modulController := http.NewModulController(modulUsecase, tusModulUsecase, cfg)
 
+	statisticUsecase := usecase.NewStatisticUsecase(userRepo, projectRepo, modulRepo, roleRepo, casbinEnforcer, db)
+	statisticController := http.NewStatisticController(statisticUsecase)
+
 	healthUsecase := usecase.NewHealthUsecase(db, cfg)
 	healthController := http.NewHealthController(healthUsecase)
 
@@ -209,6 +212,9 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	modulUpdate.Head("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetModulUpdateUploadStatus)
 	modulUpdate.Get("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetModulUpdateUploadInfo)
 	modulUpdate.Delete("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.CancelModulUpdateUpload)
+
+	statistic := api.Group("/statistic", helper.JWTAuthMiddleware(jwtManager))
+	statistic.Get("/", statisticController.GetStatistics)
 
 	monitoring := api.Group("/monitoring")
 	monitoring.Get("/health", healthController.ComprehensiveHealthCheck)

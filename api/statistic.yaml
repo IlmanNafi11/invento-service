@@ -1,0 +1,189 @@
+openapi: 3.0.3
+info:
+  title: Fiber Boilerplate API - Statistics
+  description: |
+    API dokumentasi untuk sistem statistik pada fiber boilerplate.
+    
+    **Dynamic Response Based on Permission**:
+    - Response bersifat dinamis tergantung permission dari role user
+    - Sistem akan menampilkan data sesuai dengan resource yang dapat diakses oleh user
+    - Jika user hanya memiliki read permission pada Modul, hanya total modul yang akan ditampilkan
+    - Untuk user dengan multiple permissions, semua data resource terkait akan ditampilkan
+    
+    **Statistics Available**:
+    - Total project user terkait
+    - Total modul user terkait
+    - Total user (untuk admin)
+    - Total roles (untuk admin)
+    
+    **Access Control**:
+    - Mahasiswa: Hanya melihat modul (jika permission read pada Modul)
+    - Dosen: Modul dan project
+    - Admin: Semua data (users, roles, projects, moduls)
+  version: 1.0.0
+  contact:
+    name: Developer Team
+    email: developer@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.example.com/v1
+    description: Production server
+
+paths:
+  /statistic:
+    get:
+      tags:
+        - Statistics
+      summary: Mendapatkan statistik dashboard
+      description: |
+        Endpoint untuk mendapatkan statistik dashboard dengan data yang dinamis berdasarkan permission user.
+        Response akan berisi data sesuai dengan resource yang dapat diakses oleh user terkait.
+        
+        **Permission-Based Response**:
+        - Jika user memiliki permission "read" pada resource "Project", field `total_project` akan ditampilkan
+        - Jika user memiliki permission "read" pada resource "Modul", field `total_modul` akan ditampilkan
+        - Jika user memiliki permission untuk "User", field `total_user` akan ditampilkan
+        - Jika user memiliki permission untuk "Role", field `total_role` akan ditampilkan
+        
+        **Response Structure**:
+        Response tidak akan menampilkan field yang kosong. Hanya data yang tersedia sesuai permission akan ditampilkan.
+      operationId: getStatistics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Statistik berhasil didapat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Statistik berhasil didapat"
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/StatisticsData'
+                  timestamp:
+                    type: string
+                    format: date-time
+              examples:
+                mahasiswa_response:
+                  summary: Mahasiswa (hanya melihat modul)
+                  value:
+                    success: true
+                    message: "Statistik berhasil didapat"
+                    code: 200
+                    data:
+                      total_modul: 42
+                    timestamp: "2024-01-01T10:00:00Z"
+                dosen_response:
+                  summary: Dosen (modul dan project)
+                  value:
+                    success: true
+                    message: "Statistik berhasil didapat"
+                    code: 200
+                    data:
+                      total_project: 5
+                      total_modul: 42
+                    timestamp: "2024-01-01T10:00:00Z"
+                admin_response:
+                  summary: Admin (semua data)
+                  value:
+                    success: true
+                    message: "Statistik berhasil didapat"
+                    code: 200
+                    data:
+                      total_project: 45
+                      total_modul: 128
+                      total_user: 156
+                      total_role: 4
+                    timestamp: "2024-01-01T10:00:00Z"
+        '401':
+          description: Token tidak valid atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User tidak memiliki permission untuk mengakses statistik
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    StatisticsData:
+      type: object
+      description: |
+        Data statistik dinamis berdasarkan permission user.
+        Hanya field yang tersedia sesuai permission akan ditampilkan.
+      properties:
+        total_project:
+          type: integer
+          description: Total project yang dimiliki user atau total project di sistem (untuk admin)
+          example: 45
+          nullable: true
+        total_modul:
+          type: integer
+          description: Total modul yang dimiliki user atau total modul di sistem (untuk admin)
+          example: 128
+          nullable: true
+        total_user:
+          type: integer
+          description: Total user di sistem (hanya untuk admin atau yang memiliki permission User)
+          example: 156
+          nullable: true
+        total_role:
+          type: integer
+          description: Total role di sistem (hanya untuk admin atau yang memiliki permission Role)
+          example: 4
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Terjadi kesalahan pada server"
+        code:
+          type: integer
+          example: 500
+        errors:
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Gunakan JWT access token dengan format:
+        Authorization: Bearer {access_token}
+
+tags:
+  - name: Statistics
+    description: Endpoints untuk mendapatkan statistik dashboard
