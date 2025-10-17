@@ -125,8 +125,6 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 		return "", nil, err
 	}
 
-	uc.logger.Infof("=== LOGIN SUCCESS === User: %s (ID: %d), Token: %s...", user.Email, user.ID, authResponse.AccessToken[:20])
-
 	return refreshToken, authResponse, nil
 }
 

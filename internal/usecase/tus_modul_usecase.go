@@ -59,18 +59,19 @@ func (uc *tusModulUsecase) CheckModulUploadSlot(userID uint) (*domain.TusModulUp
 		return nil, fmt.Errorf("gagal mengecek slot upload: %v", err)
 	}
 
-	available := activeCount < domain.MaxModulQueueSize
+	maxQueue := uc.config.Upload.MaxQueueModulPerUser
+	available := activeCount < maxQueue
 
 	response := &domain.TusModulUploadSlotResponse{
 		Available:   available,
 		QueueLength: activeCount,
-		MaxQueue:    domain.MaxModulQueueSize,
+		MaxQueue:    maxQueue,
 	}
 
 	if available {
-		response.Message = fmt.Sprintf("Slot tersedia (%d/%d)", activeCount, domain.MaxModulQueueSize)
+		response.Message = fmt.Sprintf("Slot tersedia (%d/%d)", activeCount, maxQueue)
 	} else {
-		response.Message = fmt.Sprintf("Antrian penuh (%d/%d), silakan tunggu upload selesai", activeCount, domain.MaxModulQueueSize)
+		response.Message = fmt.Sprintf("Antrian penuh (%d/%d), silakan tunggu upload selesai", activeCount, maxQueue)
 	}
 
 	return response, nil
@@ -149,8 +150,9 @@ func (uc *tusModulUsecase) validateModulFileSize(fileSize int64) error {
 		return errors.New("ukuran file tidak valid")
 	}
 
-	if fileSize > domain.MaxModulFileSize {
-		return fmt.Errorf("ukuran file melebihi batas maksimal %d MB", domain.MaxModulFileSize/(1024*1024))
+	maxSize := uc.config.Upload.MaxSizeModul
+	if fileSize > maxSize {
+		return fmt.Errorf("ukuran file melebihi batas maksimal %d MB", maxSize/(1024*1024))
 	}
 
 	return nil

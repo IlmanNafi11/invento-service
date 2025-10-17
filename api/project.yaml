@@ -406,7 +406,7 @@ paths:
         
         **Persyaratan File:**
         - File harus berformat ZIP
-        - Maksimal ukuran file: 500MB (dikonfigurasi via UPLOAD_MAX_SIZE di .env)
+        - Maksimal ukuran file: 500MB (dikonfigurasi via UPLOAD_MAX_SIZE_PROJECT di .env)
         - File akan disimpan dengan struktur: [ENV]/projects/[USER_ID]/[10_DIGIT_ID]/[filename]
         
         Endpoint ini akan gagal jika tidak ada slot upload yang tersedia.

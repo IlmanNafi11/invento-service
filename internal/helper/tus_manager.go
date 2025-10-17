@@ -46,7 +46,7 @@ func (tm *TusManager) CheckUploadSlot() *UploadSlotResponse {
 		Available:     canAccept,
 		QueueLength:   queueLength,
 		ActiveUpload:  hasActiveUpload,
-		MaxConcurrent: tm.config.Upload.MaxConcurrent,
+		MaxConcurrent: tm.config.Upload.MaxConcurrentProject,
 	}
 
 	if canAccept {

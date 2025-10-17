@@ -74,8 +74,8 @@ func (uc *tusUploadUsecase) ResetUploadQueue(userID uint) error {
 }
 
 func (uc *tusUploadUsecase) InitiateUpload(userID uint, userEmail string, userRole string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error) {
-	if fileSize > uc.config.Upload.MaxSize {
-		return nil, fmt.Errorf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSize/(1024*1024))
+	if fileSize > uc.config.Upload.MaxSizeProject {
+		return nil, fmt.Errorf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSizeProject/(1024*1024))
 	}
 
 	if fileSize <= 0 {
@@ -293,7 +293,7 @@ func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID u
 	}
 
 	if fileSize > uc.config.Upload.MaxSize {
-		return nil, fmt.Errorf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSize/(1024*1024))
+		return nil, fmt.Errorf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSizeProject/(1024*1024))
 	}
 
 	if fileSize <= 0 {

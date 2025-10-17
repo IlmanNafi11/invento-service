@@ -87,8 +87,8 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	if err != nil {
 		panic("Gagal inisialisasi Casbin enforcer: " + err.Error())
 	}
-	tusStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	tusQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrent)
+	tusStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeProject)
+	tusQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
 	fileManager := helper.NewFileManager(cfg)
 	tusManager := helper.NewTusManager(tusStore, tusQueue, fileManager, cfg)
 	tusCleanup := helper.NewTusCleanup(tusUploadRepo, tusStore, cfg.Upload.CleanupInterval, cfg.Upload.IdleTimeout)

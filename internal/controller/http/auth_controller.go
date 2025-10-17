@@ -82,7 +82,6 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 
 	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
 
-	ctrl.logger.Infof("[Controller] 200 OK - Login berhasil untuk: %s (User ID: %d)", req.Email, result.User.ID)
 	return helper.SendSuccessResponse(c, helper.StatusOK, "Login berhasil", result)
 }
 

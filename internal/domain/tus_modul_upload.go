@@ -32,9 +32,6 @@ const (
 
 	ModulUploadTypeCreate = "modul_create"
 	ModulUploadTypeUpdate = "modul_update"
-
-	MaxModulFileSize  = 50 * 1024 * 1024
-	MaxModulQueueSize = 5
 )
 
 type TusModulUploadInitRequest struct {
