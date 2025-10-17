@@ -62,10 +62,14 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 
 	refreshToken, result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
-		if err.Error() == "email atau password salah" {
+		switch err.Error() {
+		case "email atau password salah":
 			return helper.SendUnauthorizedResponse(c)
+		case "akun belum diaktifkan":
+			return helper.SendErrorResponse(c, fiber.StatusForbidden, err.Error(), nil)
+		default:
+			return helper.SendInternalServerErrorResponse(c)
 		}
-		return helper.SendInternalServerErrorResponse(c)
 	}
 
 	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)

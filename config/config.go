@@ -15,6 +15,8 @@ type Config struct {
 	JWT      JWTConfig
 	Mail     MailConfig
 	Upload   UploadConfig
+	Mailtrap MailtrapConfig
+	OTP      OTPConfig
 }
 
 type AppConfig struct {
@@ -53,6 +55,22 @@ type MailConfig struct {
 	Username string
 	Password string
 	From     string
+}
+
+type MailtrapConfig struct {
+	APIToken          string
+	AccountID         string
+	Domain            string
+	TemplateRegister  string
+	TemplateResetPass string
+}
+
+type OTPConfig struct {
+	Length                int
+	ExpiryMinutes         int
+	MaxAttempts           int
+	ResendCooldownSeconds int
+	ResendMaxTimes        int
 }
 
 type UploadConfig struct {
@@ -124,7 +142,36 @@ func LoadConfig() *Config {
 			TusVersion:          getEnv("TUS_RESUMABLE_VERSION", "1.0.0"),
 			MaxResumeAttempts:   getEnvAsInt("TUS_MAX_RESUME_ATTEMPTS", 10),
 		},
+		Mailtrap: MailtrapConfig{
+			APIToken:          getEnv("MAILTRAP_API_TOKEN", ""),
+			AccountID:         getEnv("MAILTRAP_ACCOUNT_ID", ""),
+			Domain:            getEnv("MAILTRAP_DOMAIN", ""),
+			TemplateRegister:  getEnv("MAILTRAP_TEMPLATE_REGISTER", ""),
+			TemplateResetPass: getEnv("MAILTRAP_TEMPLATE_RESET_PASSWORD", ""),
+		},
+		OTP: OTPConfig{
+			Length:                getEnvAsInt("OTP_LENGTH", 6),
+			ExpiryMinutes:         getEnvAsInt("OTP_EXPIRY_MINUTES", 10),
+			MaxAttempts:           getEnvAsInt("OTP_MAX_ATTEMPTS", 5),
+			ResendCooldownSeconds: getEnvAsInt("OTP_RESEND_COOLDOWN_SECONDS", 60),
+			ResendMaxTimes:        getEnvAsInt("OTP_RESEND_MAX_TIMES", 5),
+		},
 	}
+
+	// Log config values for debugging
+	log.Printf("[CONFIG] Mailtrap loaded: APIToken=%s, AccountID=%s, Domain=%s",
+		maskToken(config.Mailtrap.APIToken),
+		config.Mailtrap.AccountID,
+		config.Mailtrap.Domain)
+	log.Printf("[CONFIG] Mailtrap Templates: Register=%s, ResetPass=%s",
+		config.Mailtrap.TemplateRegister,
+		config.Mailtrap.TemplateResetPass)
+	log.Printf("[CONFIG] OTP: Length=%d, ExpiryMinutes=%d, MaxAttempts=%d, ResendCooldown=%d, ResendMaxTimes=%d",
+		config.OTP.Length,
+		config.OTP.ExpiryMinutes,
+		config.OTP.MaxAttempts,
+		config.OTP.ResendCooldownSeconds,
+		config.OTP.ResendMaxTimes)
 
 	return config
 }
@@ -158,4 +205,11 @@ func getEnvAsInt64(key string, defaultValue int64) int64 {
 		return value
 	}
 	return defaultValue
+}
+
+func maskToken(token string) string {
+	if len(token) <= 10 {
+		return "***"
+	}
+	return token[:10] + "..."
 }

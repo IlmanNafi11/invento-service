@@ -81,6 +81,13 @@ func SendPayloadTooLargeResponse(c *fiber.Ctx, message string) error {
 	return SendErrorResponse(c, fiber.StatusRequestEntityTooLarge, message, nil)
 }
 
+func SendTooManyRequestsResponse(c *fiber.Ctx, message string) error {
+	if message == "" {
+		message = "Terlalu banyak permintaan, silakan coba lagi nanti"
+	}
+	return SendErrorResponse(c, fiber.StatusTooManyRequests, message, nil)
+}
+
 func SendInternalServerErrorResponse(c *fiber.Ctx) error {
 	return SendErrorResponse(c, fiber.StatusInternalServerError, "Terjadi kesalahan pada server", nil)
 }

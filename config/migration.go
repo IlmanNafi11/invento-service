@@ -21,6 +21,7 @@ func RunMigration(db *gorm.DB) {
 		&domain.Modul{},
 		&domain.TusUpload{},
 		&domain.TusModulUpload{},
+		&domain.OTP{},
 	); err != nil {
 		log.Fatal("Gagal melakukan auto migrate:", err)
 	}

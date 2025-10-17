@@ -105,6 +105,10 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 		return "", nil, errors.New("gagal mengambil data user")
 	}
 
+	if !user.IsActive {
+		return "", nil, errors.New("akun belum diaktifkan")
+	}
+
 	if err := helper.ComparePassword(user.Password, req.Password); err != nil {
 		return "", nil, err
 	}

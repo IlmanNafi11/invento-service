@@ -28,18 +28,25 @@ servers:
     description: Production server
 
 paths:
-  /auth/register:
+  /auth/register/otp:
     post:
       tags:
         - Authentication
-      summary: Registrasi pengguna baru
+      summary: Daftar dengan OTP
       description: |
-        Endpoint untuk mendaftarkan pengguna baru ke dalam sistem.
+        Tahap pertama registrasi: kirim nama, email, dan password
+        
+        **Flow:**
+        1. Frontend kirim nama, email, password
+        2. Backend validasi, generate OTP 6 digit, kirim via Mailtrap
+        3. Frontend tampilkan form input OTP
+        4. Lanjut ke /auth/register/verify-otp
         
         **Keamanan:**
-        - Refresh token dikirim via httpOnly cookie
-        - Tidak ada refresh token di response body
-      operationId: register
+        - Password minimal 8 karakter
+        - Email harus domain polije.ac.id
+        - OTP berlaku 10 menit, max 5 percobaan
+      operationId: registerOTP
       requestBody:
         required: true
         content:
@@ -47,40 +54,26 @@ paths:
             schema:
               $ref: '#/components/schemas/RegisterRequest'
             example:
-              name: "John Doe"
-              email: "john.doe@example.com"
-              password: "password123"
+              name: "Ilman Nafian"
+              email: "E41231969@student.polije.ac.id"
+              password: "admin1234"
       responses:
-        '201':
-          description: Registrasi berhasil
-          headers:
-            Set-Cookie:
-              description: Refresh token sebagai httpOnly cookie
-              schema:
-                type: string
-                example: refresh_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800
+        '200':
+          description: OTP berhasil dikirim ke email
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthSuccessResponse'
+                $ref: '#/components/schemas/OTPResponse'
               example:
                 success: true
-                message: "Registrasi berhasil"
-                code: 201
+                message: "Kode OTP telah dikirim ke email Anda"
+                code: 200
                 data:
-                  user:
-                    id: 1
-                    name: "John Doe"
-                    email: "john.doe@example.com"
-                    is_active: true
-                    created_at: "2024-01-01T00:00:00Z"
-                    updated_at: "2024-01-01T00:00:00Z"
-                  access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  token_type: "Bearer"
-                  expires_in: 3600
-                timestamp: "2024-01-01T00:00:00Z"
+                  message: "Kode OTP telah dikirim ke email Anda"
+                  expires_in: 600
+                timestamp: "2025-10-17T07:00:00Z"
         '400':
-          description: Data validasi tidak valid atau email domain tidak sesuai
+          description: Validasi gagal atau email domain tidak sesuai
           content:
             application/json:
               schema:
@@ -99,7 +92,7 @@ paths:
                         message: "Format email tidak valid"
                       - field: "password"
                         message: "Password minimal 8 karakter"
-                    timestamp: "2024-01-01T00:00:00Z"
+                    timestamp: "2025-10-17T07:00:00Z"
                 domainError:
                   summary: Email domain error
                   value:
@@ -107,15 +100,7 @@ paths:
                     message: "Hanya email dengan domain polije.ac.id yang dapat digunakan"
                     code: 400
                     errors: null
-                    timestamp: "2024-01-01T00:00:00Z"
-                subdomainError:
-                  summary: Email subdomain error
-                  value:
-                    success: false
-                    message: "Subdomain email tidak valid, gunakan student atau teacher"
-                    code: 400
-                    errors: null
-                    timestamp: "2024-01-01T00:00:00Z"
+                    timestamp: "2025-10-17T07:00:00Z"
         '409':
           description: Email sudah terdaftar
           content:
@@ -126,7 +111,7 @@ paths:
                 success: false
                 message: "Email sudah terdaftar"
                 code: 409
-                timestamp: "2024-01-01T00:00:00Z"
+                timestamp: "2025-10-17T07:00:00Z"
         '500':
           description: Kesalahan server
           content:
@@ -137,7 +122,184 @@ paths:
                 success: false
                 message: "Terjadi kesalahan pada server"
                 code: 500
-                timestamp: "2024-01-01T00:00:00Z"
+                timestamp: "2025-10-17T07:00:00Z"
+
+  /auth/register/verify-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Verifikasi OTP dan selesaikan registrasi
+      description: |
+        Tahap kedua registrasi: verifikasi OTP yang dikirim ke email
+        
+        **Flow:**
+        1. Frontend tampilkan form input OTP (6 digit)
+        2. Frontend kirim email, code (OTP), dan type="register"
+        3. Backend validasi OTP, buat user, active akun
+        4. Return access token dan set refresh token cookie
+        5. Frontend auto login dengan access token
+        
+        **Keamanan:**
+        - OTP berlaku 10 menit
+        - Max 5 percobaan, lock setelah itu
+        - Refresh token via httpOnly cookie
+      operationId: verifyRegisterOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOTPRequest'
+            example:
+              email: "E41231969@student.polije.ac.id"
+              code: "652862"
+              type: "register"
+      responses:
+        '200':
+          description: Verifikasi OTP berhasil, akun dibuat dan auto login
+          headers:
+            Set-Cookie:
+              description: Refresh token sebagai httpOnly cookie
+              schema:
+                type: string
+                example: refresh_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+              example:
+                success: true
+                message: "Verifikasi OTP berhasil, akun dibuat"
+                code: 200
+                data:
+                  user:
+                    id: 4
+                    name: "Ilman Nafian"
+                    email: "E41231969@student.polije.ac.id"
+                    is_active: true
+                    created_at: "2025-10-17T07:00:00Z"
+                    updated_at: "2025-10-17T07:00:00Z"
+                  access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  token_type: "Bearer"
+                  expires_in: 3600
+                timestamp: "2025-10-17T07:00:00Z"
+        '400':
+          description: Validasi request gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                success: false
+                message: "Data validasi tidak valid"
+                code: 400
+                errors:
+                  - field: "code"
+                    message: "Kode OTP harus 6 digit angka"
+                timestamp: "2025-10-17T07:00:00Z"
+        '401':
+          description: OTP salah atau sesi OTP berakhir
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Kode OTP salah, coba lagi"
+                code: 401
+                timestamp: "2025-10-17T07:00:00Z"
+        '404':
+          description: OTP tidak ditemukan atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Kode OTP tidak valid atau sudah expired"
+                code: 404
+                timestamp: "2025-10-17T07:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Terjadi kesalahan pada server"
+                code: 500
+                timestamp: "2025-10-17T07:00:00Z"
+
+  /auth/register/resend-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Kirim ulang OTP
+      description: |
+        Kirim ulang OTP ke email dengan rate limit
+        
+        **Limitasi:**
+        - Max 5 kali resend per sesi
+        - Cooldown 60 detik antar resend
+      operationId: resendRegisterOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendOTPRequest'
+            example:
+              email: "E41231969@student.polije.ac.id"
+              type: "register"
+      responses:
+        '200':
+          description: OTP baru berhasil dikirim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPResponse'
+              example:
+                success: true
+                message: "Kode OTP baru telah dikirim ke email Anda"
+                code: 200
+                data:
+                  message: "Kode OTP baru telah dikirim ke email Anda"
+                  expires_in: 600
+                timestamp: "2025-10-17T07:00:00Z"
+        '404':
+          description: Sesi OTP tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Silakan daftar ulang, sesi OTP telah berakhir"
+                code: 404
+                timestamp: "2025-10-17T07:00:00Z"
+        '429':
+          description: Terlalu banyak resend, tunggu beberapa saat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Silakan tunggu beberapa saat sebelum mengirim ulang kode otp"
+                code: 429
+                timestamp: "2025-10-17T07:00:00Z"
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Terjadi kesalahan pada server"
+                code: 500
+                timestamp: "2025-10-17T07:00:00Z"
 
   /auth/login:
     post:
@@ -475,6 +637,208 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /auth/reset-password/otp:
+    post:
+      tags:
+        - Authentication OTP
+      summary: Mulai reset password dengan OTP
+      description: |
+        Endpoint untuk memulai proses reset password dengan OTP verification.
+        OTP 6-digit akan dikirim ke email yang terdaftar di akun.
+      operationId: initiateResetPasswordOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: OTP reset password berhasil dikirim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Email tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/reset-password/verify-otp:
+    post:
+      tags:
+        - Authentication OTP
+      summary: Verifikasi OTP reset password
+      description: |
+        Endpoint untuk memverifikasi kode OTP reset password.
+        Belum mengubah password, hanya verifikasi OTP.
+      operationId: verifyResetPasswordOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOTPRequest'
+      responses:
+        '200':
+          description: Verifikasi OTP berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Kode OTP salah atau sudah expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Email tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/reset-password/confirm-otp:
+    post:
+      tags:
+        - Authentication OTP
+      summary: Konfirmasi reset password dengan OTP
+      description: |
+        Endpoint untuk mengubah password setelah verifikasi OTP.
+        Pengguna akan langsung login dengan password baru setelah berhasil.
+      operationId: confirmResetPasswordOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+                - new_password
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                  description: 6-digit OTP code
+                new_password:
+                  type: string
+                  format: password
+                  minLength: 8
+      responses:
+        '200':
+          description: Password berhasil direset
+          headers:
+            Set-Cookie:
+              description: Refresh token sebagai httpOnly cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '400':
+          description: Validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Email tidak ditemukan atau verifikasi OTP gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/reset-password/resend-otp:
+    post:
+      tags:
+        - Authentication OTP
+      summary: Kirim ulang OTP reset password
+      description: |
+        Endpoint untuk mengirim ulang OTP reset password.
+        Rate limited: maksimal 5 kali, cooldown 60 detik antar pengiriman.
+      operationId: resendResetPasswordOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - type
+              properties:
+                email:
+                  type: string
+                  format: email
+                type:
+                  type: string
+                  enum: [reset_password]
+      responses:
+        '200':
+          description: OTP resend berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Sesi OTP expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Terlalu banyak percobaan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -576,6 +940,29 @@ components:
           minLength: 8
           example: "newpassword123"
 
+    VerifyOTPRequest:
+      type: object
+      required:
+        - email
+        - code
+        - type
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: '^\d{6}$'
+          description: 6-digit OTP code
+          example: "123456"
+        type:
+          type: string
+          enum: [register, reset_password]
+          example: "register"
+
     AuthResponse:
       type: object
       description: Response tidak mengandung refresh_token di body. Refresh token dikirim via httpOnly cookie.
@@ -666,6 +1053,32 @@ components:
         message:
           type: string
           example: "Format email tidak valid"
+
+    OTPResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Kode OTP telah dikirim ke email Anda"
+        expires_in:
+          type: integer
+          description: OTP expiration dalam detik
+          example: 600
+
+    ResendOTPRequest:
+      type: object
+      required:
+        - email
+        - type
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        type:
+          type: string
+          enum: [register, reset_password]
+          example: "register"
 
     ValidationErrorResponse:
       allOf:

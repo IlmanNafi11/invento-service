@@ -16,8 +16,12 @@ import (
 )
 
 func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
+	appLogger := helper.NewLogger()
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			appLogger.Error("[ERROR_HANDLER] Error occurred: %v, Path: %s, Method: %s", err, c.Path(), c.Method())
+
 			if c.Path() != "" && len(c.Path()) >= 8 && c.Path()[:8] == "/uploads" {
 				return err
 			}
@@ -72,6 +76,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	projectRepo := repo.NewProjectRepository(db)
 	modulRepo := repo.NewModulRepository(db)
 	tusUploadRepo := repo.NewTusUploadRepository(db)
+	otpRepo := repo.NewOTPRepository(db)
 
 	jwtManager, err := helper.NewJWTManager(cfg)
 	if err != nil {
@@ -97,6 +102,9 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	authUsecase := usecase.NewAuthUsecase(userRepo, refreshTokenRepo, resetTokenRepo, roleRepo, cfg)
 	authController := http.NewAuthController(authUsecase, cfg)
+
+	authOTPUsecase := usecase.NewAuthOTPUsecase(userRepo, refreshTokenRepo, otpRepo, roleRepo, cfg)
+	authOTPController := http.NewAuthOTPController(authOTPUsecase, cfg)
 
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
 	roleController := http.NewRoleController(roleUsecase)
@@ -126,6 +134,15 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	auth.Post("/refresh", authController.RefreshToken)
 	auth.Post("/reset-password", authController.ResetPassword)
 	auth.Post("/reset-password/confirm", authController.ConfirmResetPassword)
+
+	authOTP := api.Group("/auth")
+	authOTP.Post("/register/otp", authOTPController.RegisterWithOTP)
+	authOTP.Post("/register/verify-otp", authOTPController.VerifyRegisterOTP)
+	authOTP.Post("/register/resend-otp", authOTPController.ResendRegisterOTP)
+	authOTP.Post("/reset-password/otp", authOTPController.InitiateResetPassword)
+	authOTP.Post("/reset-password/verify-otp", authOTPController.VerifyResetPasswordOTP)
+	authOTP.Post("/reset-password/confirm-otp", authOTPController.ConfirmResetPasswordWithOTP)
+	authOTP.Post("/reset-password/resend-otp", authOTPController.ResendResetPasswordOTP)
 
 	protected := auth.Group("/", helper.JWTAuthMiddleware(jwtManager))
 	protected.Post("logout", authController.Logout)
