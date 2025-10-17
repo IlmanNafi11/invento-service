@@ -124,22 +124,22 @@ func (pr *PathResolver) ConvertToAPIPath(absolutePath *string) *string {
 
 	basePath := pr.GetBasePath()
 	path := *absolutePath
-	
+
 	path = filepath.Clean(path)
 	basePath = filepath.Clean(basePath)
-	
+
 	if len(path) > len(basePath) && filepath.HasPrefix(path, basePath) {
 		relativePath := path[len(basePath):]
-		
+
 		relativePath = filepath.ToSlash(relativePath)
-		
+
 		if len(relativePath) > 0 && relativePath[0] != '/' {
 			relativePath = "/" + relativePath
 		}
-		
+
 		apiPath := "/uploads" + relativePath
 		return &apiPath
 	}
-	
+
 	return absolutePath
 }

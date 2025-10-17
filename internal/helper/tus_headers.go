@@ -15,12 +15,12 @@ const (
 	HeaderContentLength  = "Content-Length"
 	HeaderLocation       = "Location"
 
-	TusVersion            = "1.0.0"
-	TusContentType        = "application/offset+octet-stream"
-	DefaultChunkSize      = 1048576
-	MaxChunkSize          = 2097152
-	MaxProjectFileSize    = 524288000
-	MaxModulFileSize      = 52428800
+	TusVersion         = "1.0.0"
+	TusContentType     = "application/offset+octet-stream"
+	DefaultChunkSize   = 1048576
+	MaxChunkSize       = 2097152
+	MaxProjectFileSize = 524288000
+	MaxModulFileSize   = 52428800
 )
 
 type TusHeaders struct {

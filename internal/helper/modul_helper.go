@@ -43,7 +43,7 @@ func (mh *ModulHelper) getBasePath() string {
 func (mh *ModulHelper) ValidateModulFile(fileHeader *multipart.FileHeader) error {
 	ext := GetFileExtension(fileHeader.Filename)
 	validExtensions := []string{".docx", ".xlsx", ".pdf", ".pptx"}
-	
+
 	isValid := false
 	for _, validExt := range validExtensions {
 		if ext == validExt {
@@ -51,7 +51,7 @@ func (mh *ModulHelper) ValidateModulFile(fileHeader *multipart.FileHeader) error
 			break
 		}
 	}
-	
+
 	if !isValid {
 		return errors.New("file modul harus berupa docx, xlsx, pdf, atau pptx")
 	}
@@ -79,13 +79,13 @@ func (mh *ModulHelper) ValidateModulFileSize(fileSize int64) error {
 
 func ValidateModulFileExtension(tipe string) error {
 	validTypes := []string{"docx", "xlsx", "pdf", "pptx"}
-	
+
 	for _, validType := range validTypes {
 		if tipe == validType {
 			return nil
 		}
 	}
-	
+
 	return errors.New("tipe file harus salah satu dari: docx, xlsx, pdf, pptx")
 }
 

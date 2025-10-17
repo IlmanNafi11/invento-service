@@ -30,8 +30,6 @@ func NewModulUsecase(modulRepo repo.ModulRepository) ModulUsecase {
 	}
 }
 
-
-
 func (uc *modulUsecase) GetList(userID uint, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error) {
 	if page <= 0 {
 		page = 1
@@ -82,8 +80,6 @@ func (uc *modulUsecase) GetByID(modulID, userID uint) (*domain.ModulResponse, er
 		UpdatedAt: modul.UpdatedAt,
 	}, nil
 }
-
-
 
 func (uc *modulUsecase) Delete(modulID, userID uint) error {
 	modul, err := uc.modulRepo.GetByID(modulID)

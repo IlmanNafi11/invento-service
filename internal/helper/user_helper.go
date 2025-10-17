@@ -8,7 +8,7 @@ import (
 	"mime/multipart"
 )
 
-type UserHelper struct{
+type UserHelper struct {
 	pathResolver *PathResolver
 	config       *config.Config
 }

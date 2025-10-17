@@ -571,7 +571,7 @@ func TestAuthUsecase_Logout_Success(t *testing.T) {
 			RefreshTokenExpireHours: 24,
 		},
 	}
-	
+
 	if _, err := helper.NewJWTManager(cfg); err != nil {
 		t.Skip("Skipping test due to missing JWT keys")
 	}

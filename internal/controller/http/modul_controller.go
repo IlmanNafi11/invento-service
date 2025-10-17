@@ -27,8 +27,6 @@ func NewModulController(modulUsecase usecase.ModulUsecase, tusModulUsecase useca
 	}
 }
 
-
-
 func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
@@ -58,8 +56,6 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 
 	return helper.SendSuccessResponse(c, fiber.StatusOK, "Daftar modul berhasil diambil", result)
 }
-
-
 
 func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 	userIDVal := c.Locals("user_id")

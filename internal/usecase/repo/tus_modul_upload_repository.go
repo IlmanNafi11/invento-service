@@ -77,12 +77,12 @@ func (r *tusModulUploadRepository) Complete(id string, modulID uint, filePath st
 	return r.db.Model(&domain.TusModulUpload{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"modul_id":      modulID,
-			"file_path":     filePath,
-			"status":        domain.ModulUploadStatusCompleted,
-			"progress":      100.0,
-			"completed_at":  &now,
-			"updated_at":    now,
+			"modul_id":     modulID,
+			"file_path":    filePath,
+			"status":       domain.ModulUploadStatusCompleted,
+			"progress":     100.0,
+			"completed_at": &now,
+			"updated_at":   now,
 		}).Error
 }
 
@@ -92,8 +92,8 @@ func (r *tusModulUploadRepository) Delete(id string) error {
 
 func (r *tusModulUploadRepository) GetExpiredUploads() ([]domain.TusModulUpload, error) {
 	var uploads []domain.TusModulUpload
-	err := r.db.Where("expires_at < ? AND status NOT IN (?)", 
-		time.Now(), 
+	err := r.db.Where("expires_at < ? AND status NOT IN (?)",
+		time.Now(),
 		[]string{domain.ModulUploadStatusCompleted, domain.ModulUploadStatusExpired, domain.ModulUploadStatusCancelled},
 	).Find(&uploads).Error
 	return uploads, err
@@ -102,7 +102,7 @@ func (r *tusModulUploadRepository) GetExpiredUploads() ([]domain.TusModulUpload,
 func (r *tusModulUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error) {
 	var uploads []domain.TusModulUpload
 	cutoffTime := time.Now().Add(-timeout)
-	err := r.db.Where("updated_at < ? AND status IN (?)", 
+	err := r.db.Where("updated_at < ? AND status IN (?)",
 		cutoffTime,
 		[]string{domain.ModulUploadStatusUploading, domain.ModulUploadStatusPending},
 	).Find(&uploads).Error
@@ -112,8 +112,8 @@ func (r *tusModulUploadRepository) GetAbandonedUploads(timeout time.Duration) ([
 func (r *tusModulUploadRepository) CountActiveByUserID(userID uint) (int, error) {
 	var count int64
 	err := r.db.Model(&domain.TusModulUpload{}).
-		Where("user_id = ? AND status IN (?)", 
-			userID, 
+		Where("user_id = ? AND status IN (?)",
+			userID,
 			[]string{domain.ModulUploadStatusQueued, domain.ModulUploadStatusPending, domain.ModulUploadStatusUploading},
 		).Count(&count).Error
 	return int(count), err
@@ -121,8 +121,8 @@ func (r *tusModulUploadRepository) CountActiveByUserID(userID uint) (int, error)
 
 func (r *tusModulUploadRepository) GetActiveByUserID(userID uint) ([]domain.TusModulUpload, error) {
 	var uploads []domain.TusModulUpload
-	err := r.db.Where("user_id = ? AND status IN (?)", 
-		userID, 
+	err := r.db.Where("user_id = ? AND status IN (?)",
+		userID,
 		[]string{domain.ModulUploadStatusQueued, domain.ModulUploadStatusPending, domain.ModulUploadStatusUploading},
 	).Order("created_at ASC").Find(&uploads).Error
 	return uploads, err
