@@ -33,6 +33,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build binary
+        run: |
+          mkdir -p bin
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/app cmd/app/main.go
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -49,8 +60,6 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=ref,event=branch
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
@@ -63,102 +72,14 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-  deploy-dev:
-    name: Deploy to Development
+  deploy:
+    name: Deploy Services
     runs-on: ubuntu-latest
     needs: build-docker
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/refactoring'
-    environment:
-      name: development
-      url: https://dev-api.invento.local
+    if: success()
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to dev environment
-        env:
-          DEPLOY_KEY: ${{ secrets.DEV_DEPLOY_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEV_DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEV_DEPLOY_USER }}
+      - name: Deployment Info
         run: |
-          echo "Deploying to development environment..."
-          echo "Image Tag: ${{ needs.build-docker.outputs.image-tag }}"
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd /app && docker pull ${{ needs.build-docker.outputs.image-tag }} && docker-compose up -d"
-
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build-docker
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: staging
-      url: https://staging-api.invento.local
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to staging environment
-        env:
-          DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
-          DEPLOY_HOST: ${{ secrets.STAGING_DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.STAGING_DEPLOY_USER }}
-        run: |
-          echo "Deploying to staging environment..."
-          echo "Image Tag: ${{ needs.build-docker.outputs.image-tag }}"
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd /app && docker pull ${{ needs.build-docker.outputs.image-tag }} && docker-compose up -d"
-
-  deploy-prod:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: build-docker
-    if: startsWith(github.ref, 'refs/tags/')
-    environment:
-      name: production
-      url: https://api.invento.local
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to production environment
-        env:
-          DEPLOY_KEY: ${{ secrets.PROD_DEPLOY_KEY }}
-          DEPLOY_HOST: ${{ secrets.PROD_DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.PROD_DEPLOY_USER }}
-        run: |
-          echo "Deploying to production environment..."
-          echo "Image Tag: ${{ needs.build-docker.outputs.image-tag }}"
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd /app && docker pull ${{ needs.build-docker.outputs.image-tag }} && docker-compose up -d"
-
-  notify:
-    name: Notify
-    runs-on: ubuntu-latest
-    needs: [build-docker]
-    if: always()
-    steps:
-      - name: Notify status
-        run: |
-          if [ "${{ needs.build-docker.result }}" = "failure" ]; then
-            echo "CD Pipeline failed"
-            exit 1
-          fi
-          echo "CD Pipeline completed successfully"
-          echo "Image: ${{ needs.build-docker.outputs.image-tag }}"
-          echo "Digest: ${{ needs.build-docker.outputs.image-digest }}"
+          echo "Image built and pushed: ${{ needs.build-docker.outputs.image-tag }}"
+          echo "Ready for deployment"
