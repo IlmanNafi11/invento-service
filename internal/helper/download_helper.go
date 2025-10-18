@@ -30,16 +30,16 @@ func (dh *DownloadHelper) resolvePath(relativePath string) string {
 	if filepath.IsAbs(relativePath) {
 		return relativePath
 	}
-	
+
 	if dh.pathResolver == nil {
 		logger := NewLogger()
 		logger.Error("resolvePath - pathResolver is nil!")
 		return relativePath
 	}
-	
+
 	basePath := dh.pathResolver.GetBasePath()
 	cleanBasePath := strings.TrimRight(basePath, "/")
-	
+
 	pathToJoin := relativePath
 	if strings.HasPrefix(relativePath, "uploads/") {
 		pathToJoin = strings.TrimPrefix(relativePath, "uploads/")
@@ -47,16 +47,16 @@ func (dh *DownloadHelper) resolvePath(relativePath string) string {
 	if strings.HasPrefix(relativePath, "temp/") {
 		pathToJoin = strings.TrimPrefix(relativePath, "temp/")
 	}
-	
+
 	resolved := filepath.Join(cleanBasePath, pathToJoin)
-	
+
 	absPath, err := filepath.Abs(resolved)
 	if err != nil {
 		logger := NewLogger()
 		logger.Warn("resolvePath - Failed to get absolute path: %v, using relative path", err)
 		return resolved
 	}
-	
+
 	return absPath
 }
 
@@ -150,5 +150,3 @@ func (dh *DownloadHelper) GetFilesByIDs(projectIDs, modulIDs []uint, projects []
 
 	return selectedProjects, selectedModuls
 }
-
-

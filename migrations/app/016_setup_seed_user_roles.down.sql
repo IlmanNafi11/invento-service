@@ -1,1 +1,0 @@
-UPDATE users SET role_id = NULL WHERE email = 'user@example.com';

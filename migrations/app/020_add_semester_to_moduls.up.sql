@@ -1,1 +1,0 @@
-ALTER TABLE moduls ADD COLUMN semester INT NOT NULL DEFAULT 1 AFTER ukuran;

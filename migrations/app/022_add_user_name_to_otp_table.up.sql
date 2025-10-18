@@ -1,1 +1,0 @@
-ALTER TABLE otps ADD COLUMN user_name VARCHAR(255) DEFAULT '' AFTER email;

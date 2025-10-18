@@ -11,7 +11,7 @@ import (
 
 func ConnectDatabase(cfg *Config) *gorm.DB {
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local&multiStatements=true",
 		cfg.Database.User,
 		cfg.Database.Password,
 		cfg.Database.Host,
@@ -19,8 +19,6 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 		cfg.Database.Name,
 	)
 
-	// Disable SQL query logging untuk log yang lebih bersih
-	// Hanya tampilkan error jika ada masalah database
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
