@@ -1,0 +1,34 @@
+version: "1.59"
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  dupl:
+    threshold: 100
+
+linters:
+  disable-all: true
+  enable:
+    - vet
+    - gofmt
+    - ineffassign
+    - staticcheck
+    - unused
+    - errcheck
+    - unconvert
+    - goimports
+    - misspell
+    - unparam
+    - whitespace
+    - gocritic
+
+run:
+  timeout: 5m
+  skip-dirs:
+    - bin
+    - vendor
+    - uploads
+    - keys

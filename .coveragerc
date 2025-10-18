@@ -1,0 +1,5 @@
+# Code Coverage Configuration
+coverage_threshold: 40
+test_timeout: 5m
+race_detector: true
+verbose: true

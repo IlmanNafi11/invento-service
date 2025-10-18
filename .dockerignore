@@ -1,0 +1,14 @@
+bin/
+vendor/
+.git/
+.gitignore
+.env
+.env.*
+*.log
+debug.log
+.DS_Store
+.vscode/
+.idea/
+uploads/
+keys/
+*.pem

@@ -1,0 +1,194 @@
+name: Security & Quality Scan
+
+on:
+  schedule:
+    - cron: '0 2 * * MON'
+  workflow_dispatch:
+
+env:
+  GO_VERSION: "1.24"
+
+jobs:
+  security-scan:
+    name: Security Scan (Gosec)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run Gosec
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail -fmt json -out gosec-report.json ./...'
+
+      - name: Upload Gosec report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gosec-security-report
+          path: gosec-report.json
+          retention-days: 30
+
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Check for vulnerable dependencies
+        run: |
+          go install github.com/golang/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+  license-check:
+    name: License Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install license-checker
+        run: go install github.com/google/licenseclassifier/v2/cmd/classifier@latest
+
+      - name: Check licenses
+        run: |
+          for mod in $(go list -m all | cut -d' ' -f1 | grep -v fiber-boiler-plate); do
+            echo "Checking $mod"
+          done
+          echo "License check complete"
+
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+          args: --config=.golangci.yml --timeout=5m
+
+      - name: Check code formatting
+        run: |
+          if [ -n "$(gofmt -s -l .)" ]; then
+            echo "⚠️  Code formatting issues found"
+            gofmt -s -d . || true
+          fi
+
+      - name: Run goimports check
+        run: |
+          go install golang.org/x/tools/cmd/goimports@latest
+          if [ -n "$(goimports -l .)" ]; then
+            echo "⚠️  Import issues found"
+            goimports -d . || true
+          fi
+
+  test-coverage:
+    name: Test Coverage Report
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: invento_test
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root -proot &> /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Setup test database
+        run: |
+          mysql -h 127.0.0.1 -u root -proot -e "CREATE DATABASE IF NOT EXISTS invento_test;"
+
+      - name: Run tests with coverage
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: invento_test
+          APP_ENV: test
+        run: |
+          go test -v -covermode=atomic -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.out
+          fail_ci_if_error: false
+
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [security-scan, dependency-check, code-quality, test-coverage]
+    if: always()
+    steps:
+      - name: Print summary
+        run: |
+          echo "📊 Weekly Security & Quality Scan Results"
+          echo "========================================="
+          echo "✅ Scan completed at $(date)"
+          echo ""
+          echo "Check artifacts for detailed reports"

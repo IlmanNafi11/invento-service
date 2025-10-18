@@ -1,0 +1,49 @@
+# CODEOWNERS file
+# This file indicates who should be automatically requested for PR review
+# when changes are made to specific files
+
+# Global ownership
+* @ilmannafi11
+
+# API specifications
+/api/ @ilmannafi11
+
+# Configuration
+/config/ @ilmannafi11
+.env.example @ilmannafi11
+
+# Core application
+/cmd/app/ @ilmannafi11
+/internal/app/ @ilmannafi11
+
+# Controllers
+/internal/controller/http/ @ilmannafi11
+
+# Business logic and use cases
+/internal/usecase/ @ilmannafi11
+/internal/usecase/repo/ @ilmannafi11
+
+# Domain models
+/internal/domain/ @ilmannafi11
+
+# Helper utilities
+/internal/helper/ @ilmannafi11
+
+# Database
+/migrations/ @ilmannafi11
+/queries/ @ilmannafi11
+
+# Documentation
+/docs/ @ilmannafi11
+README.md @ilmannafi11
+
+# CI/CD and deployment
+/.github/ @ilmannafi11
+Dockerfile @ilmannafi11
+docker-compose.yml @ilmannafi11
+Makefile @ilmannafi11
+.golangci.yml @ilmannafi11
+
+# Configuration files
+go.mod @ilmannafi11
+go.sum @ilmannafi11
