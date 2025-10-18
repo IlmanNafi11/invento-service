@@ -451,6 +451,44 @@ go build -ldflags="-s -w" -o bin/app ./main.go
 - CORS configuration
 - Rate limiting ready (middleware support)
 
+## CI/CD Pipeline
+
+Project ini dilengkapi dengan pipeline CI/CD komprehensif menggunakan GitHub Actions:
+
+### Continuous Integration (CI)
+- **Lint**: Code quality checks dengan golangci-lint
+- **Test**: Unit tests dengan code coverage minimum 40%
+- **Build**: Automatic binary compilation
+- **Security**: Vulnerability scanning dengan Gosec
+
+### Continuous Deployment (CD)
+- **Docker**: Multi-stage build untuk optimisasi ukuran image
+- **Registry**: Push otomatis ke GitHub Container Registry
+- **Deployment**: Auto-deployment ke Dev/Staging dari push, Production dari tags
+
+### Local Development
+
+```bash
+# Setup development environment
+make install-tools
+make deps
+
+# Build dan test
+make build
+make test
+make coverage
+
+# Linting dan formatting
+make lint
+make fmt
+
+# Docker development
+docker-compose up -d
+docker-compose logs -f app
+```
+
+Untuk dokumentasi lengkap, lihat [CI/CD Pipeline Documentation](./docs/CI_CD_PIPELINE.md)
+
 ## Deployment
 
 Aplikasi dapat anda deploy ke:
@@ -472,4 +510,4 @@ Pastikan semua tests passed dan mengikuti coding standards.
 
 ## License
 
-MIT License
+MIT License# CI/CD Test Push
