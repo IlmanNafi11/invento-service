@@ -31,6 +31,7 @@ type authOTPUsecase struct {
 	mailtrapClient   *helper.MailtrapClient
 	otpValidator     *helper.OTPValidator
 	rateLimiter      *helper.ResendRateLimiter
+	casbinEnforcer   *helper.CasbinEnforcer
 	config           *config.Config
 	logger           *helper.Logger
 }
@@ -40,6 +41,7 @@ func NewAuthOTPUsecase(
 	refreshTokenRepo repo.RefreshTokenRepository,
 	otpRepo repo.OTPRepository,
 	roleRepo repo.RoleRepository,
+	casbinEnforcer *helper.CasbinEnforcer,
 	config *config.Config,
 ) AuthOTPUsecase {
 	jwtManager, err := helper.NewJWTManager(config)
@@ -63,6 +65,7 @@ func NewAuthOTPUsecase(
 		mailtrapClient:   mailtrapClient,
 		otpValidator:     otpValidator,
 		rateLimiter:      rateLimiter,
+		casbinEnforcer:   casbinEnforcer,
 		config:           config,
 		logger:           logger,
 	}
@@ -162,6 +165,10 @@ func (uc *authOTPUsecase) VerifyRegisterOTP(req domain.VerifyOTPRequest) (string
 
 	if err := uc.otpRepo.DeleteByEmail(req.Email, otpType); err != nil {
 		return "", nil, errors.New("gagal menghapus kode otp")
+	}
+
+	if err := uc.casbinEnforcer.LoadPolicy(); err != nil {
+		uc.logger.Error("Gagal reload policy casbin setelah registrasi: %v", err)
 	}
 
 	refreshToken, authResp, err := uc.authHelper.GenerateAuthResponse(user)
@@ -307,9 +314,8 @@ func (uc *authOTPUsecase) ConfirmResetPasswordWithOTP(email string, newPassword 
 		return "", nil, errors.New("gagal menghapus kode otp")
 	}
 
-	user.Role = &domain.Role{
-		ID:       *user.RoleID,
-		NamaRole: "User",
+	if err := uc.casbinEnforcer.LoadPolicy(); err != nil {
+		uc.logger.Error("Gagal reload policy casbin setelah reset password: %v", err)
 	}
 
 	refreshToken, authResp, err := uc.authHelper.GenerateAuthResponse(user)

@@ -103,7 +103,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	authUsecase := usecase.NewAuthUsecase(userRepo, refreshTokenRepo, resetTokenRepo, roleRepo, cfg)
 	authController := http.NewAuthController(authUsecase, cfg)
 
-	authOTPUsecase := usecase.NewAuthOTPUsecase(userRepo, refreshTokenRepo, otpRepo, roleRepo, cfg)
+	authOTPUsecase := usecase.NewAuthOTPUsecase(userRepo, refreshTokenRepo, otpRepo, roleRepo, casbinEnforcer, cfg)
 	authOTPController := http.NewAuthOTPController(authOTPUsecase, cfg)
 
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
