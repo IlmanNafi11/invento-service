@@ -203,7 +203,7 @@ jobs:
              [ "${{ needs.test.result }}" = "failure" ] || \
              [ "${{ needs.build.result }}" = "failure" ] || \
              [ "${{ needs.security.result }}" = "failure" ]; then
-            echo "❌ CI Pipeline failed"
+            echo "CI Pipeline failed"
             exit 1
           fi
-          echo "✅ CI Pipeline passed successfully"
+          echo "CI Pipeline passed successfully"

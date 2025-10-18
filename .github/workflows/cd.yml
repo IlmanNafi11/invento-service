@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - main
+      - develop
+      - refactoring
     tags:
       - 'v*'
   workflow_run:
     workflows: ["CI Pipeline"]
     types:
       - completed
-    branches:
-      - main
 
 env:
   GO_VERSION: "1.24"
@@ -84,7 +84,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEV_DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEV_DEPLOY_USER }}
         run: |
-          echo "🚀 Deploying to development environment..."
+          echo "Deploying to development environment..."
           echo "Image Tag: ${{ needs.build-docker.outputs.image-tag }}"
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
@@ -111,7 +111,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.STAGING_DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.STAGING_DEPLOY_USER }}
         run: |
-          echo "🚀 Deploying to staging environment..."
+          echo "Deploying to staging environment..."
           echo "Image Tag: ${{ needs.build-docker.outputs.image-tag }}"
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
@@ -138,7 +138,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.PROD_DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.PROD_DEPLOY_USER }}
         run: |
-          echo "🚀 Deploying to production environment..."
+          echo "Deploying to production environment..."
           echo "Image Tag: ${{ needs.build-docker.outputs.image-tag }}"
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
@@ -147,25 +147,18 @@ jobs:
           ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
             "cd /app && docker pull ${{ needs.build-docker.outputs.image-tag }} && docker-compose up -d"
 
-  notify-success:
-    name: Notify Success
+  notify:
+    name: Notify
     runs-on: ubuntu-latest
     needs: [build-docker]
-    if: success()
+    if: always()
     steps:
-      - name: Notify deployment success
+      - name: Notify status
         run: |
-          echo "✅ CD Pipeline completed successfully"
+          if [ "${{ needs.build-docker.result }}" = "failure" ]; then
+            echo "CD Pipeline failed"
+            exit 1
+          fi
+          echo "CD Pipeline completed successfully"
           echo "Image: ${{ needs.build-docker.outputs.image-tag }}"
           echo "Digest: ${{ needs.build-docker.outputs.image-digest }}"
-
-  notify-failure:
-    name: Notify Failure
-    runs-on: ubuntu-latest
-    needs: [build-docker]
-    if: failure()
-    steps:
-      - name: Notify deployment failure
-        run: |
-          echo "❌ CD Pipeline failed"
-          exit 1
