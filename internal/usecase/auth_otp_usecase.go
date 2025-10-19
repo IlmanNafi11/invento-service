@@ -77,7 +77,10 @@ func (uc *authOTPUsecase) RegisterWithOTP(req domain.RegisterRequest) (*domain.O
 		return nil, err
 	}
 
-	existingUser, _ := uc.userRepo.GetByEmail(req.Email)
+	existingUser, err := uc.userRepo.GetByEmail(req.Email)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errors.New("gagal mengecek email")
+	}
 	if existingUser != nil {
 		return nil, errors.New("email sudah terdaftar")
 	}
