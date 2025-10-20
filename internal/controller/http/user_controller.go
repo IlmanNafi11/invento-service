@@ -126,9 +126,16 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 		return helper.SendValidationErrorResponse(c, validationErrors)
 	}
 
-	fotoProfil, _ := c.FormFile("foto_profil")
+	fotoProfil, errFile := c.FormFile("foto_profil")
 
-	result, err := ctrl.userUsecase.UpdateProfile(userID, req, fotoProfil)
+	var fotoProfilToPass interface{}
+	if errFile == nil && fotoProfil != nil {
+		fotoProfilToPass = fotoProfil
+	} else {
+		fotoProfilToPass = nil
+	}
+
+	result, err := ctrl.userUsecase.UpdateProfile(userID, req, fotoProfilToPass)
 	if err != nil {
 		switch err.Error() {
 		case "format foto profil harus png, jpg, atau jpeg", "ukuran foto profil tidak boleh lebih dari 2MB":

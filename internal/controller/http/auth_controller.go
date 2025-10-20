@@ -55,27 +55,21 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	var req domain.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
-		ctrl.logger.Warnf("[Controller] Error parsing request body: %v", err)
 		return helper.SendBadRequestResponse(c, "Format request tidak valid")
 	}
 
 	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
-		ctrl.logger.Warnf("[Controller] Validasi request gagal - Errors: %v", validationErrors)
 		return helper.SendValidationErrorResponse(c, validationErrors)
 	}
 
 	refreshToken, result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
-		ctrl.logger.Warnf("[Controller] Login failed untuk email: %s, error: %s", req.Email, err.Error())
 		switch err.Error() {
 		case "email atau password salah":
-			ctrl.logger.Infof("[Controller] 401 Unauthorized - Email/Password salah untuk: %s", req.Email)
 			return helper.SendUnauthorizedResponse(c)
 		case "akun belum diaktifkan":
-			ctrl.logger.Infof("[Controller] 403 Forbidden - Akun belum diaktifkan untuk: %s", req.Email)
 			return helper.SendErrorResponse(c, fiber.StatusForbidden, err.Error(), nil)
 		default:
-			ctrl.logger.Errorf("[Controller] 500 Server Error - Unexpected error: %v", err)
 			return helper.SendInternalServerErrorResponse(c)
 		}
 	}

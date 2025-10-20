@@ -118,7 +118,11 @@ func (pr *PathResolver) GetModulFilePath(userID uint, identifier string, filenam
 }
 
 func (pr *PathResolver) ConvertToAPIPath(absolutePath *string) *string {
-	if absolutePath == nil || *absolutePath == "" {
+	if absolutePath == nil {
+		return nil
+	}
+
+	if *absolutePath == "" {
 		return absolutePath
 	}
 
@@ -138,7 +142,9 @@ func (pr *PathResolver) ConvertToAPIPath(absolutePath *string) *string {
 		}
 
 		apiPath := "/uploads" + relativePath
-		return &apiPath
+		result := new(string)
+		*result = apiPath
+		return result
 	}
 
 	return absolutePath

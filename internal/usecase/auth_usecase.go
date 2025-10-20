@@ -102,26 +102,21 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 	user, err := uc.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			uc.logger.Warnf("[Step 1] User tidak ditemukan dengan email: %s, error: %v", req.Email, err)
 			return "", nil, errors.New("email atau password salah")
 		}
-		uc.logger.Errorf("[Step 1] Error saat mengambil data user: %v", err)
 		return "", nil, errors.New("gagal mengambil data user")
 	}
 
 	if !user.IsActive {
-		uc.logger.Warnf("[Step 2] User tidak aktif - ID: %d, Email: %s, IsActive: %v", user.ID, user.Email, user.IsActive)
 		return "", nil, errors.New("akun belum diaktifkan")
 	}
 
 	if err := helper.ComparePassword(user.Password, req.Password); err != nil {
-		uc.logger.Warnf("[Step 3] Password tidak cocok untuk user: %s, error: %v", user.Email, err)
 		return "", nil, err
 	}
 
 	refreshToken, authResponse, err := uc.authHelper.GenerateAuthResponse(user)
 	if err != nil {
-		uc.logger.Errorf("[Step 4] Error saat generate auth response: %v", err)
 		return "", nil, err
 	}
 

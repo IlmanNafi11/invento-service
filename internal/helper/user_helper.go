@@ -26,11 +26,16 @@ func (uh *UserHelper) BuildProfileData(user *domain.User, jumlahProject, jumlahM
 		roleName = user.Role.NamaRole
 	}
 
+	var fotoProfilPath *string
+	if user.FotoProfil != nil && *user.FotoProfil != "" {
+		fotoProfilPath = uh.pathResolver.ConvertToAPIPath(user.FotoProfil)
+	}
+
 	return &domain.ProfileData{
 		Name:          user.Name,
 		Email:         user.Email,
 		JenisKelamin:  user.JenisKelamin,
-		FotoProfil:    uh.pathResolver.ConvertToAPIPath(user.FotoProfil),
+		FotoProfil:    fotoProfilPath,
 		Role:          roleName,
 		CreatedAt:     user.CreatedAt,
 		JumlahProject: jumlahProject,
@@ -101,11 +106,4 @@ func (uh *UserHelper) DeleteProfilePhoto(photoPath *string) error {
 		return DeleteFile(*photoPath)
 	}
 	return nil
-}
-
-func (uh *UserHelper) NormalizeJenisKelamin(jenisKelamin string) *string {
-	if jenisKelamin == "" {
-		return nil
-	}
-	return &jenisKelamin
 }

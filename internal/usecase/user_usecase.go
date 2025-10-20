@@ -254,7 +254,10 @@ func (uc *userUsecase) UpdateProfile(userID uint, req domain.UpdateProfileReques
 		return nil, errors.New("gagal mengambil data user")
 	}
 
-	jenisKelaminPtr := uc.userHelper.NormalizeJenisKelamin(req.JenisKelamin)
+	var jenisKelaminPtr *string
+	if req.JenisKelamin != "" {
+		jenisKelaminPtr = &req.JenisKelamin
+	}
 
 	fotoProfilPath, err := uc.userHelper.SaveProfilePhoto(fotoProfil, userID, user.FotoProfil)
 	if err != nil {
