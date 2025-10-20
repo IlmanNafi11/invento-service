@@ -1,7 +1,5 @@
 .idea
 .env
-.prompt.md
-.kilocode/*
-.serena/*
+keys/*
 uploads/temp/*
 uploads/profil/*
