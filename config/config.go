@@ -111,7 +111,7 @@ func LoadConfig() *Config {
 			Host:           getEnv("DB_HOST", "localhost"),
 			Port:           getEnv("DB_PORT", "3306"),
 			User:           getEnv("DB_USER", "root"),
-			Password:       getEnv("DB_PASSWORD", "admin"),
+			Password: getEnvAllowEmpty("DB_PASSWORD", "admin"),
 			Name:           getEnv("DB_NAME", "fiber_boilerplate"),
 			AutoMigrate:    getEnvAsBool("DB_AUTO_MIGRATE", true),
 			RunSeeder:      getEnvAsBool("DB_RUN_SEEDER", false),
@@ -222,4 +222,12 @@ func maskToken(token string) string {
 		return "***"
 	}
 	return token[:10] + "..."
+}
+
+func getEnvAllowEmpty(key, defaultValue string) string {
+    value, exists := os.LookupEnv(key)
+    if !exists {
+        return defaultValue
+    }
+    return value
 }
