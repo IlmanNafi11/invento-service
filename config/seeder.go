@@ -5,46 +5,32 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"path/filepath"
 
 	"gorm.io/gorm"
 )
 
 func RunSeeder(db *gorm.DB, cfg *Config) {
-	log.Println("Menjalankan database seeder dari folder migrations/app...")
+	log.Println("Menjalankan seeder: migrations/app/001_create_all_tables.up.sql")
 
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatal("Gagal mendapatkan koneksi database:", err)
 	}
 
-	seederDir := "migrations/app"
+	filePath := "migrations/app/001_create_all_tables.up.sql"
 
-	files, err := filepath.Glob(filepath.Join(seederDir, "*seed*.up.sql"))
+	sqlBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Fatal("Gagal membaca file seeder:", err)
+		log.Fatalf("Gagal membaca file seeder %s: %v", filePath, err)
 	}
 
-	if len(files) == 0 {
-		log.Println("Tidak ada file seeder ditemukan di folder migrations/app")
-		return
+	sqlContent := string(sqlBytes)
+
+	if err := runSQL(sqlDB, sqlContent); err != nil {
+		log.Fatalf("Gagal menjalankan seeder %s: %v", filePath, err)
 	}
 
-	for _, file := range files {
-		log.Printf("Menjalankan seeder file: %s", file)
-
-		sqlBytes, err := ioutil.ReadFile(file)
-		if err != nil {
-			log.Fatalf("Gagal membaca file %s: %v", file, err)
-		}
-
-		sqlContent := string(sqlBytes)
-		if err := runSQL(sqlDB, sqlContent); err != nil {
-			log.Fatalf("Gagal menjalankan seeder %s: %v", file, err)
-		}
-	}
-
-	log.Println("Semua seeder SQL berhasil dijalankan!")
+	log.Println("Seeder berhasil dijalankan dari:", filePath)
 }
 
 func runSQL(db *sql.DB, query string) error {
