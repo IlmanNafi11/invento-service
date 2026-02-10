@@ -68,6 +68,11 @@ func getTestConfig() *config.Config {
 		JWT: config.JWTConfig{
 			RefreshTokenExpireHours: 168,
 		},
+		Upload: config.UploadConfig{
+			TusVersion: "1.0.0",
+			ChunkSize:  1048576, // 1MB
+			MaxSize:    52428800,
+		},
 	}
 }
 
