@@ -3,8 +3,8 @@ package helper
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"fiber-boiler-plate/config"
+	"fmt"
 	"io"
 	"net/http"
 	"time"

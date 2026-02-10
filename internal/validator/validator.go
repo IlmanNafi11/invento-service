@@ -154,14 +154,14 @@ func getFileExtension(filename string) string {
 // GetAllowedFileTypes returns a list of commonly allowed file types for document uploads.
 func GetAllowedFileTypes() []string {
 	return []string{
-		".pdf",              // PDF documents
-		".doc", ".docx",     // Microsoft Word
-		".xls", ".xlsx",     // Microsoft Excel
-		".ppt", ".pptx",     // Microsoft PowerPoint
-		".txt",              // Plain text
-		".zip", ".rar",      // Archives
-		".jpg", ".jpeg",     // JPEG images
-		".png",              // PNG images
+		".pdf",          // PDF documents
+		".doc", ".docx", // Microsoft Word
+		".xls", ".xlsx", // Microsoft Excel
+		".ppt", ".pptx", // Microsoft PowerPoint
+		".txt",         // Plain text
+		".zip", ".rar", // Archives
+		".jpg", ".jpeg", // JPEG images
+		".png", // PNG images
 	}
 }
 

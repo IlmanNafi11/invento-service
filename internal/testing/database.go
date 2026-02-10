@@ -103,15 +103,15 @@ func SeedTestDatabase(db *gorm.DB) error {
 
 	// Create permissions
 	permissions := []domain.Permission{
-		{ Resource: "users", Action: "read", Label: "Read users" },
-		{ Resource: "users", Action: "write", Label: "Write users" },
-		{ Resource: "users", Action: "delete", Label: "Delete users" },
-		{ Resource: "projects", Action: "read", Label: "Read projects" },
-		{ Resource: "projects", Action: "write", Label: "Write projects" },
-		{ Resource: "projects", Action: "delete", Label: "Delete projects" },
-		{ Resource: "moduls", Action: "read", Label: "Read moduls" },
-		{ Resource: "moduls", Action: "write", Label: "Write moduls" },
-		{ Resource: "moduls", Action: "delete", Label: "Delete moduls" },
+		{Resource: "users", Action: "read", Label: "Read users"},
+		{Resource: "users", Action: "write", Label: "Write users"},
+		{Resource: "users", Action: "delete", Label: "Delete users"},
+		{Resource: "projects", Action: "read", Label: "Read projects"},
+		{Resource: "projects", Action: "write", Label: "Write projects"},
+		{Resource: "projects", Action: "delete", Label: "Delete projects"},
+		{Resource: "moduls", Action: "read", Label: "Read moduls"},
+		{Resource: "moduls", Action: "write", Label: "Write moduls"},
+		{Resource: "moduls", Action: "delete", Label: "Delete moduls"},
 	}
 
 	for _, permission := range permissions {

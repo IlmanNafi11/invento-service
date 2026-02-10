@@ -20,12 +20,12 @@ const (
 
 // LoggingConfig holds configuration for the logging middleware
 type LoggingConfig struct {
-	Logger             *logger.Logger
-	LogRequestBody     bool
-	SanitizePaths      []string
-	SensitiveFields    []string
-	MaxBodySize        int
-	SkipPaths          []string
+	Logger          *logger.Logger
+	LogRequestBody  bool
+	SanitizePaths   []string
+	SensitiveFields []string
+	MaxBodySize     int
+	SkipPaths       []string
 }
 
 // DefaultLoggingConfig returns default logging configuration
@@ -154,7 +154,7 @@ func sanitizeField(body, field string) string {
 			result += body[idx:]
 			break
 		}
-		result += body[idx:i+len(search)]
+		result += body[idx : i+len(search)]
 
 		// Find the value (skip whitespace and quotes)
 		j := i + len(search)

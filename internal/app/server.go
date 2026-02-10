@@ -2,6 +2,7 @@ package app
 
 import (
 	"fiber-boiler-plate/config"
+	_ "fiber-boiler-plate/docs"
 	"fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/controller/http"
 	"fiber-boiler-plate/internal/helper"
@@ -14,6 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/swaggo/fiber-swagger"
 	"gorm.io/gorm"
 )
 
@@ -72,10 +74,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	// Log startup information
 	appLogger.Info("Server starting", map[string]interface{}{
-		"app":     cfg.App.Name,
-		"env":     cfg.App.Env,
-		"port":    cfg.App.Port,
-		"log_level": cfg.Logging.Level,
+		"app":        cfg.App.Name,
+		"env":        cfg.App.Env,
+		"port":       cfg.App.Port,
+		"log_level":  cfg.Logging.Level,
 		"log_format": cfg.Logging.Format,
 	})
 
@@ -252,11 +254,9 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	app.Get("/health", healthController.BasicHealthCheck)
 
-	// TODO: Swagger UI will be enabled when docs package is generated
-	// if cfg.Swagger.Enabled {
-	// 	appLogger.Info("Swagger UI enabled at /swagger/*", nil)
-	// 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
-	// }
+	// Enable Swagger UI
+	appLogger.Info("Swagger UI enabled at /swagger/*", nil)
+	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 
 	return app
 }

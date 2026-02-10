@@ -19,7 +19,6 @@ func ExampleSetupTestApp() {
 	defer testutil.TeardownTestApp(app)
 }
 
-
 // TestExample_TokenGeneration demonstrates generating test tokens
 func TestExample_TokenGeneration(t *testing.T) {
 	// Generate test tokens

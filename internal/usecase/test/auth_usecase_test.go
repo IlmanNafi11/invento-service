@@ -183,10 +183,10 @@ func TestAuthUsecase_Register_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
-			PrivateKeyPath:          "/home/ilmannafi/Documents/invento-be/keys/private.pem",
-			PublicKeyPath:           "/home/ilmannafi/Documents/invento-be/keys/public.pem",
-			PrivateKeyRotationPath:  "/home/ilmannafi/Documents/invento-be/keys/private_rotation.pem",
-			PublicKeyRotationPath:   "/home/ilmannafi/Documents/invento-be/keys/public_rotation.pem",
+			PrivateKeyPath:          "../../../keys/private.pem",
+			PublicKeyPath:           "../../../keys/public.pem",
+			PrivateKeyRotationPath:  "../../../keys/private_rotation.pem",
+			PublicKeyRotationPath:   "../../../keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
@@ -244,10 +244,10 @@ func TestAuthUsecase_Register_EmailAlreadyExists(t *testing.T) {
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
-			PrivateKeyPath:          "/home/ilmannafi/Documents/invento-be/keys/private.pem",
-			PublicKeyPath:           "/home/ilmannafi/Documents/invento-be/keys/public.pem",
-			PrivateKeyRotationPath:  "/home/ilmannafi/Documents/invento-be/keys/private_rotation.pem",
-			PublicKeyRotationPath:   "/home/ilmannafi/Documents/invento-be/keys/public_rotation.pem",
+			PrivateKeyPath:          "../../../keys/private.pem",
+			PublicKeyPath:           "../../../keys/public.pem",
+			PrivateKeyRotationPath:  "../../../keys/private_rotation.pem",
+			PublicKeyRotationPath:   "../../../keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
@@ -291,10 +291,10 @@ func TestAuthUsecase_Login_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
-			PrivateKeyPath:          "/home/ilmannafi/Documents/invento-be/keys/private.pem",
-			PublicKeyPath:           "/home/ilmannafi/Documents/invento-be/keys/public.pem",
-			PrivateKeyRotationPath:  "/home/ilmannafi/Documents/invento-be/keys/private_rotation.pem",
-			PublicKeyRotationPath:   "/home/ilmannafi/Documents/invento-be/keys/public_rotation.pem",
+			PrivateKeyPath:          "../../../keys/private.pem",
+			PublicKeyPath:           "../../../keys/public.pem",
+			PrivateKeyRotationPath:  "../../../keys/private_rotation.pem",
+			PublicKeyRotationPath:   "../../../keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
@@ -351,10 +351,10 @@ func TestAuthUsecase_Login_InvalidCredentials(t *testing.T) {
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
-			PrivateKeyPath:          "/home/ilmannafi/Documents/invento-be/keys/private.pem",
-			PublicKeyPath:           "/home/ilmannafi/Documents/invento-be/keys/public.pem",
-			PrivateKeyRotationPath:  "/home/ilmannafi/Documents/invento-be/keys/private_rotation.pem",
-			PublicKeyRotationPath:   "/home/ilmannafi/Documents/invento-be/keys/public_rotation.pem",
+			PrivateKeyPath:          "../../../keys/private.pem",
+			PublicKeyPath:           "../../../keys/public.pem",
+			PrivateKeyRotationPath:  "../../../keys/private_rotation.pem",
+			PublicKeyRotationPath:   "../../../keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
@@ -391,10 +391,10 @@ func TestAuthUsecase_RefreshToken_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
-			PrivateKeyPath:          "/home/ilmannafi/Documents/invento-be/keys/private.pem",
-			PublicKeyPath:           "/home/ilmannafi/Documents/invento-be/keys/public.pem",
-			PrivateKeyRotationPath:  "/home/ilmannafi/Documents/invento-be/keys/private_rotation.pem",
-			PublicKeyRotationPath:   "/home/ilmannafi/Documents/invento-be/keys/public_rotation.pem",
+			PrivateKeyPath:          "../../../keys/private.pem",
+			PublicKeyPath:           "../../../keys/public.pem",
+			PrivateKeyRotationPath:  "../../../keys/private_rotation.pem",
+			PublicKeyRotationPath:   "../../../keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
@@ -458,10 +458,10 @@ func TestAuthUsecase_ResetPassword_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
-			PrivateKeyPath:          "/home/ilmannafi/Documents/invento-be/keys/private.pem",
-			PublicKeyPath:           "/home/ilmannafi/Documents/invento-be/keys/public.pem",
-			PrivateKeyRotationPath:  "/home/ilmannafi/Documents/invento-be/keys/private_rotation.pem",
-			PublicKeyRotationPath:   "/home/ilmannafi/Documents/invento-be/keys/public_rotation.pem",
+			PrivateKeyPath:          "../../../keys/private.pem",
+			PublicKeyPath:           "../../../keys/public.pem",
+			PrivateKeyRotationPath:  "../../../keys/private_rotation.pem",
+			PublicKeyRotationPath:   "../../../keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
@@ -510,10 +510,10 @@ func TestAuthUsecase_ConfirmResetPassword_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
-			PrivateKeyPath:          "/home/ilmannafi/Documents/invento-be/keys/private.pem",
-			PublicKeyPath:           "/home/ilmannafi/Documents/invento-be/keys/public.pem",
-			PrivateKeyRotationPath:  "/home/ilmannafi/Documents/invento-be/keys/private_rotation.pem",
-			PublicKeyRotationPath:   "/home/ilmannafi/Documents/invento-be/keys/public_rotation.pem",
+			PrivateKeyPath:          "../../../keys/private.pem",
+			PublicKeyPath:           "../../../keys/public.pem",
+			PrivateKeyRotationPath:  "../../../keys/private_rotation.pem",
+			PublicKeyRotationPath:   "../../../keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
@@ -563,10 +563,10 @@ func TestAuthUsecase_Logout_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
-			PrivateKeyPath:          "/home/ilmannafi/Documents/invento-be/keys/private.pem",
-			PublicKeyPath:           "/home/ilmannafi/Documents/invento-be/keys/public.pem",
-			PrivateKeyRotationPath:  "/home/ilmannafi/Documents/invento-be/keys/private_rotation.pem",
-			PublicKeyRotationPath:   "/home/ilmannafi/Documents/invento-be/keys/public_rotation.pem",
+			PrivateKeyPath:          "../../../keys/private.pem",
+			PublicKeyPath:           "../../../keys/public.pem",
+			PrivateKeyRotationPath:  "../../../keys/private_rotation.pem",
+			PublicKeyRotationPath:   "../../../keys/public_rotation.pem",
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},

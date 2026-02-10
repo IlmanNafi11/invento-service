@@ -2,8 +2,8 @@ package http
 
 import (
 	"bytes"
-	"fiber-boiler-plate/internal/helper"
 	apperrors "fiber-boiler-plate/internal/errors"
+	"fiber-boiler-plate/internal/helper"
 
 	"github.com/gofiber/fiber/v2"
 )

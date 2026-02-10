@@ -214,28 +214,10 @@ func (ctrl *RoleController) DeleteRole(c *fiber.Ctx) error {
 }
 
 // handleRoleError handles role usecase errors and maps them to appropriate HTTP responses.
-// This replaces string-based error matching with type-safe error handling.
+// Uses type-safe error handling with AppError types.
 func (ctrl *RoleController) handleRoleError(c *fiber.Ctx, err error) error {
-	// Check if it's an AppError
 	if appErr, ok := err.(*apperrors.AppError); ok {
 		return helper.SendAppError(c, appErr)
 	}
-
-	// Fallback to string-based error matching for existing usecase errors
-	// TODO: Update usecase to return AppError types instead of string errors
-	errMsg := err.Error()
-	switch errMsg {
-	case "role tidak ditemukan":
-		return ctrl.SendNotFound(c, errMsg)
-	case "nama role sudah ada":
-		return ctrl.SendConflict(c, errMsg)
-	case "permission tidak boleh kosong":
-		return ctrl.SendBadRequest(c, errMsg)
-	default:
-		// Check for action/permission related errors
-		if len(errMsg) > 20 && errMsg[:6] == "action" {
-			return ctrl.SendBadRequest(c, errMsg)
-		}
-		return ctrl.SendInternalError(c)
-	}
+	return ctrl.SendInternalError(c)
 }

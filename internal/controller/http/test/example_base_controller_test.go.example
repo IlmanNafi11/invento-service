@@ -1,0 +1,550 @@
+package http_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fiber-boiler-plate/config"
+	"fiber-boiler-plate/internal/controller/http"
+	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
+	"fiber-boiler-plate/internal/testing"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+// This file demonstrates testing patterns for controllers using:
+// 1. Base Controller integration
+// 2. AppError type-safe error handling
+// 3. Standardized response patterns
+// 4. Test utilities from internal/testing
+
+// ============================================================================
+// Mock Usecase
+// ============================================================================
+
+type MockUserUsecase struct {
+	mock.Mock
+}
+
+func (m *MockUserUsecase) GetUsers(page, limit int) ([]domain.UserResponse, int, error) {
+	args := m.Called(page, limit)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]domain.UserResponse), args.Int(1), args.Error(2)
+}
+
+func (m *MockUserUsecase) GetUserByID(id uint) (*domain.UserResponse, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.UserResponse), args.Error(1)
+}
+
+func (m *MockUserUsecase) UpdateUser(id uint, req domain.UserUpdateRequest) (*domain.UserResponse, error) {
+	args := m.Called(id, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.UserResponse), args.Error(1)
+}
+
+func (m *MockUserUsecase) DeleteUser(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+// ============================================================================
+// Test Configuration
+// ============================================================================
+
+func getTestConfig() *config.Config {
+	return &config.Config{
+		App: config.AppConfig{
+			Env:            "development",
+			CorsOriginDev:  "http://localhost:5173",
+			CorsOriginProd: "https://yourdomain.com",
+		},
+		JWT: config.JWTConfig{
+			RefreshTokenExpireHours: 168,
+		},
+	}
+}
+
+// ============================================================================
+// Tests for Base Controller Integration
+// ============================================================================
+
+// TestUserController_GetUsers_Success demonstrates testing a controller that
+// embeds BaseController and returns standardized success responses.
+func TestUserController_GetUsers_Success(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	expectedUsers := []domain.UserResponse{
+		{
+			ID:    1,
+			Name:  "Test User",
+			Email: "test@example.com",
+		},
+		{
+			ID:    2,
+			Name:  "Admin User",
+			Email: "admin@example.com",
+		},
+	}
+	totalItems := 2
+
+	mockUC.On("GetUsers", 1, 10).Return(expectedUsers, totalItems, nil)
+
+	app := fiber.New()
+	app.Get("/users", controller.GetUsers)
+
+	req := httptest.NewRequest("GET", "/users?page=1&limit=10", nil)
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+	// Use test utilities for assertions
+	testing.AssertSuccess(t, resp)
+	testing.AssertSuccessField(t, resp)
+	testing.AssertDataFieldExists(t, resp)
+
+	// Parse response for detailed assertions
+	var response map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	assert.Equal(t, true, response["success"])
+	assert.Equal(t, float64(200), response["code"])
+	assert.Equal(t, "Data user berhasil diambil", response["message"])
+
+	// Check data structure
+	data := response["data"].(map[string]interface{})
+	assert.Contains(t, data, "items")
+	assert.Contains(t, data, "pagination")
+
+	// Check pagination
+	pagination := data["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(1), pagination["page"])
+	assert.Equal(t, float64(10), pagination["limit"])
+	assert.Equal(t, float64(1), pagination["total_pages"])
+	assert.Equal(t, float64(2), pagination["total_items"])
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestUserController_GetUserByID_Success demonstrates testing a single item retrieval.
+func TestUserController_GetUserByID_Success(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	expectedUser := &domain.UserResponse{
+		ID:    1,
+		Name:  "Test User",
+		Email: "test@example.com",
+	}
+
+	mockUC.On("GetUserByID", uint(1)).Return(expectedUser, nil)
+
+	app := fiber.New()
+	app.Get("/users/:id", controller.GetUserByID)
+
+	req := httptest.NewRequest("GET", "/users/1", nil)
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+	testing.AssertSuccess(t, resp)
+	testing.AssertDataFieldExists(t, resp)
+
+	var response map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(1), data["id"])
+	assert.Equal(t, "Test User", data["name"])
+	assert.Equal(t, "test@example.com", data["email"])
+
+	mockUC.AssertExpectations(t)
+}
+
+// ============================================================================
+// Tests for AppError Integration
+// ============================================================================
+
+// TestUserController_GetUserByID_NotFound demonstrates testing AppError handling.
+// The usecase returns an AppError, which the controller automatically converts
+// to the appropriate HTTP response.
+func TestUserController_GetUserByID_NotFound(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	// Return AppError from usecase
+	mockUC.On("GetUserByID", uint(999)).Return(
+		nil,
+		apperrors.NewNotFoundError("User"),
+	)
+
+	app := fiber.New()
+	app.Get("/users/:id", controller.GetUserByID)
+
+	req := httptest.NewRequest("GET", "/users/999", nil)
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+
+	testing.AssertError(t, resp, fiber.StatusNotFound)
+
+	var response map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	assert.Equal(t, false, response["success"])
+	assert.Equal(t, float64(404), response["code"])
+	assert.Equal(t, "User tidak ditemukan", response["message"])
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestUserController_UpdateUser_Conflict demonstrates testing conflict errors with AppError.
+func TestUserController_UpdateUser_Conflict(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	reqBody := domain.UserUpdateRequest{
+		Name:  "Updated User",
+		Email: "existing@example.com",
+	}
+
+	// Return conflict AppError
+	mockUC.On("UpdateUser", uint(1), reqBody).Return(
+		nil,
+		apperrors.NewConflictError("Email sudah terdaftar"),
+	)
+
+	app := fiber.New()
+	app.Put("/users/:id", controller.UpdateUser)
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("PUT", "/users/1", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusConflict, resp.StatusCode)
+
+	testing.AssertError(t, resp, fiber.StatusConflict)
+
+	var response map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	assert.Equal(t, false, response["success"])
+	assert.Equal(t, float64(409), response["code"])
+	assert.Equal(t, "Email sudah terdaftar", response["message"])
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestUserController_DeleteUser_Forbidden demonstrates testing forbidden errors with AppError.
+func TestUserController_DeleteUser_Forbidden(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	// Return forbidden AppError
+	mockUC.On("DeleteUser", uint(1)).Return(
+		apperrors.NewForbiddenError("Tidak dapat menghapus user yang sedang aktif"),
+	)
+
+	app := fiber.New()
+	app.Delete("/users/:id", controller.DeleteUser)
+
+	req := httptest.NewRequest("DELETE", "/users/1", nil)
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusForbidden, resp.StatusCode)
+
+	testing.AssertError(t, resp, fiber.StatusForbidden)
+
+	var response map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	assert.Equal(t, false, response["success"])
+	assert.Equal(t, float64(403), response["code"])
+	assert.Equal(t, "Tidak dapat menghapus user yang sedang aktif", response["message"])
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestUserController_GetUserByID_InternalError demonstrates testing internal server errors.
+func TestUserController_GetUserByID_InternalError(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	// Return internal error AppError
+	mockUC.On("GetUserByID", uint(1)).Return(
+		nil,
+		apperrors.NewInternalError(errors.New("database connection failed")),
+	)
+
+	app := fiber.New()
+	app.Get("/users/:id", controller.GetUserByID)
+
+	req := httptest.NewRequest("GET", "/users/1", nil)
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	testing.AssertError(t, resp, fiber.StatusInternalServerError)
+
+	var response map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	assert.Equal(t, false, response["success"])
+	assert.Equal(t, float64(500), response["code"])
+	assert.Equal(t, "Terjadi kesalahan pada server", response["message"])
+
+	// Internal error details should NOT be exposed
+	assert.Nil(t, response["errors"])
+
+	mockUC.AssertExpectations(t)
+}
+
+// ============================================================================
+// Tests for Validation
+// ============================================================================
+
+// TestUserController_UpdateUser_ValidationError demonstrates validation error testing.
+// The controller uses ValidateStruct from BaseController which returns standardized
+// validation error responses.
+func TestUserController_UpdateUser_ValidationError(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	// Invalid request - email format is wrong
+	reqBody := map[string]interface{}{
+		"name":  "Test User",
+		"email": "invalid-email-format",
+	}
+
+	app := fiber.New()
+	app.Put("/users/:id", controller.UpdateUser)
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("PUT", "/users/1", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+
+	testing.AssertError(t, resp, fiber.StatusBadRequest)
+
+	var response map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	assert.Equal(t, false, response["success"])
+	assert.Equal(t, float64(400), response["code"])
+	assert.Contains(t, response["message"], "validasi")
+
+	// Should have validation errors
+	errors, hasErrors := response["errors"]
+	assert.True(t, hasErrors, "Response should contain validation errors")
+	assert.NotNil(t, errors)
+}
+
+// ============================================================================
+// Tests Using Test Utilities
+// ============================================================================
+
+// TestUserController_GetUserByID_WithUtilities demonstrates using test utilities
+// from the internal/testing package for cleaner assertions.
+func TestUserController_GetUserByID_WithUtilities(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	expectedUser := &domain.UserResponse{
+		ID:    1,
+		Name:  "Test User",
+		Email: "test@example.com",
+	}
+
+	mockUC.On("GetUserByID", uint(1)).Return(expectedUser, nil)
+
+	app := fiber.New()
+	app.Get("/users/:id", controller.GetUserByID)
+
+	req := httptest.NewRequest("GET", "/users/1", nil)
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+
+	// Use utility functions for common assertions
+	testing.AssertSuccess(t, resp)
+	testing.AssertStatusCode(t, resp, fiber.StatusOK)
+	testing.AssertJSONContentType(t, resp)
+	testing.AssertSuccessField(t, resp)
+	testing.AssertDataFieldExists(t, resp)
+	testing.AssertResponseMessage(t, resp, "Data user berhasil diambil")
+	testing.AssertResponseCode(t, resp, 200)
+
+	// Use JSON field assertions for specific field checks
+	testing.AssertJSONField(t, resp, "success", true)
+	testing.AssertJSONField(t, resp, "data.id", float64(1))
+	testing.AssertJSONField(t, resp, "data.name", "Test User")
+	testing.AssertJSONField(t, resp, "data.email", "test@example.com")
+
+	mockUC.AssertExpectations(t)
+}
+
+// ============================================================================
+// Table-Driven Tests
+// ============================================================================
+
+// TestUserController_GetUserByID_Errors demonstrates table-driven testing
+// for multiple error scenarios.
+func TestUserController_GetUserByID_Errors(t *testing.T) {
+	tests := []struct {
+		name           string
+		userID         string
+		mockReturn     interface{}
+		mockError      error
+		expectedStatus int
+		expectedMsg    string
+	}{
+		{
+			name:           "not found",
+			userID:         "999",
+			mockReturn:     nil,
+			mockError:      apperrors.NewNotFoundError("User"),
+			expectedStatus: fiber.StatusNotFound,
+			expectedMsg:    "tidak ditemukan",
+		},
+		{
+			name:           "invalid id format",
+			userID:         "invalid",
+			mockReturn:     nil,
+			mockError:      nil, // Controller handles ID parsing
+			expectedStatus: fiber.StatusBadRequest,
+			expectedMsg:    "ID tidak valid",
+		},
+		{
+			name:           "internal error",
+			userID:         "1",
+			mockReturn:     nil,
+			mockError:      apperrors.NewInternalError(errors.New("db error")),
+			expectedStatus: fiber.StatusInternalServerError,
+			expectedMsg:    "Terjadi kesalahan pada server",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockUC := new(MockUserUsecase)
+			cfg := getTestConfig()
+			controller := http.NewUserController(mockUC, cfg)
+
+			// Only setup mock if not testing invalid ID format
+			if tt.name != "invalid id format" {
+				mockUC.On("GetUserByID", mock.Anything).Return(tt.mockReturn, tt.mockError)
+			}
+
+			app := fiber.New()
+			app.Get("/users/:id", controller.GetUserByID)
+
+			req := httptest.NewRequest("GET", "/users/"+tt.userID, nil)
+			resp, err := app.Test(req)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
+
+			var response map[string]interface{}
+			json.NewDecoder(resp.Body).Decode(&response)
+
+			assert.Equal(t, false, response["success"])
+			assert.Contains(t, response["message"], tt.expectedMsg)
+
+			mockUC.AssertExpectations(t)
+		})
+	}
+}
+
+// ============================================================================
+// Tests with Fixtures
+// ============================================================================
+
+// TestUserController_WithFixtures demonstrates using test fixtures
+// from the internal/testing package.
+func TestUserController_WithFixtures(t *testing.T) {
+	mockUC := new(MockUserUsecase)
+	cfg := getTestConfig()
+	controller := http.NewUserController(mockUC, cfg)
+
+	// Use fixtures for test data
+	user := testing.GetTestUser()
+	expectedResponse := &domain.UserResponse{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+
+	mockUC.On("GetUserByID", uint(1)).Return(expectedResponse, nil)
+
+	app := fiber.New()
+	app.Get("/users/:id", controller.GetUserByID)
+
+	req := httptest.NewRequest("GET", "/users/1", nil)
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	testing.AssertSuccess(t, resp)
+
+	var response map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(user.ID), data["id"])
+	assert.Equal(t, user.Name, data["name"])
+	assert.Equal(t, user.Email, data["email"])
+
+	mockUC.AssertExpectations(t)
+}
+
+// ============================================================================
+// Summary
+// ============================================================================
+//
+// This example file demonstrates:
+// 1. ✅ Testing controllers with Base Controller integration
+// 2. ✅ Testing AppError type-safe error handling
+// 3. ✅ Using test utilities from internal/testing package
+// 4. ✅ Table-driven tests for multiple scenarios
+// 5. ✅ Using fixtures for test data
+// 6. ✅ Proper response structure assertions
+//
+// Key patterns to follow:
+// - Mock usecases instead of hitting real database
+// - Use AppError for type-safe error handling in usecases
+// - Controllers automatically handle AppError responses
+// - Use test utilities to reduce assertion boilerplate
+// - Test both success and error paths
+// - Use descriptive test names: TestController_Method_Scenario

@@ -108,9 +108,9 @@ func NewProblemDetailsResponse(status int, title, detail string) ProblemDetailsR
 // Pagination: metadata pagination
 type ListResponse struct {
 	BaseResponse
-	Data      interface{}          `json:"data"`
-	Pagination PaginationMetadata   `json:"pagination"`
-	Timestamp  time.Time            `json:"timestamp"`
+	Data       interface{}        `json:"data"`
+	Pagination PaginationMetadata `json:"pagination"`
+	Timestamp  time.Time          `json:"timestamp"`
 }
 
 // NewListResponse membuat instance ListResponse baru
@@ -147,35 +147,3 @@ func NewMessageResponse(code int, message string) MessageResponse {
 	}
 }
 
-// DataResponse adalah wrapper untuk response dengan struktur data khusus
-// ResponseKey: kunci untuk data yang dikembalikan
-// ResponseData: data yang dikembalikan
-type DataResponse struct {
-	ResponseKey   string      `json:"-"`
-	ResponseData  interface{} `json:"data,omitempty"`
-	BaseResponse
-	Timestamp time.Time `json:"timestamp"`
-}
-
-// NewDataResponse membuat instance DataResponse baru dengan key khusus
-func NewDataResponse(code int, message string, key string, data interface{}) DataResponse {
-	return DataResponse{
-		ResponseKey: key,
-		BaseResponse: BaseResponse{
-			Success: true,
-			Message: message,
-			Code:    code,
-		},
-		ResponseData: data,
-		Timestamp:    time.Now(),
-	}
-}
-
-// MarshalJSON mengimplementasikan custom JSON marshaling untuk DataResponse
-func (d DataResponse) MarshalJSON() ([]byte, error) {
-	type Alias DataResponse
-	if d.ResponseKey != "" && d.ResponseKey != "data" {
-		return nil, nil // TODO: implement custom marshaling
-	}
-	return nil, nil // TODO: implement proper marshaling
-}

@@ -4,8 +4,8 @@ import (
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
 	apperrors "fiber-boiler-plate/internal/errors"
+	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,9 +27,9 @@ type AuthController struct {
 func NewAuthController(authUsecase usecase.AuthUsecase, cfg *config.Config) *AuthController {
 	return &AuthController{
 		BaseController: base.NewBaseController(nil, nil),
-		authUsecase:   authUsecase,
-		cookieHelper:  helper.NewCookieHelper(cfg),
-		logger:        helper.NewLogger(),
+		authUsecase:    authUsecase,
+		cookieHelper:   helper.NewCookieHelper(cfg),
+		logger:         helper.NewLogger(),
 	}
 }
 
