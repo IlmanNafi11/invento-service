@@ -94,6 +94,7 @@ type ResponseTimes struct {
 
 type ServicesStatus struct {
 	Database DatabaseService `json:"database"`
+	Email    EmailService    `json:"email"`
 }
 
 type DatabaseService struct {
@@ -101,6 +102,13 @@ type DatabaseService struct {
 	Status   ServiceStatus `json:"status"`
 	Version  string        `json:"version"`
 	PingTime string        `json:"ping_time"`
+}
+
+type EmailService struct {
+	Name      string        `json:"name"`
+	Provider  string        `json:"provider"`
+	Status    ServiceStatus `json:"status"`
+	APIKeySet bool          `json:"api_key_set"`
 }
 
 type Dependency struct {

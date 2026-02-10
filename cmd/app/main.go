@@ -11,9 +11,9 @@ func main() {
 
 	db := config.ConnectDatabase(cfg)
 
-	if cfg.Database.AutoMigrate && cfg.Database.MigrateOnStart {
+	if cfg.Database.AutoMigrate {
 		log.Printf("🔄 Menjalankan auto migration untuk environment: %s", cfg.App.Env)
-		config.RunMigration(db)
+		config.AutoMigrate(db)
 	}
 
 	if cfg.App.Env == "production" {

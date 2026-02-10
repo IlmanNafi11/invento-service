@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS casbin_rule (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     ptype VARCHAR(100) NOT NULL,
     v0 VARCHAR(100),
     v1 VARCHAR(100),
@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS casbin_rule (
     v3 VARCHAR(100),
     v4 VARCHAR(100),
     v5 VARCHAR(100),
-    UNIQUE KEY unique_casbin_rule (ptype, v0, v1, v2, v3, v4, v5)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    UNIQUE KEY unique_casbin_rule (ptypev0v1v2v3v4v5)
+) 

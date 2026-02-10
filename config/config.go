@@ -10,12 +10,14 @@ import (
 )
 
 type Config struct {
-	App      AppConfig
+	App     AppConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
 	Upload   UploadConfig
 	Resend   ResendConfig
 	OTP      OTPConfig
+	Logging  LoggingConfig
+	Swagger  SwaggerConfig
 }
 
 type AppConfig struct {
@@ -79,6 +81,16 @@ type UploadConfig struct {
 	TempPathDevelopment  string
 	TusVersion           string
 	MaxResumeAttempts    int
+}
+
+type LoggingConfig struct {
+	Level         string
+	Format        string
+	LogRequestBody bool
+}
+
+type SwaggerConfig struct {
+	Enabled bool
 }
 
 func LoadConfig() *Config {
@@ -145,6 +157,14 @@ func LoadConfig() *Config {
 			MaxAttempts:           getEnvAsInt("OTP_MAX_ATTEMPTS", 5),
 			ResendCooldownSeconds: getEnvAsInt("OTP_RESEND_COOLDOWN_SECONDS", 60),
 			ResendMaxTimes:        getEnvAsInt("OTP_RESEND_MAX_TIMES", 5),
+		},
+		Logging: LoggingConfig{
+			Level:         getEnv("LOG_LEVEL", "INFO"),
+			Format:        getEnv("LOG_FORMAT", "text"),
+			LogRequestBody: getEnvAsBool("LOG_REQUEST_BODY", false),
+		},
+		Swagger: SwaggerConfig{
+			Enabled: getEnvAsBool("SWAGGER_ENABLED", false),
 		},
 	}
 

@@ -1,15 +1,15 @@
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED NOT NULL,
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
     token VARCHAR(512) UNIQUE NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     is_revoked BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_refresh_tokens_user_id (user_id),
-    INDEX idx_refresh_tokens_token (token),
-    INDEX idx_refresh_tokens_expires_at (expires_at),
-    INDEX idx_refresh_tokens_user_revoked (user_id, is_revoked),
-    INDEX idx_refresh_tokens_expires_revoked (expires_at, is_revoked),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW() ,
+    CREATE INDEX idx_refresh_tokens_user_id ON roles(user_id),
+    CREATE INDEX idx_refresh_tokens_token ON roles(token),
+    CREATE INDEX idx_refresh_tokens_expires_at ON roles(expires_at),
+    CREATE INDEX idx_refresh_tokens_user_revoked ON roles(user_idis_revoked),
+    CREATE INDEX idx_refresh_tokens_expires_revoked ON roles(expires_atis_revoked),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) 

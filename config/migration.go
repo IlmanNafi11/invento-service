@@ -4,8 +4,9 @@ import (
 	"log"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/mysql"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +18,7 @@ func RunMigration(db *gorm.DB) {
 		log.Fatal("Gagal mendapatkan database instance:", err)
 	}
 
-	driver, err := mysql.WithInstance(sqlDB, &mysql.Config{
+	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{
 		MigrationsTable: "schema_migrations",
 	})
 	if err != nil {
@@ -26,7 +27,7 @@ func RunMigration(db *gorm.DB) {
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://migrations/app",
-		"mysql",
+		"postgres",
 		driver,
 	)
 	if err != nil {

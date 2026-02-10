@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"log"
 
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 func ConnectDatabase(cfg *Config) *gorm.DB {
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local&multiStatements=true",
-		cfg.Database.User,
-		cfg.Database.Password,
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Jakarta",
 		cfg.Database.Host,
 		cfg.Database.Port,
+		cfg.Database.User,
+		cfg.Database.Password,
 		cfg.Database.Name,
 	)
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 
@@ -27,6 +27,6 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 		log.Fatal("Gagal menghubungkan ke database:", err)
 	}
 
-	log.Println("Berhasil terhubung ke database MySQL")
+	log.Println("Berhasil terhubung ke database PostgreSQL")
 	return db
 }

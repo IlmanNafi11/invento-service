@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS roles (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     nama_role VARCHAR(50) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_roles_nama_role (nama_role)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_roles_nama_role ON roles(nama_role);

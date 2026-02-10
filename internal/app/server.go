@@ -2,25 +2,42 @@ package app
 
 import (
 	"fiber-boiler-plate/config"
+	"fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/controller/http"
 	"fiber-boiler-plate/internal/helper"
+	"fiber-boiler-plate/internal/logger"
+	"fiber-boiler-plate/internal/middleware"
 	"fiber-boiler-plate/internal/usecase"
 	"fiber-boiler-plate/internal/usecase/repo"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"gorm.io/gorm"
 )
 
 func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
-	appLogger := helper.NewLogger()
+	// Initialize structured logger
+	logLevel := logger.ParseLogLevel(cfg.Logging.Level)
+	logFormat := logger.ParseLogFormat(cfg.Logging.Format)
+	isDevelopment := cfg.App.Env == "development"
+
+	appLogger := logger.NewLogger(logLevel, logFormat)
+	if isDevelopment && logFormat == logger.TextFormat {
+		// Use default text logger for development
+		appLogger = logger.NewDefaultLogger(isDevelopment)
+	}
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			appLogger.Error("[ERROR_HANDLER] Error occurred: %v, Path: %s, Method: %s", err, c.Path(), c.Method())
+			requestID := middleware.GetRequestID(c)
+			reqLogger := appLogger.WithRequestID(requestID)
+			reqLogger.Error("[ERROR_HANDLER] Error occurred", map[string]interface{}{
+				"error":  err.Error(),
+				"path":   c.Path(),
+				"method": c.Method(),
+			})
 
 			if c.Path() != "" && len(c.Path()) >= 8 && c.Path()[:8] == "/uploads" {
 				return err
@@ -48,8 +65,19 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 		},
 	})
 
-	app.Use(logger.New())
+	// Apply middleware in order: RequestID -> Logger -> Recover -> CORS
+	app.Use(middleware.RequestID())
+	app.Use(middleware.RequestLogger(appLogger))
 	app.Use(recover.New())
+
+	// Log startup information
+	appLogger.Info("Server starting", map[string]interface{}{
+		"app":     cfg.App.Name,
+		"env":     cfg.App.Env,
+		"port":    cfg.App.Port,
+		"log_level": cfg.Logging.Level,
+		"log_format": cfg.Logging.Format,
+	})
 
 	corsOrigin := cfg.App.CorsOriginDev
 	if cfg.App.Env == "production" {
@@ -107,13 +135,14 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	authOTPController := http.NewAuthOTPController(authOTPUsecase, cfg)
 
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
-	roleController := http.NewRoleController(roleUsecase)
+	baseCtrl := base.NewBaseController(jwtManager, casbinEnforcer)
+	roleController := http.NewRoleController(roleUsecase, baseCtrl)
 
 	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, projectRepo, modulRepo, casbinEnforcer, pathResolver, cfg, db)
 	userController := http.NewUserController(userUsecase)
 
 	projectUsecase := usecase.NewProjectUsecase(projectRepo, fileManager)
-	projectController := http.NewProjectController(projectUsecase)
+	projectController := http.NewProjectController(projectUsecase, jwtManager, casbinEnforcer)
 
 	tusUploadUsecase := usecase.NewTusUploadUsecase(tusUploadRepo, projectRepo, projectUsecase, tusManager, fileManager, cfg)
 	tusController := http.NewTusController(tusUploadUsecase, cfg)
@@ -121,7 +150,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	tusModulUploadRepo := repo.NewTusModulUploadRepository(db)
 	modulUsecase := usecase.NewModulUsecase(modulRepo)
 	tusModulUsecase := usecase.NewTusModulUsecase(tusModulUploadRepo, modulRepo, tusManager, fileManager, cfg)
-	modulController := http.NewModulController(modulUsecase, tusModulUsecase, cfg)
+	modulController := http.NewModulController(modulUsecase, tusModulUsecase, cfg, baseCtrl)
 
 	statisticUsecase := usecase.NewStatisticUsecase(userRepo, projectRepo, modulRepo, roleRepo, casbinEnforcer, db)
 	statisticController := http.NewStatisticController(statisticUsecase)
@@ -222,6 +251,12 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	monitoring.Get("/status", healthController.GetApplicationStatus)
 
 	app.Get("/health", healthController.BasicHealthCheck)
+
+	// TODO: Swagger UI will be enabled when docs package is generated
+	// if cfg.Swagger.Enabled {
+	// 	appLogger.Info("Swagger UI enabled at /swagger/*", nil)
+	// 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
+	// }
 
 	return app
 }

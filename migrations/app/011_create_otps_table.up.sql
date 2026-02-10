@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS otps (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
     user_name VARCHAR(255) DEFAULT '',
     password_hash VARCHAR(512) DEFAULT '',
@@ -12,10 +12,10 @@ CREATE TABLE IF NOT EXISTS otps (
     is_used BOOLEAN DEFAULT false,
     resend_count INT DEFAULT 0,
     last_resend_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_otps_email (email),
-    INDEX idx_otps_type (type),
-    INDEX idx_otps_expires_at (expires_at),
-    INDEX idx_otps_validation (email, type, is_used, expires_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW() ,
+    CREATE INDEX idx_otps_email ON roles(email),
+    CREATE INDEX idx_otps_type ON roles(type),
+    CREATE INDEX idx_otps_expires_at ON roles(expires_at),
+    CREATE INDEX idx_otps_validation ON roles(emailtypeis_usedexpires_at)
+) 

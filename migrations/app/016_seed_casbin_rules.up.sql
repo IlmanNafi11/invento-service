@@ -1,5 +1,5 @@
-INSERT INTO casbin_rule (ptype, v0, v1, v2) 
-SELECT DISTINCT 'p', r.nama_role, p.resource, p.action
+INSERT INTO casbin_rule (ptypev0v1v2) 
+SELECT DISTINCT 'p'r.nama_rolep.resourcep.action
 FROM roles r
 INNER JOIN role_permissions rp ON r.id = rp.role_id
 INNER JOIN permissions p ON rp.permission_id = p.id

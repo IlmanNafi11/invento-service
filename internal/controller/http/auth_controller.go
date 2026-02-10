@@ -2,161 +2,281 @@ package http
 
 import (
 	"fiber-boiler-plate/config"
+	"fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
 )
 
+// AuthController handles authentication-related HTTP requests.
+// It embeds BaseController for common functionality like user ID extraction,
+// validation helpers, and standardized response methods.
 type AuthController struct {
+	*base.BaseController
 	authUsecase  usecase.AuthUsecase
 	cookieHelper *helper.CookieHelper
 	logger       *helper.Logger
 }
 
+// NewAuthController creates a new AuthController instance.
+// Initializes base controller without JWT/Casbin since auth endpoints
+// handle credentials directly (no authentication required).
 func NewAuthController(authUsecase usecase.AuthUsecase, cfg *config.Config) *AuthController {
 	return &AuthController{
-		authUsecase:  authUsecase,
-		cookieHelper: helper.NewCookieHelper(cfg),
-		logger:       helper.NewLogger(),
+		BaseController: base.NewBaseController(nil, nil),
+		authUsecase:   authUsecase,
+		cookieHelper:  helper.NewCookieHelper(cfg),
+		logger:        helper.NewLogger(),
 	}
 }
 
-func (ctrl *AuthController) Register(c *fiber.Ctx) error {
-	var req domain.RegisterRequest
-	if err := c.BodyParser(&req); err != nil {
-		return helper.SendBadRequestResponse(c, "Format request tidak valid")
+// handleAppError standardizes error handling for AppError types.
+// Returns true if error was handled (response sent), false otherwise.
+func (ctrl *AuthController) handleAppError(c *fiber.Ctx, err error) bool {
+	if appErr, ok := err.(*apperrors.AppError); ok {
+		helper.SendAppError(c, appErr)
+		return true
 	}
-
-	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
-		return helper.SendValidationErrorResponse(c, validationErrors)
-	}
-
-	refreshToken, result, err := ctrl.authUsecase.Register(req)
-	if err != nil {
-		switch err.Error() {
-		case "email sudah terdaftar":
-			return helper.SendConflictResponse(c, err.Error())
-		case "hanya email dengan domain polije.ac.id yang dapat digunakan",
-			"subdomain email tidak valid, gunakan student atau teacher",
-			"role tidak tersedia, silakan hubungi administrator":
-			return helper.SendBadRequestResponse(c, err.Error())
-		default:
-			return helper.SendInternalServerErrorResponse(c)
-		}
-	}
-
-	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
-
-	return helper.SendSuccessResponse(c, helper.StatusCreated, "Registrasi berhasil", result)
+	return false
 }
 
+// Login authenticates a user with email and password.
+//
+// @Summary Login pengguna
+// @Description Autentikasi pengguna dengan email dan password. Refresh token dikirim via httpOnly cookie.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body domain.AuthRequest true "Credential login"
+// @Success 200 {object} dto.SuccessResponse{data=domain.AuthResponse} "Login berhasil"
+// @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
+// @Failure 401 {object} dto.ErrorResponse "Email atau password salah"
+// @Failure 403 {object} dto.ErrorResponse "Akun belum diaktifkan"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
+// @Router /api/v1/auth/login [post]
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	var req domain.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
-		return helper.SendBadRequestResponse(c, "Format request tidak valid")
+		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
 
-	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
-		return helper.SendValidationErrorResponse(c, validationErrors)
+	if !ctrl.ValidateStruct(c, req) {
+		return nil
 	}
 
 	refreshToken, result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
-		switch err.Error() {
-		case "email atau password salah":
-			return helper.SendUnauthorizedResponse(c)
-		case "akun belum diaktifkan":
-			return helper.SendErrorResponse(c, fiber.StatusForbidden, err.Error(), nil)
-		default:
-			return helper.SendInternalServerErrorResponse(c)
+		if ctrl.handleAppError(c, err) {
+			return nil
 		}
+
+		// Handle string-based errors from usecase (migration in progress)
+		if err.Error() == "email atau password salah" {
+			return ctrl.SendUnauthorized(c)
+		}
+		if err.Error() == "akun belum diaktifkan" {
+			return helper.SendErrorResponse(c, fiber.StatusForbidden, "akun belum diaktifkan", nil)
+		}
+		return ctrl.SendInternalError(c)
 	}
 
 	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
-
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Login berhasil", result)
+	return ctrl.SendSuccess(c, result, "Login berhasil")
 }
 
+// Register creates a new user account.
+//
+// @Summary Registrasi pengguna baru
+// @Description Membuat akun pengguna baru dengan email polije.ac.id.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body domain.RegisterRequest true "Data registrasi"
+// @Success 201 {object} dto.SuccessResponse{data=domain.AuthResponse} "Registrasi berhasil"
+// @Failure 400 {object} dto.ErrorResponse "Data validasi tidak valid"
+// @Failure 409 {object} dto.ErrorResponse "Email sudah terdaftar"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
+// @Router /api/v1/auth/register [post]
+func (ctrl *AuthController) Register(c *fiber.Ctx) error {
+	var req domain.RegisterRequest
+	if err := c.BodyParser(&req); err != nil {
+		return ctrl.SendBadRequest(c, "Format request tidak valid")
+	}
+
+	if !ctrl.ValidateStruct(c, req) {
+		return nil
+	}
+
+	refreshToken, result, err := ctrl.authUsecase.Register(req)
+	if err != nil {
+		if ctrl.handleAppError(c, err) {
+			return nil
+		}
+
+		// Handle string-based errors from usecase (migration in progress)
+		if err.Error() == "email sudah terdaftar" {
+			return ctrl.SendConflict(c, "Email sudah terdaftar")
+		}
+		if err.Error() == "hanya email dengan domain polije.ac.id yang dapat digunakan" ||
+			err.Error() == "subdomain email tidak valid, gunakan student atau teacher" ||
+			err.Error() == "role tidak tersedia, silakan hubungi administrator" {
+			return ctrl.SendBadRequest(c, err.Error())
+		}
+		return ctrl.SendInternalError(c)
+	}
+
+	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
+	return ctrl.SendCreated(c, result, "Registrasi berhasil")
+}
+
+// RefreshToken refreshes an access token using a valid refresh token.
+//
+// @Summary Refresh access token
+// @Description Memperbarui access token menggunakan refresh token dari cookie.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.SuccessResponse{data=domain.RefreshTokenResponse} "Token berhasil diperbarui"
+// @Failure 400 {object} dto.ErrorResponse "Refresh token diperlukan"
+// @Failure 401 {object} dto.ErrorResponse "Token tidak valid atau expired"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
+// @Router /api/v1/auth/refresh [post]
 func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 	oldRefreshToken := helper.GetRefreshTokenFromCookie(c)
 	if oldRefreshToken == "" {
-		return helper.SendBadRequestResponse(c, "Refresh token diperlukan")
+		return ctrl.SendBadRequest(c, "Refresh token diperlukan")
 	}
 
 	newRefreshToken, result, err := ctrl.authUsecase.RefreshToken(oldRefreshToken)
 	if err != nil {
-		switch err.Error() {
-		case "refresh token tidak valid atau sudah expired", "user tidak ditemukan":
-			return helper.SendUnauthorizedResponse(c)
-		default:
-			return helper.SendInternalServerErrorResponse(c)
+		if ctrl.handleAppError(c, err) {
+			return nil
 		}
+
+		// Handle string-based errors from usecase (migration in progress)
+		if err.Error() == "refresh token tidak valid atau sudah expired" ||
+			err.Error() == "user tidak ditemukan" {
+			return ctrl.SendUnauthorized(c)
+		}
+		return ctrl.SendInternalError(c)
 	}
 
 	ctrl.cookieHelper.SetRefreshTokenCookie(c, newRefreshToken)
-
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Token berhasil diperbarui", result)
+	return ctrl.SendSuccess(c, result, "Token berhasil diperbarui")
 }
 
-func (ctrl *AuthController) ResetPassword(c *fiber.Ctx) error {
-	var req domain.ResetPasswordRequest
-	if err := c.BodyParser(&req); err != nil {
-		return helper.SendBadRequestResponse(c, "Format request tidak valid")
-	}
-
-	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
-		return helper.SendValidationErrorResponse(c, validationErrors)
-	}
-
-	err := ctrl.authUsecase.ResetPassword(req)
-	if err != nil {
-		if err.Error() == "email tidak ditemukan" {
-			return helper.SendNotFoundResponse(c, err.Error())
-		}
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Link reset password telah dikirim ke email Anda", nil)
-}
-
-func (ctrl *AuthController) ConfirmResetPassword(c *fiber.Ctx) error {
-	var req domain.NewPasswordRequest
-	if err := c.BodyParser(&req); err != nil {
-		return helper.SendBadRequestResponse(c, "Format request tidak valid")
-	}
-
-	if validationErrors := helper.ValidateStruct(req); len(validationErrors) > 0 {
-		return helper.SendValidationErrorResponse(c, validationErrors)
-	}
-
-	err := ctrl.authUsecase.ConfirmResetPassword(req)
-	if err != nil {
-		if err.Error() == "token reset password tidak valid atau sudah expired" {
-			return helper.SendNotFoundResponse(c, "Token reset password tidak valid")
-		}
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Password berhasil direset", nil)
-}
-
+// Logout invalidates the user's refresh token.
+//
+// @Summary Logout pengguna
+// @Description Menghapus refresh token dari cookie dan database.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.SuccessResponse "Logout berhasil"
+// @Failure 400 {object} dto.ErrorResponse "Refresh token diperlukan"
+// @Failure 404 {object} dto.ErrorResponse "Token tidak valid"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
+// @Router /api/v1/auth/logout [post]
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 	token := helper.GetRefreshTokenFromCookie(c)
 	if token == "" {
-		return helper.SendBadRequestResponse(c, "Refresh token diperlukan")
+		return ctrl.SendBadRequest(c, "Refresh token diperlukan")
 	}
 
 	err := ctrl.authUsecase.Logout(token)
 	if err != nil {
-		if err.Error() == "refresh token tidak valid" {
-			return helper.SendNotFoundResponse(c, err.Error())
+		if ctrl.handleAppError(c, err) {
+			return nil
 		}
-		return helper.SendInternalServerErrorResponse(c)
+
+		// Handle string-based errors from usecase (migration in progress)
+		if err.Error() == "refresh token tidak valid" {
+			return ctrl.SendNotFound(c, "Token tidak valid")
+		}
+		return ctrl.SendInternalError(c)
 	}
 
 	ctrl.cookieHelper.ClearRefreshTokenCookie(c)
+	return ctrl.SendSuccess(c, nil, "Logout berhasil")
+}
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Logout berhasil", nil)
+// ResetPassword initiates password reset by sending OTP to email.
+//
+// @Summary Minta reset password
+// @Description Mengirim OTP ke email untuk reset password.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body domain.ResetPasswordRequest true "Email untuk reset password"
+// @Success 200 {object} dto.SuccessResponse "Link reset password telah dikirim"
+// @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
+// @Failure 404 {object} dto.ErrorResponse "Email tidak ditemukan"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
+// @Router /api/v1/auth/reset-password/otp [post]
+func (ctrl *AuthController) ResetPassword(c *fiber.Ctx) error {
+	var req domain.ResetPasswordRequest
+	if err := c.BodyParser(&req); err != nil {
+		return ctrl.SendBadRequest(c, "Format request tidak valid")
+	}
+
+	if !ctrl.ValidateStruct(c, req) {
+		return nil
+	}
+
+	err := ctrl.authUsecase.ResetPassword(req)
+	if err != nil {
+		if ctrl.handleAppError(c, err) {
+			return nil
+		}
+
+		// Handle string-based errors from usecase (migration in progress)
+		if err.Error() == "email tidak ditemukan" {
+			return ctrl.SendNotFound(c, "Email tidak ditemukan")
+		}
+		return ctrl.SendInternalError(c)
+	}
+
+	return ctrl.SendSuccess(c, nil, "Link reset password telah dikirim ke email Anda")
+}
+
+// ConfirmResetPassword completes password reset using OTP token.
+//
+// @Summary Konfirmasi reset password
+// @Description Mengatur password baru menggunakan token reset yang valid.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body domain.NewPasswordRequest true "Token dan password baru"
+// @Success 200 {object} dto.SuccessResponse "Password berhasil direset"
+// @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
+// @Failure 404 {object} dto.ErrorResponse "Token tidak valid"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
+// @Router /api/v1/auth/reset-password/confirm-otp [post]
+func (ctrl *AuthController) ConfirmResetPassword(c *fiber.Ctx) error {
+	var req domain.NewPasswordRequest
+	if err := c.BodyParser(&req); err != nil {
+		return ctrl.SendBadRequest(c, "Format request tidak valid")
+	}
+
+	if !ctrl.ValidateStruct(c, req) {
+		return nil
+	}
+
+	err := ctrl.authUsecase.ConfirmResetPassword(req)
+	if err != nil {
+		if ctrl.handleAppError(c, err) {
+			return nil
+		}
+
+		// Handle string-based errors from usecase (migration in progress)
+		if err.Error() == "token reset password tidak valid atau sudah expired" {
+			return ctrl.SendNotFound(c, "Token reset password tidak valid")
+		}
+		return ctrl.SendInternalError(c)
+	}
+
+	return ctrl.SendSuccess(c, nil, "Password berhasil direset")
 }

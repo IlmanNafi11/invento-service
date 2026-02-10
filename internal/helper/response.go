@@ -2,12 +2,19 @@ package helper
 
 import (
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
+	"fiber-boiler-plate/internal/version"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func SendSuccessResponse(c *fiber.Ctx, code int, message string, data interface{}) error {
+	// Add version headers
+	c.Set("X-API-Version", version.CurrentAPIVersion)
+	c.Set("X-API-Deprecated", strconv.FormatBool(false))
+
 	response := domain.SuccessResponse{
 		BaseResponse: domain.BaseResponse{
 			Success: true,
@@ -21,6 +28,10 @@ func SendSuccessResponse(c *fiber.Ctx, code int, message string, data interface{
 }
 
 func SendErrorResponse(c *fiber.Ctx, code int, message string, errors interface{}) error {
+	// Add version headers
+	c.Set("X-API-Version", version.CurrentAPIVersion)
+	c.Set("X-API-Deprecated", strconv.FormatBool(false))
+
 	response := domain.ErrorResponse{
 		BaseResponse: domain.BaseResponse{
 			Success: false,
@@ -90,4 +101,23 @@ func SendTooManyRequestsResponse(c *fiber.Ctx, message string) error {
 
 func SendInternalServerErrorResponse(c *fiber.Ctx) error {
 	return SendErrorResponse(c, fiber.StatusInternalServerError, "Terjadi kesalahan pada server", nil)
+}
+
+// SendAppError handles *AppError types by mapping them to appropriate HTTP responses.
+// This function provides a bridge between the new error handling system and the Fiber response helpers.
+//
+// Example usage in controllers:
+//
+//	if err != nil {
+//	    if appErr, ok := err.(*apperrors.AppError); ok {
+//	        return helper.SendAppError(c, appErr)
+//	    }
+//	    return helper.SendInternalServerErrorResponse(c)
+//	}
+//
+// Migration path from string matching:
+// OLD: switch err.Error() { case "user tidak ditemukan": ... }
+// NEW: return errors.NewNotFoundError("User")
+func SendAppError(c *fiber.Ctx, err *apperrors.AppError) error {
+	return SendErrorResponse(c, err.HTTPStatus, err.Message, nil)
 }

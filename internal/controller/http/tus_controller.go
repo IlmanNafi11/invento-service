@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fiber-boiler-plate/config"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
+	base "fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/usecase"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -15,343 +16,558 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// TusController handles TUS (Resumable Upload Protocol) v1.0.0 uploads.
+// See tus_controller_doc.go for protocol documentation and integration examples.
 type TusController struct {
+	base       *base.BaseController
 	tusUsecase usecase.TusUploadUsecase
 	config     *config.Config
 	validator  *validator.Validate
 }
 
+// NewTusController creates a new TUS controller instance.
 func NewTusController(tusUsecase usecase.TusUploadUsecase, cfg *config.Config) *TusController {
 	return &TusController{
+		base:       base.NewBaseController(nil, nil),
 		tusUsecase: tusUsecase,
 		config:     cfg,
 		validator:  validator.New(),
 	}
 }
 
+// ========================================================================
+// Helper Endpoints (Standard REST responses)
+// ========================================================================
+
+// CheckUploadSlot checks if an upload slot is available for the user.
+// This endpoint uses standard REST response format.
+//
+// Response: JSON with slot availability information
 func (ctrl *TusController) CheckUploadSlot(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
 	}
 
 	result, err := ctrl.tusUsecase.CheckUploadSlot(userID)
 	if err != nil {
-		return helper.SendInternalServerErrorResponse(c)
+		return ctrl.base.SendInternalError(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Pengecekan slot upload berhasil", result)
+	return helper.SendTusSlotResponse(
+		c,
+		result.Available,
+		result.Message,
+		result.QueueLength,
+		result.ActiveUpload,
+		result.MaxConcurrent,
+	)
 }
 
+// ResetUploadQueue resets the user's upload queue.
+// This endpoint uses standard REST response format.
+//
+// Response: JSON success message
 func (ctrl *TusController) ResetUploadQueue(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
 	}
 
 	err := ctrl.tusUsecase.ResetUploadQueue(userID)
 	if err != nil {
-		return helper.SendInternalServerErrorResponse(c)
+		return ctrl.base.SendInternalError(c)
 	}
 
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Queue upload berhasil direset", nil)
+	return ctrl.base.SendSuccess(c, nil, "Queue upload berhasil direset")
 }
 
+// ========================================================================
+// TUS Protocol Endpoints - Project Upload
+// ========================================================================
+
+// InitiateUpload initiates a new TUS upload session for a project.
+//
+// TUS Protocol: POST /upload
+// Request Headers:
+//   - Tus-Resumable: 1.0.0
+//   - Upload-Length: [total file size]
+//   - Upload-Metadata: [base64 encoded metadata]
+//
+// Response: 201 Created with Location header and JSON body
 func (ctrl *TusController) InitiateUpload(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
+	// Get authenticated user context
+	userID, userEmail, userRole, err := ctrl.getTusAuthContext(c)
+	if err != nil {
+		return err
 	}
 
-	userEmailVal := c.Locals("user_email")
-	if userEmailVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userEmail, ok := userEmailVal.(string)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	userRoleVal := c.Locals("user_role")
-	if userRoleVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userRole, ok := userRoleVal.(string)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	tusVersion := c.Get("Tus-Resumable")
+	// Validate TUS protocol headers
+	tusVersion := c.Get(helper.HeaderTusResumable)
 	if tusVersion == "" {
 		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Tus-Resumable wajib diisi", nil)
 	}
 
 	if tusVersion != ctrl.config.Upload.TusVersion {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Versi Tus tidak didukung, gunakan %s", ctrl.config.Upload.TusVersion), nil)
+		appErr := apperrors.NewTusVersionError(ctrl.config.Upload.TusVersion)
+		return helper.SendAppError(c, appErr)
 	}
 
-	uploadLengthStr := c.Get("Upload-Length")
+	// Parse and validate upload length
+	fileSize, err := ctrl.parseUploadLength(c)
+	if err != nil {
+		return ctrl.base.SendBadRequest(c, "Header Upload-Length tidak valid")
+	}
+
+	// Parse and validate metadata
+	metadata, err := ctrl.parseUploadMetadata(c.Get(helper.HeaderUploadMetadata))
+	if err != nil {
+		return ctrl.base.SendBadRequest(c, "Format Upload-Metadata tidak valid")
+	}
+
+	if !ctrl.base.ValidateStruct(c, metadata) {
+		return nil
+	}
+
+	// Initiate upload
+	result, err := ctrl.tusUsecase.InitiateUpload(userID, userEmail, userRole, fileSize, metadata)
+	if err != nil {
+		return ctrl.handleTusUsecaseError(c, err, 0)
+	}
+
+	// Set TUS response headers
+	helper.SetTusResponseHeaders(c, 0, fileSize)
+	helper.SetTusLocationHeader(c, result.UploadURL)
+
+	return helper.SendTusInitiateResponse(c, result.UploadID, result.UploadURL, fileSize)
+}
+
+// UploadChunk uploads a chunk of data for an existing upload session.
+//
+// TUS Protocol: PATCH /upload/{id}
+// Request Headers:
+//   - Tus-Resumable: 1.0.0
+//   - Upload-Offset: [current offset]
+//   - Content-Type: application/offset+octet-stream
+//   - Content-Length: [chunk size]
+//
+// Response: 204 No Content with Upload-Offset header
+func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		helper.SetTusResponseHeaders(c, 0, 0)
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	// Validate upload ID
+	uploadID := c.Params("id")
+	if uploadID == "" {
+		return helper.BuildTusErrorResponse(c, fiber.StatusBadRequest, 0)
+	}
+
+	// Validate TUS protocol headers
+	if err := ctrl.validateTusHeaders(c); err != nil {
+		return helper.BuildTusErrorResponse(c, fiber.StatusPreconditionFailed, 0)
+	}
+
+	// Parse and validate chunk data
+	offset, _, bodyReader, err := ctrl.parseChunkRequest(c)
+	if err != nil {
+		return helper.BuildTusErrorResponse(c, fiber.StatusBadRequest, 0)
+	}
+
+	// Handle chunk upload
+	newOffset, err := ctrl.tusUsecase.HandleChunk(uploadID, userID, offset, bodyReader)
+	if err != nil {
+		return ctrl.handleTusChunkError(c, err, newOffset)
+	}
+
+	// Return success with new offset
+	return helper.SendTusChunkResponse(c, newOffset)
+}
+
+// GetUploadStatus retrieves the current upload status (TUS HEAD request).
+//
+// TUS Protocol: HEAD /upload/{id}
+// Response: 200 OK with Upload-Offset and Upload-Length headers
+func (ctrl *TusController) GetUploadStatus(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
+	}
+
+	// Validate upload ID
+	uploadID := c.Params("id")
+	if uploadID == "" {
+		return ctrl.base.SendBadRequest(c, "ID upload tidak valid")
+	}
+
+	// Validate TUS version
+	tusVersion := c.Get(helper.HeaderTusResumable)
+	if tusVersion != ctrl.config.Upload.TusVersion {
+		appErr := apperrors.NewTusVersionError(ctrl.config.Upload.TusVersion)
+		return helper.SendAppError(c, appErr)
+	}
+
+	// Get upload status
+	offset, length, err := ctrl.tusUsecase.GetUploadStatus(uploadID, userID)
+	if err != nil {
+		return ctrl.handleTusUsecaseError(c, err, 0)
+	}
+
+	// Return TUS HEAD response
+	return helper.SendTusHeadResponse(c, offset, length)
+}
+
+// GetUploadInfo retrieves detailed information about an upload (REST endpoint).
+//
+// This is NOT a TUS protocol endpoint - it returns standard JSON response.
+// Use this for getting upload metadata, progress percentage, etc.
+//
+// Response: JSON with upload information
+func (ctrl *TusController) GetUploadInfo(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
+	}
+
+	// Validate upload ID
+	uploadID := c.Params("id")
+	if uploadID == "" {
+		return ctrl.base.SendBadRequest(c, "ID upload tidak valid")
+	}
+
+	// Get upload info
+	result, err := ctrl.tusUsecase.GetUploadInfo(uploadID, userID)
+	if err != nil {
+		return ctrl.handleTusUsecaseError(c, err, 0)
+	}
+
+	return ctrl.base.SendSuccess(c, result, "Informasi upload berhasil didapat")
+}
+
+// CancelUpload cancels an active upload session.
+//
+// TUS Protocol: DELETE /upload/{id}
+// Response: 204 No Content
+func (ctrl *TusController) CancelUpload(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
+	}
+
+	// Validate upload ID
+	uploadID := c.Params("id")
+	if uploadID == "" {
+		return ctrl.base.SendBadRequest(c, "ID upload tidak valid")
+	}
+
+	// Validate TUS version
+	tusVersion := c.Get(helper.HeaderTusResumable)
+	if tusVersion != ctrl.config.Upload.TusVersion {
+		appErr := apperrors.NewTusVersionError(ctrl.config.Upload.TusVersion)
+		return helper.SendAppError(c, appErr)
+	}
+
+	// Cancel upload
+	err := ctrl.tusUsecase.CancelUpload(uploadID, userID)
+	if err != nil {
+		return ctrl.handleTusUsecaseError(c, err, 0)
+	}
+
+	return helper.SendTusDeleteResponse(c)
+}
+
+// ========================================================================
+// TUS Protocol Endpoints - Project Update Upload
+// ========================================================================
+
+// InitiateProjectUpdateUpload initiates a new TUS upload session for project update.
+//
+// TUS Protocol: POST /project/{id}/upload
+// Response: 201 Created with Location header and JSON body
+func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
+	}
+
+	// Parse project ID
+	projectID, err := ctrl.base.ParsePathID(c)
+	if err != nil {
+		return err
+	}
+
+	// Validate TUS protocol headers
+	tusVersion := c.Get(helper.HeaderTusResumable)
+	if tusVersion == "" {
+		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Tus-Resumable wajib diisi", nil)
+	}
+
+	if tusVersion != ctrl.config.Upload.TusVersion {
+		appErr := apperrors.NewTusVersionError(ctrl.config.Upload.TusVersion)
+		return helper.SendAppError(c, appErr)
+	}
+
+	// Parse and validate upload length
+	fileSize, err := ctrl.parseUploadLength(c)
+	if err != nil {
+		return ctrl.base.SendBadRequest(c, "Header Upload-Length tidak valid")
+	}
+
+	// Parse and validate metadata (optional for project updates)
+	uploadMetadata := c.Get(helper.HeaderUploadMetadata)
+	var metadata domain.TusUploadInitRequest
+	if uploadMetadata != "" {
+		metadata, err = ctrl.parseUploadMetadata(uploadMetadata)
+		if err != nil {
+			return ctrl.base.SendBadRequest(c, "Format Upload-Metadata tidak valid")
+		}
+		if !ctrl.base.ValidateStruct(c, metadata) {
+			return nil
+		}
+	}
+
+	// Initiate upload
+	result, err := ctrl.tusUsecase.InitiateProjectUpdateUpload(projectID, userID, fileSize, metadata)
+	if err != nil {
+		return ctrl.handleTusUsecaseError(c, err, 0)
+	}
+
+	// Set TUS response headers
+	helper.SetTusResponseHeaders(c, 0, fileSize)
+	helper.SetTusLocationHeader(c, result.UploadURL)
+
+	return helper.SendTusInitiateResponse(c, result.UploadID, result.UploadURL, fileSize)
+}
+
+// UploadProjectUpdateChunk uploads a chunk for project update.
+//
+// TUS Protocol: PATCH /project/{id}/upload/{upload_id}
+// Response: 204 No Content with Upload-Offset header
+func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		helper.SetTusResponseHeaders(c, 0, 0)
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	// Parse project ID
+	projectID, err := ctrl.base.ParsePathID(c)
+	if err != nil {
+		helper.SetTusResponseHeaders(c, 0, 0)
+		return err
+	}
+
+	// Validate upload ID
+	uploadID := c.Params("upload_id")
+	if uploadID == "" {
+		return helper.BuildTusErrorResponse(c, fiber.StatusBadRequest, 0)
+	}
+
+	// Validate TUS protocol headers
+	if err := ctrl.validateTusHeaders(c); err != nil {
+		return helper.BuildTusErrorResponse(c, fiber.StatusPreconditionFailed, 0)
+	}
+
+	// Parse and validate chunk data
+	offset, _, bodyReader, err := ctrl.parseChunkRequest(c)
+	if err != nil {
+		return helper.BuildTusErrorResponse(c, fiber.StatusBadRequest, 0)
+	}
+
+	// Handle chunk upload
+	newOffset, err := ctrl.tusUsecase.HandleProjectUpdateChunk(projectID, uploadID, userID, offset, bodyReader)
+	if err != nil {
+		return ctrl.handleTusChunkError(c, err, newOffset)
+	}
+
+	// Return success with new offset
+	return helper.SendTusChunkResponse(c, newOffset)
+}
+
+// GetProjectUpdateUploadStatus retrieves project update upload status (TUS HEAD).
+//
+// TUS Protocol: HEAD /project/{id}/upload/{upload_id}
+// Response: 200 OK with Upload-Offset and Upload-Length headers
+func (ctrl *TusController) GetProjectUpdateUploadStatus(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
+	}
+
+	// Parse project ID
+	projectID, err := ctrl.base.ParsePathID(c)
+	if err != nil {
+		return err
+	}
+
+	// Validate upload ID
+	uploadID := c.Params("upload_id")
+	if uploadID == "" {
+		return ctrl.base.SendBadRequest(c, "ID upload tidak valid")
+	}
+
+	// Validate TUS version
+	tusVersion := c.Get(helper.HeaderTusResumable)
+	if tusVersion != ctrl.config.Upload.TusVersion {
+		appErr := apperrors.NewTusVersionError(ctrl.config.Upload.TusVersion)
+		return helper.SendAppError(c, appErr)
+	}
+
+	// Get upload status
+	offset, length, err := ctrl.tusUsecase.GetProjectUpdateUploadStatus(projectID, uploadID, userID)
+	if err != nil {
+		return ctrl.handleTusUsecaseError(c, err, 0)
+	}
+
+	// Return TUS HEAD response
+	return helper.SendTusHeadResponse(c, offset, length)
+}
+
+// GetProjectUpdateUploadInfo retrieves project update upload info (REST endpoint).
+//
+// This is NOT a TUS protocol endpoint - it returns standard JSON response.
+//
+// Response: JSON with upload information
+func (ctrl *TusController) GetProjectUpdateUploadInfo(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
+	}
+
+	// Parse project ID
+	projectID, err := ctrl.base.ParsePathID(c)
+	if err != nil {
+		return err
+	}
+
+	// Validate upload ID
+	uploadID := c.Params("upload_id")
+	if uploadID == "" {
+		return ctrl.base.SendBadRequest(c, "ID upload tidak valid")
+	}
+
+	// Get upload info
+	result, err := ctrl.tusUsecase.GetProjectUpdateUploadInfo(projectID, uploadID, userID)
+	if err != nil {
+		return ctrl.handleTusUsecaseError(c, err, 0)
+	}
+
+	return ctrl.base.SendSuccess(c, result, "Informasi update upload berhasil didapat")
+}
+
+// CancelProjectUpdateUpload cancels project update upload.
+//
+// TUS Protocol: DELETE /project/{id}/upload/{upload_id}
+// Response: 204 No Content
+func (ctrl *TusController) CancelProjectUpdateUpload(c *fiber.Ctx) error {
+	// Get authenticated user ID
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return nil
+	}
+
+	// Parse project ID
+	projectID, err := ctrl.base.ParsePathID(c)
+	if err != nil {
+		return err
+	}
+
+	// Validate upload ID
+	uploadID := c.Params("upload_id")
+	if uploadID == "" {
+		return ctrl.base.SendBadRequest(c, "ID upload tidak valid")
+	}
+
+	// Validate TUS version
+	tusVersion := c.Get(helper.HeaderTusResumable)
+	if tusVersion != ctrl.config.Upload.TusVersion {
+		appErr := apperrors.NewTusVersionError(ctrl.config.Upload.TusVersion)
+		return helper.SendAppError(c, appErr)
+	}
+
+	// Cancel upload
+	err = ctrl.tusUsecase.CancelProjectUpdateUpload(projectID, uploadID, userID)
+	if err != nil {
+		return ctrl.handleTusUsecaseError(c, err, 0)
+	}
+
+	return helper.SendTusDeleteResponse(c)
+}
+
+// ========================================================================
+// Helper Methods
+// ========================================================================
+
+// getTusAuthContext extracts authenticated user context (ID, email, role).
+// Returns error and sends response if authentication fails.
+func (ctrl *TusController) getTusAuthContext(c *fiber.Ctx) (uint, string, string, error) {
+	userID := ctrl.base.GetAuthenticatedUserID(c)
+	if userID == 0 {
+		return 0, "", "", fiber.ErrUnauthorized
+	}
+
+	userEmail := ctrl.base.GetAuthenticatedUserEmail(c)
+	if userEmail == "" {
+		return 0, "", "", fiber.ErrUnauthorized
+	}
+
+	userRole := ctrl.base.GetAuthenticatedUserRole(c)
+	if userRole == "" {
+		return 0, "", "", fiber.ErrUnauthorized
+	}
+
+	return userID, userEmail, userRole, nil
+}
+
+// validateTusHeaders validates TUS protocol headers.
+// Returns error if headers are invalid.
+func (ctrl *TusController) validateTusHeaders(c *fiber.Ctx) error {
+	tusVersion := c.Get(helper.HeaderTusResumable)
+	if tusVersion == "" || tusVersion != ctrl.config.Upload.TusVersion {
+		return fiber.NewError(fiber.StatusPreconditionFailed, "invalid TUS version")
+	}
+
+	contentType := c.Get(helper.HeaderContentType)
+	if contentType != helper.TusContentType {
+		return fiber.NewError(fiber.StatusUnsupportedMediaType, "invalid content type")
+	}
+
+	return nil
+}
+
+// parseUploadLength parses and validates the Upload-Length header.
+func (ctrl *TusController) parseUploadLength(c *fiber.Ctx) (int64, error) {
+	uploadLengthStr := c.Get(helper.HeaderUploadLength)
 	if uploadLengthStr == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Upload-Length wajib diisi", nil)
+		return 0, fiber.NewError(fiber.StatusBadRequest, "Upload-Length header required")
 	}
 
 	fileSize, err := strconv.ParseInt(uploadLengthStr, 10, 64)
 	if err != nil || fileSize <= 0 {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Upload-Length tidak valid", nil)
+		return 0, fiber.NewError(fiber.StatusBadRequest, "invalid Upload-Length")
 	}
 
-	uploadMetadata := c.Get("Upload-Metadata")
-	if uploadMetadata == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Upload-Metadata wajib diisi", nil)
-	}
-
-	metadata, err := ctrl.parseMetadata(uploadMetadata)
-	if err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format Upload-Metadata tidak valid", nil)
-	}
-
-	if err := ctrl.validator.Struct(metadata); err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Data validasi tidak valid", nil)
-	}
-
-	result, err := ctrl.tusUsecase.InitiateUpload(userID, userEmail, userRole, fileSize, metadata)
-	if err != nil {
-		if strings.Contains(err.Error(), "melebihi batas maksimal") {
-			return helper.SendErrorResponse(c, fiber.StatusRequestEntityTooLarge, err.Error(), nil)
-		}
-		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
-	}
-
-	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-	c.Set("Location", result.UploadURL)
-	c.Set("Upload-Offset", "0")
-
-	return helper.SendSuccessResponse(c, fiber.StatusCreated, "Upload project berhasil diinisiasi", result)
+	return fileSize, nil
 }
 
-func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
-
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-
-	uploadID := c.Params("id")
-	if uploadID == "" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	tusVersion := c.Get("Tus-Resumable")
-	if tusVersion == "" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	if tusVersion != ctrl.config.Upload.TusVersion {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusPreconditionFailed)
-	}
-
-	contentType := c.Get("Content-Type")
-	if contentType != "application/offset+octet-stream" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusUnsupportedMediaType)
-	}
-
-	offsetStr := c.Get("Upload-Offset")
-	if offsetStr == "" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	offset, err := strconv.ParseInt(offsetStr, 10, 64)
-	if err != nil || offset < 0 {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	contentLengthStr := c.Get("Content-Length")
-	if contentLengthStr == "" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	chunkSize, err := strconv.ParseInt(contentLengthStr, 10, 64)
-	if err != nil || chunkSize <= 0 {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	if chunkSize > ctrl.config.Upload.ChunkSize*2 {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusRequestEntityTooLarge)
-	}
-
-	bodyBytes := c.Body()
-	if bodyBytes == nil || len(bodyBytes) == 0 {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	if int64(len(bodyBytes)) != chunkSize {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	bodyReader := bytes.NewReader(bodyBytes)
-
-	newOffset, err := ctrl.tusUsecase.HandleChunk(uploadID, userID, offset, bodyReader)
-	if err != nil {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return c.SendStatus(fiber.StatusNotFound)
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return c.SendStatus(fiber.StatusForbidden)
-		}
-		if strings.Contains(err.Error(), "offset tidak valid") {
-			c.Set("Upload-Offset", fmt.Sprintf("%d", newOffset))
-			return c.SendStatus(fiber.StatusConflict)
-		}
-		if strings.Contains(err.Error(), "tidak aktif") {
-			return c.SendStatus(fiber.StatusLocked)
-		}
-
-		return c.SendStatus(fiber.StatusInternalServerError)
-	}
-
-	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-	c.Set("Upload-Offset", fmt.Sprintf("%d", newOffset))
-
-	return c.SendStatus(fiber.StatusNoContent)
-}
-
-func (ctrl *TusController) GetUploadStatus(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	uploadID := c.Params("id")
-	if uploadID == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
-	}
-
-	tusVersion := c.Get("Tus-Resumable")
-	if tusVersion != ctrl.config.Upload.TusVersion {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Versi Tus tidak didukung", nil)
-	}
-
-	offset, length, err := ctrl.tusUsecase.GetUploadStatus(uploadID, userID)
-	if err != nil {
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return helper.SendErrorResponse(c, fiber.StatusNotFound, err.Error(), nil)
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return helper.SendForbiddenResponse(c)
-		}
-		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
-	}
-
-	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-	c.Set("Upload-Offset", fmt.Sprintf("%d", offset))
-	c.Set("Upload-Length", fmt.Sprintf("%d", length))
-
-	return c.SendStatus(fiber.StatusOK)
-}
-
-func (ctrl *TusController) GetUploadInfo(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	uploadID := c.Params("id")
-	if uploadID == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
-	}
-
-	result, err := ctrl.tusUsecase.GetUploadInfo(uploadID, userID)
-	if err != nil {
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return helper.SendNotFoundResponse(c, err.Error())
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return helper.SendForbiddenResponse(c)
-		}
-		return helper.SendInternalServerErrorResponse(c)
-	}
-
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Informasi upload berhasil didapat", result)
-}
-
-func (ctrl *TusController) CancelUpload(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	uploadID := c.Params("id")
-	if uploadID == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
-	}
-
-	tusVersion := c.Get("Tus-Resumable")
-	if tusVersion != ctrl.config.Upload.TusVersion {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Versi Tus tidak didukung", nil)
-	}
-
-	err := ctrl.tusUsecase.CancelUpload(uploadID, userID)
-	if err != nil {
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return helper.SendErrorResponse(c, fiber.StatusNotFound, err.Error(), nil)
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return helper.SendForbiddenResponse(c)
-		}
-		if strings.Contains(err.Error(), "sudah selesai") {
-			return helper.SendErrorResponse(c, fiber.StatusConflict, err.Error(), nil)
-		}
-		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
-	}
-
-	return c.SendStatus(fiber.StatusNoContent)
-}
-
-func (ctrl *TusController) parseMetadata(metadataHeader string) (domain.TusUploadInitRequest, error) {
+// parseUploadMetadata parses TUS Upload-Metadata header.
+// Format: "key1 base64value1,key2 base64value2"
+func (ctrl *TusController) parseUploadMetadata(metadataHeader string) (domain.TusUploadInitRequest, error) {
 	var metadata domain.TusUploadInitRequest
+
+	if metadataHeader == "" {
+		return metadata, fiber.NewError(fiber.StatusBadRequest, "Upload-Metadata header required")
+	}
 
 	pairs := strings.Split(metadataHeader, ",")
 	metadataMap := make(map[string]string)
@@ -393,296 +609,97 @@ func (ctrl *TusController) parseMetadata(metadataHeader string) (domain.TusUploa
 	return metadata, nil
 }
 
-func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
-
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	projectIDStr := c.Params("id")
-	projectID, err := strconv.Atoi(projectIDStr)
-	if err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
-	}
-
-	tusVersion := c.Get("Tus-Resumable")
-	if tusVersion == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Tus-Resumable wajib diisi", nil)
-	}
-
-	if tusVersion != ctrl.config.Upload.TusVersion {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, fmt.Sprintf("Versi Tus tidak didukung, gunakan %s", ctrl.config.Upload.TusVersion), nil)
-	}
-
-	uploadLengthStr := c.Get("Upload-Length")
-	if uploadLengthStr == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Upload-Length wajib diisi", nil)
-	}
-
-	fileSize, err := strconv.ParseInt(uploadLengthStr, 10, 64)
-	if err != nil || fileSize <= 0 {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Upload-Length tidak valid", nil)
-	}
-
-	uploadMetadata := c.Get("Upload-Metadata")
-
-	var metadata domain.TusUploadInitRequest
-	if uploadMetadata != "" {
-		metadata, err = ctrl.parseMetadata(uploadMetadata)
-		if err != nil {
-			return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Format Upload-Metadata tidak valid", nil)
-		}
-		if err := ctrl.validator.Struct(metadata); err != nil {
-			return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Data validasi tidak valid", nil)
-		}
-	} else {
-	}
-
-	result, err := ctrl.tusUsecase.InitiateProjectUpdateUpload(uint(projectID), userID, fileSize, metadata)
-	if err != nil {
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return helper.SendErrorResponse(c, fiber.StatusNotFound, err.Error(), nil)
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return helper.SendErrorResponse(c, fiber.StatusForbidden, err.Error(), nil)
-		}
-		if strings.Contains(err.Error(), "melebihi batas maksimal") {
-			return helper.SendErrorResponse(c, fiber.StatusRequestEntityTooLarge, err.Error(), nil)
-		}
-		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
-	}
-
-	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-	c.Set("Location", result.UploadURL)
-	c.Set("Upload-Offset", "0")
-
-	return helper.SendSuccessResponse(c, fiber.StatusCreated, "Update upload project berhasil diinisiasi", result)
-}
-
-func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-
-	projectIDStr := c.Params("id")
-	projectID, err := strconv.Atoi(projectIDStr)
-	if err != nil {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	uploadID := c.Params("upload_id")
-	if uploadID == "" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
-	}
-
-	tusVersion := c.Get("Tus-Resumable")
-	if tusVersion == "" || tusVersion != ctrl.config.Upload.TusVersion {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusPreconditionFailed)
-	}
-
-	contentType := c.Get("Content-Type")
-	if contentType != "application/offset+octet-stream" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusUnsupportedMediaType)
-	}
-
-	offsetStr := c.Get("Upload-Offset")
+// parseChunkRequest parses and validates chunk upload request.
+// Returns offset, chunk size, and body reader.
+func (ctrl *TusController) parseChunkRequest(c *fiber.Ctx) (offset int64, chunkSize int64, bodyReader *bytes.Reader, err error) {
+	// Parse offset
+	offsetStr := c.Get(helper.HeaderUploadOffset)
 	if offsetStr == "" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "Upload-Offset header required")
 	}
 
-	offset, err := strconv.ParseInt(offsetStr, 10, 64)
+	offset, err = strconv.ParseInt(offsetStr, 10, 64)
 	if err != nil || offset < 0 {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "invalid Upload-Offset")
 	}
 
-	contentLengthStr := c.Get("Content-Length")
+	// Parse chunk size
+	contentLengthStr := c.Get(helper.HeaderContentLength)
 	if contentLengthStr == "" {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "Content-Length header required")
 	}
 
-	chunkSize, err := strconv.ParseInt(contentLengthStr, 10, 64)
+	chunkSize, err = strconv.ParseInt(contentLengthStr, 10, 64)
 	if err != nil || chunkSize <= 0 {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "invalid Content-Length")
 	}
 
-	if chunkSize > ctrl.config.Upload.ChunkSize*2 {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusRequestEntityTooLarge)
+	// Validate chunk size against maximum
+	if chunkSize > int64(ctrl.config.Upload.ChunkSize*2) {
+		return 0, 0, nil, fiber.NewError(fiber.StatusRequestEntityTooLarge, "chunk size exceeds maximum")
 	}
 
+	// Read and validate body
 	bodyBytes := c.Body()
-	if bodyBytes == nil || len(bodyBytes) == 0 || int64(len(bodyBytes)) != chunkSize {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-		return c.SendStatus(fiber.StatusBadRequest)
+	if bodyBytes == nil || len(bodyBytes) == 0 {
+		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "request body is empty")
 	}
 
-	bodyReader := bytes.NewReader(bodyBytes)
-
-	newOffset, err := ctrl.tusUsecase.HandleProjectUpdateChunk(uint(projectID), uploadID, userID, offset, bodyReader)
-	if err != nil {
-		c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return c.SendStatus(fiber.StatusNotFound)
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return c.SendStatus(fiber.StatusForbidden)
-		}
-		if strings.Contains(err.Error(), "offset tidak valid") {
-			c.Set("Upload-Offset", fmt.Sprintf("%d", newOffset))
-			return c.SendStatus(fiber.StatusConflict)
-		}
-		if strings.Contains(err.Error(), "tidak aktif") {
-			return c.SendStatus(fiber.StatusLocked)
-		}
-
-		return c.SendStatus(fiber.StatusInternalServerError)
+	if int64(len(bodyBytes)) != chunkSize {
+		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "body size doesn't match Content-Length")
 	}
 
-	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-	c.Set("Upload-Offset", fmt.Sprintf("%d", newOffset))
-
-	return c.SendStatus(fiber.StatusNoContent)
+	bodyReader = bytes.NewReader(bodyBytes)
+	return offset, chunkSize, bodyReader, nil
 }
 
-func (ctrl *TusController) GetProjectUpdateUploadStatus(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
+// handleTusUsecaseError handles usecase errors for TUS operations.
+// Converts string-based errors to appropriate HTTP responses.
+func (ctrl *TusController) handleTusUsecaseError(c *fiber.Ctx, err error, offset int64) error {
+	if err == nil {
+		return nil
 	}
 
-	projectIDStr := c.Params("id")
-	projectID, err := strconv.Atoi(projectIDStr)
-	if err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
+	errMsg := err.Error()
+
+	switch {
+	case strings.Contains(errMsg, "tidak ditemukan"):
+		return ctrl.base.SendNotFound(c, errMsg)
+	case strings.Contains(errMsg, "tidak memiliki akses"):
+		return ctrl.base.SendForbidden(c)
+	case strings.Contains(errMsg, "melebihi batas maksimal"):
+		appErr := apperrors.NewPayloadTooLargeError(errMsg)
+		return helper.SendAppError(c, appErr)
+	case strings.Contains(errMsg, "sudah selesai"):
+		appErr := apperrors.NewTusCompletedError()
+		return helper.SendAppError(c, appErr)
+	default:
+		return ctrl.base.SendInternalError(c)
 	}
-
-	uploadID := c.Params("upload_id")
-	if uploadID == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
-	}
-
-	tusVersion := c.Get("Tus-Resumable")
-	if tusVersion != ctrl.config.Upload.TusVersion {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Versi Tus tidak didukung", nil)
-	}
-
-	offset, length, err := ctrl.tusUsecase.GetProjectUpdateUploadStatus(uint(projectID), uploadID, userID)
-	if err != nil {
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return helper.SendErrorResponse(c, fiber.StatusNotFound, err.Error(), nil)
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return helper.SendForbiddenResponse(c)
-		}
-		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
-	}
-
-	c.Set("Tus-Resumable", ctrl.config.Upload.TusVersion)
-	c.Set("Upload-Offset", fmt.Sprintf("%d", offset))
-	c.Set("Upload-Length", fmt.Sprintf("%d", length))
-
-	return c.SendStatus(fiber.StatusOK)
 }
 
-func (ctrl *TusController) GetProjectUpdateUploadInfo(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
+// handleTusChunkError handles errors during chunk upload.
+// Returns TUS protocol-compliant error responses with headers.
+func (ctrl *TusController) handleTusChunkError(c *fiber.Ctx, err error, offset int64) error {
+	if err == nil {
+		return nil
 	}
 
-	projectIDStr := c.Params("id")
-	projectID, err := strconv.Atoi(projectIDStr)
-	if err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
-	}
+	helper.SetTusResponseHeaders(c, 0, 0)
 
-	uploadID := c.Params("upload_id")
-	if uploadID == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
-	}
+	errMsg := err.Error()
 
-	result, err := ctrl.tusUsecase.GetProjectUpdateUploadInfo(uint(projectID), uploadID, userID)
-	if err != nil {
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return helper.SendNotFoundResponse(c, err.Error())
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return helper.SendForbiddenResponse(c)
-		}
-		return helper.SendInternalServerErrorResponse(c)
+	switch {
+	case strings.Contains(errMsg, "tidak ditemukan"):
+		return helper.BuildTusErrorResponse(c, fiber.StatusNotFound, 0)
+	case strings.Contains(errMsg, "tidak memiliki akses"):
+		return helper.BuildTusErrorResponse(c, fiber.StatusForbidden, 0)
+	case strings.Contains(errMsg, "offset tidak valid"):
+		helper.SetTusOffsetHeader(c, offset)
+		return helper.BuildTusErrorResponse(c, fiber.StatusConflict, offset)
+	case strings.Contains(errMsg, "tidak aktif"):
+		return helper.BuildTusErrorResponse(c, fiber.StatusLocked, 0)
+	default:
+		return helper.BuildTusErrorResponse(c, fiber.StatusInternalServerError, 0)
 	}
-
-	return helper.SendSuccessResponse(c, fiber.StatusOK, "Informasi update upload berhasil didapat", result)
-}
-
-func (ctrl *TusController) CancelProjectUpdateUpload(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return helper.SendUnauthorizedResponse(c)
-	}
-	userID, ok := userIDVal.(uint)
-	if !ok {
-		return helper.SendUnauthorizedResponse(c)
-	}
-
-	projectIDStr := c.Params("id")
-	projectID, err := strconv.Atoi(projectIDStr)
-	if err != nil {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID project tidak valid", nil)
-	}
-
-	uploadID := c.Params("upload_id")
-	if uploadID == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "ID upload tidak valid", nil)
-	}
-
-	tusVersion := c.Get("Tus-Resumable")
-	if tusVersion != ctrl.config.Upload.TusVersion {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Versi Tus tidak didukung", nil)
-	}
-
-	err = ctrl.tusUsecase.CancelProjectUpdateUpload(uint(projectID), uploadID, userID)
-	if err != nil {
-		if strings.Contains(err.Error(), "tidak ditemukan") {
-			return helper.SendErrorResponse(c, fiber.StatusNotFound, err.Error(), nil)
-		}
-		if strings.Contains(err.Error(), "tidak memiliki akses") {
-			return helper.SendForbiddenResponse(c)
-		}
-		if strings.Contains(err.Error(), "sudah selesai") {
-			return helper.SendErrorResponse(c, fiber.StatusConflict, err.Error(), nil)
-		}
-		return helper.SendErrorResponse(c, fiber.StatusInternalServerError, err.Error(), nil)
-	}
-
-	return c.SendStatus(fiber.StatusNoContent)
 }
