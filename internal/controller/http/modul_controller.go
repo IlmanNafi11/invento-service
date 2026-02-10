@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/domain"
@@ -78,13 +79,14 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	result, err := ctrl.modulUsecase.GetList(userID, params.Search, params.FilterType, params.FilterSemester, params.Page, params.Limit)
 	if err != nil {
 		// Check if AppError
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Daftar modul berhasil diambil", result)
+	return ctrl.SendSuccess(c, result, "Daftar modul berhasil diambil")
 }
 
 // Delete deletes a module by ID.
@@ -118,7 +120,8 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 	err = ctrl.modulUsecase.Delete(modulID, userID)
 	if err != nil {
 		// Handle typed errors
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
@@ -149,13 +152,14 @@ func (ctrl *ModulController) CheckUploadSlot(c *fiber.Ctx) error {
 	response, err := ctrl.tusModulUsecase.CheckModulUploadSlot(userID)
 	if err != nil {
 		// Handle typed errors
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Status slot upload berhasil didapat", response)
+	return ctrl.SendSuccess(c, response, "Status slot upload berhasil didapat")
 }
 
 // InitiateUpload initiates a new TUS upload for a module file.
@@ -233,7 +237,7 @@ func (ctrl *ModulController) InitiateUpload(c *fiber.Ctx) error {
 	helper.SetTusResponseHeaders(c, 0, fileSize)
 	helper.SetTusLocationHeader(c, result.UploadURL)
 
-	return helper.SendSuccessResponse(c, helper.StatusCreated, "Upload modul berhasil diinisiasi", result)
+	return ctrl.SendCreated(c, result, "Upload modul berhasil diinisiasi")
 }
 
 // UploadChunk handles PATCH request to upload a chunk of file data.
@@ -423,7 +427,8 @@ func (ctrl *ModulController) GetUploadInfo(c *fiber.Ctx) error {
 	info, err := ctrl.tusModulUsecase.GetModulUploadInfo(uploadID, userID)
 	if err != nil {
 		// Handle typed errors
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
@@ -529,7 +534,8 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 	err = ctrl.modulUsecase.UpdateMetadata(modulID, userID, req)
 	if err != nil {
 		// Handle typed errors
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
@@ -579,7 +585,8 @@ func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 	filePath, err := ctrl.modulUsecase.Download(userID, req.IDs)
 	if err != nil {
 		// Handle typed errors
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)

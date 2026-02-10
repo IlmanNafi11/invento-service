@@ -3,9 +3,9 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/controller/http"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/domain"
 	"net/http/httptest"
 	"testing"
@@ -124,7 +124,7 @@ func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
 		Password: "password123",
 	}
 
-	mockAuthUC.On("Register", reqBody).Return(nil, errors.New("email sudah terdaftar"))
+	mockAuthUC.On("Register", reqBody).Return("", (*domain.AuthResponse)(nil), apperrors.NewConflictError("Email sudah terdaftar"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/register", bytes.NewReader(bodyBytes))
@@ -188,7 +188,7 @@ func TestAuthController_Login_InvalidCredentials(t *testing.T) {
 		Password: "wrongpassword",
 	}
 
-	mockAuthUC.On("Login", reqBody).Return(nil, errors.New("email atau password salah"))
+	mockAuthUC.On("Login", reqBody).Return("", (*domain.AuthResponse)(nil), apperrors.NewUnauthorizedError("Email atau password salah"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/login", bytes.NewReader(bodyBytes))

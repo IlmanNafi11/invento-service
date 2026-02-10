@@ -93,7 +93,7 @@ func (ctrl *ModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 	helper.SetTusResponseHeaders(c, 0, tusHeaders.UploadLength)
 	helper.SetTusLocationHeader(c, result.UploadURL)
 
-	return helper.SendSuccessResponse(c, helper.StatusCreated, "Update upload modul berhasil diinisiasi", result)
+	return ctrl.SendCreated(c, result, "Update upload modul berhasil diinisiasi")
 }
 
 // UploadModulUpdateChunk handles PATCH /modul/:id/update/:upload_id

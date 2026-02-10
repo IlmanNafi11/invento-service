@@ -105,7 +105,7 @@ func (ctrl *TusController) InitiateUpload(c *fiber.Ctx) error {
 	// Validate TUS protocol headers
 	tusVersion := c.Get(helper.HeaderTusResumable)
 	if tusVersion == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Tus-Resumable wajib diisi", nil)
+		return ctrl.base.SendBadRequest(c, "Header Tus-Resumable wajib diisi")
 	}
 
 	if tusVersion != ctrl.config.Upload.TusVersion {
@@ -306,7 +306,7 @@ func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
 	// Validate TUS protocol headers
 	tusVersion := c.Get(helper.HeaderTusResumable)
 	if tusVersion == "" {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Header Tus-Resumable wajib diisi", nil)
+		return ctrl.base.SendBadRequest(c, "Header Tus-Resumable wajib diisi")
 	}
 
 	if tusVersion != ctrl.config.Upload.TusVersion {
@@ -654,32 +654,37 @@ func (ctrl *TusController) parseChunkRequest(c *fiber.Ctx) (offset int64, chunkS
 }
 
 // handleTusUsecaseError handles usecase errors for TUS operations.
-// Converts string-based errors to appropriate HTTP responses.
+// Uses type-safe AppError checking to map to appropriate HTTP responses.
 func (ctrl *TusController) handleTusUsecaseError(c *fiber.Ctx, err error, offset int64) error {
 	if err == nil {
 		return nil
 	}
 
-	errMsg := err.Error()
-
-	switch {
-	case strings.Contains(errMsg, "tidak ditemukan"):
-		return ctrl.base.SendNotFound(c, errMsg)
-	case strings.Contains(errMsg, "tidak memiliki akses"):
-		return ctrl.base.SendForbidden(c)
-	case strings.Contains(errMsg, "melebihi batas maksimal"):
-		appErr := apperrors.NewPayloadTooLargeError(errMsg)
-		return helper.SendAppError(c, appErr)
-	case strings.Contains(errMsg, "sudah selesai"):
-		appErr := apperrors.NewTusCompletedError()
-		return helper.SendAppError(c, appErr)
-	default:
-		return ctrl.base.SendInternalError(c)
+	// Handle typed AppError
+	if appErr, ok := err.(*apperrors.AppError); ok {
+		switch appErr.Code {
+		case apperrors.ErrNotFound:
+			return ctrl.base.SendNotFound(c, appErr.Message)
+		case apperrors.ErrForbidden:
+			return ctrl.base.SendForbidden(c)
+		case apperrors.ErrPayloadTooLarge:
+			return helper.SendAppError(c, appErr)
+		case apperrors.ErrTusAlreadyCompleted:
+			return helper.SendAppError(c, appErr)
+		case apperrors.ErrTusVersionMismatch:
+			return helper.SendAppError(c, appErr)
+		default:
+			// For any other AppError, use the AppError's status
+			return helper.SendAppError(c, appErr)
+		}
 	}
+
+	// Fallback for unexpected errors
+	return ctrl.base.SendInternalError(c)
 }
 
 // handleTusChunkError handles errors during chunk upload.
-// Returns TUS protocol-compliant error responses with headers.
+// Uses type-safe AppError checking to return TUS protocol-compliant error responses.
 func (ctrl *TusController) handleTusChunkError(c *fiber.Ctx, err error, offset int64) error {
 	if err == nil {
 		return nil
@@ -687,19 +692,25 @@ func (ctrl *TusController) handleTusChunkError(c *fiber.Ctx, err error, offset i
 
 	helper.SetTusResponseHeaders(c, 0, 0)
 
-	errMsg := err.Error()
-
-	switch {
-	case strings.Contains(errMsg, "tidak ditemukan"):
-		return helper.BuildTusErrorResponse(c, fiber.StatusNotFound, 0)
-	case strings.Contains(errMsg, "tidak memiliki akses"):
-		return helper.BuildTusErrorResponse(c, fiber.StatusForbidden, 0)
-	case strings.Contains(errMsg, "offset tidak valid"):
-		helper.SetTusOffsetHeader(c, offset)
-		return helper.BuildTusErrorResponse(c, fiber.StatusConflict, offset)
-	case strings.Contains(errMsg, "tidak aktif"):
-		return helper.BuildTusErrorResponse(c, fiber.StatusLocked, 0)
-	default:
-		return helper.BuildTusErrorResponse(c, fiber.StatusInternalServerError, 0)
+	// Handle typed AppError
+	if appErr, ok := err.(*apperrors.AppError); ok {
+		switch appErr.Code {
+		case apperrors.ErrNotFound:
+			return helper.BuildTusErrorResponse(c, fiber.StatusNotFound, 0)
+		case apperrors.ErrForbidden:
+			return helper.BuildTusErrorResponse(c, fiber.StatusForbidden, 0)
+		case apperrors.ErrTusOffsetMismatch:
+			helper.SetTusOffsetHeader(c, offset)
+			return helper.BuildTusErrorResponse(c, fiber.StatusConflict, offset)
+		case apperrors.ErrTusInactive:
+			return helper.BuildTusErrorResponse(c, fiber.StatusLocked, 0)
+		case apperrors.ErrTusAlreadyCompleted:
+			return helper.BuildTusErrorResponse(c, fiber.StatusConflict, 0)
+		default:
+			return helper.BuildTusErrorResponse(c, appErr.HTTPStatus, 0)
+		}
 	}
+
+	// Fallback for unexpected errors
+	return helper.BuildTusErrorResponse(c, fiber.StatusInternalServerError, 0)
 }

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
@@ -41,7 +42,7 @@ func NewProjectController(projectUsecase usecase.ProjectUsecase, jwtManager *hel
 // @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
 // @Failure 404 {object} domain.ErrorResponse "Project not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /project/{id} [patch]
+// @Router /api/v1/project/{id} [patch]
 func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -69,11 +70,10 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 	// Call usecase
 	err = ctrl.projectUsecase.UpdateMetadata(projectID, userID, req)
 	if err != nil {
-		// Handle AppError type
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
-		// Handle unexpected errors
 		return ctrl.SendInternalError(c)
 	}
 
@@ -95,7 +95,7 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 // @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
 // @Failure 404 {object} domain.ErrorResponse "Project not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /project/{id} [get]
+// @Router /api/v1/project/{id} [get]
 func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -112,11 +112,10 @@ func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 	// Call usecase
 	result, err := ctrl.projectUsecase.GetByID(projectID, userID)
 	if err != nil {
-		// Handle AppError type
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
-		// Handle unexpected errors
 		return ctrl.SendInternalError(c)
 	}
 
@@ -140,7 +139,7 @@ func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 // @Failure 400 {object} domain.ErrorResponse "Invalid query parameters"
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /project [get]
+// @Router /api/v1/project [get]
 func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -162,11 +161,10 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 	// Call usecase
 	result, err := ctrl.projectUsecase.GetList(userID, params.Search, params.FilterSemester, params.FilterKategori, params.Page, params.Limit)
 	if err != nil {
-		// Handle AppError type
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
-		// Handle unexpected errors
 		return ctrl.SendInternalError(c)
 	}
 
@@ -188,7 +186,7 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 // @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
 // @Failure 404 {object} domain.ErrorResponse "Project not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /project/{id} [delete]
+// @Router /api/v1/project/{id} [delete]
 func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -205,11 +203,10 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 	// Call usecase
 	err = ctrl.projectUsecase.Delete(projectID, userID)
 	if err != nil {
-		// Handle AppError type
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
-		// Handle unexpected errors
 		return ctrl.SendInternalError(c)
 	}
 
@@ -230,7 +227,7 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
 // @Failure 404 {object} domain.ErrorResponse "One or more projects not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /project/download [post]
+// @Router /api/v1/project/download [post]
 func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -257,11 +254,10 @@ func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
 	// Call usecase
 	filePath, err := ctrl.projectUsecase.Download(userID, req.IDs)
 	if err != nil {
-		// Handle AppError type
-		if appErr, ok := err.(*apperrors.AppError); ok {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
 			return helper.SendAppError(c, appErr)
 		}
-		// Handle unexpected errors
 		return ctrl.SendInternalError(c)
 	}
 

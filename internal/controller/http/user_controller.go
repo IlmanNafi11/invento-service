@@ -11,7 +11,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// UserController handles user-related HTTP requests
+// UserController handles user-related HTTP requests.
+//
+// Singular endpoint (/profile) rationale:
+// - /profile refers to the current authenticated user's single profile (not a collection)
+// - Each authenticated user has exactly one profile, no ID parameter needed
+// - Semantically correct to use singular for singleton current-user resources
 type UserController struct {
 	*base.BaseController
 	userUsecase usecase.UserUsecase
@@ -50,7 +55,7 @@ func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 		return ctrl.SendInternalError(c)
 	}
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Daftar user berhasil diambil", result)
+	return ctrl.SendSuccess(c, result, "Daftar user berhasil diambil")
 }
 
 // UpdateUserRole handles PUT /api/v1/user/{id}/role - Update user role
@@ -163,7 +168,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 		return ctrl.SendInternalError(c)
 	}
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Daftar file user berhasil diambil", result)
+	return ctrl.SendSuccess(c, result, "Daftar file user berhasil diambil")
 }
 
 // GetProfile handles GET /api/v1/profile - Get current user profile

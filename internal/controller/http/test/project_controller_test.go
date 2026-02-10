@@ -7,7 +7,6 @@ import (
 	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
 	app_testing "fiber-boiler-plate/internal/testing"
-	"errors"
 	"fmt"
 	"net/http/httptest"
 	"testing"
@@ -108,7 +107,8 @@ func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
 	controller := http.NewProjectController(mockUC, nil, nil)
 
-	mockUC.On("GetByID", uint(999), uint(1)).Return(nil, errors.New("project tidak ditemukan"))
+	appErr := apperrors.NewNotFoundError("Project")
+	mockUC.On("GetByID", uint(999), uint(1)).Return(nil, appErr)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -125,12 +125,13 @@ func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
-	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
 	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "Project tidak ditemukan", response["message"])
 
 	mockUC.AssertExpectations(t)
 }

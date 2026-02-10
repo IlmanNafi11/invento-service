@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/domain"
@@ -33,16 +34,6 @@ func NewAuthController(authUsecase usecase.AuthUsecase, cfg *config.Config) *Aut
 	}
 }
 
-// handleAppError standardizes error handling for AppError types.
-// Returns true if error was handled (response sent), false otherwise.
-func (ctrl *AuthController) handleAppError(c *fiber.Ctx, err error) bool {
-	if appErr, ok := err.(*apperrors.AppError); ok {
-		helper.SendAppError(c, appErr)
-		return true
-	}
-	return false
-}
-
 // Login authenticates a user with email and password.
 //
 // @Summary Login pengguna
@@ -69,16 +60,9 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 
 	refreshToken, result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
-		if ctrl.handleAppError(c, err) {
-			return nil
-		}
-
-		// Handle string-based errors from usecase (migration in progress)
-		if err.Error() == "email atau password salah" {
-			return ctrl.SendUnauthorized(c)
-		}
-		if err.Error() == "akun belum diaktifkan" {
-			return helper.SendErrorResponse(c, fiber.StatusForbidden, "akun belum diaktifkan", nil)
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -112,18 +96,9 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 
 	refreshToken, result, err := ctrl.authUsecase.Register(req)
 	if err != nil {
-		if ctrl.handleAppError(c, err) {
-			return nil
-		}
-
-		// Handle string-based errors from usecase (migration in progress)
-		if err.Error() == "email sudah terdaftar" {
-			return ctrl.SendConflict(c, "Email sudah terdaftar")
-		}
-		if err.Error() == "hanya email dengan domain polije.ac.id yang dapat digunakan" ||
-			err.Error() == "subdomain email tidak valid, gunakan student atau teacher" ||
-			err.Error() == "role tidak tersedia, silakan hubungi administrator" {
-			return ctrl.SendBadRequest(c, err.Error())
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -152,14 +127,9 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 
 	newRefreshToken, result, err := ctrl.authUsecase.RefreshToken(oldRefreshToken)
 	if err != nil {
-		if ctrl.handleAppError(c, err) {
-			return nil
-		}
-
-		// Handle string-based errors from usecase (migration in progress)
-		if err.Error() == "refresh token tidak valid atau sudah expired" ||
-			err.Error() == "user tidak ditemukan" {
-			return ctrl.SendUnauthorized(c)
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -188,13 +158,9 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 
 	err := ctrl.authUsecase.Logout(token)
 	if err != nil {
-		if ctrl.handleAppError(c, err) {
-			return nil
-		}
-
-		// Handle string-based errors from usecase (migration in progress)
-		if err.Error() == "refresh token tidak valid" {
-			return ctrl.SendNotFound(c, "Token tidak valid")
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -228,13 +194,9 @@ func (ctrl *AuthController) ResetPassword(c *fiber.Ctx) error {
 
 	err := ctrl.authUsecase.ResetPassword(req)
 	if err != nil {
-		if ctrl.handleAppError(c, err) {
-			return nil
-		}
-
-		// Handle string-based errors from usecase (migration in progress)
-		if err.Error() == "email tidak ditemukan" {
-			return ctrl.SendNotFound(c, "Email tidak ditemukan")
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -267,13 +229,9 @@ func (ctrl *AuthController) ConfirmResetPassword(c *fiber.Ctx) error {
 
 	err := ctrl.authUsecase.ConfirmResetPassword(req)
 	if err != nil {
-		if ctrl.handleAppError(c, err) {
-			return nil
-		}
-
-		// Handle string-based errors from usecase (migration in progress)
-		if err.Error() == "token reset password tidak valid atau sudah expired" {
-			return ctrl.SendNotFound(c, "Token reset password tidak valid")
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}

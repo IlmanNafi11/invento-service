@@ -76,6 +76,20 @@ definitions:
       timestamp:
         type: string
     type: object
+  domain.ConfirmResetPasswordOTPRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+    required:
+    - code
+    - email
+    - new_password
+    type: object
   domain.DatabaseService:
     properties:
       name:
@@ -248,6 +262,19 @@ definitions:
     - new_password
     - token
     type: object
+  domain.OTPResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      message:
+        type: string
+      token_type:
+        type: string
+      user_id:
+        type: integer
+    type: object
   domain.PaginationData:
     properties:
       limit:
@@ -331,6 +358,19 @@ definitions:
     - email
     - name
     - password
+    type: object
+  domain.ResendOTPRequest:
+    properties:
+      email:
+        type: string
+      type:
+        enum:
+        - register
+        - reset_password
+        type: string
+    required:
+    - email
+    - type
     type: object
   domain.ResetPasswordRequest:
     properties:
@@ -563,6 +603,22 @@ definitions:
       resource:
         type: string
     type: object
+  domain.VerifyOTPRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      type:
+        enum:
+        - register
+        - reset_password
+        type: string
+    required:
+    - code
+    - email
+    - type
+    type: object
 info:
   contact: {}
 paths:
@@ -637,6 +693,304 @@ paths:
       summary: Logout pengguna
       tags:
       - Auth
+  /api/v1/auth/otp/register:
+    post:
+      consumes:
+      - application/json
+      description: Memulai proses registrasi dengan mengirim kode OTP ke email pengguna.
+      parameters:
+      - description: Data registrasi
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Kode OTP telah dikirim ke email
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.OTPResponse'
+              type: object
+        "400":
+          description: Format request tidak valid
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "409":
+          description: Email sudah terdaftar
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Terjadi kesalahan pada server
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Registrasi dengan OTP
+      tags:
+      - Auth OTP
+  /api/v1/auth/otp/register/resend:
+    post:
+      consumes:
+      - application/json
+      description: Mengirim ulang kode OTP untuk proses registrasi.
+      parameters:
+      - description: Email untuk kirim ulang OTP
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ResendOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Kode OTP baru telah dikirim
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.OTPResponse'
+              type: object
+        "400":
+          description: Format request tidak valid
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Email tidak ditemukan
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "429":
+          description: Terlalu banyak permintaan, coba lagi nanti
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Terjadi kesalahan pada server
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Kirim ulang OTP registrasi
+      tags:
+      - Auth OTP
+  /api/v1/auth/otp/register/verify:
+    post:
+      consumes:
+      - application/json
+      description: Memverifikasi kode OTP yang dikirim saat registrasi dan membuat
+        akun pengguna.
+      parameters:
+      - description: Email dan kode OTP
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.VerifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Verifikasi OTP berhasil, akun dibuat
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.AuthResponse'
+              type: object
+        "400":
+          description: Format request tidak valid
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Kode OTP tidak valid atau expired
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Email tidak ditemukan
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Terjadi kesalahan pada server
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Verifikasi OTP registrasi
+      tags:
+      - Auth OTP
+  /api/v1/auth/otp/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Mengirim kode OTP ke email untuk reset password.
+      parameters:
+      - description: Email untuk reset password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Kode OTP telah dikirim ke email
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.OTPResponse'
+              type: object
+        "400":
+          description: Format request tidak valid
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Email tidak ditemukan
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "429":
+          description: Terlalu banyak permintaan, coba lagi nanti
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Terjadi kesalahan pada server
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Minta reset password dengan OTP
+      tags:
+      - Auth OTP
+  /api/v1/auth/otp/reset-password/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Mengatur password baru menggunakan OTP yang sudah diverifikasi.
+      parameters:
+      - description: Email, kode OTP, dan password baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ConfirmResetPasswordOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password berhasil direset
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.AuthResponse'
+              type: object
+        "400":
+          description: Format request tidak valid
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Kode OTP tidak valid atau expired
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Email tidak ditemukan
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Terjadi kesalahan pada server
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Konfirmasi reset password dengan OTP
+      tags:
+      - Auth OTP
+  /api/v1/auth/otp/reset-password/resend:
+    post:
+      consumes:
+      - application/json
+      description: Mengirim ulang kode OTP untuk reset password.
+      parameters:
+      - description: Email untuk kirim ulang OTP
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ResendOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Kode OTP baru telah dikirim
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.OTPResponse'
+              type: object
+        "400":
+          description: Format request tidak valid
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Email tidak ditemukan
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "429":
+          description: Terlalu banyak permintaan, coba lagi nanti
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Terjadi kesalahan pada server
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Kirim ulang OTP reset password
+      tags:
+      - Auth OTP
+  /api/v1/auth/otp/reset-password/verify:
+    post:
+      consumes:
+      - application/json
+      description: Memverifikasi kode OTP untuk reset password.
+      parameters:
+      - description: Email dan kode OTP
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.VerifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Verifikasi OTP berhasil
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.OTPResponse'
+              type: object
+        "400":
+          description: Format request tidak valid
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Kode OTP tidak valid atau expired
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Email tidak ditemukan
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Terjadi kesalahan pada server
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Verifikasi OTP reset password
+      tags:
+      - Auth OTP
   /api/v1/auth/refresh:
     post:
       consumes:
@@ -1640,27 +1994,6 @@ paths:
       summary: Application Status
       tags:
       - Monitoring
-  /api/v1/monitoring/health:
-    get:
-      consumes:
-      - application/json
-      description: Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status
-        dasar tanpa pengecekan koneksi database.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Server berjalan dengan baik
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.BasicHealthCheck'
-              type: object
-      summary: Basic Health Check
-      tags:
-      - Monitoring
   /api/v1/monitoring/metrics:
     get:
       consumes:
@@ -1783,6 +2116,441 @@ paths:
       summary: Update user profile
       tags:
       - User Profile
+  /api/v1/project:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve paginated list of projects with optional filters
+      parameters:
+      - description: Search by project name
+        in: query
+        name: search
+        type: string
+      - description: Filter by semester (1-8)
+        in: query
+        name: filter_semester
+        type: integer
+      - description: Filter by category (website, mobile, iot, machine_learning, deep_learning)
+        in: query
+        name: filter_kategori
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get list of projects
+      tags:
+      - Project
+  /api/v1/project/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a project by ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project deleted successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid project ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "403":
+          description: Forbidden - no access to this project
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a project
+      tags:
+      - Project
+    get:
+      consumes:
+      - application/json
+      description: Retrieve details of a specific project by ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project details retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid project ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "403":
+          description: Forbidden - no access to this project
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get project by ID
+      tags:
+      - Project
+    patch:
+      consumes:
+      - application/json
+      description: Update nama_project, kategori, or semester of an existing project
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ProjectUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Metadata updated successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "403":
+          description: Forbidden - no access to this project
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update project metadata
+      tags:
+      - Project
+  /api/v1/project/download:
+    post:
+      consumes:
+      - application/json
+      description: Download one or more projects as a ZIP file
+      parameters:
+      - description: Download request with project IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ProjectDownloadRequest'
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: ZIP file containing project files
+          schema:
+            type: file
+        "400":
+          description: Invalid request format or empty IDs
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: One or more projects not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Download projects as ZIP
+      tags:
+      - Project
+  /api/v1/role:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of roles with optional search
+      parameters:
+      - description: Search keyword
+        in: query
+        name: search
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Roles retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get role list
+      tags:
+      - Roles
+    post:
+      consumes:
+      - application/json
+      description: Creates a new role with the specified name and permissions
+      parameters:
+      - description: Role creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RoleCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Role created successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "409":
+          description: Role name already exists
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create role
+      tags:
+      - Roles
+  /api/v1/role/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a role and removes all associated permissions
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role deleted successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid role ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete role
+      tags:
+      - Roles
+    get:
+      consumes:
+      - application/json
+      description: Retrieves detailed information about a specific role including
+        its permissions
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role details retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid role ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get role detail
+      tags:
+      - Roles
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing role's name and permissions
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Role update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RoleUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role updated successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid request format
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Role not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "409":
+          description: Role name already exists
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update role
+      tags:
+      - Roles
+  /api/v1/role/permissions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all available permissions grouped by resource
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permissions retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get available permissions
+      tags:
+      - Roles
   /api/v1/statistic:
     get:
       consumes:
@@ -2106,439 +2874,4 @@ paths:
       summary: Basic Health Check
       tags:
       - Monitoring
-  /project:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve paginated list of projects with optional filters
-      parameters:
-      - description: Search by project name
-        in: query
-        name: search
-        type: string
-      - description: Filter by semester (1-8)
-        in: query
-        name: filter_semester
-        type: integer
-      - description: Filter by category (website, mobile, iot, machine_learning, deep_learning)
-        in: query
-        name: filter_kategori
-        type: string
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: Items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List retrieved successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid query parameters
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get list of projects
-      tags:
-      - Project
-  /project/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Permanently delete a project by ID
-      parameters:
-      - description: Project ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Project deleted successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid project ID
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "403":
-          description: Forbidden - no access to this project
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Project not found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete a project
-      tags:
-      - Project
-    get:
-      consumes:
-      - application/json
-      description: Retrieve details of a specific project by ID
-      parameters:
-      - description: Project ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Project details retrieved successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid project ID
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "403":
-          description: Forbidden - no access to this project
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Project not found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get project by ID
-      tags:
-      - Project
-    patch:
-      consumes:
-      - application/json
-      description: Update nama_project, kategori, or semester of an existing project
-      parameters:
-      - description: Project ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.ProjectUpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Metadata updated successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid request format
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "403":
-          description: Forbidden - no access to this project
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Project not found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Update project metadata
-      tags:
-      - Project
-  /project/download:
-    post:
-      consumes:
-      - application/json
-      description: Download one or more projects as a ZIP file
-      parameters:
-      - description: Download request with project IDs
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.ProjectDownloadRequest'
-      produces:
-      - application/zip
-      responses:
-        "200":
-          description: ZIP file containing project files
-          schema:
-            type: file
-        "400":
-          description: Invalid request format or empty IDs
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: One or more projects not found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Download projects as ZIP
-      tags:
-      - Project
-  /role:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a paginated list of roles with optional search
-      parameters:
-      - description: Search keyword
-        in: query
-        name: search
-        type: string
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: Items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Roles retrieved successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid query parameters
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get role list
-      tags:
-      - Roles
-    post:
-      consumes:
-      - application/json
-      description: Creates a new role with the specified name and permissions
-      parameters:
-      - description: Role creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.RoleCreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Role created successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid request format
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "409":
-          description: Role name already exists
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Create role
-      tags:
-      - Roles
-  /role/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Deletes a role and removes all associated permissions
-      parameters:
-      - description: Role ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Role deleted successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid role ID
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Role not found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete role
-      tags:
-      - Roles
-    get:
-      consumes:
-      - application/json
-      description: Retrieves detailed information about a specific role including
-        its permissions
-      parameters:
-      - description: Role ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Role details retrieved successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid role ID
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Role not found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get role detail
-      tags:
-      - Roles
-    put:
-      consumes:
-      - application/json
-      description: Updates an existing role's name and permissions
-      parameters:
-      - description: Role ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Role update request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.RoleUpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Role updated successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Invalid request format
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Role not found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "409":
-          description: Role name already exists
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Update role
-      tags:
-      - Roles
-  /role/permissions:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves all available permissions grouped by resource
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Permissions retrieved successfully
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get available permissions
-      tags:
-      - Roles
 swagger: "2.0"

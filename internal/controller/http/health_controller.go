@@ -1,21 +1,27 @@
 package http
 
 import (
+	"fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-// HealthController handles health check and monitoring endpoints
+// HealthController handles health check and monitoring endpoints.
+// It embeds BaseController for common functionality including standardized response methods.
 type HealthController struct {
+	*base.BaseController
 	healthUsecase usecase.HealthUsecase
 }
 
-// NewHealthController creates a new health controller instance
+// NewHealthController creates a new health controller instance.
+// Initializes base controller without JWT/Casbin since health endpoints
+// are publicly accessible (no authentication required).
 func NewHealthController(healthUsecase usecase.HealthUsecase) *HealthController {
 	return &HealthController{
-		healthUsecase: healthUsecase,
+		BaseController: base.NewBaseController(nil, nil),
+		healthUsecase:  healthUsecase,
 	}
 }
 
@@ -28,11 +34,10 @@ func NewHealthController(healthUsecase usecase.HealthUsecase) *HealthController 
 //	@Produce		json
 //	@Success		200	{object}	domain.SuccessResponse{data=domain.BasicHealthCheck}	"Server berjalan dengan baik"
 //	@Router			/health [get]
-//	@Router			/api/v1/monitoring/health [get]
 func (ctrl *HealthController) BasicHealthCheck(c *fiber.Ctx) error {
 	healthData := ctrl.healthUsecase.GetBasicHealth()
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Server berjalan dengan baik", healthData)
+	return ctrl.SendSuccess(c, healthData, "Server berjalan dengan baik")
 }
 
 // ComprehensiveHealthCheck provides detailed health check including database and system info
@@ -54,7 +59,7 @@ func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 		return helper.SendErrorResponse(c, fiber.StatusServiceUnavailable, "Beberapa komponen sistem mengalami masalah", healthData)
 	}
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Pemeriksaan kesehatan sistem berhasil", healthData)
+	return ctrl.SendSuccess(c, healthData, "Pemeriksaan kesehatan sistem berhasil")
 }
 
 // GetSystemMetrics provides detailed system metrics for monitoring
@@ -69,7 +74,7 @@ func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
 	metricsData := ctrl.healthUsecase.GetSystemMetrics()
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Metrics sistem berhasil diambil", metricsData)
+	return ctrl.SendSuccess(c, metricsData, "Metrics sistem berhasil diambil")
 }
 
 // GetApplicationStatus provides application status and dependencies
@@ -84,5 +89,5 @@ func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
 func (ctrl *HealthController) GetApplicationStatus(c *fiber.Ctx) error {
 	statusData := ctrl.healthUsecase.GetApplicationStatus()
 
-	return helper.SendSuccessResponse(c, helper.StatusOK, "Status aplikasi berhasil diambil", statusData)
+	return ctrl.SendSuccess(c, statusData, "Status aplikasi berhasil diambil")
 }
