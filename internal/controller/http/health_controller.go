@@ -26,7 +26,7 @@ func NewHealthController(healthUsecase usecase.HealthUsecase) *HealthController 
 //	@Tags			Monitoring
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	dto.SuccessResponse{data=domain.BasicHealthCheck}	"Server berjalan dengan baik"
+//	@Success		200	{object}	domain.SuccessResponse{data=domain.BasicHealthCheck}	"Server berjalan dengan baik"
 //	@Router			/health [get]
 //	@Router			/api/v1/monitoring/health [get]
 func (ctrl *HealthController) BasicHealthCheck(c *fiber.Ctx) error {
@@ -44,8 +44,8 @@ func (ctrl *HealthController) BasicHealthCheck(c *fiber.Ctx) error {
 //	@Tags			Monitoring
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	dto.SuccessResponse{data=domain.ComprehensiveHealthCheck}	"Sistem sehat"
-//	@Failure		503	{object}	dto.ErrorResponse	"Beberapa komponen sistem mengalami masalah"
+//	@Success		200	{object}	domain.SuccessResponse{data=domain.ComprehensiveHealthCheck}	"Sistem sehat"
+//	@Failure		503	{object}	domain.ErrorResponse	"Beberapa komponen sistem mengalami masalah"
 //	@Router			/api/v1/monitoring/status [get]
 func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 	healthData := ctrl.healthUsecase.GetComprehensiveHealth()
@@ -64,7 +64,7 @@ func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 //	@Tags			Monitoring
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	dto.SuccessResponse{data=domain.SystemMetrics}	"Metrics sistem berhasil diambil"
+//	@Success		200	{object}	domain.SuccessResponse{data=domain.SystemMetrics}	"Metrics sistem berhasil diambil"
 //	@Router			/api/v1/monitoring/metrics [get]
 func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
 	metricsData := ctrl.healthUsecase.GetSystemMetrics()
@@ -79,7 +79,7 @@ func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
 //	@Tags			Monitoring
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	dto.SuccessResponse{data=domain.ApplicationStatus}	"Status aplikasi berhasil diambil"
+//	@Success		200	{object}	domain.SuccessResponse{data=domain.ApplicationStatus}	"Status aplikasi berhasil diambil"
 //	@Router			/api/v1/monitoring/app-status [get]
 func (ctrl *HealthController) GetApplicationStatus(c *fiber.Ctx) error {
 	statusData := ctrl.healthUsecase.GetApplicationStatus()

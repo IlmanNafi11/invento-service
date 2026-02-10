@@ -45,7 +45,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -61,25 +61,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Format request tidak valid",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Email atau password salah",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Akun belum diaktifkan",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Terjadi kesalahan pada server",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -102,25 +102,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Logout berhasil",
                         "schema": {
-                            "$ref": "#/definitions/dto.SuccessResponse"
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Refresh token diperlukan",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Token tidak valid",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Terjadi kesalahan pada server",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -145,7 +145,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -161,19 +161,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Refresh token diperlukan",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Token tidak valid atau expired",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Terjadi kesalahan pada server",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -209,7 +209,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -225,19 +225,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Data validasi tidak valid",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Email sudah terdaftar",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Terjadi kesalahan pada server",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -271,25 +271,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Password berhasil direset",
                         "schema": {
-                            "$ref": "#/definitions/dto.SuccessResponse"
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Format request tidak valid",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Token tidak valid",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Terjadi kesalahan pada server",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -323,25 +323,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Link reset password telah dikirim",
                         "schema": {
-                            "$ref": "#/definitions/dto.SuccessResponse"
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Format request tidak valid",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Email tidak ditemukan",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Terjadi kesalahan pada server",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -1678,7 +1678,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1713,7 +1713,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1748,7 +1748,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1783,7 +1783,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1799,7 +1799,7 @@ const docTemplate = `{
                     "503": {
                         "description": "Beberapa komponen sistem mengalami masalah",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -1829,7 +1829,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1845,13 +1845,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -1896,7 +1896,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1912,19 +1912,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -1954,7 +1954,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1970,13 +1970,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Tidak memiliki akses",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Terjadi kesalahan pada server",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -2028,7 +2028,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2044,13 +2044,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -2080,7 +2080,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2099,13 +2099,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -2142,31 +2142,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SuccessResponse"
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -2218,25 +2218,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -2289,7 +2289,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -2305,25 +2305,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -2369,31 +2369,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SuccessResponse"
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -2418,7 +2418,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                    "$ref": "#/definitions/domain.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
@@ -3953,50 +3953,6 @@ const docTemplate = `{
                 },
                 "resource": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 200
-                },
-                "errors": {},
-                "message": {
-                    "type": "string",
-                    "example": "Berhasil"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "timestamp": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                }
-            }
-        },
-        "dto.SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer",
-                    "example": 200
-                },
-                "data": {},
-                "message": {
-                    "type": "string",
-                    "example": "Berhasil"
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "timestamp": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
                 }
             }
         }

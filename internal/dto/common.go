@@ -4,39 +4,6 @@ import (
 	"time"
 )
 
-// PaginationMetadata menyimpan informasi metadata untuk pagination
-// Page: halaman saat ini
-// Limit: jumlah item per halaman
-// TotalItems: total keseluruhan item
-// TotalPages: total keseluruhan halaman
-// HasNext: apakah ada halaman berikutnya
-// HasPrev: apakah ada halaman sebelumnya
-type PaginationMetadata struct {
-	Page       int  `json:"page"`
-	Limit      int  `json:"limit"`
-	TotalItems int  `json:"total_items"`
-	TotalPages int  `json:"total_pages"`
-	HasNext    bool `json:"has_next"`
-	HasPrev    bool `json:"has_prev"`
-}
-
-// NewPaginationMetadata membuat instance PaginationMetadata baru
-func NewPaginationMetadata(page, limit, totalItems int) PaginationMetadata {
-	totalPages := (totalItems + limit - 1) / limit
-	if totalPages < 1 {
-		totalPages = 1
-	}
-
-	return PaginationMetadata{
-		Page:       page,
-		Limit:      limit,
-		TotalItems: totalItems,
-		TotalPages: totalPages,
-		HasNext:    page < totalPages,
-		HasPrev:    page > 1,
-	}
-}
-
 // ErrorDetail menyimpan detail error pada field tertentu
 // Field: nama field yang memiliki error
 // Message: pesan error yang menjelaskan kesalahan
