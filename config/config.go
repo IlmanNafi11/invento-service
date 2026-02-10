@@ -13,9 +13,8 @@ type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
-	Mail     MailConfig
 	Upload   UploadConfig
-	Mailtrap MailtrapConfig
+	Resend   ResendConfig
 	OTP      OTPConfig
 }
 
@@ -49,20 +48,10 @@ type JWTConfig struct {
 	KeyRotationHours        int
 }
 
-type MailConfig struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
-	From     string
-}
-
-type MailtrapConfig struct {
-	APIToken          string
-	AccountID         string
-	Domain            string
-	TemplateRegister  string
-	TemplateResetPass string
+type ResendConfig struct {
+	APIKey    string
+	FromEmail string
+	FromName  string
 }
 
 type OTPConfig struct {
@@ -111,7 +100,7 @@ func LoadConfig() *Config {
 			Host:           getEnv("DB_HOST", "localhost"),
 			Port:           getEnv("DB_PORT", "3306"),
 			User:           getEnv("DB_USER", "root"),
-			Password: getEnvAllowEmpty("DB_PASSWORD", "admin"),
+			Password:       getEnvAllowEmpty("DB_PASSWORD", "admin"),
 			Name:           getEnv("DB_NAME", "fiber_boilerplate"),
 			AutoMigrate:    getEnvAsBool("DB_AUTO_MIGRATE", true),
 			RunSeeder:      getEnvAsBool("DB_RUN_SEEDER", false),
@@ -126,13 +115,6 @@ func LoadConfig() *Config {
 			ExpireHours:             getEnvAsInt("JWT_EXPIRE_HOURS", 1),
 			RefreshTokenExpireHours: getEnvAsInt("REFRESH_TOKEN_EXPIRE_HOURS", 168),
 			KeyRotationHours:        getEnvAsInt("JWT_KEY_ROTATION_HOURS", 168),
-		},
-		Mail: MailConfig{
-			Host:     getEnv("MAIL_HOST", "localhost"),
-			Port:     getEnv("MAIL_PORT", "587"),
-			Username: getEnv("MAIL_USERNAME", ""),
-			Password: getEnv("MAIL_PASSWORD", ""),
-			From:     getEnv("MAIL_FROM", "noreply@example.com"),
 		},
 		Upload: UploadConfig{
 			MaxSize:              getEnvAsInt64("UPLOAD_MAX_SIZE", 524288000),
@@ -152,12 +134,10 @@ func LoadConfig() *Config {
 			TusVersion:           getEnv("TUS_RESUMABLE_VERSION", "1.0.0"),
 			MaxResumeAttempts:    getEnvAsInt("TUS_MAX_RESUME_ATTEMPTS", 10),
 		},
-		Mailtrap: MailtrapConfig{
-			APIToken:          getEnv("MAILTRAP_API_TOKEN", ""),
-			AccountID:         getEnv("MAILTRAP_ACCOUNT_ID", ""),
-			Domain:            getEnv("MAILTRAP_DOMAIN", ""),
-			TemplateRegister:  getEnv("MAILTRAP_TEMPLATE_REGISTER", ""),
-			TemplateResetPass: getEnv("MAILTRAP_TEMPLATE_RESET_PASSWORD", ""),
+		Resend: ResendConfig{
+			APIKey:    getEnv("RESEND_API_KEY", ""),
+			FromEmail: getEnv("RESEND_FROM_EMAIL", "noreply@example.com"),
+			FromName:  getEnv("RESEND_FROM_NAME", "Invento Service"),
 		},
 		OTP: OTPConfig{
 			Length:                getEnvAsInt("OTP_LENGTH", 6),
@@ -169,13 +149,10 @@ func LoadConfig() *Config {
 	}
 
 	// Log config values for debugging
-	log.Printf("[CONFIG] Mailtrap loaded: APIToken=%s, AccountID=%s, Domain=%s",
-		maskToken(config.Mailtrap.APIToken),
-		config.Mailtrap.AccountID,
-		config.Mailtrap.Domain)
-	log.Printf("[CONFIG] Mailtrap Templates: Register=%s, ResetPass=%s",
-		config.Mailtrap.TemplateRegister,
-		config.Mailtrap.TemplateResetPass)
+	log.Printf("[CONFIG] Resend loaded: APIKey=%s, FromEmail=%s, FromName=%s",
+		maskToken(config.Resend.APIKey),
+		config.Resend.FromEmail,
+		config.Resend.FromName)
 	log.Printf("[CONFIG] OTP: Length=%d, ExpiryMinutes=%d, MaxAttempts=%d, ResendCooldown=%d, ResendMaxTimes=%d",
 		config.OTP.Length,
 		config.OTP.ExpiryMinutes,
@@ -225,9 +202,9 @@ func maskToken(token string) string {
 }
 
 func getEnvAllowEmpty(key, defaultValue string) string {
-    value, exists := os.LookupEnv(key)
-    if !exists {
-        return defaultValue
-    }
-    return value
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+	return value
 }

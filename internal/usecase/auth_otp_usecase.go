@@ -28,7 +28,7 @@ type authOTPUsecase struct {
 	roleRepo         repo.RoleRepository
 	authHelper       *helper.AuthHelper
 	jwtManager       *helper.JWTManager
-	mailtrapClient   *helper.MailtrapClient
+	resendClient     *helper.ResendClient
 	otpValidator     *helper.OTPValidator
 	rateLimiter      *helper.ResendRateLimiter
 	casbinEnforcer   *helper.CasbinEnforcer
@@ -50,7 +50,7 @@ func NewAuthOTPUsecase(
 	}
 
 	authHelper := helper.NewAuthHelper(refreshTokenRepo, jwtManager, config)
-	mailtrapClient := helper.NewMailtrapClient(&config.Mailtrap)
+	resendClient := helper.NewResendClient(&config.Resend)
 	otpValidator := helper.NewOTPValidator(config.OTP.MaxAttempts, config.OTP.ExpiryMinutes)
 	rateLimiter := helper.NewResendRateLimiter(config.OTP.ResendMaxTimes, config.OTP.ResendCooldownSeconds)
 	logger := helper.NewLogger()
@@ -62,7 +62,7 @@ func NewAuthOTPUsecase(
 		roleRepo:         roleRepo,
 		authHelper:       authHelper,
 		jwtManager:       jwtManager,
-		mailtrapClient:   mailtrapClient,
+		resendClient:     resendClient,
 		otpValidator:     otpValidator,
 		rateLimiter:      rateLimiter,
 		casbinEnforcer:   casbinEnforcer,
@@ -103,7 +103,7 @@ func (uc *authOTPUsecase) RegisterWithOTP(req domain.RegisterRequest) (*domain.O
 		return nil, errors.New("gagal menyimpan kode otp")
 	}
 
-	if err := uc.mailtrapClient.SendOTPEmail(req.Email, otp, uc.config.Mailtrap.TemplateRegister); err != nil {
+	if err := uc.resendClient.SendOTPEmail(req.Email, otp, "register"); err != nil {
 		uc.otpRepo.MarkAsUsed(otpRecord.ID)
 		return nil, errors.New("gagal mengirim kode otp ke email")
 	}
@@ -209,7 +209,7 @@ func (uc *authOTPUsecase) ResendRegisterOTP(req domain.ResendOTPRequest) (*domai
 		return nil, errors.New("gagal menyimpan kode otp")
 	}
 
-	if err := uc.mailtrapClient.SendOTPEmail(req.Email, otp, uc.config.Mailtrap.TemplateRegister); err != nil {
+	if err := uc.resendClient.SendOTPEmail(req.Email, otp, "register"); err != nil {
 		uc.otpRepo.MarkAsUsed(newOTPRecord.ID)
 		return nil, errors.New("gagal mengirim kode otp ke email")
 	}
@@ -251,8 +251,8 @@ func (uc *authOTPUsecase) InitiateResetPassword(req domain.ResetPasswordRequest)
 		return nil, errors.New("gagal menyimpan kode otp")
 	}
 
-	// Step 6: Send email via Mailtrap
-	if err := uc.mailtrapClient.SendOTPEmail(req.Email, otp, uc.config.Mailtrap.TemplateResetPass); err != nil {
+	// Step 6: Send email via Resend
+	if err := uc.resendClient.SendOTPEmail(req.Email, otp, "reset_password"); err != nil {
 		uc.otpRepo.MarkAsUsed(otpRecord.ID)
 		return nil, errors.New("gagal mengirim kode otp ke email")
 	}
@@ -356,7 +356,7 @@ func (uc *authOTPUsecase) ResendResetPasswordOTP(req domain.ResendOTPRequest) (*
 		return nil, errors.New("gagal menyimpan kode otp")
 	}
 
-	if err := uc.mailtrapClient.SendOTPEmail(req.Email, otp, uc.config.Mailtrap.TemplateResetPass); err != nil {
+	if err := uc.resendClient.SendOTPEmail(req.Email, otp, "reset_password"); err != nil {
 		uc.otpRepo.MarkAsUsed(newOTPRecord.ID)
 		return nil, errors.New("gagal mengirim kode otp ke email")
 	}

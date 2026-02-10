@@ -80,23 +80,19 @@ func TestLoadConfig_JWTConfiguration(t *testing.T) {
 	assert.Equal(t, 48, cfg.JWT.RefreshTokenExpireHours)
 }
 
-func TestLoadConfig_MailConfiguration(t *testing.T) {
+func TestLoadConfig_ResendConfiguration(t *testing.T) {
 	os.Clearenv()
 
 	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("MAIL_HOST", "smtp.test.com")
-	os.Setenv("MAIL_PORT", "587")
-	os.Setenv("MAIL_USERNAME", "test@test.com")
-	os.Setenv("MAIL_PASSWORD", "mailpass")
-	os.Setenv("MAIL_FROM", "noreply@test.com")
+	os.Setenv("RESEND_API_KEY", "re_test_api_key")
+	os.Setenv("RESEND_FROM_EMAIL", "noreply@test.com")
+	os.Setenv("RESEND_FROM_NAME", "Test Service")
 
 	cfg := config.LoadConfig()
 
-	assert.Equal(t, "smtp.test.com", cfg.Mail.Host)
-	assert.Equal(t, "587", cfg.Mail.Port)
-	assert.Equal(t, "test@test.com", cfg.Mail.Username)
-	assert.Equal(t, "mailpass", cfg.Mail.Password)
-	assert.Equal(t, "noreply@test.com", cfg.Mail.From)
+	assert.Equal(t, "re_test_api_key", cfg.Resend.APIKey)
+	assert.Equal(t, "noreply@test.com", cfg.Resend.FromEmail)
+	assert.Equal(t, "Test Service", cfg.Resend.FromName)
 }
 
 func TestConfig_StructureValidation(t *testing.T) {
@@ -125,12 +121,10 @@ func TestConfig_StructureValidation(t *testing.T) {
 			ExpireHours:             1,
 			RefreshTokenExpireHours: 24,
 		},
-		Mail: config.MailConfig{
-			Host:     "smtp.gmail.com",
-			Port:     "587",
-			Username: "test@gmail.com",
-			Password: "password",
-			From:     "noreply@test.com",
+		Resend: config.ResendConfig{
+			APIKey:    "re_test_api_key",
+			FromEmail: "noreply@test.com",
+			FromName:  "Test Service",
 		},
 	}
 
@@ -151,6 +145,7 @@ func TestConfig_StructureValidation(t *testing.T) {
 	assert.Equal(t, 1, cfg.JWT.ExpireHours)
 	assert.Equal(t, 24, cfg.JWT.RefreshTokenExpireHours)
 
-	assert.Equal(t, "smtp.gmail.com", cfg.Mail.Host)
-	assert.Equal(t, "587", cfg.Mail.Port)
+	assert.Equal(t, "re_test_api_key", cfg.Resend.APIKey)
+	assert.Equal(t, "noreply@test.com", cfg.Resend.FromEmail)
+	assert.Equal(t, "Test Service", cfg.Resend.FromName)
 }
