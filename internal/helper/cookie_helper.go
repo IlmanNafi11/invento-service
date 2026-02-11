@@ -18,6 +18,9 @@ func NewCookieHelper(cfg *config.Config) *CookieHelper {
 
 func (ch *CookieHelper) SetRefreshTokenCookie(c *fiber.Ctx, token string) {
 	secure := ch.config.App.Env == "production"
+	// Default 7 days (604800 seconds) for refresh token cookie
+	// Supabase refresh tokens are typically valid for 7 days
+	maxAge := 604800
 
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
@@ -25,7 +28,7 @@ func (ch *CookieHelper) SetRefreshTokenCookie(c *fiber.Ctx, token string) {
 		HTTPOnly: true,
 		Secure:   secure,
 		SameSite: "Strict",
-		MaxAge:   ch.config.JWT.RefreshTokenExpireHours * 3600,
+		MaxAge:   maxAge,
 		Path:     "/",
 	})
 }

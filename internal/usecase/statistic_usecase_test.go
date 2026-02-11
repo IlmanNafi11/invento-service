@@ -4,6 +4,7 @@ import (
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +38,7 @@ type statisticUsecaseWithInterface struct {
 	db             *gorm.DB
 }
 
-func (su *statisticUsecaseWithInterface) GetStatistics(userID uint, userRole string) (*domain.StatisticData, error) {
+func (su *statisticUsecaseWithInterface) GetStatistics(userID string, userRole string) (*domain.StatisticData, error) {
 	result := &domain.StatisticData{}
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")
@@ -120,7 +121,7 @@ func seedTestDB(db *gorm.DB, userCount, roleCount int) {
 	// Create users
 	for i := 1; i <= userCount; i++ {
 		user := domain.User{
-			ID:    uint(i),
+			ID:    fmt.Sprintf("user-%d", i),
 			Email: "user" + string(rune('0'+i)) + "@example.com",
 			Name:  "User " + string(rune('0'+i)),
 		}
@@ -142,7 +143,7 @@ func TestStatisticUsecase_GetStatistics_AllPermissionsGranted(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(1)
+	userID := "user-1"
 	userRole := "admin"
 
 	// Setup expectations - all permissions granted
@@ -185,7 +186,7 @@ func TestStatisticUsecase_GetStatistics_OnlyProjectPermission(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(2)
+	userID := "user-2"
 	userRole := "project_manager"
 
 	// Only project permission granted
@@ -223,7 +224,7 @@ func TestStatisticUsecase_GetStatistics_OnlyModulPermission(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(3)
+	userID := "user-3"
 	userRole := "modul_viewer"
 
 	mockCasbin.On("CheckPermission", userRole, "Project", "read").Return(false, nil)
@@ -260,7 +261,7 @@ func TestStatisticUsecase_GetStatistics_OnlyUserPermission(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(4)
+	userID := "user-4"
 	userRole := "user_manager"
 
 	mockCasbin.On("CheckPermission", userRole, "Project", "read").Return(false, nil)
@@ -294,7 +295,7 @@ func TestStatisticUsecase_GetStatistics_OnlyRolePermission(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(5)
+	userID := "user-5"
 	userRole := "role_manager"
 
 	mockCasbin.On("CheckPermission", userRole, "Project", "read").Return(false, nil)
@@ -328,7 +329,7 @@ func TestStatisticUsecase_GetStatistics_NoPermissions(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(6)
+	userID := "user-6"
 	userRole := "guest"
 
 	// No permissions granted
@@ -362,7 +363,7 @@ func TestStatisticUsecase_GetStatistics_ProjectAndModulPermissions(t *testing.T)
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(7)
+	userID := "user-7"
 	userRole := "content_manager"
 
 	mockCasbin.On("CheckPermission", userRole, "Project", "read").Return(true, nil)
@@ -402,7 +403,7 @@ func TestStatisticUsecase_GetStatistics_UserAndRolePermissions(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(8)
+	userID := "user-8"
 	userRole := "admin"
 
 	mockCasbin.On("CheckPermission", userRole, "Project", "read").Return(false, nil)
@@ -436,7 +437,7 @@ func TestStatisticUsecase_GetStatistics_EmptyDatabase(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(9)
+	userID := "user-9"
 	userRole := "admin"
 
 	mockCasbin.On("CheckPermission", userRole, "Project", "read").Return(true, nil)
@@ -478,7 +479,7 @@ func TestStatisticUsecase_GetStatistics_ZeroCounts(t *testing.T) {
 
 	userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-	userID := uint(10)
+	userID := "user-10"
 	userRole := "user_with_no_content"
 
 	mockCasbin.On("CheckPermission", userRole, "Project", "read").Return(true, nil)
@@ -513,7 +514,7 @@ func TestStatisticUsecase_GetStatistics_VariousUserIDs(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		userID        uint
+		userID        string
 		userRole      string
 		projectCount  int
 		modulCount    int
@@ -522,7 +523,7 @@ func TestStatisticUsecase_GetStatistics_VariousUserIDs(t *testing.T) {
 	}{
 		{
 			name:          "User 1 with admin role",
-			userID:        1,
+			userID:        "user-1",
 			userRole:      "admin",
 			projectCount:  8,
 			modulCount:    15,
@@ -531,7 +532,7 @@ func TestStatisticUsecase_GetStatistics_VariousUserIDs(t *testing.T) {
 		},
 		{
 			name:          "User 2 with manager role",
-			userID:        2,
+			userID:        "user-2",
 			userRole:      "manager",
 			projectCount:  12,
 			modulCount:    25,
@@ -540,7 +541,7 @@ func TestStatisticUsecase_GetStatistics_VariousUserIDs(t *testing.T) {
 		},
 		{
 			name:          "User 100 with admin role",
-			userID:        100,
+			userID:        "user-100",
 			userRole:      "admin",
 			projectCount:  0,
 			modulCount:    0,
@@ -619,56 +620,56 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 	seedTestDB(db, 40, 9)
 
 	testCases := []struct {
-		name              string
-		userRole          string
-		hasProjectRead    bool
-		hasModulRead      bool
-		hasUserRead       bool
-		hasRoleRead       bool
-		projectCount      int
-		modulCount        int
-		expectProjectNil  bool
-		expectModulNil    bool
-		expectUserNil     bool
-		expectRoleNil     bool
+		name             string
+		userRole         string
+		hasProjectRead   bool
+		hasModulRead     bool
+		hasUserRead      bool
+		hasRoleRead      bool
+		projectCount     int
+		modulCount       int
+		expectProjectNil bool
+		expectModulNil   bool
+		expectUserNil    bool
+		expectRoleNil    bool
 	}{
 		{
-			name:            "Full admin - all permissions",
-			userRole:        "admin",
-			hasProjectRead:  true,
-			hasModulRead:    true,
-			hasUserRead:     true,
-			hasRoleRead:     true,
-			projectCount:    15,
-			modulCount:      35,
+			name:             "Full admin - all permissions",
+			userRole:         "admin",
+			hasProjectRead:   true,
+			hasModulRead:     true,
+			hasUserRead:      true,
+			hasRoleRead:      true,
+			projectCount:     15,
+			modulCount:       35,
 			expectProjectNil: false,
 			expectModulNil:   false,
 			expectUserNil:    false,
 			expectRoleNil:    false,
 		},
 		{
-			name:            "Project manager - only projects",
-			userRole:        "project_manager",
-			hasProjectRead:  true,
-			hasModulRead:    false,
-			hasUserRead:     false,
-			hasRoleRead:     false,
-			projectCount:    20,
-			modulCount:      0,
+			name:             "Project manager - only projects",
+			userRole:         "project_manager",
+			hasProjectRead:   true,
+			hasModulRead:     false,
+			hasUserRead:      false,
+			hasRoleRead:      false,
+			projectCount:     20,
+			modulCount:       0,
 			expectProjectNil: false,
 			expectModulNil:   true,
 			expectUserNil:    true,
 			expectRoleNil:    true,
 		},
 		{
-			name:            "User admin - users and roles",
-			userRole:        "user_admin",
-			hasProjectRead:  false,
-			hasModulRead:    false,
-			hasUserRead:     true,
-			hasRoleRead:     true,
-			projectCount:    0,
-			modulCount:      0,
+			name:             "User admin - users and roles",
+			userRole:         "user_admin",
+			hasProjectRead:   false,
+			hasModulRead:     false,
+			hasUserRead:      true,
+			hasRoleRead:      true,
+			projectCount:     0,
+			modulCount:       0,
 			expectProjectNil: true,
 			expectModulNil:   true,
 			expectUserNil:    false,
@@ -684,7 +685,7 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 
 			userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-			userID := uint(1)
+			userID := "user-1"
 
 			mockCasbin.On("CheckPermission", tc.userRole, "Project", "read").Return(tc.hasProjectRead, nil)
 			mockCasbin.On("CheckPermission", tc.userRole, "Modul", "read").Return(tc.hasModulRead, nil)
@@ -773,7 +774,7 @@ func TestStatisticUsecase_ActualGetStatistics_WithRealEnforcer(t *testing.T) {
 
 	usecase := NewStatisticUsecase(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, casbinEnforcer, db)
 
-	userID := uint(1)
+	userID := "user-1"
 	userRole := "admin"
 
 	// Add permissions to admin role
@@ -825,7 +826,7 @@ func TestStatisticUsecase_ActualGetStatistics_NoPermissions(t *testing.T) {
 
 	usecase := NewStatisticUsecase(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, casbinEnforcer, db)
 
-	userID := uint(1)
+	userID := "user-1"
 	userRole := "guest"
 	// No permissions added for guest
 
@@ -861,7 +862,7 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 
 	usecase := NewStatisticUsecase(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, casbinEnforcer, db)
 
-	userID := uint(1)
+	userID := "user-1"
 	userRole := "project_manager"
 
 	// Add only Project and User permissions

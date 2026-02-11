@@ -6,19 +6,20 @@ import (
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
+	"strconv"
 
 	"gorm.io/gorm"
 )
 
 type UserUsecase interface {
 	GetUserList(params domain.UserListQueryParams) (*domain.UserListData, error)
-	UpdateUserRole(userID uint, roleName string) error
-	DeleteUser(userID uint) error
-	GetUserFiles(userID uint, params domain.UserFilesQueryParams) (*domain.UserFilesData, error)
-	GetProfile(userID uint) (*domain.ProfileData, error)
-	UpdateProfile(userID uint, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error)
-	GetUserPermissions(userID uint) ([]domain.UserPermissionItem, error)
-	DownloadUserFiles(ownerUserID uint, projectIDs, modulIDs []uint) (string, error)
+	UpdateUserRole(userID string, roleName string) error
+	DeleteUser(userID string) error
+	GetUserFiles(userID string, params domain.UserFilesQueryParams) (*domain.UserFilesData, error)
+	GetProfile(userID string) (*domain.ProfileData, error)
+	UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error)
+	GetUserPermissions(userID string) ([]domain.UserPermissionItem, error)
+	DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error)
 }
 
 type userUsecase struct {
@@ -76,7 +77,7 @@ func (uc *userUsecase) GetUserList(params domain.UserListQueryParams) (*domain.U
 	}, nil
 }
 
-func (uc *userUsecase) UpdateUserRole(userID uint, roleName string) error {
+func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -93,18 +94,19 @@ func (uc *userUsecase) UpdateUserRole(userID uint, roleName string) error {
 		return errors.New("gagal mengambil data role")
 	}
 
-	if user.RoleID != nil && *user.RoleID == role.ID {
+	roleID := int(role.ID)
+	if user.RoleID != nil && *user.RoleID == roleID {
 		return nil
 	}
 
-	if err := uc.userRepo.UpdateRole(userID, &role.ID); err != nil {
+	if err := uc.userRepo.UpdateRole(userID, &roleID); err != nil {
 		return errors.New("gagal memperbarui role user")
 	}
 
 	return nil
 }
 
-func (uc *userUsecase) DeleteUser(userID uint) error {
+func (uc *userUsecase) DeleteUser(userID string) error {
 	_, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -120,7 +122,7 @@ func (uc *userUsecase) DeleteUser(userID uint) error {
 	return nil
 }
 
-func (uc *userUsecase) GetUserFiles(userID uint, params domain.UserFilesQueryParams) (*domain.UserFilesData, error) {
+func (uc *userUsecase) GetUserFiles(userID string, params domain.UserFilesQueryParams) (*domain.UserFilesData, error) {
 	_, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -162,7 +164,7 @@ func (uc *userUsecase) GetUserFiles(userID uint, params domain.UserFilesQueryPar
 			normalizedURL = *normalizedPath
 		}
 		allFiles = append(allFiles, domain.UserFileItem{
-			ID:          pf.ID,
+			ID:          strconv.FormatUint(uint64(pf.ID), 10),
 			NamaFile:    pf.NamaFile,
 			Kategori:    pf.Kategori,
 			DownloadURL: normalizedURL,
@@ -196,7 +198,7 @@ func (uc *userUsecase) GetUserFiles(userID uint, params domain.UserFilesQueryPar
 			normalizedURL = *normalizedPath
 		}
 		allFiles = append(allFiles, domain.UserFileItem{
-			ID:          mf.ID,
+			ID:          strconv.FormatUint(uint64(mf.ID), 10),
 			NamaFile:    mf.NamaFile,
 			Kategori:    mf.Kategori,
 			DownloadURL: normalizedURL,
@@ -223,7 +225,7 @@ func (uc *userUsecase) GetUserFiles(userID uint, params domain.UserFilesQueryPar
 	}, nil
 }
 
-func (uc *userUsecase) GetProfile(userID uint) (*domain.ProfileData, error) {
+func (uc *userUsecase) GetProfile(userID string) (*domain.ProfileData, error) {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -245,7 +247,7 @@ func (uc *userUsecase) GetProfile(userID uint) (*domain.ProfileData, error) {
 	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
-func (uc *userUsecase) UpdateProfile(userID uint, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error) {
+func (uc *userUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error) {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -271,7 +273,7 @@ func (uc *userUsecase) UpdateProfile(userID uint, req domain.UpdateProfileReques
 	return uc.GetProfile(userID)
 }
 
-func (uc *userUsecase) GetUserPermissions(userID uint) ([]domain.UserPermissionItem, error) {
+func (uc *userUsecase) GetUserPermissions(userID string) ([]domain.UserPermissionItem, error) {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -297,7 +299,7 @@ func (uc *userUsecase) GetUserPermissions(userID uint) ([]domain.UserPermissionI
 	return uc.userHelper.AggregateUserPermissions(permissions), nil
 }
 
-func (uc *userUsecase) DownloadUserFiles(ownerUserID uint, projectIDs, modulIDs []uint) (string, error) {
+func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error) {
 	if err := uc.downloadHelper.ValidateDownloadRequest(projectIDs, modulIDs); err != nil {
 		return "", err
 	}
@@ -310,12 +312,31 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID uint, projectIDs, modulIDs 
 		return "", errors.New("gagal mengambil data user")
 	}
 
-	projects, err := uc.projectRepo.GetByIDsForUser(projectIDs, ownerUserID)
+	// Convert string IDs to uint for repository calls
+	projectIDsUint := make([]uint, 0, len(projectIDs))
+	for _, idStr := range projectIDs {
+		id, err := strconv.ParseUint(idStr, 10, 32)
+		if err != nil {
+			return "", errors.New("invalid project ID format")
+		}
+		projectIDsUint = append(projectIDsUint, uint(id))
+	}
+
+	modulIDsUint := make([]uint, 0, len(modulIDs))
+	for _, idStr := range modulIDs {
+		id, err := strconv.ParseUint(idStr, 10, 32)
+		if err != nil {
+			return "", errors.New("invalid modul ID format")
+		}
+		modulIDsUint = append(modulIDsUint, uint(id))
+	}
+
+	projects, err := uc.projectRepo.GetByIDsForUser(projectIDsUint, ownerUserID)
 	if err != nil {
 		return "", errors.New("gagal mengambil data project")
 	}
 
-	moduls, err := uc.modulRepo.GetByIDsForUser(modulIDs, ownerUserID)
+	moduls, err := uc.modulRepo.GetByIDsForUser(modulIDsUint, ownerUserID)
 	if err != nil {
 		return "", errors.New("gagal mengambil data modul")
 	}

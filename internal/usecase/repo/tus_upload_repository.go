@@ -34,7 +34,7 @@ func (r *tusUploadRepository) GetByID(id string) (*domain.TusUpload, error) {
 	return &upload, nil
 }
 
-func (r *tusUploadRepository) GetByUserID(userID uint) ([]domain.TusUpload, error) {
+func (r *tusUploadRepository) GetByUserID(userID string) ([]domain.TusUpload, error) {
 	var uploads []domain.TusUpload
 	err := r.db.Where("user_id = ?", userID).
 		Order("created_at DESC").
@@ -84,7 +84,7 @@ func (r *tusUploadRepository) GetExpired(before time.Time) ([]domain.TusUpload, 
 	return uploads, err
 }
 
-func (r *tusUploadRepository) GetByUserIDAndStatus(userID uint, status string) ([]domain.TusUpload, error) {
+func (r *tusUploadRepository) GetByUserIDAndStatus(userID string, status string) ([]domain.TusUpload, error) {
 	var uploads []domain.TusUpload
 	err := r.db.Where("user_id = ? AND status = ?", userID, status).
 		Order("created_at DESC").

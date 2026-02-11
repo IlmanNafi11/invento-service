@@ -19,11 +19,9 @@ func TestLoadConfig_DefaultValues(t *testing.T) {
 	os.Setenv("DB_USER", "testuser")
 	os.Setenv("DB_PASSWORD", "testpass")
 	os.Setenv("DB_NAME", "testdb")
-	os.Setenv("JWT_PRIVATE_KEY_PATH", "./keys/test_private.pem")
-	os.Setenv("JWT_PUBLIC_KEY_PATH", "./keys/test_public.pem")
-	os.Setenv("JWT_PRIVATE_KEY_ROTATION_PATH", "./keys/test_private_rotation.pem")
-	os.Setenv("JWT_PUBLIC_KEY_ROTATION_PATH", "./keys/test_public_rotation.pem")
-	os.Setenv("JWT_EXPIRE_HOURS", "2")
+	os.Setenv("SUPABASE_URL", "https://test.supabase.co")
+	os.Setenv("SUPABASE_ANON_KEY", "test_anon_key")
+	os.Setenv("SUPABASE_SERVICE_ROLE_KEY", "test_service_role_key")
 
 	cfg := config.LoadConfig()
 
@@ -35,64 +33,34 @@ func TestLoadConfig_DefaultValues(t *testing.T) {
 	assert.Equal(t, "testuser", cfg.Database.User)
 	assert.Equal(t, "testpass", cfg.Database.Password)
 	assert.Equal(t, "testdb", cfg.Database.Name)
-	assert.Equal(t, "./keys/test_private.pem", cfg.JWT.PrivateKeyPath)
-	assert.Equal(t, "./keys/test_public.pem", cfg.JWT.PublicKeyPath)
-	assert.Equal(t, "./keys/test_private_rotation.pem", cfg.JWT.PrivateKeyRotationPath)
-	assert.Equal(t, "./keys/test_public_rotation.pem", cfg.JWT.PublicKeyRotationPath)
-	assert.Equal(t, 2, cfg.JWT.ExpireHours)
+	assert.Equal(t, "https://test.supabase.co", cfg.Supabase.URL)
+	assert.Equal(t, "test_anon_key", cfg.Supabase.AnonKey)
+	assert.Equal(t, "test_service_role_key", cfg.Supabase.ServiceKey)
 }
 
 func TestLoadConfig_DatabaseBooleanValues(t *testing.T) {
 	os.Clearenv()
 
 	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("DB_AUTO_MIGRATE", "true")
-	os.Setenv("DB_RUN_SEEDER", "false")
-	os.Setenv("DB_SEED_USERS", "true")
-	os.Setenv("DB_MIGRATE_ON_START", "false")
 
 	cfg := config.LoadConfig()
 
-	assert.True(t, cfg.Database.AutoMigrate)
-	assert.False(t, cfg.Database.RunSeeder)
-	assert.True(t, cfg.Database.SeedUsers)
-	assert.False(t, cfg.Database.MigrateOnStart)
+	assert.NotNil(t, cfg.Database)
 }
 
-func TestLoadConfig_JWTConfiguration(t *testing.T) {
+func TestLoadConfig_SupabaseConfiguration(t *testing.T) {
 	os.Clearenv()
 
 	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("JWT_PRIVATE_KEY_PATH", "./keys/test_private.pem")
-	os.Setenv("JWT_PUBLIC_KEY_PATH", "./keys/test_public.pem")
-	os.Setenv("JWT_PRIVATE_KEY_ROTATION_PATH", "./keys/test_private_rotation.pem")
-	os.Setenv("JWT_PUBLIC_KEY_ROTATION_PATH", "./keys/test_public_rotation.pem")
-	os.Setenv("JWT_EXPIRE_HOURS", "2")
-	os.Setenv("REFRESH_TOKEN_EXPIRE_HOURS", "48")
+	os.Setenv("SUPABASE_URL", "https://test.supabase.co")
+	os.Setenv("SUPABASE_ANON_KEY", "test_anon_key")
+	os.Setenv("SUPABASE_SERVICE_ROLE_KEY", "test_service_role_key")
 
 	cfg := config.LoadConfig()
 
-	assert.Equal(t, "./keys/test_private.pem", cfg.JWT.PrivateKeyPath)
-	assert.Equal(t, "./keys/test_public.pem", cfg.JWT.PublicKeyPath)
-	assert.Equal(t, "./keys/test_private_rotation.pem", cfg.JWT.PrivateKeyRotationPath)
-	assert.Equal(t, "./keys/test_public_rotation.pem", cfg.JWT.PublicKeyRotationPath)
-	assert.Equal(t, 2, cfg.JWT.ExpireHours)
-	assert.Equal(t, 48, cfg.JWT.RefreshTokenExpireHours)
-}
-
-func TestLoadConfig_ResendConfiguration(t *testing.T) {
-	os.Clearenv()
-
-	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("RESEND_API_KEY", "re_test_api_key")
-	os.Setenv("RESEND_FROM_EMAIL", "noreply@test.com")
-	os.Setenv("RESEND_FROM_NAME", "Test Service")
-
-	cfg := config.LoadConfig()
-
-	assert.Equal(t, "re_test_api_key", cfg.Resend.APIKey)
-	assert.Equal(t, "noreply@test.com", cfg.Resend.FromEmail)
-	assert.Equal(t, "Test Service", cfg.Resend.FromName)
+	assert.Equal(t, "https://test.supabase.co", cfg.Supabase.URL)
+	assert.Equal(t, "test_anon_key", cfg.Supabase.AnonKey)
+	assert.Equal(t, "test_service_role_key", cfg.Supabase.ServiceKey)
 }
 
 func TestConfig_StructureValidation(t *testing.T) {
@@ -103,28 +71,17 @@ func TestConfig_StructureValidation(t *testing.T) {
 			Env:  "development",
 		},
 		Database: config.DatabaseConfig{
-			Host:           "localhost",
-			Port:           "3306",
-			User:           "root",
-			Password:       "admin",
-			Name:           "testdb",
-			AutoMigrate:    true,
-			RunSeeder:      false,
-			SeedUsers:      true,
-			MigrateOnStart: true,
+			Host:     "localhost",
+			Port:     "3306",
+			User:     "root",
+			Password: "admin",
+			Name:     "testdb",
 		},
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "./keys/private.pem",
-			PublicKeyPath:           "./keys/public.pem",
-			PrivateKeyRotationPath:  "./keys/private_rotation.pem",
-			PublicKeyRotationPath:   "./keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
-		},
-		Resend: config.ResendConfig{
-			APIKey:    "re_test_api_key",
-			FromEmail: "noreply@test.com",
-			FromName:  "Test Service",
+		Supabase: config.SupabaseConfig{
+			URL:        "https://test.supabase.co",
+			AnonKey:    "test_anon_key",
+			ServiceKey: "test_service_role_key",
+			DBURL:      "postgresql://test:test@localhost:5432/testdb",
 		},
 	}
 
@@ -135,52 +92,11 @@ func TestConfig_StructureValidation(t *testing.T) {
 
 	assert.Equal(t, "localhost", cfg.Database.Host)
 	assert.Equal(t, "3306", cfg.Database.Port)
-	assert.True(t, cfg.Database.AutoMigrate)
-	assert.False(t, cfg.Database.RunSeeder)
 
-	assert.Equal(t, "./keys/private.pem", cfg.JWT.PrivateKeyPath)
-	assert.Equal(t, "./keys/public.pem", cfg.JWT.PublicKeyPath)
-	assert.Equal(t, "./keys/private_rotation.pem", cfg.JWT.PrivateKeyRotationPath)
-	assert.Equal(t, "./keys/public_rotation.pem", cfg.JWT.PublicKeyRotationPath)
-	assert.Equal(t, 1, cfg.JWT.ExpireHours)
-	assert.Equal(t, 24, cfg.JWT.RefreshTokenExpireHours)
-
-	assert.Equal(t, "re_test_api_key", cfg.Resend.APIKey)
-	assert.Equal(t, "noreply@test.com", cfg.Resend.FromEmail)
-	assert.Equal(t, "Test Service", cfg.Resend.FromName)
-}
-
-func TestLoadConfig_OTPConfiguration(t *testing.T) {
-	os.Clearenv()
-
-	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("OTP_LENGTH", "8")
-	os.Setenv("OTP_EXPIRY_MINUTES", "15")
-	os.Setenv("OTP_MAX_ATTEMPTS", "3")
-	os.Setenv("OTP_RESEND_COOLDOWN_SECONDS", "30")
-	os.Setenv("OTP_RESEND_MAX_TIMES", "3")
-
-	cfg := config.LoadConfig()
-
-	assert.Equal(t, 8, cfg.OTP.Length)
-	assert.Equal(t, 15, cfg.OTP.ExpiryMinutes)
-	assert.Equal(t, 3, cfg.OTP.MaxAttempts)
-	assert.Equal(t, 30, cfg.OTP.ResendCooldownSeconds)
-	assert.Equal(t, 3, cfg.OTP.ResendMaxTimes)
-}
-
-func TestLoadConfig_OTPConfiguration_DefaultValues(t *testing.T) {
-	os.Clearenv()
-
-	os.Setenv("APP_NAME", "test-app")
-
-	cfg := config.LoadConfig()
-
-	assert.Equal(t, 6, cfg.OTP.Length)
-	assert.Equal(t, 10, cfg.OTP.ExpiryMinutes)
-	assert.Equal(t, 5, cfg.OTP.MaxAttempts)
-	assert.Equal(t, 60, cfg.OTP.ResendCooldownSeconds)
-	assert.Equal(t, 5, cfg.OTP.ResendMaxTimes)
+	assert.Equal(t, "https://test.supabase.co", cfg.Supabase.URL)
+	assert.Equal(t, "test_anon_key", cfg.Supabase.AnonKey)
+	assert.Equal(t, "test_service_role_key", cfg.Supabase.ServiceKey)
+	assert.Equal(t, "postgresql://test:test@localhost:5432/testdb", cfg.Supabase.DBURL)
 }
 
 func TestLoadConfig_UploadConfiguration(t *testing.T) {
@@ -432,14 +348,9 @@ func TestLoadConfig_AllConfigurations(t *testing.T) {
 	os.Setenv("DB_USER", "testuser")
 	os.Setenv("DB_PASSWORD", "testpass")
 	os.Setenv("DB_NAME", "testdb")
-	os.Setenv("DB_AUTO_MIGRATE", "true")
-	os.Setenv("JWT_PRIVATE_KEY_PATH", "./keys/test_private.pem")
-	os.Setenv("JWT_PUBLIC_KEY_PATH", "./keys/test_public.pem")
-	os.Setenv("JWT_EXPIRE_HOURS", "2")
-	os.Setenv("RESEND_API_KEY", "re_test_api_key")
-	os.Setenv("RESEND_FROM_EMAIL", "noreply@test.com")
-	os.Setenv("OTP_LENGTH", "8")
-	os.Setenv("OTP_EXPIRY_MINUTES", "15")
+	os.Setenv("SUPABASE_URL", "https://test.supabase.co")
+	os.Setenv("SUPABASE_ANON_KEY", "test_anon_key")
+	os.Setenv("SUPABASE_SERVICE_ROLE_KEY", "test_service_role_key")
 	os.Setenv("UPLOAD_MAX_SIZE", "1048576000")
 	os.Setenv("UPLOAD_CHUNK_SIZE", "2097152")
 	os.Setenv("LOG_LEVEL", "DEBUG")
@@ -460,20 +371,11 @@ func TestLoadConfig_AllConfigurations(t *testing.T) {
 	assert.Equal(t, "testuser", cfg.Database.User)
 	assert.Equal(t, "testpass", cfg.Database.Password)
 	assert.Equal(t, "testdb", cfg.Database.Name)
-	assert.True(t, cfg.Database.AutoMigrate)
 
-	// JWT config
-	assert.Equal(t, "./keys/test_private.pem", cfg.JWT.PrivateKeyPath)
-	assert.Equal(t, "./keys/test_public.pem", cfg.JWT.PublicKeyPath)
-	assert.Equal(t, 2, cfg.JWT.ExpireHours)
-
-	// Resend config
-	assert.Equal(t, "re_test_api_key", cfg.Resend.APIKey)
-	assert.Equal(t, "noreply@test.com", cfg.Resend.FromEmail)
-
-	// OTP config
-	assert.Equal(t, 8, cfg.OTP.Length)
-	assert.Equal(t, 15, cfg.OTP.ExpiryMinutes)
+	// Supabase config
+	assert.Equal(t, "https://test.supabase.co", cfg.Supabase.URL)
+	assert.Equal(t, "test_anon_key", cfg.Supabase.AnonKey)
+	assert.Equal(t, "test_service_role_key", cfg.Supabase.ServiceKey)
 
 	// Upload config
 	assert.Equal(t, int64(1048576000), cfg.Upload.MaxSize)
@@ -512,44 +414,6 @@ func TestLoadConfig_AppConfig_CorsOrigins_DefaultValues(t *testing.T) {
 	assert.Equal(t, "https://yourdomain.com", cfg.App.CorsOriginProd)
 }
 
-func TestLoadConfig_JWT_KeyRotation(t *testing.T) {
-	os.Clearenv()
-
-	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("JWT_KEY_ROTATION_HOURS", "336")
-
-	cfg := config.LoadConfig()
-
-	assert.Equal(t, 336, cfg.JWT.KeyRotationHours)
-}
-
-func TestLoadConfig_JWT_KeyRotation_DefaultValue(t *testing.T) {
-	os.Clearenv()
-
-	os.Setenv("APP_NAME", "test-app")
-
-	cfg := config.LoadConfig()
-
-	assert.Equal(t, 168, cfg.JWT.KeyRotationHours)
-}
-
-func TestLoadConfig_JWT_AllPaths(t *testing.T) {
-	os.Clearenv()
-
-	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("JWT_PRIVATE_KEY_PATH", "/custom/path/private.pem")
-	os.Setenv("JWT_PUBLIC_KEY_PATH", "/custom/path/public.pem")
-	os.Setenv("JWT_PRIVATE_KEY_ROTATION_PATH", "/custom/path/private_rot.pem")
-	os.Setenv("JWT_PUBLIC_KEY_ROTATION_PATH", "/custom/path/public_rot.pem")
-
-	cfg := config.LoadConfig()
-
-	assert.Equal(t, "/custom/path/private.pem", cfg.JWT.PrivateKeyPath)
-	assert.Equal(t, "/custom/path/public.pem", cfg.JWT.PublicKeyPath)
-	assert.Equal(t, "/custom/path/private_rot.pem", cfg.JWT.PrivateKeyRotationPath)
-	assert.Equal(t, "/custom/path/public_rot.pem", cfg.JWT.PublicKeyRotationPath)
-}
-
 func TestLoadConfig_Database_AllFields(t *testing.T) {
 	os.Clearenv()
 
@@ -559,10 +423,6 @@ func TestLoadConfig_Database_AllFields(t *testing.T) {
 	os.Setenv("DB_USER", "testuser")
 	os.Setenv("DB_PASSWORD", "testpassword")
 	os.Setenv("DB_NAME", "testdbname")
-	os.Setenv("DB_AUTO_MIGRATE", "false")
-	os.Setenv("DB_RUN_SEEDER", "true")
-	os.Setenv("DB_SEED_USERS", "false")
-	os.Setenv("DB_MIGRATE_ON_START", "false")
 
 	cfg := config.LoadConfig()
 
@@ -571,35 +431,34 @@ func TestLoadConfig_Database_AllFields(t *testing.T) {
 	assert.Equal(t, "testuser", cfg.Database.User)
 	assert.Equal(t, "testpassword", cfg.Database.Password)
 	assert.Equal(t, "testdbname", cfg.Database.Name)
-	assert.False(t, cfg.Database.AutoMigrate)
-	assert.True(t, cfg.Database.RunSeeder)
-	assert.False(t, cfg.Database.SeedUsers)
-	assert.False(t, cfg.Database.MigrateOnStart)
 }
 
-func TestLoadConfig_Resend_AllFields(t *testing.T) {
+func TestLoadConfig_Supabase_AllFields(t *testing.T) {
 	os.Clearenv()
 
 	os.Setenv("APP_NAME", "test-app")
-	os.Setenv("RESEND_API_KEY", "re_test_key_123")
-	os.Setenv("RESEND_FROM_EMAIL", "test@example.com")
-	os.Setenv("RESEND_FROM_NAME", "Test App")
+	os.Setenv("SUPABASE_URL", "https://custom.supabase.co")
+	os.Setenv("SUPABASE_ANON_KEY", "custom_anon_key")
+	os.Setenv("SUPABASE_SERVICE_ROLE_KEY", "custom_service_role_key")
+	os.Setenv("SUPABASE_DB_URL", "postgresql://user:pass@custom.supabase.co:5432/dbname")
 
 	cfg := config.LoadConfig()
 
-	assert.Equal(t, "re_test_key_123", cfg.Resend.APIKey)
-	assert.Equal(t, "test@example.com", cfg.Resend.FromEmail)
-	assert.Equal(t, "Test App", cfg.Resend.FromName)
+	assert.Equal(t, "https://custom.supabase.co", cfg.Supabase.URL)
+	assert.Equal(t, "custom_anon_key", cfg.Supabase.AnonKey)
+	assert.Equal(t, "custom_service_role_key", cfg.Supabase.ServiceKey)
+	assert.Equal(t, "postgresql://user:pass@custom.supabase.co:5432/dbname", cfg.Supabase.DBURL)
 }
 
-func TestLoadConfig_Resend_DefaultValues(t *testing.T) {
+func TestLoadConfig_Supabase_DefaultValues(t *testing.T) {
 	os.Clearenv()
 
 	os.Setenv("APP_NAME", "test-app")
 
 	cfg := config.LoadConfig()
 
-	assert.Equal(t, "", cfg.Resend.APIKey)
-	assert.Equal(t, "noreply@example.com", cfg.Resend.FromEmail)
-	assert.Equal(t, "Invento Service", cfg.Resend.FromName)
+	assert.Equal(t, "", cfg.Supabase.URL)
+	assert.Equal(t, "", cfg.Supabase.AnonKey)
+	assert.Equal(t, "", cfg.Supabase.ServiceKey)
+	assert.Equal(t, "", cfg.Supabase.DBURL)
 }

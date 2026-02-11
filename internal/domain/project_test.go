@@ -10,7 +10,7 @@ func TestProjectStruct(t *testing.T) {
 		now := time.Now()
 		project := Project{
 			ID:          1,
-			UserID:      100,
+			UserID:      "user-100",
 			NamaProject: "E-Commerce Platform",
 			Kategori:    "website",
 			Semester:    3,
@@ -23,8 +23,8 @@ func TestProjectStruct(t *testing.T) {
 		if project.ID != 1 {
 			t.Errorf("Expected ID 1, got %d", project.ID)
 		}
-		if project.UserID != 100 {
-			t.Errorf("Expected UserID 100, got %d", project.UserID)
+		if project.UserID != "user-100" {
+			t.Errorf("Expected UserID 'user-100', got %s", project.UserID)
 		}
 		if project.NamaProject != "E-Commerce Platform" {
 			t.Errorf("Expected NamaProject 'E-Commerce Platform', got %s", project.NamaProject)
@@ -39,13 +39,13 @@ func TestProjectStruct(t *testing.T) {
 
 	t.Run("Project with User relation", func(t *testing.T) {
 		user := User{
-			ID:    100,
+			ID:    "user-100",
 			Email: "user@example.com",
 			Name:  "Test User",
 		}
 		project := Project{
 			ID:          1,
-			UserID:      100,
+			UserID:      "user-100",
 			NamaProject: "Mobile App",
 			Kategori:    "mobile",
 			Semester:    5,
@@ -55,7 +55,7 @@ func TestProjectStruct(t *testing.T) {
 		}
 
 		if project.User.ID != project.UserID {
-			t.Errorf("User ID mismatch: %d vs %d", project.User.ID, project.UserID)
+			t.Errorf("User ID mismatch: %s vs %s", project.User.ID, project.UserID)
 		}
 	})
 }
@@ -539,59 +539,59 @@ func TestProjectEdgeCases(t *testing.T) {
 func TestProjectUserRelationship(t *testing.T) {
 	t.Run("Project with zero UserID", func(t *testing.T) {
 		project := Project{
-			UserID: 0,
+			UserID: "",
 		}
 
-		if project.UserID != 0 {
-			t.Errorf("Expected UserID 0, got %d", project.UserID)
+		if project.UserID != "" {
+			t.Errorf("Expected UserID empty string, got %s", project.UserID)
 		}
 	})
 
 	t.Run("Project without User relation", func(t *testing.T) {
 		project := Project{
 			ID:     1,
-			UserID: 100,
+			UserID: "user-100",
 		}
 
-		if project.User.ID != 0 {
-			t.Errorf("Expected empty User relation, got ID %d", project.User.ID)
+		if project.User.ID != "" {
+			t.Errorf("Expected empty User relation, got ID %s", project.User.ID)
 		}
 	})
 
 	t.Run("Project with matching User relation", func(t *testing.T) {
 		user := User{
-			ID:    200,
+			ID:    "user-200",
 			Email: "test@example.com",
 			Name:  "Test User",
 		}
 
 		project := Project{
 			ID:     1,
-			UserID: 200,
+			UserID: "user-200",
 			User:   user,
 		}
 
 		if project.User.ID != project.UserID {
-			t.Errorf("User ID mismatch: User.ID=%d, UserID=%d", project.User.ID, project.UserID)
+			t.Errorf("User ID mismatch: User.ID=%s, UserID=%s", project.User.ID, project.UserID)
 		}
 	})
 
 	t.Run("Project with mismatched User relation", func(t *testing.T) {
 		user := User{
-			ID:    300,
+			ID:    "user-300",
 			Email: "other@example.com",
 			Name:  "Other User",
 		}
 
 		project := Project{
 			ID:     1,
-			UserID: 200,
+			UserID: "user-200",
 			User:   user,
 		}
 
 		// This test documents the behavior - the User relation ID can differ from UserID
 		if project.User.ID == project.UserID {
-			t.Errorf("Expected mismatched IDs, but both are %d", project.UserID)
+			t.Errorf("Expected mismatched IDs, but both are %s", project.UserID)
 		}
 	})
 }

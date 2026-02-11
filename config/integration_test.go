@@ -291,22 +291,14 @@ func TestIntegrationConfigValidation(t *testing.T) {
 		assert.NotEmpty(t, cfg.Database.Port)
 		assert.NotEmpty(t, cfg.Database.User)
 		assert.NotEmpty(t, cfg.Database.Name)
-
-		// Auto migrate and seeder flags should have defaults
-		assert.NotNil(t, cfg.Database.AutoMigrate)
-		assert.NotNil(t, cfg.Database.RunSeeder)
-		assert.NotNil(t, cfg.Database.MigrateOnStart)
 	})
 
-	t.Run("JWTConfigDefaults", func(t *testing.T) {
+	t.Run("SupabaseConfigDefaults", func(t *testing.T) {
 		cfg := LoadConfig()
 
-		// Verify JWT config has sensible defaults
-		assert.NotEmpty(t, cfg.JWT.PrivateKeyPath)
-		assert.NotEmpty(t, cfg.JWT.PublicKeyPath)
-		assert.Greater(t, cfg.JWT.ExpireHours, 0)
-		assert.Greater(t, cfg.JWT.RefreshTokenExpireHours, 0)
-		assert.Greater(t, cfg.JWT.KeyRotationHours, 0)
+		// Verify Supabase config has sensible defaults
+		// Note: URL, AnonKey, ServiceKey, and DBURL may be empty in test environment
+		assert.NotNil(t, cfg.Supabase)
 	})
 
 	t.Run("UploadConfigDefaults", func(t *testing.T) {
@@ -318,17 +310,6 @@ func TestIntegrationConfigValidation(t *testing.T) {
 		assert.Greater(t, cfg.Upload.MaxConcurrent, 0)
 		assert.Greater(t, cfg.Upload.IdleTimeout, 0)
 		assert.NotEmpty(t, cfg.Upload.TusVersion)
-	})
-
-	t.Run("OTPConfigDefaults", func(t *testing.T) {
-		cfg := LoadConfig()
-
-		// Verify OTP config has sensible defaults
-		assert.Greater(t, cfg.OTP.Length, 0)
-		assert.Greater(t, cfg.OTP.ExpiryMinutes, 0)
-		assert.Greater(t, cfg.OTP.MaxAttempts, 0)
-		assert.Greater(t, cfg.OTP.ResendCooldownSeconds, 0)
-		assert.Greater(t, cfg.OTP.ResendMaxTimes, 0)
 	})
 }
 

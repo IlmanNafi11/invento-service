@@ -27,7 +27,7 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	jenisKelamin := "Laki-laki"
 	user := &domain.User{
@@ -36,7 +36,7 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 		Name:         "Test User",
 		JenisKelamin: &jenisKelamin,
 		FotoProfil:   stringPtr("/uploads/profiles/test.jpg"),
-		RoleID:       uintPtr(1),
+		RoleID:       intPtr(1),
 		IsActive:     true,
 		CreatedAt:    time.Now(),
 	}
@@ -83,7 +83,7 @@ func TestUserUsecase_GetUserByID_NotFound(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(999)
+	userID := "user-999"
 
 	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -114,13 +114,13 @@ func TestUserUsecase_ListUsers_Success(t *testing.T) {
 
 	users := []domain.UserListItem{
 		{
-			ID:         1,
+			ID:         "user-1",
 			Email:      "user1@example.com",
 			Role:       "admin",
 			DibuatPada: time.Now(),
 		},
 		{
-			ID:         2,
+			ID:         "user-2",
 			Email:      "user2@example.com",
 			Role:       "user",
 			DibuatPada: time.Now(),
@@ -166,7 +166,7 @@ func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
 
 	users := []domain.UserListItem{
 		{
-			ID:         1,
+			ID:         "user-1",
 			Email:      "admin@example.com",
 			Role:       "admin",
 			DibuatPada: time.Now(),
@@ -210,7 +210,7 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	jenisKelamin := "Laki-laki"
 	oldFotoProfil := "/uploads/profiles/old.jpg"
@@ -260,7 +260,7 @@ func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(999)
+	userID := "user-999"
 
 	req := domain.UpdateProfileRequest{
 		Name: "Updated Name",
@@ -293,7 +293,7 @@ func TestUserUsecase_DeleteUser_Success(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	user := &domain.User{
 		ID:        userID,
@@ -329,7 +329,7 @@ func TestUserUsecase_DeleteUser_NotFound(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(999)
+	userID := "user-999"
 
 	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -359,7 +359,7 @@ func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, casbinEnforcer, pathResolver, cfg, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	jenisKelamin := "Laki-laki"
 	role := &domain.Role{
@@ -372,7 +372,7 @@ func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
 		Email:        "test@example.com",
 		Name:         "Test User",
 		JenisKelamin: &jenisKelamin,
-		RoleID:       &role.ID,
+		RoleID:       intPtr(int(role.ID)),
 		IsActive:     true,
 		CreatedAt:    time.Now(),
 		Role:         role,
@@ -407,23 +407,23 @@ func TestUserUsecase_UpdateUserRole_Success(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	roleName := "admin"
 
 	jenisKelamin := "Laki-laki"
-	roleID := uint(2)
+	roleID := int(2)
 	user := &domain.User{
 		ID:           userID,
 		Email:        "test@example.com",
 		Name:         "Test User",
 		JenisKelamin: &jenisKelamin,
-		RoleID:       uintPtr(1),
+		RoleID:       intPtr(1),
 		IsActive:     true,
 		CreatedAt:    time.Now(),
 	}
 
 	role := &domain.Role{
-		ID:       roleID,
+		ID:       uint(roleID),
 		NamaRole: roleName,
 	}
 
@@ -455,7 +455,7 @@ func TestUserUsecase_UpdateUserRole_UserNotFound(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(999)
+	userID := "user-999"
 	roleName := "admin"
 
 	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
@@ -484,7 +484,7 @@ func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	roleName := "nonexistent"
 
 	jenisKelamin := "Laki-laki"
@@ -493,7 +493,7 @@ func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
 		Email:        "test@example.com",
 		Name:         "Test User",
 		JenisKelamin: &jenisKelamin,
-		RoleID:       uintPtr(1),
+		RoleID:       intPtr(1),
 		IsActive:     true,
 		CreatedAt:    time.Now(),
 	}
@@ -526,9 +526,9 @@ func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	roleName := "admin"
-	roleID := uint(1)
+	roleID := int(1)
 
 	jenisKelamin := "Laki-laki"
 	user := &domain.User{
@@ -542,7 +542,7 @@ func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
 	}
 
 	role := &domain.Role{
-		ID:       roleID,
+		ID:       uint(roleID),
 		NamaRole: roleName,
 	}
 
@@ -556,9 +556,6 @@ func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
 	mockUserRepo.AssertExpectations(t)
 	mockRoleRepo.AssertExpectations(t)
 }
-
-
-
 
 // TestUserUsecase_DownloadUserFiles_EmptyIDs tests empty IDs
 func TestUserUsecase_DownloadUserFiles_EmptyIDs(t *testing.T) {
@@ -576,9 +573,9 @@ func TestUserUsecase_DownloadUserFiles_EmptyIDs(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	ownerUserID := uint(1)
-	projectIDs := []uint{}
-	modulIDs := []uint{}
+	ownerUserID := "user-1"
+	projectIDs := []string{}
+	modulIDs := []string{}
 
 	result, err := userUC.DownloadUserFiles(ownerUserID, projectIDs, modulIDs)
 
@@ -603,9 +600,9 @@ func TestUserUsecase_DownloadUserFiles_UserNotFound(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	ownerUserID := uint(999)
-	projectIDs := []uint{1}
-	modulIDs := []uint{1}
+	ownerUserID := "user-999"
+	projectIDs := []string{"1"}
+	modulIDs := []string{"1"}
 
 	mockUserRepo.On("GetByID", ownerUserID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -634,9 +631,11 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
 
-	ownerUserID := uint(1)
-	projectIDs := []uint{1}
-	modulIDs := []uint{1}
+	ownerUserID := "user-1"
+	projectIDs := []string{"1"}
+	modulIDs := []string{"1"}
+	projectIDsUint := []uint{1}
+	modulIDsUint := []uint{1}
 
 	jenisKelamin := "Laki-laki"
 	user := &domain.User{
@@ -649,8 +648,8 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 	}
 
 	mockUserRepo.On("GetByID", ownerUserID).Return(user, nil)
-	mockProjectRepo.On("GetByIDsForUser", projectIDs, ownerUserID).Return([]domain.Project{}, nil)
-	mockModulRepo.On("GetByIDsForUser", modulIDs, ownerUserID).Return([]domain.Modul{}, nil)
+	mockProjectRepo.On("GetByIDsForUser", projectIDsUint, ownerUserID).Return([]domain.Project{}, nil)
+	mockModulRepo.On("GetByIDsForUser", modulIDsUint, ownerUserID).Return([]domain.Modul{}, nil)
 
 	result, err := userUC.DownloadUserFiles(ownerUserID, projectIDs, modulIDs)
 

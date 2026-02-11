@@ -13,12 +13,12 @@ import (
 
 // JWTClaims represents the JWT claims structure
 type JWTClaims struct {
-	UserID    uint   `json:"user_id"`
-	Email     string `json:"email"`
-	RoleID    *uint  `json:"role_id"`
-	Role      string `json:"role"`
-	TokenType string `json:"token_type"`
-	KeyID     string `json:"kid"`
+	UserID    string  `json:"user_id"`
+	Email     string  `json:"email"`
+	RoleID    *int    `json:"role_id"`
+	Role      string  `json:"role"`
+	TokenType string  `json:"token_type"`
+	KeyID     string  `json:"kid"`
 	jwt.RegisteredClaims
 }
 
@@ -33,7 +33,7 @@ func GenerateTestRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 }
 
 // GenerateTestToken generates a valid JWT test token
-func GenerateTestToken(userID uint, email, role string) string {
+func GenerateTestToken(userID string, email, role string) string {
 	privateKey, _, err := GenerateTestRSAKeys()
 	if err != nil {
 		panic(fmt.Sprintf("failed to generate test keys: %v", err))
@@ -64,7 +64,7 @@ func GenerateTestToken(userID uint, email, role string) string {
 }
 
 // GenerateTestTokenWithRoleID generates a test token with a specific role ID
-func GenerateTestTokenWithRoleID(userID uint, email, role string, roleID uint) string {
+func GenerateTestTokenWithRoleID(userID string, email, role string, roleID int) string {
 	privateKey, _, err := GenerateTestRSAKeys()
 	if err != nil {
 		panic(fmt.Sprintf("failed to generate test keys: %v", err))
@@ -103,7 +103,7 @@ func GenerateExpiredToken() string {
 	}
 
 	claims := JWTClaims{
-		UserID:    1,
+		UserID:    "00000000-0000-0000-0000-000000000001",
 		Email:     "test@example.com",
 		Role:      "user",
 		TokenType: "access",
@@ -132,7 +132,7 @@ func GenerateInvalidToken() string {
 }
 
 // GenerateTokenWithCustomExpiration generates a token with custom expiration
-func GenerateTokenWithCustomExpiration(userID uint, email, role string, expiration time.Duration) string {
+func GenerateTokenWithCustomExpiration(userID string, email, role string, expiration time.Duration) string {
 	privateKey, _, err := GenerateTestRSAKeys()
 	if err != nil {
 		panic(fmt.Sprintf("failed to generate test keys: %v", err))
@@ -219,7 +219,7 @@ func GenerateTestRefreshToken() string {
 	}
 
 	claims := JWTClaims{
-		UserID:    1,
+		UserID:    "00000000-0000-0000-0000-000000000001",
 		Email:     "test@example.com",
 		Role:      "user",
 		TokenType: "refresh",

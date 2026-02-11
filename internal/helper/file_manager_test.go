@@ -59,7 +59,7 @@ func TestFileManager_GenerateRandomDirectory(t *testing.T) {
 
 func TestFileManager_GetUserUploadPath(t *testing.T) {
 	fm, tempDir := setupFileManagerTest(t)
-	userID := uint(123)
+	userID := "123"
 
 	path, err := fm.GetUserUploadPath(userID)
 	assert.NoError(t, err)
@@ -84,7 +84,7 @@ func TestFileManager_GetUserUploadPath_Production(t *testing.T) {
 		},
 	}
 	fm := helper.NewFileManager(cfg)
-	userID := uint(456)
+	userID := "456"
 
 	path, err := fm.GetUserUploadPath(userID)
 	assert.NoError(t, err)
@@ -101,7 +101,7 @@ func TestFileManager_GetUserUploadPath_Production(t *testing.T) {
 
 func TestFileManager_CreateProjectUploadDirectory(t *testing.T) {
 	fm, tempDir := setupFileManagerTest(t)
-	userID := uint(789)
+	userID := "789"
 
 	projectPath, randomDir, err := fm.CreateProjectUploadDirectory(userID)
 	assert.NoError(t, err)
@@ -120,7 +120,7 @@ func TestFileManager_CreateProjectUploadDirectory(t *testing.T) {
 
 func TestFileManager_GetProjectFilePath(t *testing.T) {
 	fm, tempDir := setupFileManagerTest(t)
-	userID := uint(100)
+	userID := "100"
 	randomDir := "abc123"
 	filename := "testfile.zip"
 
@@ -132,7 +132,7 @@ func TestFileManager_GetProjectFilePath(t *testing.T) {
 
 func TestFileManager_DeleteUserDirectory(t *testing.T) {
 	fm, _ := setupFileManagerTest(t)
-	userID := uint(200)
+	userID := "200"
 
 	// Create directory first
 	userPath, err := fm.GetUserUploadPath(userID)
@@ -153,7 +153,7 @@ func TestFileManager_DeleteUserDirectory(t *testing.T) {
 
 func TestFileManager_DeleteProjectDirectory(t *testing.T) {
 	fm, _ := setupFileManagerTest(t)
-	userID := uint(300)
+	userID := "300"
 
 	// Create project directory first
 	projectPath, randomDir, err := fm.CreateProjectUploadDirectory(userID)
@@ -232,7 +232,7 @@ func TestFileManager_GetModulBasePath_Production(t *testing.T) {
 
 func TestFileManager_GetUserModulPath(t *testing.T) {
 	fm, tempDir := setupFileManagerTest(t)
-	userID := uint(500)
+	userID := "500"
 
 	path, err := fm.GetUserModulPath(userID)
 	assert.NoError(t, err)
@@ -248,7 +248,7 @@ func TestFileManager_GetUserModulPath(t *testing.T) {
 
 func TestFileManager_CreateModulUploadDirectory(t *testing.T) {
 	fm, tempDir := setupFileManagerTest(t)
-	userID := uint(600)
+	userID := "600"
 
 	modulPath, randomDir, err := fm.CreateModulUploadDirectory(userID)
 	assert.NoError(t, err)
@@ -267,7 +267,7 @@ func TestFileManager_CreateModulUploadDirectory(t *testing.T) {
 
 func TestFileManager_GetModulFilePath(t *testing.T) {
 	fm, tempDir := setupFileManagerTest(t)
-	userID := uint(700)
+	userID := "700"
 	randomDir := "xyz789"
 	filename := "modul.pdf"
 
@@ -279,7 +279,7 @@ func TestFileManager_GetModulFilePath(t *testing.T) {
 
 func TestFileManager_DeleteModulDirectory(t *testing.T) {
 	fm, _ := setupFileManagerTest(t)
-	userID := uint(800)
+	userID := "800"
 
 	// Create modul directory first
 	modulPath, randomDir, err := fm.CreateModulUploadDirectory(userID)
@@ -305,7 +305,7 @@ func TestFileManager_DeleteModulDirectory(t *testing.T) {
 
 func TestFileManager_DeleteUserModulDirectory(t *testing.T) {
 	fm, _ := setupFileManagerTest(t)
-	userID := uint(900)
+	userID := "900"
 
 	// Create user modul directory first
 	userModulPath, err := fm.GetUserModulPath(userID)
@@ -336,8 +336,8 @@ func TestFileManager_MultipleUsers(t *testing.T) {
 	fm, _ := setupFileManagerTest(t)
 
 	// Create directories for multiple users
-	userIDs := []uint{1, 2, 3, 4, 5}
-	paths := make(map[uint]string)
+	userIDs := []string{"1", "2", "3", "4", "5"}
+	paths := make(map[string]string)
 
 	for _, uid := range userIDs {
 		path, err := fm.GetUserUploadPath(uid)

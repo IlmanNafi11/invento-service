@@ -17,7 +17,7 @@ func TestProjectRepository_Create_Success(t *testing.T) {
 
 	project := &domain.Project{
 		NamaProject: "Test Project",
-		UserID:      1,
+		UserID:      "user-1",
 		Kategori:    "website",
 		Semester:    1,
 		Ukuran:      "small",
@@ -38,7 +38,7 @@ func TestProjectRepository_GetByID_Success(t *testing.T) {
 
 	project := &domain.Project{
 		NamaProject: "Test Project",
-		UserID:      1,
+		UserID:      "user-1",
 		Kategori:    "website",
 		Semester:    1,
 		Ukuran:      "small",
@@ -55,13 +55,12 @@ func TestProjectRepository_GetByID_Success(t *testing.T) {
 	assert.Equal(t, "Test Project", result.NamaProject)
 }
 
-// TestProjectRepository_GetByIDs_Success tests successful project retrieval by IDs
 func TestProjectRepository_GetByIDs_Success(t *testing.T) {
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	projects := []domain.Project{
 		{NamaProject: "Project 1", UserID: userID, Kategori: "website", Semester: 1, Ukuran: "small", PathFile: "/test1"},
@@ -80,17 +79,16 @@ func TestProjectRepository_GetByIDs_Success(t *testing.T) {
 	assert.Len(t, result, 2)
 }
 
-// TestProjectRepository_GetByIDsForUser_Success tests successful project retrieval for user
 func TestProjectRepository_GetByIDsForUser_Success(t *testing.T) {
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	projects := []domain.Project{
 		{NamaProject: "Project 1", UserID: userID, Kategori: "website", Semester: 1, Ukuran: "small", PathFile: "/test1"},
-		{NamaProject: "Project 2", UserID: 2, Kategori: "mobile", Semester: 2, Ukuran: "medium", PathFile: "/test2"},
+		{NamaProject: "Project 2", UserID: "user-2", Kategori: "mobile", Semester: 2, Ukuran: "medium", PathFile: "/test2"},
 	}
 
 	for i := range projects {
@@ -102,7 +100,7 @@ func TestProjectRepository_GetByIDsForUser_Success(t *testing.T) {
 	ids := []uint{projects[0].ID, projects[1].ID}
 	result, err := repo.GetByIDsForUser(ids, userID)
 	assert.NoError(t, err)
-	assert.Len(t, result, 1) // Only user's project
+	assert.Len(t, result, 1)
 }
 
 // TestProjectRepository_GetByUserID_Success tests successful project retrieval by user ID
@@ -111,12 +109,12 @@ func TestProjectRepository_GetByUserID_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	projects := []domain.Project{
 		{NamaProject: "Project 1", UserID: userID, Kategori: "website", Semester: 1, Ukuran: "small", PathFile: "/test1"},
 		{NamaProject: "Project 2", UserID: userID, Kategori: "mobile", Semester: 2, Ukuran: "medium", PathFile: "/test2"},
-		{NamaProject: "Project 3", UserID: 2, Kategori: "desktop", Semester: 1, Ukuran: "large", PathFile: "/test3"},
+		{NamaProject: "Project 3", UserID: "user-2", Kategori: "desktop", Semester: 1, Ukuran: "large", PathFile: "/test3"},
 	}
 
 	for _, proj := range projects {
@@ -157,7 +155,7 @@ func TestProjectRepository_CountByUserID_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	projects := []domain.Project{
 		{NamaProject: "Project 1", UserID: userID, Kategori: "website", Semester: 1, Ukuran: "small", PathFile: "/test1"},
@@ -183,7 +181,7 @@ func TestProjectRepository_Update_Success(t *testing.T) {
 
 	project := &domain.Project{
 		NamaProject: "Old Name",
-		UserID:      1,
+		UserID:      "user-1",
 		Kategori:    "website",
 		Semester:    1,
 		Ukuran:      "small",
@@ -214,7 +212,7 @@ func TestProjectRepository_Delete_Success(t *testing.T) {
 
 	project := &domain.Project{
 		NamaProject: "To Delete",
-		UserID:      1,
+		UserID:      "user-1",
 		Kategori:    "website",
 		Semester:    1,
 		Ukuran:      "small",

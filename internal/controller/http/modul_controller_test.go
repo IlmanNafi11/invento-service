@@ -28,7 +28,7 @@ type MockModulUsecase struct {
 	mock.Mock
 }
 
-func (m *MockModulUsecase) GetList(userID uint, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error) {
+func (m *MockModulUsecase) GetList(userID string, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error) {
 	args := m.Called(userID, search, filterType, filterSemester, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -36,7 +36,7 @@ func (m *MockModulUsecase) GetList(userID uint, search string, filterType string
 	return args.Get(0).(*domain.ModulListData), args.Error(1)
 }
 
-func (m *MockModulUsecase) GetByID(modulID, userID uint) (*domain.ModulResponse, error) {
+func (m *MockModulUsecase) GetByID(modulID uint, userID string) (*domain.ModulResponse, error) {
 	args := m.Called(modulID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -44,17 +44,17 @@ func (m *MockModulUsecase) GetByID(modulID, userID uint) (*domain.ModulResponse,
 	return args.Get(0).(*domain.ModulResponse), args.Error(1)
 }
 
-func (m *MockModulUsecase) UpdateMetadata(modulID, userID uint, req domain.ModulUpdateRequest) error {
+func (m *MockModulUsecase) UpdateMetadata(modulID uint, userID string, req domain.ModulUpdateRequest) error {
 	args := m.Called(modulID, userID, req)
 	return args.Error(0)
 }
 
-func (m *MockModulUsecase) Delete(modulID, userID uint) error {
+func (m *MockModulUsecase) Delete(modulID uint, userID string) error {
 	args := m.Called(modulID, userID)
 	return args.Error(0)
 }
 
-func (m *MockModulUsecase) Download(userID uint, modulIDs []uint) (string, error) {
+func (m *MockModulUsecase) Download(userID string, modulIDs []uint) (string, error) {
 	args := m.Called(userID, modulIDs)
 	if args.Get(0) == nil {
 		return "", args.Error(1)
@@ -67,7 +67,7 @@ type MockTusModulUsecase struct {
 	mock.Mock
 }
 
-func (m *MockTusModulUsecase) InitiateModulUpload(userID uint, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (m *MockTusModulUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
 	args := m.Called(userID, fileSize, uploadMetadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -75,12 +75,12 @@ func (m *MockTusModulUsecase) InitiateModulUpload(userID uint, fileSize int64, u
 	return args.Get(0).(*domain.TusModulUploadResponse), args.Error(1)
 }
 
-func (m *MockTusModulUsecase) HandleModulChunk(uploadID string, userID uint, offset int64, chunk io.Reader) (int64, error) {
+func (m *MockTusModulUsecase) HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
 	args := m.Called(uploadID, userID, offset, chunk)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockTusModulUsecase) GetModulUploadInfo(uploadID string, userID uint) (*domain.TusModulUploadInfoResponse, error) {
+func (m *MockTusModulUsecase) GetModulUploadInfo(uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
 	args := m.Called(uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -88,17 +88,17 @@ func (m *MockTusModulUsecase) GetModulUploadInfo(uploadID string, userID uint) (
 	return args.Get(0).(*domain.TusModulUploadInfoResponse), args.Error(1)
 }
 
-func (m *MockTusModulUsecase) GetModulUploadStatus(uploadID string, userID uint) (int64, int64, error) {
+func (m *MockTusModulUsecase) GetModulUploadStatus(uploadID string, userID string) (int64, int64, error) {
 	args := m.Called(uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusModulUsecase) CancelModulUpload(uploadID string, userID uint) error {
+func (m *MockTusModulUsecase) CancelModulUpload(uploadID string, userID string) error {
 	args := m.Called(uploadID, userID)
 	return args.Error(0)
 }
 
-func (m *MockTusModulUsecase) CheckModulUploadSlot(userID uint) (*domain.TusModulUploadSlotResponse, error) {
+func (m *MockTusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error) {
 	args := m.Called(userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -106,7 +106,7 @@ func (m *MockTusModulUsecase) CheckModulUploadSlot(userID uint) (*domain.TusModu
 	return args.Get(0).(*domain.TusModulUploadSlotResponse), args.Error(1)
 }
 
-func (m *MockTusModulUsecase) InitiateModulUpdateUpload(modulID, userID uint, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (m *MockTusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
 	args := m.Called(modulID, userID, fileSize, uploadMetadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -132,20 +132,19 @@ func (m *MockTusModulUsecase) CancelModulUpdateUpload(modulID uint, uploadID str
 	return args.Error(0)
 }
 
-func (m *MockTusModulUsecase) HandleModulUpdateChunk(uploadID string, userID uint, offset int64, chunk io.Reader) (int64, error) {
+func (m *MockTusModulUsecase) HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
 	args := m.Called(uploadID, userID, offset, chunk)
 	return args.Get(0).(int64), args.Error(1)
 }
 
 // Helper function to create test base controller
 func getTestBaseController() *base.BaseController {
-	jwtManager := &helper.JWTManager{}
 	casbin := &helper.CasbinEnforcer{}
-	return base.NewBaseController(jwtManager, casbin)
+	return base.NewBaseController("https://test.supabase.co", casbin)
 }
 
 // Helper function to set authenticated user in context
-func setAuthenticatedUser(c *fiber.Ctx, userID uint, email, role string) {
+func setAuthenticatedUser(c *fiber.Ctx, userID string, email, role string) {
 	c.Locals("user_id", userID)
 	c.Locals("user_email", email)
 	c.Locals("user_role", role)
@@ -163,7 +162,7 @@ func TestModulController_GetList_Success(t *testing.T) {
 
 	// Setup middleware to inject authenticated user
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 
@@ -198,7 +197,7 @@ func TestModulController_GetList_Success(t *testing.T) {
 		},
 	}
 
-	mockModulUC.On("GetList", uint(1), "", "", 0, 1, 10).Return(expectedData, nil)
+	mockModulUC.On("GetList", "user-1", "", "", 0, 1, 10).Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/modul", nil)
 	resp, err := app.Test(req)
@@ -218,7 +217,7 @@ func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Get("/api/v1/modul", controller.GetList)
@@ -243,7 +242,7 @@ func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 		},
 	}
 
-	mockModulUC.On("GetList", uint(1), "matematika", "pdf", 1, 1, 10).Return(expectedData, nil)
+	mockModulUC.On("GetList", "user-1", "matematika", "pdf", 1, 1, 10).Return(expectedData, nil)
 
 	url := app_testing.BuildURL("/api/v1/modul", map[string]string{
 		"search":          "matematika",
@@ -287,7 +286,7 @@ func TestModulController_UpdateMetadata_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
@@ -297,7 +296,7 @@ func TestModulController_UpdateMetadata_Success(t *testing.T) {
 		Semester: 2,
 	}
 
-	mockModulUC.On("UpdateMetadata", uint(1), uint(1), reqBody).Return(nil)
+	mockModulUC.On("UpdateMetadata", uint(1), "user-1", reqBody).Return(nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("PATCH", "/api/v1/modul/1", bytes.NewReader(bodyBytes))
@@ -319,7 +318,7 @@ func TestModulController_UpdateMetadata_NotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
@@ -329,7 +328,7 @@ func TestModulController_UpdateMetadata_NotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("Modul tidak ditemukan")
-	mockModulUC.On("UpdateMetadata", uint(999), uint(1), reqBody).Return(appErr)
+	mockModulUC.On("UpdateMetadata", uint(999), "user-1", reqBody).Return(appErr)
 
 	resp := app_testing.MakeRequest(app, "PATCH", "/api/v1/modul/999", reqBody, "")
 
@@ -348,7 +347,7 @@ func TestModulController_UpdateMetadata_ValidationError(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
@@ -373,12 +372,12 @@ func TestModulController_Delete_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/:id", controller.Delete)
 
-	mockModulUC.On("Delete", uint(1), uint(1)).Return(nil)
+	mockModulUC.On("Delete", uint(1), "user-1").Return(nil)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/modul/1", nil)
 	resp, err := app.Test(req)
@@ -398,13 +397,13 @@ func TestModulController_Delete_NotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/:id", controller.Delete)
 
 	appErr := apperrors.NewNotFoundError("Modul tidak ditemukan")
-	mockModulUC.On("Delete", uint(999), uint(1)).Return(appErr)
+	mockModulUC.On("Delete", uint(999), "user-1").Return(appErr)
 
 	resp := app_testing.MakeRequest(app, "DELETE", "/api/v1/modul/999", nil, "")
 
@@ -423,13 +422,13 @@ func TestModulController_Delete_Forbidden(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/:id", controller.Delete)
 
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses ke modul ini")
-	mockModulUC.On("Delete", uint(2), uint(1)).Return(appErr)
+	mockModulUC.On("Delete", uint(2), "user-1").Return(appErr)
 
 	resp := app_testing.MakeRequest(app, "DELETE", "/api/v1/modul/2", nil, "")
 
@@ -448,7 +447,7 @@ func TestModulController_Delete_InvalidID(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/:id", controller.Delete)
@@ -468,7 +467,7 @@ func TestModulController_Download_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -477,7 +476,7 @@ func TestModulController_Download_Success(t *testing.T) {
 		IDs: []uint{1, 2},
 	}
 
-	mockModulUC.On("Download", uint(1), []uint{1, 2}).Return("/tmp/nonexistent.zip", nil)
+	mockModulUC.On("Download", "user-1", []uint{1, 2}).Return("/tmp/nonexistent.zip", nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/modul/download", bytes.NewReader(bodyBytes))
@@ -500,7 +499,7 @@ func TestModulController_Download_EmptyIDs(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -524,7 +523,7 @@ func TestModulController_Download_NotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -534,7 +533,7 @@ func TestModulController_Download_NotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("Salah satu modul tidak ditemukan")
-	mockModulUC.On("Download", uint(1), []uint{1, 999}).Return("", appErr)
+	mockModulUC.On("Download", "user-1", []uint{1, 999}).Return("", appErr)
 
 	resp := app_testing.MakeRequest(app, "POST", "/api/v1/modul/download", reqBody, "")
 
@@ -573,7 +572,7 @@ func TestModulController_Download_InternalError(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -582,7 +581,7 @@ func TestModulController_Download_InternalError(t *testing.T) {
 		IDs: []uint{1},
 	}
 
-	mockModulUC.On("Download", uint(1), []uint{1}).Return("", errors.New("zip creation failed"))
+	mockModulUC.On("Download", "user-1", []uint{1}).Return("", errors.New("zip creation failed"))
 
 	resp := app_testing.MakeRequest(app, "POST", "/api/v1/modul/download", reqBody, "")
 
@@ -622,7 +621,7 @@ func TestInitiateModulUpload_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/upload", controller.InitiateUpload)
@@ -635,7 +634,7 @@ func TestInitiateModulUpload_Success(t *testing.T) {
 		Length:    1048576,
 	}
 
-	mockTusUC.On("InitiateModulUpload", uint(1), int64(1048576), uploadMetadata).Return(expectedResponse, nil)
+	mockTusUC.On("InitiateModulUpload", "user-1", int64(1048576), uploadMetadata).Return(expectedResponse, nil)
 
 	req := httptest.NewRequest("POST", "/api/v1/modul/upload", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -665,7 +664,7 @@ func TestInitiateModulUpload_InvalidHeaders(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/upload", controller.InitiateUpload)
@@ -687,13 +686,13 @@ func TestUploadModulChunk_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/upload/:upload_id", controller.UploadChunk)
 
 	chunkData := []byte("test modul chunk data")
-	mockTusUC.On("HandleModulChunk", "test-modul-upload-id", uint(1), int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
+	mockTusUC.On("HandleModulChunk", "test-modul-upload-id", "user-1", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
 
 	req := httptest.NewRequest("PATCH", "/api/v1/modul/upload/test-modul-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", cfg.Upload.TusVersion)
@@ -722,13 +721,13 @@ func TestUploadModulChunk_InvalidOffset(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/upload/:upload_id", controller.UploadChunk)
 
 	appErr := apperrors.NewTusOffsetError(500, 0)
-	mockTusUC.On("HandleModulChunk", "test-modul-upload-id", uint(1), int64(0), mock.Anything).Return(int64(500), appErr)
+	mockTusUC.On("HandleModulChunk", "test-modul-upload-id", "user-1", int64(0), mock.Anything).Return(int64(500), appErr)
 
 	chunkData := []byte("test modul chunk data")
 	req := httptest.NewRequest("PATCH", "/api/v1/modul/upload/test-modul-upload-id", bytes.NewReader(chunkData))
@@ -777,12 +776,12 @@ func TestGetModulUploadStatus_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Head("/api/v1/modul/upload/:upload_id", controller.GetUploadStatus)
 
-	mockTusUC.On("GetModulUploadStatus", "test-modul-upload-id", uint(1)).Return(int64(524288), int64(1048576), nil)
+	mockTusUC.On("GetModulUploadStatus", "test-modul-upload-id", "user-1").Return(int64(524288), int64(1048576), nil)
 
 	req := httptest.NewRequest("HEAD", "/api/v1/modul/upload/test-modul-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -809,13 +808,13 @@ func TestGetModulUploadStatus_NotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Head("/api/v1/modul/upload/:upload_id", controller.GetUploadStatus)
 
 	appErr := apperrors.NewNotFoundError("upload tidak ditemukan")
-	mockTusUC.On("GetModulUploadStatus", "nonexistent-id", uint(1)).Return(int64(0), int64(0), appErr)
+	mockTusUC.On("GetModulUploadStatus", "nonexistent-id", "user-1").Return(int64(0), int64(0), appErr)
 
 	req := httptest.NewRequest("HEAD", "/api/v1/modul/upload/nonexistent-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -837,12 +836,12 @@ func TestCancelModulUpload_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/upload/:upload_id", controller.CancelUpload)
 
-	mockTusUC.On("CancelModulUpload", "test-modul-upload-id", uint(1)).Return(nil)
+	mockTusUC.On("CancelModulUpload", "test-modul-upload-id", "user-1").Return(nil)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/modul/upload/test-modul-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -864,13 +863,13 @@ func TestCancelModulUpload_AlreadyCompleted(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/upload/:upload_id", controller.CancelUpload)
 
 	appErr := apperrors.NewConflictError("upload sudah selesai dan tidak bisa dibatalkan")
-	mockTusUC.On("CancelModulUpload", "test-modul-upload-id", uint(1)).Return(appErr)
+	mockTusUC.On("CancelModulUpload", "test-modul-upload-id", "user-1").Return(appErr)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/modul/upload/test-modul-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -892,7 +891,7 @@ func TestGetModulUploadInfo_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Get("/api/v1/modul/upload/:upload_id", controller.GetUploadInfo)
@@ -907,7 +906,7 @@ func TestGetModulUploadInfo_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 
-	mockTusUC.On("GetModulUploadInfo", "test-modul-upload-id", uint(1)).Return(expectedInfo, nil)
+	mockTusUC.On("GetModulUploadInfo", "test-modul-upload-id", "user-1").Return(expectedInfo, nil)
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/modul/upload/test-modul-upload-id", nil, "")
 
@@ -927,13 +926,13 @@ func TestGetModulUploadInfo_Forbidden(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 2, "other@example.com", "user")
+		setAuthenticatedUser(c, "user-2", "other@example.com", "user")
 		return c.Next()
 	})
 	app.Get("/api/v1/modul/upload/:upload_id", controller.GetUploadInfo)
 
 	appErr := apperrors.NewForbiddenError("tidak memiliki akses ke upload ini")
-	mockTusUC.On("GetModulUploadInfo", "test-modul-upload-id", uint(2)).Return(nil, appErr)
+	mockTusUC.On("GetModulUploadInfo", "test-modul-upload-id", "user-2").Return(nil, appErr)
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/modul/upload/test-modul-upload-id", nil, "")
 
@@ -956,7 +955,7 @@ func TestDownloadModul_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -967,7 +966,7 @@ func TestDownloadModul_Success(t *testing.T) {
 
 	// Note: This test expects the file to not exist, so it will return 404
 	// In a real scenario, you would mock the file system or use a test file
-	mockModulUC.On("Download", uint(1), []uint{1}).Return("/tmp/nonexistent.zip", nil)
+	mockModulUC.On("Download", "user-1", []uint{1}).Return("/tmp/nonexistent.zip", nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/modul/download", bytes.NewReader(bodyBytes))
@@ -1016,7 +1015,7 @@ func TestInitiateModulUpdateUpload_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/:id/upload", controller.InitiateModulUpdateUpload)
@@ -1029,7 +1028,7 @@ func TestInitiateModulUpdateUpload_Success(t *testing.T) {
 		Length:    1048576,
 	}
 
-	mockTusUC.On("InitiateModulUpdateUpload", uint(1), uint(1), int64(1048576), metadata).Return(expectedResponse, nil)
+	mockTusUC.On("InitiateModulUpdateUpload", uint(1), "user-1", int64(1048576), metadata).Return(expectedResponse, nil)
 
 	req := httptest.NewRequest("POST", "/api/v1/modul/1/upload", nil)
 	req.Header.Set("Tus-Resumable", cfg.Upload.TusVersion)
@@ -1073,7 +1072,7 @@ func TestInitiateModulUpdateUpload_InvalidModulID(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/:id/upload", controller.InitiateModulUpdateUpload)
@@ -1097,13 +1096,13 @@ func TestInitiateModulUpdateUpload_ModulNotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/:id/upload", controller.InitiateModulUpdateUpload)
 
 	metadata := "filename base64modul.pdf"
-	mockTusUC.On("InitiateModulUpdateUpload", uint(999), uint(1), int64(1048576), metadata).Return(nil, apperrors.NewNotFoundError("Modul tidak ditemukan"))
+	mockTusUC.On("InitiateModulUpdateUpload", uint(999), "user-1", int64(1048576), metadata).Return(nil, apperrors.NewNotFoundError("Modul tidak ditemukan"))
 
 	req := httptest.NewRequest("POST", "/api/v1/modul/999/upload", nil)
 	req.Header.Set("Tus-Resumable", cfg.Upload.TusVersion)
@@ -1127,13 +1126,13 @@ func TestUploadModulUpdateChunk_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/:id/upload/:upload_id", controller.UploadModulUpdateChunk)
 
 	chunkData := []byte("test modul update chunk")
-	mockTusUC.On("HandleModulUpdateChunk", "test-modul-update-upload-id", uint(1), int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
+	mockTusUC.On("HandleModulUpdateChunk", "test-modul-update-upload-id", "user-1", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
 
 	req := httptest.NewRequest("PATCH", "/api/v1/modul/1/upload/test-modul-update-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", cfg.Upload.TusVersion)
@@ -1180,13 +1179,13 @@ func TestGetModulUpdateUploadStatus_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Head("/modul/:id/update/:upload_id", controller.GetModulUpdateUploadStatus)
 
 	// Note: Controller currently calls GetModulUploadStatus instead of GetModulUpdateUploadStatus
-	mockTusUC.On("GetModulUploadStatus", "test-modul-update-upload-id", uint(1)).Return(int64(524288), int64(1048576), nil)
+	mockTusUC.On("GetModulUploadStatus", "test-modul-update-upload-id", "user-1").Return(int64(524288), int64(1048576), nil)
 
 	req := httptest.NewRequest("HEAD", "/modul/1/update/test-modul-update-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -1208,23 +1207,23 @@ func TestGetModulUpdateUploadInfo_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Get("/modul/:id/update/:upload_id", controller.GetModulUpdateUploadInfo)
 
 	expectedInfo := &domain.TusModulUploadInfoResponse{
-		UploadID:    "test-modul-update-upload-id",
-		Status:      domain.UploadStatusUploading,
-		Progress:    50.0,
-		Offset:      524288,
-		Length:      1048576,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		UploadID:  "test-modul-update-upload-id",
+		Status:    domain.UploadStatusUploading,
+		Progress:  50.0,
+		Offset:    524288,
+		Length:    1048576,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	// Note: Controller currently calls GetModulUploadInfo instead of GetModulUpdateUploadInfo
-	mockTusUC.On("GetModulUploadInfo", "test-modul-update-upload-id", uint(1)).Return(expectedInfo, nil)
+	mockTusUC.On("GetModulUploadInfo", "test-modul-update-upload-id", "user-1").Return(expectedInfo, nil)
 
 	resp := app_testing.MakeRequest(app, "GET", "/modul/1/update/test-modul-update-upload-id", nil, "")
 
@@ -1243,13 +1242,13 @@ func TestCancelModulUpdateUpload_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, 1, "test@example.com", "user")
+		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
 		return c.Next()
 	})
 	app.Delete("/modul/:id/update/:upload_id", controller.CancelModulUpdateUpload)
 
 	// Note: Controller currently calls CancelModulUpload instead of CancelModulUpdateUpload
-	mockTusUC.On("CancelModulUpload", "test-modul-update-upload-id", uint(1)).Return(nil)
+	mockTusUC.On("CancelModulUpload", "test-modul-update-upload-id", "user-1").Return(nil)
 
 	req := httptest.NewRequest("DELETE", "/modul/1/update/test-modul-update-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")

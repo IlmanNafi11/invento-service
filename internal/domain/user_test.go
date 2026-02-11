@@ -47,14 +47,14 @@ func TestUserListItem(t *testing.T) {
 	t.Run("UserListItem struct", func(t *testing.T) {
 		now := time.Now()
 		item := UserListItem{
-			ID:         1,
+			ID: "user-1",
 			Email:      "user@example.com",
 			Role:       "Admin",
 			DibuatPada: now,
 		}
 
-		if item.ID != 1 {
-			t.Errorf("Expected ID 1, got %d", item.ID)
+		if item.ID != "user-1" {
+			t.Errorf("Expected ID 'user-1', got %s", item.ID)
 		}
 		if item.Email != "user@example.com" {
 			t.Errorf("Expected Email 'user@example.com', got %s", item.Email)
@@ -68,8 +68,8 @@ func TestUserListItem(t *testing.T) {
 func TestUserListData(t *testing.T) {
 	t.Run("UserListData with pagination", func(t *testing.T) {
 		items := []UserListItem{
-			{ID: 1, Email: "user1@example.com", Role: "Admin"},
-			{ID: 2, Email: "user2@example.com", Role: "User"},
+			{ID: "user-1", Email: "user1@example.com", Role: "Admin"},
+			{ID: "user-2", Email: "user2@example.com", Role: "User"},
 		}
 
 		data := UserListData{
@@ -240,14 +240,14 @@ func TestUpdateProfileRequest(t *testing.T) {
 func TestUserFileItem(t *testing.T) {
 	t.Run("UserFileItem struct", func(t *testing.T) {
 		item := UserFileItem{
-			ID:          1,
+			ID: "user-1",
 			NamaFile:    "project_report.pdf",
 			Kategori:    "project",
 			DownloadURL: "https://example.com/download/project_report.pdf",
 		}
 
-		if item.ID != 1 {
-			t.Errorf("Expected ID 1, got %d", item.ID)
+		if item.ID != "user-1" {
+			t.Errorf("Expected ID 'user-1', got %s", item.ID)
 		}
 		if item.NamaFile != "project_report.pdf" {
 			t.Errorf("Expected NamaFile 'project_report.pdf', got %s", item.NamaFile)
@@ -265,7 +265,7 @@ func TestUserFileItem(t *testing.T) {
 
 		for _, kategori := range kategories {
 			item := UserFileItem{
-				ID:          1,
+				ID: "user-1",
 				NamaFile:    "test.pdf",
 				Kategori:    kategori,
 				DownloadURL: "https://example.com/download/test.pdf",
@@ -312,8 +312,8 @@ func TestUserFilesQueryParams(t *testing.T) {
 func TestUserFilesData(t *testing.T) {
 	t.Run("UserFilesData with pagination", func(t *testing.T) {
 		items := []UserFileItem{
-			{ID: 1, NamaFile: "project1.pdf", Kategori: "project", DownloadURL: "url1"},
-			{ID: 2, NamaFile: "modul1.pdf", Kategori: "modul", DownloadURL: "url2"},
+			{ID: "user-1", NamaFile: "project1.pdf", Kategori: "project", DownloadURL: "url1"},
+			{ID: "user-2", NamaFile: "modul1.pdf", Kategori: "modul", DownloadURL: "url2"},
 		}
 
 		data := UserFilesData{

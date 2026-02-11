@@ -12,7 +12,7 @@ func TestTusModulUploadStruct(t *testing.T) {
 
 		upload := TusModulUpload{
 			ID:         "modul-upload-123",
-			UserID:     1,
+			UserID:     "user-1",
 			ModulID:    &modulID,
 			UploadType: ModulUploadTypeCreate,
 			UploadURL:  "https://example.com/upload/modul-upload-123",
@@ -28,8 +28,8 @@ func TestTusModulUploadStruct(t *testing.T) {
 		if upload.ID != "modul-upload-123" {
 			t.Errorf("Expected ID 'modul-upload-123', got %s", upload.ID)
 		}
-		if upload.UserID != 1 {
-			t.Errorf("Expected UserID 1, got %d", upload.UserID)
+		if upload.UserID != "user-1" {
+			t.Errorf("Expected UserID 'user-1', got %s", upload.UserID)
 		}
 		if upload.ModulID == nil || *upload.ModulID != 50 {
 			t.Errorf("Expected ModulID 50, got %v", upload.ModulID)
@@ -45,7 +45,7 @@ func TestTusModulUploadStruct(t *testing.T) {
 	t.Run("TusModulUpload without ModulID", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:         "modul-upload-456",
-			UserID:     2,
+			UserID: "user-2",
 			ModulID:    nil,
 			UploadType: ModulUploadTypeUpdate,
 			FileSize:   256000,
@@ -66,7 +66,7 @@ func TestTusModulUploadStruct(t *testing.T) {
 
 		upload := TusModulUpload{
 			ID:          "modul-upload-789",
-			UserID:      3,
+			UserID: "user-3",
 			UploadType:  ModulUploadTypeCreate,
 			FileSize:    1024000,
 			Status:      ModulUploadStatusCompleted,
@@ -398,7 +398,7 @@ func TestTusModulUploadMetadata(t *testing.T) {
 
 		upload := TusModulUpload{
 			ID:              "modul-upload-metadata-1",
-			UserID:          1,
+			UserID: "user-1",
 			UploadType:      ModulUploadTypeCreate,
 			UploadMetadata:  metadata,
 			FileSize:        2500000,
@@ -442,7 +442,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Nil ModulID for new modul creation", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:         "modul-upload-nil",
-			UserID:     1,
+			UserID: "user-1",
 			ModulID:    nil,
 			UploadType: ModulUploadTypeCreate,
 			Status:     ModulUploadStatusPending,
@@ -460,7 +460,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 		modulID := uint(123)
 		upload := TusModulUpload{
 			ID:         "modul-upload-update",
-			UserID:     1,
+			UserID: "user-1",
 			ModulID:    &modulID,
 			UploadType: ModulUploadTypeUpdate,
 			Status:     ModulUploadStatusPending,
@@ -479,7 +479,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Zero progress for pending upload", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "modul-upload-zero-progress",
-			UserID:   1,
+			UserID: "user-1",
 			Status:   ModulUploadStatusPending,
 			Progress: 0,
 			FileSize: 1000000,
@@ -493,7 +493,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Full progress for completed upload", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "modul-upload-full-progress",
-			UserID:   1,
+			UserID: "user-1",
 			Status:   ModulUploadStatusCompleted,
 			Progress: 100.0,
 			FileSize: 1000000,
@@ -507,7 +507,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Partial progress during upload", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:            "modul-upload-partial",
-			UserID:        1,
+			UserID: "user-1",
 			Status:        ModulUploadStatusUploading,
 			Progress:      45.5,
 			FileSize:      1000000,
@@ -525,7 +525,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Empty upload URL before initialization", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:        "modul-upload-no-url",
-			UserID:    1,
+			UserID: "user-1",
 			UploadURL: "",
 			Status:    ModulUploadStatusQueued,
 		}
@@ -538,7 +538,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Populated upload URL after initialization", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:        "modul-upload-with-url",
-			UserID:    1,
+			UserID: "user-1",
 			UploadURL: "https://example.com/tus/modul-upload-with-url",
 			Status:    ModulUploadStatusPending,
 		}
@@ -551,7 +551,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Nil CompletedAt for in-progress upload", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:          "modul-upload-in-progress",
-			UserID:      1,
+			UserID: "user-1",
 			Status:      ModulUploadStatusUploading,
 			Progress:    50.0,
 			CompletedAt: nil,
@@ -566,7 +566,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 		now := time.Now()
 		upload := TusModulUpload{
 			ID:          "modul-upload-done",
-			UserID:      1,
+			UserID: "user-1",
 			Status:      ModulUploadStatusCompleted,
 			Progress:    100.0,
 			CompletedAt: &now,
@@ -580,7 +580,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Zero file size edge case", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "modul-upload-zero-size",
-			UserID:   1,
+			UserID: "user-1",
 			FileSize: 0,
 			Status:   ModulUploadStatusPending,
 		}
@@ -593,7 +593,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	t.Run("Large file size", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "modul-upload-large",
-			UserID:   1,
+			UserID: "user-1",
 			FileSize: 500000000, // 500MB
 			Status:   ModulUploadStatusPending,
 		}
@@ -899,7 +899,7 @@ func TestTusModulUploadInvalidProgress(t *testing.T) {
 	t.Run("Negative progress is invalid", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "negative-progress",
-			UserID:   1,
+			UserID: "user-1",
 			Status:   ModulUploadStatusUploading,
 			Progress: -10.0,
 		}
@@ -912,7 +912,7 @@ func TestTusModulUploadInvalidProgress(t *testing.T) {
 	t.Run("Progress over 100 is invalid", func(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "over-100-progress",
-			UserID:   1,
+			UserID: "user-1",
 			Status:   ModulUploadStatusUploading,
 			Progress: 150.0,
 		}

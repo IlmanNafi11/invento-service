@@ -76,20 +76,6 @@ definitions:
       timestamp:
         type: string
     type: object
-  domain.ConfirmResetPasswordOTPRequest:
-    properties:
-      code:
-        type: string
-      email:
-        type: string
-      new_password:
-        minLength: 8
-        type: string
-    required:
-    - code
-    - email
-    - new_password
-    type: object
   domain.DatabaseService:
     properties:
       name:
@@ -251,30 +237,6 @@ definitions:
         minimum: 1
         type: integer
     type: object
-  domain.NewPasswordRequest:
-    properties:
-      new_password:
-        minLength: 8
-        type: string
-      token:
-        type: string
-    required:
-    - new_password
-    - token
-    type: object
-  domain.OTPResponse:
-    properties:
-      access_token:
-        type: string
-      expires_in:
-        type: integer
-      message:
-        type: string
-      token_type:
-        type: string
-      user_id:
-        type: integer
-    type: object
   domain.PaginationData:
     properties:
       limit:
@@ -358,19 +320,6 @@ definitions:
     - email
     - name
     - password
-    type: object
-  domain.ResendOTPRequest:
-    properties:
-      email:
-        type: string
-      type:
-        enum:
-        - register
-        - reset_password
-        type: string
-    required:
-    - email
-    - type
     type: object
   domain.ResetPasswordRequest:
     properties:
@@ -540,7 +489,7 @@ definitions:
       foto_profil:
         type: string
       id:
-        type: integer
+        type: string
       is_active:
         type: boolean
       jenis_kelamin:
@@ -559,7 +508,7 @@ definitions:
       download_url:
         type: string
       id:
-        type: integer
+        type: string
       kategori:
         type: string
       nama_file:
@@ -590,7 +539,7 @@ definitions:
       email:
         type: string
       id:
-        type: integer
+        type: string
       role:
         type: string
     type: object
@@ -603,22 +552,6 @@ definitions:
       resource:
         type: string
     type: object
-  domain.VerifyOTPRequest:
-    properties:
-      code:
-        type: string
-      email:
-        type: string
-      type:
-        enum:
-        - register
-        - reset_password
-        type: string
-    required:
-    - code
-    - email
-    - type
-    type: object
 info:
   contact: {}
 paths:
@@ -626,10 +559,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Autentikasi pengguna dengan email dan password. Refresh token dikirim
-        via httpOnly cookie.
+      description: Autentikasi pengguna melalui Supabase Auth dengan email dan password.
+        Data profil lokal disinkronkan jika diperlukan.
       parameters:
-      - description: Credential login
+      - description: Credential login (email, password)
         in: body
         name: request
         required: true
@@ -693,304 +626,6 @@ paths:
       summary: Logout pengguna
       tags:
       - Auth
-  /api/v1/auth/otp/register:
-    post:
-      consumes:
-      - application/json
-      description: Memulai proses registrasi dengan mengirim kode OTP ke email pengguna.
-      parameters:
-      - description: Data registrasi
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Kode OTP telah dikirim ke email
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.OTPResponse'
-              type: object
-        "400":
-          description: Format request tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "409":
-          description: Email sudah terdaftar
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Terjadi kesalahan pada server
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Registrasi dengan OTP
-      tags:
-      - Auth OTP
-  /api/v1/auth/otp/register/resend:
-    post:
-      consumes:
-      - application/json
-      description: Mengirim ulang kode OTP untuk proses registrasi.
-      parameters:
-      - description: Email untuk kirim ulang OTP
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.ResendOTPRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Kode OTP baru telah dikirim
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.OTPResponse'
-              type: object
-        "400":
-          description: Format request tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Email tidak ditemukan
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "429":
-          description: Terlalu banyak permintaan, coba lagi nanti
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Terjadi kesalahan pada server
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Kirim ulang OTP registrasi
-      tags:
-      - Auth OTP
-  /api/v1/auth/otp/register/verify:
-    post:
-      consumes:
-      - application/json
-      description: Memverifikasi kode OTP yang dikirim saat registrasi dan membuat
-        akun pengguna.
-      parameters:
-      - description: Email dan kode OTP
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.VerifyOTPRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Verifikasi OTP berhasil, akun dibuat
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.AuthResponse'
-              type: object
-        "400":
-          description: Format request tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Kode OTP tidak valid atau expired
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Email tidak ditemukan
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Terjadi kesalahan pada server
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Verifikasi OTP registrasi
-      tags:
-      - Auth OTP
-  /api/v1/auth/otp/reset-password:
-    post:
-      consumes:
-      - application/json
-      description: Mengirim kode OTP ke email untuk reset password.
-      parameters:
-      - description: Email untuk reset password
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.ResetPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Kode OTP telah dikirim ke email
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.OTPResponse'
-              type: object
-        "400":
-          description: Format request tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Email tidak ditemukan
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "429":
-          description: Terlalu banyak permintaan, coba lagi nanti
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Terjadi kesalahan pada server
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Minta reset password dengan OTP
-      tags:
-      - Auth OTP
-  /api/v1/auth/otp/reset-password/confirm:
-    post:
-      consumes:
-      - application/json
-      description: Mengatur password baru menggunakan OTP yang sudah diverifikasi.
-      parameters:
-      - description: Email, kode OTP, dan password baru
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.ConfirmResetPasswordOTPRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Password berhasil direset
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.AuthResponse'
-              type: object
-        "400":
-          description: Format request tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Kode OTP tidak valid atau expired
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Email tidak ditemukan
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Terjadi kesalahan pada server
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Konfirmasi reset password dengan OTP
-      tags:
-      - Auth OTP
-  /api/v1/auth/otp/reset-password/resend:
-    post:
-      consumes:
-      - application/json
-      description: Mengirim ulang kode OTP untuk reset password.
-      parameters:
-      - description: Email untuk kirim ulang OTP
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.ResendOTPRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Kode OTP baru telah dikirim
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.OTPResponse'
-              type: object
-        "400":
-          description: Format request tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Email tidak ditemukan
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "429":
-          description: Terlalu banyak permintaan, coba lagi nanti
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Terjadi kesalahan pada server
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Kirim ulang OTP reset password
-      tags:
-      - Auth OTP
-  /api/v1/auth/otp/reset-password/verify:
-    post:
-      consumes:
-      - application/json
-      description: Memverifikasi kode OTP untuk reset password.
-      parameters:
-      - description: Email dan kode OTP
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.VerifyOTPRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Verifikasi OTP berhasil
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.OTPResponse'
-              type: object
-        "400":
-          description: Format request tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Kode OTP tidak valid atau expired
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Email tidak ditemukan
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Terjadi kesalahan pada server
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Verifikasi OTP reset password
-      tags:
-      - Auth OTP
   /api/v1/auth/refresh:
     post:
       consumes:
@@ -1027,9 +662,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Membuat akun pengguna baru dengan email polije.ac.id.
+      description: Membuat akun pengguna baru melalui Supabase Auth dan menyimpan
+        data profil ke database lokal.
       parameters:
-      - description: Data registrasi
+      - description: Data registrasi (name, email, password)
         in: body
         name: request
         required: true
@@ -1062,45 +698,12 @@ paths:
       summary: Registrasi pengguna baru
       tags:
       - Auth
-  /api/v1/auth/reset-password/confirm-otp:
+  /api/v1/auth/reset-password:
     post:
       consumes:
       - application/json
-      description: Mengatur password baru menggunakan token reset yang valid.
-      parameters:
-      - description: Token dan password baru
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.NewPasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Password berhasil direset
-          schema:
-            $ref: '#/definitions/domain.SuccessResponse'
-        "400":
-          description: Format request tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Token tidak valid
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Terjadi kesalahan pada server
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Konfirmasi reset password
-      tags:
-      - Auth
-  /api/v1/auth/reset-password/otp:
-    post:
-      consumes:
-      - application/json
-      description: Mengirim OTP ke email untuk reset password.
+      description: Mengirim link reset password ke email yang terdaftar melalui Supabase
+        Auth.
       parameters:
       - description: Email untuk reset password
         in: body

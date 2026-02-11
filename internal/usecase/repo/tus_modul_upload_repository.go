@@ -10,15 +10,15 @@ import (
 type TusModulUploadRepository interface {
 	Create(upload *domain.TusModulUpload) error
 	GetByID(id string) (*domain.TusModulUpload, error)
-	GetByUserID(userID uint) ([]domain.TusModulUpload, error)
+	GetByUserID(userID string) ([]domain.TusModulUpload, error)
 	UpdateOffset(id string, offset int64, progress float64) error
 	UpdateStatus(id string, status string) error
 	Complete(id string, modulID uint, filePath string) error
 	Delete(id string) error
 	GetExpiredUploads() ([]domain.TusModulUpload, error)
 	GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error)
-	CountActiveByUserID(userID uint) (int, error)
-	GetActiveByUserID(userID uint) ([]domain.TusModulUpload, error)
+	CountActiveByUserID(userID string) (int, error)
+	GetActiveByUserID(userID string) ([]domain.TusModulUpload, error)
 }
 
 type tusModulUploadRepository struct {
@@ -48,7 +48,7 @@ func (r *tusModulUploadRepository) GetByID(id string) (*domain.TusModulUpload, e
 	return &upload, nil
 }
 
-func (r *tusModulUploadRepository) GetByUserID(userID uint) ([]domain.TusModulUpload, error) {
+func (r *tusModulUploadRepository) GetByUserID(userID string) ([]domain.TusModulUpload, error) {
 	var uploads []domain.TusModulUpload
 	err := r.db.Where("user_id = ?", userID).
 		Order("created_at DESC").
@@ -109,7 +109,7 @@ func (r *tusModulUploadRepository) GetAbandonedUploads(timeout time.Duration) ([
 	return uploads, err
 }
 
-func (r *tusModulUploadRepository) CountActiveByUserID(userID uint) (int, error) {
+func (r *tusModulUploadRepository) CountActiveByUserID(userID string) (int, error) {
 	var count int64
 	err := r.db.Model(&domain.TusModulUpload{}).
 		Where("user_id = ? AND status IN (?)",
@@ -119,7 +119,7 @@ func (r *tusModulUploadRepository) CountActiveByUserID(userID uint) (int, error)
 	return int(count), err
 }
 
-func (r *tusModulUploadRepository) GetActiveByUserID(userID uint) ([]domain.TusModulUpload, error) {
+func (r *tusModulUploadRepository) GetActiveByUserID(userID string) ([]domain.TusModulUpload, error) {
 	var uploads []domain.TusModulUpload
 	err := r.db.Where("user_id = ? AND status IN (?)",
 		userID,

@@ -25,7 +25,7 @@ type StatisticController struct {
 // NewStatisticController creates a new statistic controller instance
 func NewStatisticController(statisticUsecase usecase.StatisticUsecase) *StatisticController {
 	return &StatisticController{
-		BaseController:   base.NewBaseController(nil, nil),
+		BaseController:   base.NewBaseController("", nil),
 		statisticUsecase: statisticUsecase,
 	}
 }
@@ -56,7 +56,7 @@ func NewStatisticController(statisticUsecase usecase.StatisticUsecase) *Statisti
 func (ctrl *StatisticController) GetStatistics(c *fiber.Ctx) error {
 	// Extract authenticated user ID
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil // unauthorized response already sent
 	}
 

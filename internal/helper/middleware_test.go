@@ -12,7 +12,7 @@ import (
 
 func TestJWTAuthMiddleware_Creation(t *testing.T) {
 	// This tests the middleware creation - full testing would require JWT setup
-	middleware := helper.JWTAuthMiddleware(nil)
+	middleware := helper.SupabaseAuthMiddleware("")
 
 	assert.NotNil(t, middleware)
 }
@@ -62,7 +62,7 @@ func TestMiddleware_OptionsRequest(t *testing.T) {
 
 func TestMiddleware_HandlerCreation(t *testing.T) {
 	// Test that all middleware creation functions return valid handlers
-	jwtMiddleware := helper.JWTAuthMiddleware(nil)
+	jwtMiddleware := helper.SupabaseAuthMiddleware("")
 	rbacMiddleware := helper.RBACMiddleware(nil, "test", "read")
 	tusMiddleware := helper.TusProtocolMiddleware("1.0.0")
 

@@ -39,19 +39,19 @@ func (pr *PathResolver) GetTempPath() string {
 	return pr.tempPathDevelopment
 }
 
-func (pr *PathResolver) GetProjectPath(userID uint) string {
+func (pr *PathResolver) GetProjectPath(userID string) string {
 	basePath := pr.GetBasePath()
-	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID))
+	return filepath.Join(basePath, "projects", userID)
 }
 
-func (pr *PathResolver) GetProjectFilePath(userID uint, identifier string, filename string) string {
+func (pr *PathResolver) GetProjectFilePath(userID string, identifier string, filename string) string {
 	basePath := pr.GetBasePath()
-	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), identifier, filename)
+	return filepath.Join(basePath, "projects", userID, identifier, filename)
 }
 
-func (pr *PathResolver) GetProjectDirectory(userID uint, identifier string) string {
+func (pr *PathResolver) GetProjectDirectory(userID string, identifier string) string {
 	basePath := pr.GetBasePath()
-	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), identifier)
+	return filepath.Join(basePath, "projects", userID, identifier)
 }
 
 func (pr *PathResolver) GetUploadPath(uploadID string) string {
@@ -92,19 +92,19 @@ func (pr *PathResolver) FileExists(path string) bool {
 	return !info.IsDir()
 }
 
-func (pr *PathResolver) GetProfilPath(userID uint) string {
+func (pr *PathResolver) GetProfilPath(userID string) string {
 	basePath := pr.GetBasePath()
-	return filepath.Join(basePath, "profil", fmt.Sprintf("%d", userID))
+	return filepath.Join(basePath, "profil", userID)
 }
 
-func (pr *PathResolver) GetProfilFilePath(userID uint, filename string) string {
+func (pr *PathResolver) GetProfilFilePath(userID string, filename string) string {
 	basePath := pr.GetBasePath()
-	return filepath.Join(basePath, "profil", fmt.Sprintf("%d", userID), filename)
+	return filepath.Join(basePath, "profil", userID, filename)
 }
 
-func (pr *PathResolver) GetProfilDirectory(userID uint) string {
+func (pr *PathResolver) GetProfilDirectory(userID string) string {
 	basePath := pr.GetBasePath()
-	return filepath.Join(basePath, "profil", fmt.Sprintf("%d", userID))
+	return filepath.Join(basePath, "profil", userID)
 }
 
 func (pr *PathResolver) GetModulPath(userID uint, identifier string) string {

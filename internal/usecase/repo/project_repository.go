@@ -27,7 +27,7 @@ func (r *projectRepository) GetByID(id uint) (*domain.Project, error) {
 	return &project, nil
 }
 
-func (r *projectRepository) GetByIDs(ids []uint, userID uint) ([]domain.Project, error) {
+func (r *projectRepository) GetByIDs(ids []uint, userID string) ([]domain.Project, error) {
 	var projects []domain.Project
 	err := r.db.Where("id IN ? AND user_id = ?", ids, userID).Find(&projects).Error
 	if err != nil {
@@ -36,7 +36,7 @@ func (r *projectRepository) GetByIDs(ids []uint, userID uint) ([]domain.Project,
 	return projects, nil
 }
 
-func (r *projectRepository) GetByIDsForUser(ids []uint, ownerUserID uint) ([]domain.Project, error) {
+func (r *projectRepository) GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Project, error) {
 	var projects []domain.Project
 	if len(ids) == 0 {
 		return projects, nil
@@ -48,7 +48,7 @@ func (r *projectRepository) GetByIDsForUser(ids []uint, ownerUserID uint) ([]dom
 	return projects, nil
 }
 
-func (r *projectRepository) GetByUserID(userID uint, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error) {
+func (r *projectRepository) GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error) {
 	var projectListItems []domain.ProjectListItem
 	var total int64
 
@@ -68,7 +68,7 @@ func (r *projectRepository) GetByUserID(userID uint, search string, filterSemest
 	}
 
 	dataQuery := `
-		SELECT 
+		SELECT
 			id,
 			nama_project,
 			kategori,
@@ -92,7 +92,7 @@ func (r *projectRepository) GetByUserID(userID uint, search string, filterSemest
 	return projectListItems, int(total), nil
 }
 
-func (r *projectRepository) CountByUserID(userID uint) (int, error) {
+func (r *projectRepository) CountByUserID(userID string) (int, error) {
 	var count int64
 	err := r.db.Model(&domain.Project{}).Where("user_id = ?", userID).Count(&count).Error
 	return int(count), err

@@ -13,11 +13,11 @@ import (
 )
 
 type ProjectUsecase interface {
-	GetList(userID uint, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error)
-	GetByID(projectID, userID uint) (*domain.ProjectResponse, error)
-	UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateRequest) error
-	Delete(projectID, userID uint) error
-	Download(userID uint, projectIDs []uint) (string, error)
+	GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error)
+	GetByID(projectID uint, userID string) (*domain.ProjectResponse, error)
+	UpdateMetadata(projectID uint, userID string, req domain.ProjectUpdateRequest) error
+	Delete(projectID uint, userID string) error
+	Download(userID string, projectIDs []uint) (string, error)
 }
 
 type projectUsecase struct {
@@ -32,7 +32,7 @@ func NewProjectUsecase(projectRepo repo.ProjectRepository, fileManager *helper.F
 	}
 }
 
-func (uc *projectUsecase) GetList(userID uint, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error) {
+func (uc *projectUsecase) GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -58,7 +58,7 @@ func (uc *projectUsecase) GetList(userID uint, search string, filterSemester int
 	}, nil
 }
 
-func (uc *projectUsecase) GetByID(projectID, userID uint) (*domain.ProjectResponse, error) {
+func (uc *projectUsecase) GetByID(projectID uint, userID string) (*domain.ProjectResponse, error) {
 	project, err := uc.projectRepo.GetByID(projectID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -83,7 +83,7 @@ func (uc *projectUsecase) GetByID(projectID, userID uint) (*domain.ProjectRespon
 	}, nil
 }
 
-func (uc *projectUsecase) UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateRequest) error {
+func (uc *projectUsecase) UpdateMetadata(projectID uint, userID string, req domain.ProjectUpdateRequest) error {
 	project, err := uc.projectRepo.GetByID(projectID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -113,7 +113,7 @@ func (uc *projectUsecase) UpdateMetadata(projectID, userID uint, req domain.Proj
 	return nil
 }
 
-func (uc *projectUsecase) Delete(projectID, userID uint) error {
+func (uc *projectUsecase) Delete(projectID uint, userID string) error {
 	project, err := uc.projectRepo.GetByID(projectID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -135,7 +135,7 @@ func (uc *projectUsecase) Delete(projectID, userID uint) error {
 	return nil
 }
 
-func (uc *projectUsecase) Download(userID uint, projectIDs []uint) (string, error) {
+func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, error) {
 	if len(projectIDs) == 0 {
 		return "", errors.New("id project tidak boleh kosong")
 	}

@@ -10,7 +10,7 @@ func TestModulStruct(t *testing.T) {
 		now := time.Now()
 		modul := Modul{
 			ID:       1,
-			UserID:   100,
+			UserID:   "user-100",
 			NamaFile: "test_module.pdf",
 			Tipe:     "pdf",
 			Ukuran:   "2.5 MB",
@@ -23,8 +23,8 @@ func TestModulStruct(t *testing.T) {
 		if modul.ID != 1 {
 			t.Errorf("Expected ID 1, got %d", modul.ID)
 		}
-		if modul.UserID != 100 {
-			t.Errorf("Expected UserID 100, got %d", modul.UserID)
+		if modul.UserID != "user-100" {
+			t.Errorf("Expected UserID 'user-100', got %s", modul.UserID)
 		}
 		if modul.NamaFile != "test_module.pdf" {
 			t.Errorf("Expected NamaFile 'test_module.pdf', got %s", modul.NamaFile)
@@ -39,13 +39,13 @@ func TestModulStruct(t *testing.T) {
 
 	t.Run("Modul with User relation", func(t *testing.T) {
 		user := User{
-			ID:    100,
+			ID:    "user-100",
 			Email: "user@example.com",
 			Name:  "Test User",
 		}
 		modul := Modul{
 			ID:       1,
-			UserID:   100,
+			UserID:   "user-100",
 			NamaFile: "test.pdf",
 			Tipe:     "pdf",
 			Ukuran:   "1 MB",
@@ -55,7 +55,7 @@ func TestModulStruct(t *testing.T) {
 		}
 
 		if modul.User.ID != modul.UserID {
-			t.Errorf("User ID mismatch: %d vs %d", modul.User.ID, modul.UserID)
+			t.Errorf("User ID mismatch: %s vs %s", modul.User.ID, modul.UserID)
 		}
 	})
 }

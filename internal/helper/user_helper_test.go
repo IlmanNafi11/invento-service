@@ -219,13 +219,13 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 	userHelper := helper.NewUserHelper(pathResolver, cfg)
 
 	t.Run("Nil fotoProfil returns nil", func(t *testing.T) {
-		result, err := userHelper.SaveProfilePhoto(nil, 1, nil)
+		result, err := userHelper.SaveProfilePhoto(nil, "1", nil)
 		assert.NoError(t, err)
 		assert.Nil(t, result)
 	})
 
 	t.Run("Non-fileheader type returns nil", func(t *testing.T) {
-		result, err := userHelper.SaveProfilePhoto("string", 1, nil)
+		result, err := userHelper.SaveProfilePhoto("string", "1", nil)
 		assert.NoError(t, err)
 		assert.Nil(t, result)
 	})
@@ -254,7 +254,7 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 
 		fileHeader := form.File["file"][0]
 
-		userID := uint(123)
+		userID := "123"
 
 		result, err := userHelper.SaveProfilePhoto(fileHeader, userID, nil)
 
@@ -269,7 +269,7 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 			Size:     100,
 		}
 
-		result, err := userHelper.SaveProfilePhoto(fileHeader, 1, nil)
+		result, err := userHelper.SaveProfilePhoto(fileHeader, "1", nil)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -282,7 +282,7 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 			Size:     3 * 1024 * 1024, // 3MB
 		}
 
-		result, err := userHelper.SaveProfilePhoto(fileHeader, 1, nil)
+		result, err := userHelper.SaveProfilePhoto(fileHeader, "1", nil)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)

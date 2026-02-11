@@ -12,23 +12,18 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-development}
       APP_PORT: ${APP_PORT:-8080}
-      DB_HOST: mysql
-      DB_PORT: ${DB_PORT:-3306}
-      DB_USER: ${DB_USER:-root}
-      DB_PASS: ${DB_PASS:-secret}
-      DB_NAME: ${DB_NAME:-invento_db}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_DB_URL: ${SUPABASE_DB_URL}
       DB_AUTO_MIGRATE: ${DB_AUTO_MIGRATE:-true}
       DB_MIGRATE_ON_START: ${DB_MIGRATE_ON_START:-true}
-      DB_RUN_SEEDER: ${DB_RUN_SEEDER:-false}
       JWT_SECRET: ${JWT_SECRET:-your-secret-key}
       MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN}
       MAILTRAP_SENDER_EMAIL: ${MAILTRAP_SENDER_EMAIL}
     volumes:
       - ./uploads:/app/uploads
       - ./keys:/app/keys
-    depends_on:
-      mysql:
-        condition: service_healthy
     networks:
       - invento-network
     healthcheck:
@@ -38,32 +33,6 @@ services:
       retries: 3
       start_period: 10s
 
-  mysql:
-    image: mysql:8.0
-    container_name: invento-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASS:-secret}
-      MYSQL_DATABASE: ${DB_NAME:-invento_db}
-      MYSQL_USER: ${DB_USER:-root}
-      MYSQL_PASSWORD: ${DB_PASS:-secret}
-    ports:
-      - "${DB_PORT:-3306}:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - invento-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASS:-secret}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
 networks:
   invento-network:
     driver: bridge
-
-volumes:
-  mysql-data:
-    driver: local

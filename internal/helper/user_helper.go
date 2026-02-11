@@ -65,7 +65,7 @@ func (uh *UserHelper) AggregateUserPermissions(permissions [][]string) []domain.
 	return result
 }
 
-func (uh *UserHelper) SaveProfilePhoto(fotoProfil interface{}, userID uint, currentPhotoPath *string) (*string, error) {
+func (uh *UserHelper) SaveProfilePhoto(fotoProfil interface{}, userID string, currentPhotoPath *string) (*string, error) {
 	if fotoProfil == nil {
 		return nil, nil
 	}

@@ -1,101 +1,174 @@
 package usecase
 
 import (
+	"context"
+	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func TestAuthUsecase_Register_Success(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
-	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
-	mockRoleRepo := new(MockRoleRepository)
-
-	cfg := &config.Config{
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/private.pem",
-			PublicKeyPath:           "../../keys/public.pem",
-			PrivateKeyRotationPath:  "../../keys/private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
-		},
-	}
-
-	if _, err := helper.NewJWTManager(cfg); err != nil {
-		t.Skip("Skipping test due to missing JWT keys")
-	}
-
-	authUC := NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
-
-	req := domain.RegisterRequest{
-		Name:     "Test User",
-		Email:    "test@student.polije.ac.id",
-		Password: "password123",
-	}
-
-	role := &domain.Role{
-		ID:       1,
-		NamaRole: "mahasiswa",
-	}
-
-	mockUserRepo.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
-	mockRoleRepo.On("GetByName", "mahasiswa").Return(role, nil)
-	mockUserRepo.On("Create", mock.AnythingOfType("*domain.User")).Return(nil)
-
-	hashedToken := helper.HashRefreshToken("plain_refresh_token")
-	refreshToken := &domain.RefreshToken{
-		ID:        1,
-		UserID:    1,
-		Token:     hashedToken,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	mockRefreshTokenRepo.On("Create", mock.AnythingOfType("uint"), mock.AnythingOfType("string"), mock.AnythingOfType("time.Time")).Return(refreshToken, nil)
-
-	refreshTokenResult, result, err := authUC.Register(req)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.NotEmpty(t, refreshTokenResult)
-	assert.NotEqual(t, hashedToken, refreshTokenResult)
-	assert.Equal(t, req.Email, result.User.Email)
-	assert.NotEmpty(t, result.AccessToken)
-	assert.Equal(t, "Bearer", result.TokenType)
-
-	mockUserRepo.AssertExpectations(t)
-	mockRefreshTokenRepo.AssertExpectations(t)
+type MockAuthService struct {
+	mock.Mock
 }
 
-func TestAuthUsecase_Register_EmailAlreadyExists(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
-	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
-	mockRoleRepo := new(MockRoleRepository)
+func (m *MockAuthService) Register(ctx context.Context, req domain.AuthServiceRegisterRequest) (*domain.AuthServiceResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
+}
 
-	cfg := &config.Config{
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/private.pem",
-			PublicKeyPath:           "../../keys/public.pem",
-			PrivateKeyRotationPath:  "../../keys/private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
+func (m *MockAuthService) Login(ctx context.Context, req domain.AuthServiceLoginRequest) (*domain.AuthServiceResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
+}
+
+func (m *MockAuthService) RefreshToken(ctx context.Context, refreshToken string) (*domain.AuthServiceResponse, error) {
+	args := m.Called(ctx, refreshToken)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
+}
+
+func (m *MockAuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
+	args := m.Called(ctx, email, redirectTo)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) GetUser(ctx context.Context, accessToken string) (*domain.AuthServiceUserInfo, error) {
+	args := m.Called(ctx, accessToken)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.AuthServiceUserInfo), args.Error(1)
+}
+
+func (m *MockAuthService) DeleteUser(ctx context.Context, uid string) error {
+	args := m.Called(ctx, uid)
+	return args.Error(0)
+}
+
+type authTestUserRepo struct {
+	mock.Mock
+}
+
+func (m *authTestUserRepo) GetByEmail(email string) (*domain.User, error) {
+	args := m.Called(email)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.User), args.Error(1)
+}
+
+func (m *authTestUserRepo) GetByID(id string) (*domain.User, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.User), args.Error(1)
+}
+
+func (m *authTestUserRepo) Create(user *domain.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
+func (m *authTestUserRepo) GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error) {
+	args := m.Called(search, filterRole, page, limit)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]domain.UserListItem), args.Int(1), args.Error(2)
+}
+
+func (m *authTestUserRepo) UpdateRole(userID string, roleID *int) error {
+	args := m.Called(userID, roleID)
+	return args.Error(0)
+}
+
+func (m *authTestUserRepo) UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+	args := m.Called(userID, name, jenisKelamin, fotoProfil)
+	return args.Error(0)
+}
+
+func (m *authTestUserRepo) Delete(userID string) error {
+	args := m.Called(userID)
+	return args.Error(0)
+}
+
+type authTestRoleRepo struct {
+	mock.Mock
+}
+
+func (m *authTestRoleRepo) Create(role *domain.Role) error {
+	args := m.Called(role)
+	return args.Error(0)
+}
+
+func (m *authTestRoleRepo) GetByID(id uint) (*domain.Role, error) {
+	args := m.Called(id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Role), args.Error(1)
+}
+
+func (m *authTestRoleRepo) GetByName(name string) (*domain.Role, error) {
+	args := m.Called(name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.Role), args.Error(1)
+}
+
+func (m *authTestRoleRepo) Update(role *domain.Role) error {
+	args := m.Called(role)
+	return args.Error(0)
+}
+
+func (m *authTestRoleRepo) Delete(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
+func (m *authTestRoleRepo) GetAll(search string, page, limit int) ([]domain.RoleListItem, int, error) {
+	args := m.Called(search, page, limit)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]domain.RoleListItem), args.Int(1), args.Error(2)
+}
+
+func newTestConfig() *config.Config {
+	return &config.Config{
+		App: config.AppConfig{
+			Env:            "development",
+			CorsOriginDev:  "http://localhost:3000",
+			CorsOriginProd: "https://example.com",
+		},
+		Supabase: config.SupabaseConfig{
+			URL: "http://localhost:54321",
 		},
 	}
+}
 
-	if _, err := helper.NewJWTManager(cfg); err != nil {
-		t.Skip("Skipping test due to missing JWT keys")
-	}
+func TestRegister_Success(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
 
-	authUC := NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
 
 	req := domain.RegisterRequest{
 		Name:     "Test User",
@@ -103,327 +176,379 @@ func TestAuthUsecase_Register_EmailAlreadyExists(t *testing.T) {
 		Password: "password123",
 	}
 
-	existingUser := &domain.User{
-		ID:    1,
-		Email: req.Email,
-		Name:  "Existing User",
+	role := &domain.Role{ID: 1, NamaRole: "mahasiswa"}
+
+	mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
+	mockRole.On("GetByName", "mahasiswa").Return(role, nil)
+	mockAuth.On("Register", mock.Anything, mock.MatchedBy(func(r domain.AuthServiceRegisterRequest) bool {
+		return r.Email == req.Email && r.Password == req.Password && r.Name == req.Name
+	})).Return(&domain.AuthServiceResponse{
+		AccessToken:  "access_token",
+		RefreshToken: "refresh_token",
+		TokenType:    "bearer",
+		ExpiresIn:    3600,
+		User:         &domain.AuthServiceUserInfo{ID: "user-uuid-123", Email: req.Email, Name: req.Name},
+	}, nil)
+	mockUser.On("Create", mock.MatchedBy(func(u *domain.User) bool {
+		return u.Email == req.Email && u.Name == req.Name && u.ID == "user-uuid-123"
+	})).Return(nil)
+
+	refreshToken, authResp, err := uc.Register(req)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, authResp)
+	assert.Equal(t, "refresh_token", refreshToken)
+	assert.Equal(t, "access_token", authResp.AccessToken)
+	assert.Equal(t, req.Email, authResp.User.Email)
+
+	mockAuth.AssertCalled(t, "Register", mock.Anything, mock.Anything)
+	mockUser.AssertCalled(t, "Create", mock.Anything)
+	mockAuth.AssertExpectations(t)
+	mockUser.AssertExpectations(t)
+	mockRole.AssertExpectations(t)
+}
+
+func TestRegister_SupabaseFails(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
+
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.RegisterRequest{
+		Name:     "Test User",
+		Email:    "test@student.polije.ac.id",
+		Password: "password123",
 	}
 
-	mockUserRepo.On("GetByEmail", req.Email).Return(existingUser, nil)
+	role := &domain.Role{ID: 1, NamaRole: "mahasiswa"}
 
-	refreshTokenResult, result, err := authUC.Register(req)
+	mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
+	mockRole.On("GetByName", "mahasiswa").Return(role, nil)
+	mockAuth.On("Register", mock.Anything, mock.Anything).Return(nil, errors.New("supabase error"))
+
+	refreshToken, authResp, err := uc.Register(req)
 
 	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.Empty(t, refreshTokenResult)
-	assert.Equal(t, "email sudah terdaftar", err.Error())
+	assert.Nil(t, authResp)
+	assert.Empty(t, refreshToken)
 
-	mockUserRepo.AssertExpectations(t)
+	mockAuth.AssertCalled(t, "Register", mock.Anything, mock.Anything)
+	mockUser.AssertNotCalled(t, "Create", mock.Anything)
 }
 
-func TestAuthUsecase_Login_Success(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
-	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
-	mockRoleRepo := new(MockRoleRepository)
+func TestRegister_LocalDBFails_RollbackSupabaseUser(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
 
-	cfg := &config.Config{
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/private.pem",
-			PublicKeyPath:           "../../keys/public.pem",
-			PrivateKeyRotationPath:  "../../keys/private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
-		},
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.RegisterRequest{
+		Name:     "Test User",
+		Email:    "test@student.polije.ac.id",
+		Password: "password123",
 	}
 
-	authUC := NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
+	role := &domain.Role{ID: 1, NamaRole: "mahasiswa"}
+	supabaseUserID := "user-uuid-123"
 
-	password := "password123"
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
+	mockRole.On("GetByName", "mahasiswa").Return(role, nil)
+	mockAuth.On("Register", mock.Anything, mock.Anything).Return(&domain.AuthServiceResponse{
+		AccessToken:  "access_token",
+		RefreshToken: "refresh_token",
+		TokenType:    "bearer",
+		ExpiresIn:    3600,
+		User:         &domain.AuthServiceUserInfo{ID: supabaseUserID, Email: req.Email, Name: req.Name},
+	}, nil)
+	mockUser.On("Create", mock.Anything).Return(errors.New("database error"))
+	mockAuth.On("DeleteUser", mock.Anything, supabaseUserID).Return(nil)
 
-	user := &domain.User{
-		ID:       1,
-		Email:    "test@example.com",
-		Password: string(hashedPassword),
+	refreshToken, authResp, err := uc.Register(req)
+
+	assert.Error(t, err)
+	assert.Nil(t, authResp)
+	assert.Empty(t, refreshToken)
+
+	mockAuth.AssertCalled(t, "Register", mock.Anything, mock.Anything)
+	mockUser.AssertCalled(t, "Create", mock.Anything)
+	mockAuth.AssertCalled(t, "DeleteUser", mock.Anything, supabaseUserID)
+}
+
+func TestRegister_EmailAlreadyExists(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
+
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.RegisterRequest{
 		Name:     "Test User",
+		Email:    "test@student.polije.ac.id",
+		Password: "password123",
+	}
+
+	existingUser := &domain.User{ID: "existing-user", Email: req.Email}
+	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
+
+	refreshToken, authResp, err := uc.Register(req)
+
+	assert.Error(t, err)
+	assert.Nil(t, authResp)
+	assert.Empty(t, refreshToken)
+	assert.Contains(t, err.Error(), "sudah terdaftar")
+
+	mockAuth.AssertNotCalled(t, "Register", mock.Anything, mock.Anything)
+}
+
+func TestRegister_InvalidEmail(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
+
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.RegisterRequest{
+		Name:     "Test User",
+		Email:    "test@gmail.com",
+		Password: "password123",
+	}
+
+	refreshToken, authResp, err := uc.Register(req)
+
+	assert.Error(t, err)
+	assert.Nil(t, authResp)
+	assert.Empty(t, refreshToken)
+	assert.Contains(t, err.Error(), "polije.ac.id")
+
+	mockAuth.AssertNotCalled(t, "Register", mock.Anything, mock.Anything)
+}
+
+func TestLogin_Success_ExistingUser(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
+
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.AuthRequest{
+		Email:    "test@student.polije.ac.id",
+		Password: "password123",
+	}
+
+	roleID := 1
+	existingUser := &domain.User{
+		ID:       "user-uuid-123",
+		Email:    req.Email,
+		Name:     "Test User",
+		RoleID:   &roleID,
 		IsActive: true,
 	}
+	role := &domain.Role{ID: 1, NamaRole: "mahasiswa"}
 
-	req := domain.AuthRequest{
-		Email:    user.Email,
-		Password: password,
-	}
+	mockAuth.On("Login", mock.Anything, mock.MatchedBy(func(r domain.AuthServiceLoginRequest) bool {
+		return r.Email == req.Email && r.Password == req.Password
+	})).Return(&domain.AuthServiceResponse{
+		AccessToken:  "access_token",
+		RefreshToken: "refresh_token",
+		TokenType:    "bearer",
+		ExpiresIn:    3600,
+		User:         &domain.AuthServiceUserInfo{ID: "user-uuid-123", Email: req.Email, Name: "Test User"},
+	}, nil)
+	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
+	mockRole.On("GetByID", uint(1)).Return(role, nil)
 
-	mockUserRepo.On("GetByEmail", req.Email).Return(user, nil)
-
-	hashedToken := helper.HashRefreshToken("plain_refresh_token")
-	refreshToken := &domain.RefreshToken{
-		ID:        1,
-		UserID:    user.ID,
-		Token:     hashedToken,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	mockRefreshTokenRepo.On("Create", user.ID, mock.AnythingOfType("string"), mock.AnythingOfType("time.Time")).Return(refreshToken, nil)
-
-	refreshTokenResult, result, err := authUC.Login(req)
+	refreshToken, authResp, err := uc.Login(req)
 
 	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.NotEmpty(t, refreshTokenResult)
-	assert.NotEqual(t, hashedToken, refreshTokenResult)
-	assert.Equal(t, user.ID, result.User.ID)
-	assert.Equal(t, user.Email, result.User.Email)
-	assert.NotEmpty(t, result.AccessToken)
+	assert.NotNil(t, authResp)
+	assert.Equal(t, "refresh_token", refreshToken)
+	assert.Equal(t, "access_token", authResp.AccessToken)
+	assert.Equal(t, req.Email, authResp.User.Email)
 
-	mockUserRepo.AssertExpectations(t)
-	mockRefreshTokenRepo.AssertExpectations(t)
+	mockAuth.AssertCalled(t, "Login", mock.Anything, mock.Anything)
+	mockUser.AssertCalled(t, "GetByEmail", req.Email)
 }
 
-func TestAuthUsecase_Login_InvalidCredentials(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
-	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
-	mockRoleRepo := new(MockRoleRepository)
+func TestLogin_Success_NewUserSync(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
 
-	cfg := &config.Config{
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/private.pem",
-			PublicKeyPath:           "../../keys/public.pem",
-			PrivateKeyRotationPath:  "../../keys/private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
-		},
-	}
-
-	if _, err := helper.NewJWTManager(cfg); err != nil {
-		t.Skip("Skipping test due to missing JWT keys")
-	}
-
-	authUC := NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
 
 	req := domain.AuthRequest{
-		Email:    "test@example.com",
+		Email:    "newuser@student.polije.ac.id",
+		Password: "password123",
+	}
+
+	role := &domain.Role{ID: 1, NamaRole: "mahasiswa"}
+
+	mockAuth.On("Login", mock.Anything, mock.Anything).Return(&domain.AuthServiceResponse{
+		AccessToken:  "access_token",
+		RefreshToken: "refresh_token",
+		TokenType:    "bearer",
+		ExpiresIn:    3600,
+		User:         &domain.AuthServiceUserInfo{ID: "new-user-uuid", Email: req.Email, Name: "New User"},
+	}, nil)
+	mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
+	mockRole.On("GetByName", "mahasiswa").Return(role, nil)
+	mockUser.On("Create", mock.MatchedBy(func(u *domain.User) bool {
+		return u.Email == req.Email && u.ID == "new-user-uuid"
+	})).Return(nil)
+	mockRole.On("GetByID", uint(1)).Return(role, nil)
+
+	refreshToken, authResp, err := uc.Login(req)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, authResp)
+	assert.Equal(t, "refresh_token", refreshToken)
+	assert.Equal(t, "access_token", authResp.AccessToken)
+
+	mockAuth.AssertCalled(t, "Login", mock.Anything, mock.Anything)
+	mockUser.AssertCalled(t, "GetByEmail", req.Email)
+	mockUser.AssertCalled(t, "Create", mock.Anything)
+}
+
+func TestLogin_SupabaseFails(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
+
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.AuthRequest{
+		Email:    "test@student.polije.ac.id",
 		Password: "wrongpassword",
 	}
 
-	mockUserRepo.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
+	mockAuth.On("Login", mock.Anything, mock.Anything).Return(nil, errors.New("invalid credentials"))
 
-	refreshTokenResult, result, err := authUC.Login(req)
+	refreshToken, authResp, err := uc.Login(req)
 
 	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.Empty(t, refreshTokenResult)
-	assert.Equal(t, "email atau password salah", err.Error())
+	assert.Nil(t, authResp)
+	assert.Empty(t, refreshToken)
+	assert.Contains(t, err.Error(), "salah")
 
-	mockUserRepo.AssertExpectations(t)
+	mockAuth.AssertCalled(t, "Login", mock.Anything, mock.Anything)
+	mockUser.AssertNotCalled(t, "GetByEmail", mock.Anything)
 }
 
-func TestAuthUsecase_RefreshToken_Success(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
-	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
-	mockRoleRepo := new(MockRoleRepository)
+func TestLogin_UserInactive(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
 
-	cfg := &config.Config{
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/private.pem",
-			PublicKeyPath:           "../../keys/public.pem",
-			PrivateKeyRotationPath:  "../../keys/private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
-		},
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.AuthRequest{
+		Email:    "inactive@student.polije.ac.id",
+		Password: "password123",
 	}
 
-	if _, err := helper.NewJWTManager(cfg); err != nil {
-		t.Skip("Skipping test due to missing JWT keys")
+	inactiveUser := &domain.User{
+		ID:       "user-uuid-123",
+		Email:    req.Email,
+		Name:     "Inactive User",
+		IsActive: false,
 	}
 
-	authUC := NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
+	mockAuth.On("Login", mock.Anything, mock.Anything).Return(&domain.AuthServiceResponse{
+		AccessToken:  "access_token",
+		RefreshToken: "refresh_token",
+		TokenType:    "bearer",
+		ExpiresIn:    3600,
+		User:         &domain.AuthServiceUserInfo{ID: "user-uuid-123", Email: req.Email},
+	}, nil)
+	mockUser.On("GetByEmail", req.Email).Return(inactiveUser, nil)
 
-	refreshTokenString := "valid_refresh_token"
-	hashedTokenString := helper.HashRefreshToken(refreshTokenString)
-	userID := uint(1)
+	refreshToken, authResp, err := uc.Login(req)
 
-	refreshToken := &domain.RefreshToken{
-		ID:        1,
-		UserID:    userID,
-		Token:     hashedTokenString,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-		IsRevoked: false,
-	}
-
-	user := &domain.User{
-		ID:       userID,
-		Email:    "test@example.com",
-		Name:     "Test User",
-		IsActive: true,
-	}
-
-	mockRefreshTokenRepo.On("GetByToken", hashedTokenString).Return(refreshToken, nil)
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockRefreshTokenRepo.On("RevokeToken", hashedTokenString).Return(nil)
-	newHashedToken := helper.HashRefreshToken("new_refresh_token")
-	newRefreshToken := &domain.RefreshToken{
-		ID:        2,
-		UserID:    userID,
-		Token:     newHashedToken,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	mockRefreshTokenRepo.On("Create", userID, mock.AnythingOfType("string"), mock.AnythingOfType("time.Time")).Return(newRefreshToken, nil)
-
-	newRefreshTokenResult, result, err := authUC.RefreshToken(refreshTokenString)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.NotEmpty(t, newRefreshTokenResult)
-	assert.NotEqual(t, newHashedToken, newRefreshTokenResult)
-	assert.NotEmpty(t, result.AccessToken)
-	assert.Equal(t, "Bearer", result.TokenType)
-
-	mockRefreshTokenRepo.AssertExpectations(t)
-	mockUserRepo.AssertExpectations(t)
+	assert.Error(t, err)
+	assert.Nil(t, authResp)
+	assert.Empty(t, refreshToken)
+	assert.Contains(t, err.Error(), "belum diaktifkan")
 }
 
-func TestAuthUsecase_ResetPassword_Success(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
-	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
-	mockRoleRepo := new(MockRoleRepository)
+func TestRequestPasswordReset_Success(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
 
-	cfg := &config.Config{
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/private.pem",
-			PublicKeyPath:           "../../keys/public.pem",
-			PrivateKeyRotationPath:  "../../keys/private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
-		},
-	}
-
-	if _, err := helper.NewJWTManager(cfg); err != nil {
-		t.Skip("Skipping test due to missing JWT keys")
-	}
-
-	authUC := NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
-
-	email := "test@example.com"
-	user := &domain.User{
-		ID:    1,
-		Email: email,
-		Name:  "Test User",
-	}
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
 
 	req := domain.ResetPasswordRequest{
-		Email: email,
+		Email: "test@student.polije.ac.id",
 	}
 
-	mockUserRepo.On("GetByEmail", email).Return(user, nil)
+	existingUser := &domain.User{ID: "user-uuid-123", Email: req.Email}
 
-	resetToken := &domain.PasswordResetToken{
-		ID:        1,
-		Email:     email,
-		Token:     "reset_token",
-		ExpiresAt: time.Now().Add(time.Hour),
-	}
-	mockResetTokenRepo.On("Create", email, mock.AnythingOfType("string"), mock.AnythingOfType("time.Time")).Return(resetToken, nil)
+	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
+	mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, mock.Anything).Return(nil)
 
-	err := authUC.ResetPassword(req)
+	err := uc.RequestPasswordReset(req)
 
 	assert.NoError(t, err)
 
-	mockUserRepo.AssertExpectations(t)
-	mockResetTokenRepo.AssertExpectations(t)
+	mockUser.AssertCalled(t, "GetByEmail", req.Email)
+	mockAuth.AssertCalled(t, "RequestPasswordReset", mock.Anything, req.Email, mock.Anything)
 }
 
-func TestAuthUsecase_ConfirmResetPassword_Success(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
-	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
-	mockRoleRepo := new(MockRoleRepository)
+func TestRequestPasswordReset_UserNotFound(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
 
-	cfg := &config.Config{
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/private.pem",
-			PublicKeyPath:           "../../keys/public.pem",
-			PrivateKeyRotationPath:  "../../keys/private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
-		},
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.ResetPasswordRequest{
+		Email: "nonexistent@student.polije.ac.id",
 	}
 
-	// Skip test if JWT keys are not available
-	if _, err := helper.NewJWTManager(cfg); err != nil {
-		t.Skip("Skipping test due to missing JWT keys")
-	}
+	mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 
-	authUC := NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
+	err := uc.RequestPasswordReset(req)
 
-	token := "valid_reset_token"
-	email := "test@example.com"
-	newPassword := "newpassword123"
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Email")
 
-	resetToken := &domain.PasswordResetToken{
-		ID:        1,
-		Email:     email,
-		Token:     token,
-		ExpiresAt: time.Now().Add(time.Hour),
-		IsUsed:    false,
-	}
-
-	req := domain.NewPasswordRequest{
-		Token:       token,
-		NewPassword: newPassword,
-	}
-
-	mockResetTokenRepo.On("GetByToken", token).Return(resetToken, nil)
-	mockUserRepo.On("UpdatePassword", email, mock.AnythingOfType("string")).Return(nil)
-	mockResetTokenRepo.On("MarkAsUsed", token).Return(nil)
-
-	err := authUC.ConfirmResetPassword(req)
-
-	assert.NoError(t, err)
-
-	mockResetTokenRepo.AssertExpectations(t)
-	mockUserRepo.AssertExpectations(t)
+	mockUser.AssertCalled(t, "GetByEmail", req.Email)
+	mockAuth.AssertNotCalled(t, "RequestPasswordReset", mock.Anything, mock.Anything, mock.Anything)
 }
 
-func TestAuthUsecase_Logout_Success(t *testing.T) {
-	mockUserRepo := new(MockUserRepository)
-	mockRefreshTokenRepo := new(MockRefreshTokenRepository)
-	mockResetTokenRepo := new(MockPasswordResetTokenRepository)
-	mockRoleRepo := new(MockRoleRepository)
+func TestRequestPasswordReset_ServiceFails(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
 
-	cfg := &config.Config{
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/private.pem",
-			PublicKeyPath:           "../../keys/public.pem",
-			PrivateKeyRotationPath:  "../../keys/private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 24,
-		},
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+
+	req := domain.ResetPasswordRequest{
+		Email: "test@student.polije.ac.id",
 	}
 
-	if _, err := helper.NewJWTManager(cfg); err != nil {
-		t.Skip("Skipping test due to missing JWT keys")
-	}
+	existingUser := &domain.User{ID: "user-uuid-123", Email: req.Email}
 
-	authUC := NewAuthUsecase(mockUserRepo, mockRefreshTokenRepo, mockResetTokenRepo, mockRoleRepo, cfg)
+	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
+	mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, mock.Anything).Return(errors.New("service error"))
 
-	token := "refresh_token_to_revoke"
-	hashedToken := helper.HashRefreshToken(token)
+	err := uc.RequestPasswordReset(req)
 
-	mockRefreshTokenRepo.On("RevokeToken", hashedToken).Return(nil)
+	assert.Error(t, err)
 
-	err := authUC.Logout(token)
-
-	assert.NoError(t, err)
-
-	mockRefreshTokenRepo.AssertExpectations(t)
+	mockUser.AssertCalled(t, "GetByEmail", req.Email)
+	mockAuth.AssertCalled(t, "RequestPasswordReset", mock.Anything, req.Email, mock.Anything)
 }

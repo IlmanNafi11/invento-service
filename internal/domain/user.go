@@ -10,7 +10,7 @@ type UserListQueryParams struct {
 }
 
 type UserListItem struct {
-	ID         uint      `json:"id"`
+	ID         string    `json:"id"`
 	Email      string    `json:"email"`
 	Role       string    `json:"role"`
 	DibuatPada time.Time `json:"dibuat_pada"`
@@ -42,7 +42,7 @@ type UpdateProfileRequest struct {
 }
 
 type UserFileItem struct {
-	ID          uint   `json:"id"`
+	ID          string `json:"id"`
 	NamaFile    string `json:"nama_file"`
 	Kategori    string `json:"kategori"`
 	DownloadURL string `json:"download_url"`

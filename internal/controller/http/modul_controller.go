@@ -57,7 +57,7 @@ func NewModulController(
 func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -106,7 +106,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -144,7 +144,7 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 func (ctrl *ModulController) CheckUploadSlot(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -186,7 +186,7 @@ func (ctrl *ModulController) CheckUploadSlot(c *fiber.Ctx) error {
 func (ctrl *ModulController) InitiateUpload(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
@@ -268,7 +268,7 @@ func (ctrl *ModulController) InitiateUpload(c *fiber.Ctx) error {
 func (ctrl *ModulController) UploadChunk(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
@@ -364,7 +364,7 @@ func (ctrl *ModulController) UploadChunk(c *fiber.Ctx) error {
 func (ctrl *ModulController) GetUploadStatus(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
@@ -413,7 +413,7 @@ func (ctrl *ModulController) GetUploadStatus(c *fiber.Ctx) error {
 func (ctrl *ModulController) GetUploadInfo(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -457,7 +457,7 @@ func (ctrl *ModulController) GetUploadInfo(c *fiber.Ctx) error {
 func (ctrl *ModulController) CancelUpload(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
@@ -509,7 +509,7 @@ func (ctrl *ModulController) CancelUpload(c *fiber.Ctx) error {
 func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -561,7 +561,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 

@@ -19,9 +19,9 @@ type ProjectController struct {
 }
 
 // NewProjectController creates a new project controller instance.
-func NewProjectController(projectUsecase usecase.ProjectUsecase, jwtManager *helper.JWTManager, casbin *helper.CasbinEnforcer) *ProjectController {
+func NewProjectController(projectUsecase usecase.ProjectUsecase, supabaseURL string, casbin *helper.CasbinEnforcer) *ProjectController {
 	return &ProjectController{
-		BaseController: base.NewBaseController(jwtManager, casbin),
+		BaseController: base.NewBaseController(supabaseURL, casbin),
 		projectUsecase: projectUsecase,
 	}
 }
@@ -46,7 +46,7 @@ func NewProjectController(projectUsecase usecase.ProjectUsecase, jwtManager *hel
 func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -99,7 +99,7 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -143,7 +143,7 @@ func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -190,7 +190,7 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -231,7 +231,7 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 

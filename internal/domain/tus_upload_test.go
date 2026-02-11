@@ -12,7 +12,7 @@ func TestTusUploadStruct(t *testing.T) {
 
 		upload := TusUpload{
 			ID:         "upload-123",
-			UserID:     1,
+			UserID: "user-1",
 			ProjectID:  &projectID,
 			UploadType: UploadTypeProjectCreate,
 			UploadURL:  "https://example.com/upload/upload-123",
@@ -28,8 +28,8 @@ func TestTusUploadStruct(t *testing.T) {
 		if upload.ID != "upload-123" {
 			t.Errorf("Expected ID 'upload-123', got %s", upload.ID)
 		}
-		if upload.UserID != 1 {
-			t.Errorf("Expected UserID 1, got %d", upload.UserID)
+		if upload.UserID != "user-1" {
+			t.Errorf("Expected UserID 'user-1', got %s", upload.UserID)
 		}
 		if upload.ProjectID == nil || *upload.ProjectID != 100 {
 			t.Errorf("Expected ProjectID 100, got %v", upload.ProjectID)
@@ -45,7 +45,7 @@ func TestTusUploadStruct(t *testing.T) {
 	t.Run("TusUpload without ProjectID", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-456",
-			UserID:     2,
+			UserID: "user-2",
 			ProjectID:  nil,
 			UploadType: UploadTypeProjectUpdate,
 			FileSize:   512000,
@@ -66,7 +66,7 @@ func TestTusUploadStruct(t *testing.T) {
 
 		upload := TusUpload{
 			ID:          "upload-789",
-			UserID:      3,
+			UserID: "user-3",
 			UploadType:  UploadTypeProjectCreate,
 			FileSize:    2048000,
 			Status:      UploadStatusCompleted,
@@ -362,7 +362,7 @@ func TestTusUploadMetadata(t *testing.T) {
 
 		upload := TusUpload{
 			ID:             "upload-metadata-1",
-			UserID:         1,
+			UserID: "user-1",
 			UploadType:     UploadTypeProjectCreate,
 			UploadMetadata: metadata,
 			FileSize:       5000000,
@@ -685,7 +685,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Nil ProjectID", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-no-project",
-			UserID:     1,
+			UserID: "user-1",
 			ProjectID:  nil,
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
@@ -700,7 +700,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Zero file size", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-zero-size",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   0,
 			Status:     UploadStatusPending,
@@ -714,7 +714,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Negative file size", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-negative-size",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   -1,
 			Status:     UploadStatusPending,
@@ -728,7 +728,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Empty upload ID", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusPending,
@@ -742,21 +742,21 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Zero UserID", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-zero-user",
-			UserID:     0,
+			UserID:     "",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusPending,
 		}
 
-		if upload.UserID != 0 {
-			t.Errorf("Expected UserID 0, got %d", upload.UserID)
+		if upload.UserID != "" {
+			t.Errorf("Expected UserID empty, got %s", upload.UserID)
 		}
 	})
 
 	t.Run("Empty upload URL", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-empty-url",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			UploadURL:  "",
 			FileSize:   1024,
@@ -771,7 +771,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Empty file path", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-empty-path",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			FilePath:   "",
@@ -786,7 +786,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Zero current offset", func(t *testing.T) {
 		upload := TusUpload{
 			ID:            "upload-zero-offset",
-			UserID:        1,
+			UserID: "user-1",
 			UploadType:    UploadTypeProjectCreate,
 			FileSize:      1024,
 			CurrentOffset: 0,
@@ -801,7 +801,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Negative current offset", func(t *testing.T) {
 		upload := TusUpload{
 			ID:            "upload-negative-offset",
-			UserID:        1,
+			UserID: "user-1",
 			UploadType:    UploadTypeProjectCreate,
 			FileSize:      1024,
 			CurrentOffset: -1,
@@ -816,7 +816,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Zero progress", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-zero-progress",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusPending,
@@ -831,7 +831,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Negative progress", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-negative-progress",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusUploading,
@@ -846,7 +846,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Progress exceeds 100", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-excess-progress",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusUploading,
@@ -861,7 +861,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Nil CompletedAt", func(t *testing.T) {
 		upload := TusUpload{
 			ID:          "upload-no-completed",
-			UserID:      1,
+			UserID: "user-1",
 			UploadType:  UploadTypeProjectCreate,
 			FileSize:    1024,
 			Status:      UploadStatusPending,
@@ -876,7 +876,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Empty upload type", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-empty-type",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: "",
 			FileSize:   1024,
 			Status:     UploadStatusPending,
@@ -890,7 +890,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	t.Run("Empty status", func(t *testing.T) {
 		upload := TusUpload{
 			ID:         "upload-empty-status",
-			UserID:     1,
+			UserID: "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     "",
@@ -910,7 +910,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 
 		upload := TusUpload{
 			ID:        "upload-timestamps",
-			UserID:    1,
+			UserID: "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			CreatedAt: past,
@@ -932,7 +932,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 	t.Run("Zero CreatedAt", func(t *testing.T) {
 		upload := TusUpload{
 			ID:        "upload-zero-created",
-			UserID:    1,
+			UserID: "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			CreatedAt: time.Time{},
@@ -946,7 +946,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 	t.Run("Zero UpdatedAt", func(t *testing.T) {
 		upload := TusUpload{
 			ID:        "upload-zero-updated",
-			UserID:    1,
+			UserID: "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			UpdatedAt: time.Time{},
@@ -960,7 +960,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 	t.Run("Zero ExpiresAt", func(t *testing.T) {
 		upload := TusUpload{
 			ID:        "upload-zero-expires",
-			UserID:    1,
+			UserID: "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			ExpiresAt: time.Time{},
@@ -976,7 +976,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 
 		upload := TusUpload{
 			ID:        "upload-expired",
-			UserID:    1,
+			UserID: "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusExpired,
 			ExpiresAt: past,
@@ -992,7 +992,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 
 		upload := TusUpload{
 			ID:        "upload-future-expiration",
-			UserID:    1,
+			UserID: "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			ExpiresAt: future,

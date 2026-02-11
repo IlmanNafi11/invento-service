@@ -20,7 +20,7 @@ type HealthController struct {
 // are publicly accessible (no authentication required).
 func NewHealthController(healthUsecase usecase.HealthUsecase) *HealthController {
 	return &HealthController{
-		BaseController: base.NewBaseController(nil, nil),
+		BaseController: base.NewBaseController("", nil),
 		healthUsecase:  healthUsecase,
 	}
 }

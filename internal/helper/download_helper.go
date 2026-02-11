@@ -19,7 +19,7 @@ func NewDownloadHelper(pathResolver *PathResolver) *DownloadHelper {
 	}
 }
 
-func (dh *DownloadHelper) ValidateDownloadRequest(projectIDs, modulIDs []uint) error {
+func (dh *DownloadHelper) ValidateDownloadRequest(projectIDs, modulIDs []string) error {
 	if len(projectIDs) == 0 && len(modulIDs) == 0 {
 		return errors.New("project IDs atau modul IDs harus diisi minimal salah satu")
 	}
@@ -91,7 +91,7 @@ func (dh *DownloadHelper) PrepareFilesForDownload(projects []domain.Project, mod
 	return filePaths, notFoundFiles, nil
 }
 
-func (dh *DownloadHelper) CreateDownloadZip(filePaths []string, userID uint) (string, error) {
+func (dh *DownloadHelper) CreateDownloadZip(filePaths []string, userID string) (string, error) {
 	if len(filePaths) == 0 {
 		return "", errors.New("tidak ada file untuk didownload")
 	}
@@ -112,7 +112,7 @@ func (dh *DownloadHelper) CreateDownloadZip(filePaths []string, userID uint) (st
 		return "", errors.New("gagal generate identifier")
 	}
 
-	zipFileName := fmt.Sprintf("user_%d_files_%s.zip", userID, identifier)
+	zipFileName := fmt.Sprintf("user_%s_files_%s.zip", userID, identifier)
 	zipFilePath := filepath.Join(tempDir, zipFileName)
 
 	if err := CreateZipArchive(filePaths, zipFilePath); err != nil {

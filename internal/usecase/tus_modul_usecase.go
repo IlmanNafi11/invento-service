@@ -19,14 +19,14 @@ import (
 )
 
 type TusModulUsecase interface {
-	InitiateModulUpload(userID uint, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
-	HandleModulChunk(uploadID string, userID uint, offset int64, chunk io.Reader) (int64, error)
-	GetModulUploadInfo(uploadID string, userID uint) (*domain.TusModulUploadInfoResponse, error)
-	GetModulUploadStatus(uploadID string, userID uint) (int64, int64, error)
-	CancelModulUpload(uploadID string, userID uint) error
-	CheckModulUploadSlot(userID uint) (*domain.TusModulUploadSlotResponse, error)
-	InitiateModulUpdateUpload(modulID, userID uint, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
-	HandleModulUpdateChunk(uploadID string, userID uint, offset int64, chunk io.Reader) (int64, error)
+	InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
+	HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
+	GetModulUploadInfo(uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error)
+	GetModulUploadStatus(uploadID string, userID string) (int64, int64, error)
+	CancelModulUpload(uploadID string, userID string) error
+	CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error)
+	InitiateModulUpdateUpload(modulID uint, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
+	HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
 }
 
 type tusModulUsecase struct {
@@ -53,7 +53,7 @@ func NewTusModulUsecase(
 	}
 }
 
-func (uc *tusModulUsecase) CheckModulUploadSlot(userID uint) (*domain.TusModulUploadSlotResponse, error) {
+func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error) {
 	activeCount, err := uc.tusModulUploadRepo.CountActiveByUserID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengecek slot upload: %v", err)
@@ -158,7 +158,7 @@ func (uc *tusModulUsecase) validateModulFileSize(fileSize int64) error {
 	return nil
 }
 
-func (uc *tusModulUsecase) InitiateModulUpload(userID uint, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
 	slotCheck, err := uc.CheckModulUploadSlot(userID)
 	if err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID uint, fileSize int64, uplo
 	metadataMap["nama_file"] = metadata.NamaFile
 	metadataMap["tipe"] = metadata.Tipe
 	metadataMap["semester"] = strconv.Itoa(metadata.Semester)
-	metadataMap["user_id"] = fmt.Sprintf("%d", userID)
+	metadataMap["user_id"] = userID
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
 		uc.tusModulUploadRepo.Delete(uploadID)
@@ -217,7 +217,7 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID uint, fileSize int64, uplo
 	}, nil
 }
 
-func (uc *tusModulUsecase) HandleModulChunk(uploadID string, userID uint, offset int64, chunk io.Reader) (int64, error) {
+func (uc *tusModulUsecase) HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -262,7 +262,7 @@ func (uc *tusModulUsecase) HandleModulChunk(uploadID string, userID uint, offset
 	return newOffset, nil
 }
 
-func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID uint) error {
+func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID string) error {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		return fmt.Errorf("gagal mengambil data upload: %v", err)
@@ -305,7 +305,7 @@ func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID uint) err
 	return nil
 }
 
-func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID uint) (*domain.TusModulUploadInfoResponse, error) {
+func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -338,7 +338,7 @@ func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID uint) (*do
 	return response, nil
 }
 
-func (uc *tusModulUsecase) GetModulUploadStatus(uploadID string, userID uint) (int64, int64, error) {
+func (uc *tusModulUsecase) GetModulUploadStatus(uploadID string, userID string) (int64, int64, error) {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -354,7 +354,7 @@ func (uc *tusModulUsecase) GetModulUploadStatus(uploadID string, userID uint) (i
 	return tusUpload.CurrentOffset, tusUpload.FileSize, nil
 }
 
-func (uc *tusModulUsecase) CancelModulUpload(uploadID string, userID uint) error {
+func (uc *tusModulUsecase) CancelModulUpload(uploadID string, userID string) error {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -382,7 +382,7 @@ func (uc *tusModulUsecase) CancelModulUpload(uploadID string, userID uint) error
 	return nil
 }
 
-func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID, userID uint, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -439,7 +439,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID, userID uint, fileS
 	metadataMap["nama_file"] = metadata.NamaFile
 	metadataMap["tipe"] = metadata.Tipe
 	metadataMap["semester"] = strconv.Itoa(metadata.Semester)
-	metadataMap["user_id"] = fmt.Sprintf("%d", userID)
+	metadataMap["user_id"] = userID
 	metadataMap["modul_id"] = strconv.FormatUint(uint64(modulID), 10)
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
@@ -455,7 +455,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID, userID uint, fileS
 	}, nil
 }
 
-func (uc *tusModulUsecase) HandleModulUpdateChunk(uploadID string, userID uint, offset int64, chunk io.Reader) (int64, error) {
+func (uc *tusModulUsecase) HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -500,7 +500,7 @@ func (uc *tusModulUsecase) HandleModulUpdateChunk(uploadID string, userID uint, 
 	return newOffset, nil
 }
 
-func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID uint) error {
+func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID string) error {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		return fmt.Errorf("gagal mengambil data upload: %v", err)

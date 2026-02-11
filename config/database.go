@@ -10,14 +10,22 @@ import (
 )
 
 func ConnectDatabase(cfg *Config) *gorm.DB {
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Jakarta",
-		cfg.Database.Host,
-		cfg.Database.Port,
-		cfg.Database.User,
-		cfg.Database.Password,
-		cfg.Database.Name,
-	)
+	// Use Supabase connection URL if available, otherwise fall back to local database
+	dsn := cfg.Supabase.DBURL
+	if dsn == "" {
+		// Fallback to local database for development
+		dsn = fmt.Sprintf(
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Jakarta",
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.User,
+			cfg.Database.Password,
+			cfg.Database.Name,
+		)
+		log.Println("Using local database connection")
+	} else {
+		log.Println("Using Supabase database connection")
+	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),

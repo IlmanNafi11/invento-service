@@ -19,7 +19,7 @@ func TestCreateModul_Success(t *testing.T) {
 
 	modul := &domain.Modul{
 		ID:       1,
-		UserID:   1,
+		UserID:   "user-1",
 		NamaFile: "Test Modul",
 		Tipe:     "pdf",
 		Ukuran:   "1.5 MB",
@@ -44,7 +44,7 @@ func TestGetModulByID_Success(t *testing.T) {
 	_ = NewModulUsecase(mockModulRepo)
 
 	modulID := uint(1)
-	userID := uint(1)
+	userID := "user-1"
 
 	expectedModul := &domain.Modul{
 		ID:        modulID,
@@ -92,7 +92,7 @@ func TestListModuls_Success(t *testing.T) {
 
 	_ = NewModulUsecase(mockModulRepo)
 
-	userID := uint(1)
+	userID := "user-1"
 	search := ""
 	filterType := ""
 	filterSemester := 0
@@ -141,7 +141,7 @@ func TestListModulsByProject_Success(t *testing.T) {
 
 	_ = NewModulUsecase(mockModulRepo)
 
-	userID := uint(1)
+	userID := "user-1"
 	ids := []uint{1, 2, 3}
 
 	expectedModuls := []domain.Modul{
@@ -188,7 +188,7 @@ func TestUpdateModul_Success(t *testing.T) {
 
 	existingModul := &domain.Modul{
 		ID:        1,
-		UserID:    1,
+		UserID:    "user-1",
 		NamaFile:  "Old Name",
 		Tipe:      "pdf",
 		Ukuran:    "1.5 MB",
@@ -199,14 +199,14 @@ func TestUpdateModul_Success(t *testing.T) {
 	}
 
 	req := domain.ModulUpdateRequest{
-		NamaFile:  "Updated Name",
-		Semester:  5,
+		NamaFile: "Updated Name",
+		Semester: 5,
 	}
 
 	mockModulRepo.On("GetByID", uint(1)).Return(existingModul, nil)
 	mockModulRepo.On("Update", mock.AnythingOfType("*domain.Modul")).Return(nil)
 
-	err := modulUc.UpdateMetadata(1, 1, req)
+	err := modulUc.UpdateMetadata(1, "user-1", req)
 
 	assert.NoError(t, err)
 	mockModulRepo.AssertExpectations(t)
@@ -218,7 +218,7 @@ func TestDeleteModul_Success(t *testing.T) {
 	modulUc := NewModulUsecase(mockModulRepo)
 
 	modulID := uint(1)
-	userID := uint(1)
+	userID := "user-1"
 
 	existingModul := &domain.Modul{
 		ID:        modulID,
@@ -259,7 +259,7 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 
 	_ = NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(1, nil)
 
@@ -276,10 +276,10 @@ func TestInitiateUpload_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
-			MaxSize:             524288000, // 500 MB (required by TusManager)
-			MaxSizeModul:        52428800,  // 50 MB
+			MaxSize:              524288000, // 500 MB (required by TusManager)
+			MaxSizeModul:         52428800,  // 50 MB
 			MaxQueueModulPerUser: 3,
-			IdleTimeout:         30,
+			IdleTimeout:          30,
 		},
 	}
 
@@ -291,7 +291,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 
 	tusModulUc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024) // 1 MB
 	// TUS metadata format: "key base64value,key2 base64value2"
 	// nama_file testfile,tipe pdf,semester 1
@@ -320,9 +320,9 @@ func TestUploadChunk_Success(t *testing.T) {
 
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
-			MaxSizeModul:        10 * 1024 * 1024,
+			MaxSizeModul:         10 * 1024 * 1024,
 			MaxQueueModulPerUser: 3,
-			IdleTimeout:         30,
+			IdleTimeout:          30,
 		},
 	}
 
@@ -335,7 +335,7 @@ func TestUploadChunk_Success(t *testing.T) {
 	_ = NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	existingUpload := &domain.TusModulUpload{
 		ID:             uploadID,
@@ -373,7 +373,7 @@ func TestModulUsecase_GetList_Success(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	userID := uint(1)
+	userID := "user-1"
 	search := ""
 	filterType := ""
 	filterSemester := 0
@@ -421,10 +421,10 @@ func TestModulUsecase_GetList_Error(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	mockModulRepo.On("GetByUserID", uint(1), "", "", 0, 1, 10).
+	mockModulRepo.On("GetByUserID", "user-1", "", "", 0, 1, 10).
 		Return(nil, 0, assert.AnError)
 
-	result, err := modulUC.GetList(1, "", "", 0, 1, 10)
+	result, err := modulUC.GetList("user-1", "", "", 0, 1, 10)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -450,10 +450,10 @@ func TestModulUsecase_GetList_WithFilters(t *testing.T) {
 		},
 	}
 
-	mockModulRepo.On("GetByUserID", uint(1), "test", "pdf", 3, 1, 10).
+	mockModulRepo.On("GetByUserID", "user-1", "test", "pdf", 3, 1, 10).
 		Return(expectedModuls, 1, nil)
 
-	result, err := modulUC.GetList(1, "test", "pdf", 3, 1, 10)
+	result, err := modulUC.GetList("user-1", "test", "pdf", 3, 1, 10)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -468,7 +468,7 @@ func TestModulUsecase_GetByID_Success(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulID := uint(1)
-	userID := uint(1)
+	userID := "user-1"
 
 	expectedModul := &domain.Modul{
 		ID:        modulID,
@@ -500,7 +500,7 @@ func TestModulUsecase_GetByID_NotFound(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulID := uint(999)
-	userID := uint(1)
+	userID := "user-1"
 
 	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -519,11 +519,11 @@ func TestModulUsecase_GetByID_Unauthorized(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulID := uint(1)
-	userID := uint(2)
+	userID := "user-2"
 
 	expectedModul := &domain.Modul{
 		ID:        modulID,
-		UserID:    1,
+		UserID:    "user-1",
 		NamaFile:  "Test Modul",
 		Tipe:      "pdf",
 		Ukuran:    "1.5 MB",
@@ -549,7 +549,7 @@ func TestModulUsecase_Download_SingleFile(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	userID := uint(1)
+	userID := "user-1"
 	modulIDs := []uint{1}
 
 	expectedModuls := []domain.Modul{
@@ -576,7 +576,7 @@ func TestModulUsecase_Download_EmptyIDs(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	userID := uint(1)
+	userID := "user-1"
 	modulIDs := []uint{}
 
 	result, err := modulUC.Download(userID, modulIDs)
@@ -591,7 +591,7 @@ func TestModulUsecase_Download_NotFound(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	userID := uint(1)
+	userID := "user-1"
 	modulIDs := []uint{1, 2}
 
 	mockModulRepo.On("GetByIDs", modulIDs, userID).Return([]domain.Modul{}, nil)

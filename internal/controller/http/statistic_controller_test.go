@@ -21,7 +21,7 @@ type MockStatisticUsecase struct {
 	mock.Mock
 }
 
-func (m *MockStatisticUsecase) GetStatistics(userID uint, userRole string) (*domain.StatisticData, error) {
+func (m *MockStatisticUsecase) GetStatistics(userID string, userRole string) (*domain.StatisticData, error) {
 	args := m.Called(userID, userRole)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -39,7 +39,7 @@ func setupTestAppWithAuthForStatistic(controller *httpcontroller.StatisticContro
 	// Mock authentication middleware that sets user ID and role from headers
 	app.Use(func(c *fiber.Ctx) error {
 		if userID := c.Get("X-Test-User-ID"); userID != "" {
-			c.Locals("user_id", uint(1))
+			c.Locals("user_id", "00000000-0000-0000-0000-000000000001")
 			c.Locals("user_email", "test@example.com")
 			c.Locals("user_role", c.Get("X-Test-User-Role", "admin"))
 		}
@@ -69,7 +69,7 @@ func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 		TotalRole:    &totalRole,
 	}
 
-	mockStatisticUC.On("GetStatistics", uint(1), "admin").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -114,7 +114,7 @@ func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T)
 		TotalRole:    nil,
 	}
 
-	mockStatisticUC.On("GetStatistics", uint(1), "user").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "user").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -155,7 +155,7 @@ func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 		TotalRole:    nil,
 	}
 
-	mockStatisticUC.On("GetStatistics", uint(1), "user").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "user").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -210,7 +210,7 @@ func TestStatisticController_GetStatistics_InternalError(t *testing.T) {
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
-	mockStatisticUC.On("GetStatistics", uint(1), "admin").Return(nil, errors.New("database connection failed"))
+	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "admin").Return(nil, errors.New("database connection failed"))
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -233,7 +233,7 @@ func TestStatisticController_GetStatistics_AppError(t *testing.T) {
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses ke statistik")
-	mockStatisticUC.On("GetStatistics", uint(1), "user").Return(nil, appErr)
+	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "user").Return(nil, appErr)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -265,7 +265,7 @@ func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
 		TotalProject: &totalProject,
 	}
 
-	mockStatisticUC.On("GetStatistics", uint(1), "admin").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -302,7 +302,7 @@ func TestStatisticController_GetStatistics_ResponseStructure(t *testing.T) {
 		TotalModul:   &totalModul,
 	}
 
-	mockStatisticUC.On("GetStatistics", uint(1), "admin").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")

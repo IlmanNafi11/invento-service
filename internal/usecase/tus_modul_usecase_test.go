@@ -26,7 +26,7 @@ func TestTusModulUsecase_InitiateUpload_Success(t *testing.T) {
 
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024) // 1 MB
 	// Base64 encoded metadata: "nama_file dGVzdGZpbGU=,tipe cGRm,semester MQ=="
 	uploadMetadata := "nama_file dGVzdGZpbGU=,tipe cGRm,semester MQ=="
@@ -64,7 +64,7 @@ func TestTusModulUsecase_InitiateUpload_QueueFull(t *testing.T) {
 
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024) // 1 MB
 	uploadMetadata := "nama_file dGVzdGZpbGU=,tipe cGRm,semester MQ=="
 
@@ -94,7 +94,7 @@ func TestTusModulUsecase_InitiateUpload_FileTooLarge(t *testing.T) {
 
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(100 * 1024 * 1024) // 100 MB - exceeds 50 MB limit
 	uploadMetadata := "nama_file dGVzdGZpbGU=,tipe cGRm,semester MQ=="
 
@@ -122,7 +122,7 @@ func TestTusModulUsecase_InitiateUpload_InvalidMetadata(t *testing.T) {
 
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024)
 	uploadMetadata := "" // Empty metadata
 
@@ -150,7 +150,7 @@ func TestTusModulUsecase_InitiateUpload_InvalidFileType(t *testing.T) {
 
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024)
 	// Invalid file type: "exe"
 	uploadMetadata := "nama_file dGVzdGZpbGU=,tipe ZXhl,semester MQ=="
@@ -180,7 +180,7 @@ func TestTusModulUsecase_UploadChunk_Success(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunkData := []byte("test chunk data")
 	chunk := bytes.NewReader(chunkData)
@@ -234,7 +234,7 @@ func TestTusModulUsecase_UploadChunk_InvalidOffset(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(100) // Wrong offset
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -280,7 +280,7 @@ func TestTusModulUsecase_UploadChunk_UploadNotFound(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -311,8 +311,8 @@ func TestTusModulUsecase_UploadChunk_UnauthorizedUser(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2) // Different user
+	ownerID := "user-1"
+	userID := "user-2" // Different user
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -358,7 +358,7 @@ func TestTusModulUsecase_GetUploadStatus_Success(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	expectedOffset := int64(512)
 	expectedFileSize := int64(1024)
 
@@ -403,8 +403,8 @@ func TestTusModulUsecase_GetUploadStatus_Unauthorized(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2)
+	ownerID := "user-1"
+	userID := "user-2"
 
 	metadata := domain.TusModulUploadInitRequest{
 		NamaFile: "testfile",
@@ -446,7 +446,7 @@ func TestTusModulUsecase_GetUploadInfo_Success(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	modulID := uint(123)
 
 	metadata := domain.TusModulUploadInitRequest{
@@ -502,7 +502,7 @@ func TestTusModulUsecase_CancelUpload_Success(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	metadata := domain.TusModulUploadInitRequest{
 		NamaFile: "testfile",
@@ -543,7 +543,7 @@ func TestTusModulUsecase_CancelUpload_AlreadyCompleted(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	metadata := domain.TusModulUploadInitRequest{
 		NamaFile: "testfile",
@@ -583,7 +583,7 @@ func TestTusModulUsecase_CheckUploadSlot_Success(t *testing.T) {
 
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(2, nil)
 
@@ -614,7 +614,7 @@ func TestTusModulUsecase_CheckUploadSlot_QueueFull(t *testing.T) {
 
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(5, nil) // Max queue reached
 
@@ -646,7 +646,7 @@ func TestTusModulUsecase_InitiateModulUpdateUpload_Success(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	modulID := uint(1)
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024) // 1 MB
 	uploadMetadata := "nama_file dXBkYXRlZGZpbGU=,tipe cGRm,semester Mg=="
 
@@ -691,7 +691,7 @@ func TestTusModulUsecase_InitiateModulUpdateUpload_ModulNotFound(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	modulID := uint(999)
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024)
 	uploadMetadata := "nama_file dXBkYXRlZGZpbGU=,tipe cGRm,semester Mg=="
 
@@ -722,7 +722,7 @@ func TestTusModulUsecase_HandleModulUpdateChunk_Success(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunkData := []byte("test chunk data")
 	chunk := bytes.NewReader(chunkData)
@@ -777,7 +777,7 @@ func TestTusModulUsecase_UploadChunk_InactiveStatus(t *testing.T) {
 	uc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 

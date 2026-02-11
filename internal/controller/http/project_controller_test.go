@@ -24,7 +24,7 @@ type MockProjectUsecase struct {
 	mock.Mock
 }
 
-func (m *MockProjectUsecase) GetList(userID uint, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error) {
+func (m *MockProjectUsecase) GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error) {
 	args := m.Called(userID, search, filterSemester, filterKategori, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -32,7 +32,7 @@ func (m *MockProjectUsecase) GetList(userID uint, search string, filterSemester 
 	return args.Get(0).(*domain.ProjectListData), args.Error(1)
 }
 
-func (m *MockProjectUsecase) GetByID(projectID, userID uint) (*domain.ProjectResponse, error) {
+func (m *MockProjectUsecase) GetByID(projectID uint, userID string) (*domain.ProjectResponse, error) {
 	args := m.Called(projectID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -40,17 +40,17 @@ func (m *MockProjectUsecase) GetByID(projectID, userID uint) (*domain.ProjectRes
 	return args.Get(0).(*domain.ProjectResponse), args.Error(1)
 }
 
-func (m *MockProjectUsecase) UpdateMetadata(projectID, userID uint, req domain.ProjectUpdateRequest) error {
+func (m *MockProjectUsecase) UpdateMetadata(projectID uint, userID string, req domain.ProjectUpdateRequest) error {
 	args := m.Called(projectID, userID, req)
 	return args.Error(0)
 }
 
-func (m *MockProjectUsecase) Delete(projectID, userID uint) error {
+func (m *MockProjectUsecase) Delete(projectID uint, userID string) error {
 	args := m.Called(projectID, userID)
 	return args.Error(0)
 }
 
-func (m *MockProjectUsecase) Download(userID uint, projectIDs []uint) (string, error) {
+func (m *MockProjectUsecase) Download(userID string, projectIDs []uint) (string, error) {
 	args := m.Called(userID, projectIDs)
 	return args.String(0), args.Error(1)
 }
@@ -58,7 +58,7 @@ func (m *MockProjectUsecase) Download(userID uint, projectIDs []uint) (string, e
 // Test 1: GetByID_Success
 func TestProjectController_GetByID_Success(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	expectedProject := &domain.ProjectResponse{
 		ID:          1,
@@ -71,18 +71,18 @@ func TestProjectController_GetByID_Success(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
-	mockUC.On("GetByID", uint(1), uint(1)).Return(expectedProject, nil)
+	mockUC.On("GetByID", uint(1), "user-1").Return(expectedProject, nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Get("/api/v1/project/:id", controller.GetByID)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	req := httptest.NewRequest("GET", "/api/v1/project/1", nil)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
@@ -107,21 +107,21 @@ func TestProjectController_GetByID_Success(t *testing.T) {
 // Test 2: GetByID_ProjectNotFound
 func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	appErr := apperrors.NewNotFoundError("Project")
-	mockUC.On("GetByID", uint(999), uint(1)).Return(nil, appErr)
+	mockUC.On("GetByID", uint(999), "user-1").Return(nil, appErr)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Get("/api/v1/project/:id", controller.GetByID)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	req := httptest.NewRequest("GET", "/api/v1/project/999", nil)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
@@ -143,7 +143,7 @@ func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 // Test 5: GetList_WithFilters
 func TestProjectController_GetList_WithFilters(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	expectedData := &domain.ProjectListData{
 		Items: []domain.ProjectListItem{
@@ -165,18 +165,18 @@ func TestProjectController_GetList_WithFilters(t *testing.T) {
 		},
 	}
 
-	mockUC.On("GetList", uint(1), "search", 1, "website", 1, 10).Return(expectedData, nil)
+	mockUC.On("GetList", "user-1", "search", 1, "website", 1, 10).Return(expectedData, nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Get("/api/v1/project", controller.GetList)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	req := httptest.NewRequest("GET", "/api/v1/project?search=search&filter_semester=1&filter_kategori=website", nil)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
@@ -195,7 +195,7 @@ func TestProjectController_GetList_WithFilters(t *testing.T) {
 // Test 6: UpdateMetadata_Success
 func TestProjectController_UpdateMetadata_Success(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	updateReq := domain.ProjectUpdateRequest{
 		NamaProject: "Updated Project",
@@ -203,18 +203,18 @@ func TestProjectController_UpdateMetadata_Success(t *testing.T) {
 		Semester:    2,
 	}
 
-	mockUC.On("UpdateMetadata", uint(1), uint(1), updateReq).Return(nil)
+	mockUC.On("UpdateMetadata", uint(1), "user-1", updateReq).Return(nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/project/:id", controller.UpdateMetadata)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	bodyBytes, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest("PATCH", "/api/v1/project/1", bytes.NewReader(bodyBytes))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -236,20 +236,20 @@ func TestProjectController_UpdateMetadata_Success(t *testing.T) {
 // Test 7: Delete_Success
 func TestProjectController_Delete_Success(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-	mockUC.On("Delete", uint(1), uint(1)).Return(nil)
+	mockUC.On("Delete", uint(1), "user-1").Return(nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Delete("/api/v1/project/:id", controller.Delete)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	req := httptest.NewRequest("DELETE", "/api/v1/project/1", nil)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
@@ -269,24 +269,24 @@ func TestProjectController_Delete_Success(t *testing.T) {
 // Test 8: Download_SingleFile
 func TestProjectController_Download_SingleFile(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	downloadReq := domain.ProjectDownloadRequest{
 		IDs: []uint{1},
 	}
 
-	mockUC.On("Download", uint(1), []uint{1}).Return("/test/path/file.zip", nil)
+	mockUC.On("Download", "user-1", []uint{1}).Return("/test/path/file.zip", nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/project/download", controller.Download)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	bodyBytes, _ := json.Marshal(downloadReq)
 	req := httptest.NewRequest("POST", "/api/v1/project/download", bytes.NewReader(bodyBytes))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -302,25 +302,25 @@ func TestProjectController_Download_SingleFile(t *testing.T) {
 // Test 9: UpdateMetadata_AccessDenied
 func TestProjectController_UpdateMetadata_AccessDenied(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	updateReq := domain.ProjectUpdateRequest{
 		NamaProject: "Updated Project",
 	}
 
 	appErr := apperrors.NewForbiddenError("tidak memiliki akses ke project ini")
-	mockUC.On("UpdateMetadata", uint(2), uint(1), updateReq).Return(appErr)
+	mockUC.On("UpdateMetadata", uint(2), "user-1", updateReq).Return(appErr)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "user1@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/project/:id", controller.UpdateMetadata)
 
-	token := app_testing.GenerateTestToken(1, "user1@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "user1@example.com", "user")
 	bodyBytes, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest("PATCH", "/api/v1/project/2", bytes.NewReader(bodyBytes))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -369,7 +369,7 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
-			controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+			controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{},
@@ -381,18 +381,18 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 				},
 			}
 
-			mockUC.On("GetList", uint(1), "", 0, "", tt.expectedPage, tt.expectedLimit).Return(expectedData, nil)
+			mockUC.On("GetList", "user-1", "", 0, "", tt.expectedPage, tt.expectedLimit).Return(expectedData, nil)
 
 			app := fiber.New()
 			app.Use(func(c *fiber.Ctx) error {
-				c.Locals("user_id", uint(1))
+				c.Locals("user_id", "user-1")
 				c.Locals("user_email", "test@example.com")
 				c.Locals("user_role", "user")
 				return c.Next()
 			})
 			app.Get("/api/v1/project", controller.GetList)
 
-			token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+			token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 			req := httptest.NewRequest("GET", "/api/v1/project"+tt.queryParams, nil)
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			resp, err := app.Test(req)
@@ -413,18 +413,18 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 // Test 11: UpdateMetadata_InvalidRequestBody
 func TestProjectController_UpdateMetadata_InvalidRequestBody(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/project/:id", controller.UpdateMetadata)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	// Invalid JSON
 	req := httptest.NewRequest("PATCH", "/api/v1/project/1", bytes.NewReader([]byte("invalid json")))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -440,7 +440,7 @@ func TestProjectController_UpdateMetadata_InvalidRequestBody(t *testing.T) {
 // Test 12: UpdateMetadata_ValidationFailure
 func TestProjectController_UpdateMetadata_ValidationFailure(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	// Invalid update request (name too short, invalid semester)
 	updateReq := domain.ProjectUpdateRequest{
@@ -451,14 +451,14 @@ func TestProjectController_UpdateMetadata_ValidationFailure(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Patch("/api/v1/project/:id", controller.UpdateMetadata)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	bodyBytes, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest("PATCH", "/api/v1/project/1", bytes.NewReader(bodyBytes))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -474,21 +474,21 @@ func TestProjectController_UpdateMetadata_ValidationFailure(t *testing.T) {
 // Test 13: Delete_ProjectNotFound
 func TestProjectController_Delete_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	appErr := apperrors.NewNotFoundError("Project")
-	mockUC.On("Delete", uint(999), uint(1)).Return(appErr)
+	mockUC.On("Delete", uint(999), "user-1").Return(appErr)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Delete("/api/v1/project/:id", controller.Delete)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	req := httptest.NewRequest("DELETE", "/api/v1/project/999", nil)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
@@ -508,18 +508,18 @@ func TestProjectController_Delete_ProjectNotFound(t *testing.T) {
 // Test 14: Download_EmptyIDs
 func TestProjectController_Download_EmptyIDs(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/project/download", controller.Download)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	// Empty IDs array
 	bodyBytes, _ := json.Marshal(domain.ProjectDownloadRequest{IDs: []uint{}})
 	req := httptest.NewRequest("POST", "/api/v1/project/download", bytes.NewReader(bodyBytes))
@@ -536,18 +536,18 @@ func TestProjectController_Download_EmptyIDs(t *testing.T) {
 // Test 15: Download_InvalidRequestBody
 func TestProjectController_Download_InvalidRequestBody(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/project/download", controller.Download)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	// Invalid JSON
 	req := httptest.NewRequest("POST", "/api/v1/project/download", bytes.NewReader([]byte("invalid json")))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -563,25 +563,25 @@ func TestProjectController_Download_InvalidRequestBody(t *testing.T) {
 // Test 16: Download_ProjectNotFound
 func TestProjectController_Download_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	downloadReq := domain.ProjectDownloadRequest{
 		IDs: []uint{1, 2},
 	}
 
 	appErr := apperrors.NewNotFoundError("Project")
-	mockUC.On("Download", uint(1), []uint{1, 2}).Return("", appErr)
+	mockUC.On("Download", "user-1", []uint{1, 2}).Return("", appErr)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Post("/api/v1/project/download", controller.Download)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	bodyBytes, _ := json.Marshal(downloadReq)
 	req := httptest.NewRequest("POST", "/api/v1/project/download", bytes.NewReader(bodyBytes))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -603,21 +603,21 @@ func TestProjectController_Download_ProjectNotFound(t *testing.T) {
 // Test 17: GetList_UseCaseError
 func TestProjectController_GetList_UseCaseError(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	appErr := apperrors.NewInternalError(fmt.Errorf("Database error"))
-	mockUC.On("GetList", uint(1), "search", 0, "", 1, 10).Return(nil, appErr)
+	mockUC.On("GetList", "user-1", "search", 0, "", 1, 10).Return(nil, appErr)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		c.Locals("user_id", uint(1))
+		c.Locals("user_id", "user-1")
 		c.Locals("user_email", "test@example.com")
 		c.Locals("user_role", "user")
 		return c.Next()
 	})
 	app.Get("/api/v1/project", controller.GetList)
 
-	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	req := httptest.NewRequest("GET", "/api/v1/project?search=search", nil)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
@@ -660,7 +660,7 @@ func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
-			controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+			controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{
@@ -682,18 +682,18 @@ func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
 				},
 			}
 
-			mockUC.On("GetList", uint(1), "", tt.filterSemester, "", 1, 10).Return(expectedData, nil)
+			mockUC.On("GetList", "user-1", "", tt.filterSemester, "", 1, 10).Return(expectedData, nil)
 
 			app := fiber.New()
 			app.Use(func(c *fiber.Ctx) error {
-				c.Locals("user_id", uint(1))
+				c.Locals("user_id", "user-1")
 				c.Locals("user_email", "test@example.com")
 				c.Locals("user_role", "user")
 				return c.Next()
 			})
 			app.Get("/api/v1/project", controller.GetList)
 
-			token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+			token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 			url := "/api/v1/project"
 			if tt.filterSemester > 0 {
 				url += fmt.Sprintf("?filter_semester=%d", tt.filterSemester)
@@ -757,7 +757,7 @@ func TestProjectController_GetList_FilterKategoriBoundaryCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
-			controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+			controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{
@@ -779,18 +779,18 @@ func TestProjectController_GetList_FilterKategoriBoundaryCases(t *testing.T) {
 				},
 			}
 
-			mockUC.On("GetList", uint(1), "", 0, tt.filterKategori, 1, 10).Return(expectedData, nil)
+			mockUC.On("GetList", "user-1", "", 0, tt.filterKategori, 1, 10).Return(expectedData, nil)
 
 			app := fiber.New()
 			app.Use(func(c *fiber.Ctx) error {
-				c.Locals("user_id", uint(1))
+				c.Locals("user_id", "user-1")
 				c.Locals("user_email", "test@example.com")
 				c.Locals("user_role", "user")
 				return c.Next()
 			})
 			app.Get("/api/v1/project", controller.GetList)
 
-			token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+			token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 			url := "/api/v1/project"
 			if tt.filterKategori != "" {
 				url += fmt.Sprintf("?filter_kategori=%s", tt.filterKategori)
@@ -859,7 +859,7 @@ func TestProjectController_GetList_PaginationBoundaries(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
-			controller := httpcontroller.NewProjectController(mockUC, nil, nil)
+			controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{},
@@ -871,18 +871,18 @@ func TestProjectController_GetList_PaginationBoundaries(t *testing.T) {
 				},
 			}
 
-			mockUC.On("GetList", uint(1), "", 0, "", tt.expectedPage, tt.expectedLimit).Return(expectedData, nil)
+			mockUC.On("GetList", "user-1", "", 0, "", tt.expectedPage, tt.expectedLimit).Return(expectedData, nil)
 
 			app := fiber.New()
 			app.Use(func(c *fiber.Ctx) error {
-				c.Locals("user_id", uint(1))
+				c.Locals("user_id", "user-1")
 				c.Locals("user_email", "test@example.com")
 				c.Locals("user_role", "user")
 				return c.Next()
 			})
 			app.Get("/api/v1/project", controller.GetList)
 
-			token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+			token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 			url := "/api/v1/project"
 			if tt.page > 0 {
 				url += fmt.Sprintf("?page=%d", tt.page)

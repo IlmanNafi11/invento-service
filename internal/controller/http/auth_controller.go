@@ -17,9 +17,8 @@ import (
 // validation helpers, and standardized response methods.
 type AuthController struct {
 	*base.BaseController
-	authUsecase  usecase.AuthUsecase
-	cookieHelper *helper.CookieHelper
-	logger       *helper.Logger
+	authUsecase usecase.AuthUsecase
+	logger      *helper.Logger
 }
 
 // NewAuthController creates a new AuthController instance.
@@ -27,9 +26,8 @@ type AuthController struct {
 // handle credentials directly (no authentication required).
 func NewAuthController(authUsecase usecase.AuthUsecase, cfg *config.Config) *AuthController {
 	return &AuthController{
-		BaseController: base.NewBaseController(nil, nil),
+		BaseController: base.NewBaseController(cfg.Supabase.URL, nil),
 		authUsecase:    authUsecase,
-		cookieHelper:   helper.NewCookieHelper(cfg),
 		logger:         helper.NewLogger(),
 	}
 }
@@ -37,11 +35,11 @@ func NewAuthController(authUsecase usecase.AuthUsecase, cfg *config.Config) *Aut
 // Login authenticates a user with email and password.
 //
 // @Summary Login pengguna
-// @Description Autentikasi pengguna dengan email dan password. Refresh token dikirim via httpOnly cookie.
+// @Description Autentikasi pengguna melalui Supabase Auth dengan email dan password. Data profil lokal disinkronkan jika diperlukan.
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body domain.AuthRequest true "Credential login"
+// @Param request body domain.AuthRequest true "Credential login (email, password)"
 // @Success 200 {object} domain.SuccessResponse{data=domain.AuthResponse} "Login berhasil"
 // @Failure 400 {object} domain.ErrorResponse "Format request tidak valid"
 // @Failure 401 {object} domain.ErrorResponse "Email atau password salah"
@@ -58,7 +56,7 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 		return nil
 	}
 
-	refreshToken, result, err := ctrl.authUsecase.Login(req)
+	_, result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -67,18 +65,17 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 		return ctrl.SendInternalError(c)
 	}
 
-	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
 	return ctrl.SendSuccess(c, result, "Login berhasil")
 }
 
 // Register creates a new user account.
 //
 // @Summary Registrasi pengguna baru
-// @Description Membuat akun pengguna baru dengan email polije.ac.id.
+// @Description Membuat akun pengguna baru melalui Supabase Auth dan menyimpan data profil ke database lokal.
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body domain.RegisterRequest true "Data registrasi"
+// @Param request body domain.RegisterRequest true "Data registrasi (name, email, password)"
 // @Success 201 {object} domain.SuccessResponse{data=domain.AuthResponse} "Registrasi berhasil"
 // @Failure 400 {object} domain.ErrorResponse "Data validasi tidak valid"
 // @Failure 409 {object} domain.ErrorResponse "Email sudah terdaftar"
@@ -94,7 +91,7 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 		return nil
 	}
 
-	refreshToken, result, err := ctrl.authUsecase.Register(req)
+	_, result, err := ctrl.authUsecase.Register(req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -103,7 +100,6 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 		return ctrl.SendInternalError(c)
 	}
 
-	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
 	return ctrl.SendCreated(c, result, "Registrasi berhasil")
 }
 
@@ -120,22 +116,8 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /api/v1/auth/refresh [post]
 func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
-	oldRefreshToken := helper.GetRefreshTokenFromCookie(c)
-	if oldRefreshToken == "" {
-		return ctrl.SendBadRequest(c, "Refresh token diperlukan")
-	}
-
-	newRefreshToken, result, err := ctrl.authUsecase.RefreshToken(oldRefreshToken)
-	if err != nil {
-		var appErr *apperrors.AppError
-		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
-		}
-		return ctrl.SendInternalError(c)
-	}
-
-	ctrl.cookieHelper.SetRefreshTokenCookie(c, newRefreshToken)
-	return ctrl.SendSuccess(c, result, "Token berhasil diperbarui")
+	// Refresh tokens are handled by Supabase Auth
+	return ctrl.SendSuccess(c, nil, "Token refresh handled by Supabase Auth")
 }
 
 // Logout invalidates the user's refresh token.
@@ -151,28 +133,14 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /api/v1/auth/logout [post]
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
-	token := helper.GetRefreshTokenFromCookie(c)
-	if token == "" {
-		return ctrl.SendBadRequest(c, "Refresh token diperlukan")
-	}
-
-	err := ctrl.authUsecase.Logout(token)
-	if err != nil {
-		var appErr *apperrors.AppError
-		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
-		}
-		return ctrl.SendInternalError(c)
-	}
-
-	ctrl.cookieHelper.ClearRefreshTokenCookie(c)
-	return ctrl.SendSuccess(c, nil, "Logout berhasil")
+	// Logout is handled by Supabase Auth
+	return ctrl.SendSuccess(c, nil, "Logout handled by Supabase Auth")
 }
 
-// ResetPassword initiates password reset by sending OTP to email.
+// RequestPasswordReset initiates password reset by sending magic link to email.
 //
 // @Summary Minta reset password
-// @Description Mengirim OTP ke email untuk reset password.
+// @Description Mengirim link reset password ke email yang terdaftar melalui Supabase Auth.
 // @Tags Auth
 // @Accept json
 // @Produce json
@@ -181,8 +149,8 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 // @Failure 400 {object} domain.ErrorResponse "Format request tidak valid"
 // @Failure 404 {object} domain.ErrorResponse "Email tidak ditemukan"
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
-// @Router /api/v1/auth/reset-password/otp [post]
-func (ctrl *AuthController) ResetPassword(c *fiber.Ctx) error {
+// @Router /api/v1/auth/reset-password [post]
+func (ctrl *AuthController) RequestPasswordReset(c *fiber.Ctx) error {
 	var req domain.ResetPasswordRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
@@ -192,7 +160,7 @@ func (ctrl *AuthController) ResetPassword(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := ctrl.authUsecase.ResetPassword(req)
+	err := ctrl.authUsecase.RequestPasswordReset(req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -202,39 +170,4 @@ func (ctrl *AuthController) ResetPassword(c *fiber.Ctx) error {
 	}
 
 	return ctrl.SendSuccess(c, nil, "Link reset password telah dikirim ke email Anda")
-}
-
-// ConfirmResetPassword completes password reset using OTP token.
-//
-// @Summary Konfirmasi reset password
-// @Description Mengatur password baru menggunakan token reset yang valid.
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body domain.NewPasswordRequest true "Token dan password baru"
-// @Success 200 {object} domain.SuccessResponse "Password berhasil direset"
-// @Failure 400 {object} domain.ErrorResponse "Format request tidak valid"
-// @Failure 404 {object} domain.ErrorResponse "Token tidak valid"
-// @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
-// @Router /api/v1/auth/reset-password/confirm-otp [post]
-func (ctrl *AuthController) ConfirmResetPassword(c *fiber.Ctx) error {
-	var req domain.NewPasswordRequest
-	if err := c.BodyParser(&req); err != nil {
-		return ctrl.SendBadRequest(c, "Format request tidak valid")
-	}
-
-	if !ctrl.ValidateStruct(c, req) {
-		return nil
-	}
-
-	err := ctrl.authUsecase.ConfirmResetPassword(req)
-	if err != nil {
-		var appErr *apperrors.AppError
-		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
-		}
-		return ctrl.SendInternalError(c)
-	}
-
-	return ctrl.SendSuccess(c, nil, "Password berhasil direset")
 }

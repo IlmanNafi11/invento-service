@@ -27,7 +27,7 @@ func (r *modulRepository) GetByID(id uint) (*domain.Modul, error) {
 	return &modul, nil
 }
 
-func (r *modulRepository) GetByIDs(ids []uint, userID uint) ([]domain.Modul, error) {
+func (r *modulRepository) GetByIDs(ids []uint, userID string) ([]domain.Modul, error) {
 	var moduls []domain.Modul
 	err := r.db.Where("id IN ? AND user_id = ?", ids, userID).Find(&moduls).Error
 	if err != nil {
@@ -36,7 +36,7 @@ func (r *modulRepository) GetByIDs(ids []uint, userID uint) ([]domain.Modul, err
 	return moduls, nil
 }
 
-func (r *modulRepository) GetByIDsForUser(ids []uint, ownerUserID uint) ([]domain.Modul, error) {
+func (r *modulRepository) GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Modul, error) {
 	var moduls []domain.Modul
 	if len(ids) == 0 {
 		return moduls, nil
@@ -48,7 +48,7 @@ func (r *modulRepository) GetByIDsForUser(ids []uint, ownerUserID uint) ([]domai
 	return moduls, nil
 }
 
-func (r *modulRepository) GetByUserID(userID uint, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error) {
+func (r *modulRepository) GetByUserID(userID string, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error) {
 	var modulListItems []domain.ModulListItem
 	var total int64
 
@@ -68,7 +68,7 @@ func (r *modulRepository) GetByUserID(userID uint, search string, filterType str
 	}
 
 	dataQuery := `
-		SELECT 
+		SELECT
 			id,
 			nama_file,
 			tipe,
@@ -92,7 +92,7 @@ func (r *modulRepository) GetByUserID(userID uint, search string, filterType str
 	return modulListItems, int(total), nil
 }
 
-func (r *modulRepository) CountByUserID(userID uint) (int, error) {
+func (r *modulRepository) CountByUserID(userID string) (int, error) {
 	var count int64
 	err := r.db.Model(&domain.Modul{}).Where("user_id = ?", userID).Count(&count).Error
 	return int(count), err

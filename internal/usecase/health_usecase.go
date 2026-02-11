@@ -4,7 +4,6 @@ import (
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
 	"fmt"
-	"net/http"
 	"runtime"
 	"time"
 
@@ -211,57 +210,18 @@ func (uc *healthUsecase) getServicesStatus() domain.ServicesStatus {
 }
 
 func (uc *healthUsecase) getEmailServiceStatus() domain.EmailService {
-	apiKey := uc.config.Resend.APIKey
-	apiKeySet := apiKey != ""
-
-	status := domain.ServiceStatusHealthy
-	if !apiKeySet {
-		status = domain.ServiceStatusError
-	} else {
-		// Verify API connectivity
-		if uc.checkResendAPI() {
-			status = domain.ServiceStatusConnected
-		} else {
-			status = domain.ServiceStatusUnhealthy
-		}
-	}
-
+	// Email service is disabled - using Supabase Auth for emails
 	return domain.EmailService{
 		Name:      "Email Service",
-		Provider:  "Resend",
-		Status:    status,
-		APIKeySet: apiKeySet,
+		Provider:  "Supabase Auth",
+		Status:    domain.ServiceStatusConnected,
+		APIKeySet: true,
 	}
 }
 
 func (uc *healthUsecase) checkResendAPI() bool {
-	apiKey := uc.config.Resend.APIKey
-	if apiKey == "" {
-		return false
-	}
-
-	// Simple API key validation - check API endpoint
-	client := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-
-	req, err := http.NewRequest("GET", "https://api.resend.com/emails", nil)
-	if err != nil {
-		return false
-	}
-
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return false
-	}
-	defer resp.Body.Close()
-
-	// Consider 401 as API key is valid but unauthorized for this endpoint
-	// Consider 200 as successful connection
-	return resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusUnauthorized
+	// Email service is disabled - using Supabase Auth
+	return true
 }
 
 func (uc *healthUsecase) getDependencies() []domain.Dependency {

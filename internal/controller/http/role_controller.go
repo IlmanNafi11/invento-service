@@ -24,7 +24,7 @@ type RoleController struct {
 //   - baseController: Base controller for common functionality (optional)
 func NewRoleController(roleUsecase usecase.RoleUsecase, baseController *base.BaseController) *RoleController {
 	if baseController == nil {
-		baseController = base.NewBaseController(nil, nil)
+		baseController = base.NewBaseController("", nil)
 	}
 
 	return &RoleController{

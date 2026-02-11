@@ -17,7 +17,7 @@ func TestModulRepository_Create_Success(t *testing.T) {
 
 	modul := &domain.Modul{
 		NamaFile: "Test Modul",
-		UserID:   1,
+		UserID:   "user-1",
 		Tipe:     "pdf",
 		Ukuran:   "small",
 		Semester: 1,
@@ -38,7 +38,7 @@ func TestModulRepository_GetByID_Success(t *testing.T) {
 
 	modul := &domain.Modul{
 		NamaFile: "Test Modul",
-		UserID:   1,
+		UserID:   "user-1",
 		Tipe:     "pdf",
 		Ukuran:   "small",
 		Semester: 1,
@@ -61,7 +61,7 @@ func TestModulRepository_GetByIDs_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	moduls := []domain.Modul{
 		{NamaFile: "Modul 1", UserID: userID, Tipe: "pdf", Ukuran: "small", Semester: 1, PathFile: "/test1"},
@@ -86,11 +86,11 @@ func TestModulRepository_GetByIDsForUser_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	moduls := []domain.Modul{
 		{NamaFile: "Modul 1", UserID: userID, Tipe: "pdf", Ukuran: "small", Semester: 1, PathFile: "/test1"},
-		{NamaFile: "Modul 2", UserID: 2, Tipe: "video", Ukuran: "medium", Semester: 2, PathFile: "/test2"},
+		{NamaFile: "Modul 2", UserID: "user-2", Tipe: "video", Ukuran: "medium", Semester: 2, PathFile: "/test2"},
 	}
 
 	for i := range moduls {
@@ -111,12 +111,12 @@ func TestModulRepository_GetByUserID_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	moduls := []domain.Modul{
 		{NamaFile: "Modul 1", UserID: userID, Tipe: "pdf", Ukuran: "small", Semester: 1, PathFile: "/test1"},
 		{NamaFile: "Modul 2", UserID: userID, Tipe: "video", Ukuran: "medium", Semester: 2, PathFile: "/test2"},
-		{NamaFile: "Modul 3", UserID: 2, Tipe: "pdf", Ukuran: "large", Semester: 1, PathFile: "/test3"},
+		{NamaFile: "Modul 3", UserID: "user-2", Tipe: "pdf", Ukuran: "large", Semester: 1, PathFile: "/test3"},
 	}
 
 	for _, modul := range moduls {
@@ -157,7 +157,7 @@ func TestModulRepository_CountByUserID_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	moduls := []domain.Modul{
 		{NamaFile: "Modul 1", UserID: userID, Tipe: "pdf", Ukuran: "small", Semester: 1, PathFile: "/test1"},
@@ -183,7 +183,7 @@ func TestModulRepository_Update_Success(t *testing.T) {
 
 	modul := &domain.Modul{
 		NamaFile: "Old Name",
-		UserID:   1,
+		UserID:   "user-1",
 		Tipe:     "pdf",
 		Ukuran:   "small",
 		Semester: 1,
@@ -214,7 +214,7 @@ func TestModulRepository_Delete_Success(t *testing.T) {
 
 	modul := &domain.Modul{
 		NamaFile: "To Delete",
-		UserID:   1,
+		UserID:   "user-1",
 		Tipe:     "pdf",
 		Ukuran:   "small",
 		Semester: 1,
@@ -241,7 +241,7 @@ func TestModulRepository_UpdateMetadata_Success(t *testing.T) {
 
 	modul := &domain.Modul{
 		NamaFile: "Original Name",
-		UserID:   1,
+		UserID:   "user-1",
 		Tipe:     "pdf",
 		Ukuran:   "small",
 		Semester: 1,

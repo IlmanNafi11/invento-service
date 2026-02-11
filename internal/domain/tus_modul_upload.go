@@ -4,7 +4,7 @@ import "time"
 
 type TusModulUpload struct {
 	ID             string                    `json:"id" gorm:"primaryKey;size:36"`
-	UserID         uint                      `json:"user_id" gorm:"not null;index"`
+	UserID         string                    `json:"user_id" gorm:"not null;index;type:uuid"`
 	ModulID        *uint                     `json:"modul_id,omitempty" gorm:"index"`
 	UploadType     string                    `json:"upload_type" gorm:"not null;size:20;default:'modul_create'"`
 	UploadURL      string                    `json:"upload_url" gorm:"size:500"`

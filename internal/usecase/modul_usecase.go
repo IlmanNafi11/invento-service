@@ -13,11 +13,11 @@ import (
 )
 
 type ModulUsecase interface {
-	GetList(userID uint, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error)
-	GetByID(modulID, userID uint) (*domain.ModulResponse, error)
-	UpdateMetadata(modulID, userID uint, req domain.ModulUpdateRequest) error
-	Delete(modulID, userID uint) error
-	Download(userID uint, modulIDs []uint) (string, error)
+	GetList(userID string, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error)
+	GetByID(modulID uint, userID string) (*domain.ModulResponse, error)
+	UpdateMetadata(modulID uint, userID string, req domain.ModulUpdateRequest) error
+	Delete(modulID uint, userID string) error
+	Download(userID string, modulIDs []uint) (string, error)
 }
 
 type modulUsecase struct {
@@ -30,7 +30,7 @@ func NewModulUsecase(modulRepo repo.ModulRepository) ModulUsecase {
 	}
 }
 
-func (uc *modulUsecase) GetList(userID uint, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error) {
+func (uc *modulUsecase) GetList(userID string, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -56,7 +56,7 @@ func (uc *modulUsecase) GetList(userID uint, search string, filterType string, f
 	}, nil
 }
 
-func (uc *modulUsecase) GetByID(modulID, userID uint) (*domain.ModulResponse, error) {
+func (uc *modulUsecase) GetByID(modulID uint, userID string) (*domain.ModulResponse, error) {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -81,7 +81,7 @@ func (uc *modulUsecase) GetByID(modulID, userID uint) (*domain.ModulResponse, er
 	}, nil
 }
 
-func (uc *modulUsecase) Delete(modulID, userID uint) error {
+func (uc *modulUsecase) Delete(modulID uint, userID string) error {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -103,7 +103,7 @@ func (uc *modulUsecase) Delete(modulID, userID uint) error {
 	return nil
 }
 
-func (uc *modulUsecase) Download(userID uint, modulIDs []uint) (string, error) {
+func (uc *modulUsecase) Download(userID string, modulIDs []uint) (string, error) {
 	if len(modulIDs) == 0 {
 		return "", errors.New("id modul tidak boleh kosong")
 	}
@@ -146,7 +146,7 @@ func (uc *modulUsecase) Download(userID uint, modulIDs []uint) (string, error) {
 	return zipFilePath, nil
 }
 
-func (uc *modulUsecase) UpdateMetadata(modulID, userID uint, req domain.ModulUpdateRequest) error {
+func (uc *modulUsecase) UpdateMetadata(modulID uint, userID string, req domain.ModulUpdateRequest) error {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

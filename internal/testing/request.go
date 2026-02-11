@@ -45,7 +45,7 @@ func MakeRequest(app *fiber.App, method, path string, body interface{}, token st
 }
 
 // MakeAuthenticatedRequest creates a request with authentication token
-func MakeAuthenticatedRequest(app *fiber.App, method, path string, body interface{}, userID uint, email, role string) *http.Response {
+func MakeAuthenticatedRequest(app *fiber.App, method, path string, body interface{}, userID string, email, role string) *http.Response {
 	token := GenerateTestToken(userID, email, role)
 	return MakeRequest(app, method, path, body, token)
 }

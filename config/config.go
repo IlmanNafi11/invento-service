@@ -10,12 +10,10 @@ import (
 )
 
 type Config struct {
-	App     AppConfig
+	App      AppConfig
 	Database DatabaseConfig
-	JWT      JWTConfig
+	Supabase SupabaseConfig
 	Upload   UploadConfig
-	Resend   ResendConfig
-	OTP      OTPConfig
 	Logging  LoggingConfig
 	Swagger  SwaggerConfig
 }
@@ -29,39 +27,11 @@ type AppConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host           string
-	Port           string
-	User           string
-	Password       string
-	Name           string
-	AutoMigrate    bool
-	RunSeeder      bool
-	SeedUsers      bool
-	MigrateOnStart bool
-}
-
-type JWTConfig struct {
-	PrivateKeyPath          string
-	PublicKeyPath           string
-	PrivateKeyRotationPath  string
-	PublicKeyRotationPath   string
-	ExpireHours             int
-	RefreshTokenExpireHours int
-	KeyRotationHours        int
-}
-
-type ResendConfig struct {
-	APIKey    string
-	FromEmail string
-	FromName  string
-}
-
-type OTPConfig struct {
-	Length                int
-	ExpiryMinutes         int
-	MaxAttempts           int
-	ResendCooldownSeconds int
-	ResendMaxTimes        int
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Name     string
 }
 
 type UploadConfig struct {
@@ -93,6 +63,13 @@ type SwaggerConfig struct {
 	Enabled bool
 }
 
+type SupabaseConfig struct {
+	URL        string
+	ServiceKey string
+	AnonKey    string
+	DBURL      string
+}
+
 func LoadConfig() *Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Tidak dapat memuat file .env, menggunakan environment variables")
@@ -109,24 +86,11 @@ func LoadConfig() *Config {
 			CorsOriginProd: getEnv("CORS_ORIGIN_PRODUCTION", "https://yourdomain.com"),
 		},
 		Database: DatabaseConfig{
-			Host:           getEnv("DB_HOST", "localhost"),
-			Port:           getEnv("DB_PORT", "3306"),
-			User:           getEnv("DB_USER", "root"),
-			Password:       getEnvAllowEmpty("DB_PASSWORD", "admin"),
-			Name:           getEnv("DB_NAME", "fiber_boilerplate"),
-			AutoMigrate:    getEnvAsBool("DB_AUTO_MIGRATE", true),
-			RunSeeder:      getEnvAsBool("DB_RUN_SEEDER", false),
-			SeedUsers:      getEnvAsBool("DB_SEED_USERS", false),
-			MigrateOnStart: getEnvAsBool("DB_MIGRATE_ON_START", true),
-		},
-		JWT: JWTConfig{
-			PrivateKeyPath:          getEnv("JWT_PRIVATE_KEY_PATH", "./keys/private.pem"),
-			PublicKeyPath:           getEnv("JWT_PUBLIC_KEY_PATH", "./keys/public.pem"),
-			PrivateKeyRotationPath:  getEnv("JWT_PRIVATE_KEY_ROTATION_PATH", "./keys/private_rotation.pem"),
-			PublicKeyRotationPath:   getEnv("JWT_PUBLIC_KEY_ROTATION_PATH", "./keys/public_rotation.pem"),
-			ExpireHours:             getEnvAsInt("JWT_EXPIRE_HOURS", 1),
-			RefreshTokenExpireHours: getEnvAsInt("REFRESH_TOKEN_EXPIRE_HOURS", 168),
-			KeyRotationHours:        getEnvAsInt("JWT_KEY_ROTATION_HOURS", 168),
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnv("DB_PORT", "3306"),
+			User:     getEnv("DB_USER", "root"),
+			Password: getEnvAllowEmpty("DB_PASSWORD", "admin"),
+			Name:     getEnv("DB_NAME", "fiber_boilerplate"),
 		},
 		Upload: UploadConfig{
 			MaxSize:              getEnvAsInt64("UPLOAD_MAX_SIZE", 524288000),
@@ -146,18 +110,6 @@ func LoadConfig() *Config {
 			TusVersion:           getEnv("TUS_RESUMABLE_VERSION", "1.0.0"),
 			MaxResumeAttempts:    getEnvAsInt("TUS_MAX_RESUME_ATTEMPTS", 10),
 		},
-		Resend: ResendConfig{
-			APIKey:    getEnv("RESEND_API_KEY", ""),
-			FromEmail: getEnv("RESEND_FROM_EMAIL", "noreply@example.com"),
-			FromName:  getEnv("RESEND_FROM_NAME", "Invento Service"),
-		},
-		OTP: OTPConfig{
-			Length:                getEnvAsInt("OTP_LENGTH", 6),
-			ExpiryMinutes:         getEnvAsInt("OTP_EXPIRY_MINUTES", 10),
-			MaxAttempts:           getEnvAsInt("OTP_MAX_ATTEMPTS", 5),
-			ResendCooldownSeconds: getEnvAsInt("OTP_RESEND_COOLDOWN_SECONDS", 60),
-			ResendMaxTimes:        getEnvAsInt("OTP_RESEND_MAX_TIMES", 5),
-		},
 		Logging: LoggingConfig{
 			Level:         getEnv("LOG_LEVEL", "INFO"),
 			Format:        getEnv("LOG_FORMAT", "text"),
@@ -166,19 +118,13 @@ func LoadConfig() *Config {
 		Swagger: SwaggerConfig{
 			Enabled: getEnvAsBool("SWAGGER_ENABLED", false),
 		},
+		Supabase: SupabaseConfig{
+			URL:        getEnv("SUPABASE_URL", ""),
+			ServiceKey: getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),
+			AnonKey:    getEnv("SUPABASE_ANON_KEY", ""),
+			DBURL:      getEnv("SUPABASE_DB_URL", ""),
+		},
 	}
-
-	// Log config values for debugging
-	log.Printf("[CONFIG] Resend loaded: APIKey=%s, FromEmail=%s, FromName=%s",
-		maskToken(config.Resend.APIKey),
-		config.Resend.FromEmail,
-		config.Resend.FromName)
-	log.Printf("[CONFIG] OTP: Length=%d, ExpiryMinutes=%d, MaxAttempts=%d, ResendCooldown=%d, ResendMaxTimes=%d",
-		config.OTP.Length,
-		config.OTP.ExpiryMinutes,
-		config.OTP.MaxAttempts,
-		config.OTP.ResendCooldownSeconds,
-		config.OTP.ResendMaxTimes)
 
 	return config
 }

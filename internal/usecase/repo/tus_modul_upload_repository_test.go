@@ -18,7 +18,7 @@ func TestTusModulUploadRepository_Create_Success(t *testing.T) {
 
 	upload := &domain.TusModulUpload{
 		ID:         "test-upload-id-1",
-		UserID:     1,
+		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadURL:  "https://example.com/upload",
 		UploadMetadata: domain.TusModulUploadInitRequest{
@@ -47,7 +47,7 @@ func TestTusModulUploadRepository_Create_DuplicateID(t *testing.T) {
 
 	upload1 := &domain.TusModulUpload{
 		ID:         "duplicate-id",
-		UserID:     1,
+		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			NamaFile: "Test Modul.pdf",
@@ -66,7 +66,7 @@ func TestTusModulUploadRepository_Create_DuplicateID(t *testing.T) {
 	// Try to create another upload with the same ID
 	upload2 := &domain.TusModulUpload{
 		ID:         "duplicate-id",
-		UserID:     2,
+		UserID:     "user-2",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			NamaFile: "Another Modul.pdf",
@@ -90,7 +90,7 @@ func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
 
 	upload := &domain.TusModulUpload{
 		ID:         "test-upload-id-2",
-		UserID:     1,
+		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadURL:  "https://example.com/upload",
 		UploadMetadata: domain.TusModulUploadInitRequest{
@@ -110,7 +110,7 @@ func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, upload.ID, result.ID)
-	assert.Equal(t, uint(1), result.UserID)
+	assert.Equal(t, "user-1", result.UserID)
 	assert.Equal(t, "Test Modul.pdf", result.UploadMetadata.NamaFile)
 }
 
@@ -132,7 +132,7 @@ func TestTusModulUploadRepository_GetByUserID_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	uploads := []domain.TusModulUpload{
 		{
@@ -163,7 +163,7 @@ func TestTusModulUploadRepository_GetByUserID_Success(t *testing.T) {
 		},
 		{
 			ID:         "upload-3",
-			UserID:     2,
+			UserID:     "user-2",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Other Modul.pdf",
@@ -195,7 +195,7 @@ func TestTusModulUploadRepository_UpdateOffset_Success(t *testing.T) {
 
 	upload := &domain.TusModulUpload{
 		ID:         "test-upload-id-3",
-		UserID:     1,
+		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			NamaFile: "Test Modul.pdf",
@@ -244,7 +244,7 @@ func TestTusModulUploadRepository_UpdateStatus_Success(t *testing.T) {
 
 	upload := &domain.TusModulUpload{
 		ID:         "test-upload-id-4",
-		UserID:     1,
+		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			NamaFile: "Test Modul.pdf",
@@ -290,7 +290,7 @@ func TestTusModulUploadRepository_Complete_Success(t *testing.T) {
 
 	upload := &domain.TusModulUpload{
 		ID:         "test-upload-id-5",
-		UserID:     1,
+		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			NamaFile: "Test Modul.pdf",
@@ -346,7 +346,7 @@ func TestTusModulUploadRepository_Delete_Success(t *testing.T) {
 
 	upload := &domain.TusModulUpload{
 		ID:         "test-upload-id-6",
-		UserID:     1,
+		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			NamaFile: "Test Modul.pdf",
@@ -394,7 +394,7 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 	uploads := []domain.TusModulUpload{
 		{
 			ID:         "expired-1",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Expired Modul 1.pdf",
@@ -407,7 +407,7 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 		},
 		{
 			ID:         "expired-2",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Expired Modul 2.pdf",
@@ -420,7 +420,7 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 		},
 		{
 			ID:         "active-1",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Active Modul.pdf",
@@ -433,7 +433,7 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 		},
 		{
 			ID:         "completed-1",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Completed Modul.pdf",
@@ -446,7 +446,7 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 		},
 		{
 			ID:         "cancelled-1",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Cancelled Modul.pdf",
@@ -482,7 +482,7 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 	uploads := []domain.TusModulUpload{
 		{
 			ID:         "abandoned-1",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Abandoned Modul 1.pdf",
@@ -498,7 +498,7 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 		},
 		{
 			ID:         "abandoned-2",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Abandoned Modul 2.pdf",
@@ -514,7 +514,7 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 		},
 		{
 			ID:         "active-1",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Active Modul.pdf",
@@ -530,7 +530,7 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 		},
 		{
 			ID:         "completed-1",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Completed Modul.pdf",
@@ -544,7 +544,7 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 		},
 		{
 			ID:         "failed-1",
-			UserID:     1,
+			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				NamaFile: "Failed Modul.pdf",
@@ -575,7 +575,7 @@ func TestTusModulUploadRepository_CountActiveByUserID_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	uploads := []domain.TusModulUpload{
 		{
@@ -662,7 +662,7 @@ func TestTusModulUploadRepository_CountActiveByUserID_NoUploads(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	repo := NewTusModulUploadRepository(db)
 	count, err := repo.CountActiveByUserID(userID)
@@ -676,7 +676,7 @@ func TestTusModulUploadRepository_GetActiveByUserID_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	uploads := []domain.TusModulUpload{
 		{
@@ -750,7 +750,7 @@ func TestTusModulUploadRepository_GetActiveByUserID_Ordering(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	baseTime := time.Now()
 
@@ -821,7 +821,7 @@ func TestTusModulUploadRepository_GetActiveByUserID_NoActiveUploads(t *testing.T
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	// Create only completed uploads
 	uploads := []domain.TusModulUpload{
@@ -870,7 +870,7 @@ func TestTusModulUploadRepository_GetByUserID_Ordering(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	userID := uint(1)
+	userID := "user-1"
 	baseTime := time.Now()
 
 	uploads := []domain.TusModulUpload{
@@ -941,7 +941,7 @@ func TestTusModulUploadRepository_Complete_SetsProgressAndTimestamp(t *testing.T
 
 	upload := &domain.TusModulUpload{
 		ID:         "test-upload-complete",
-		UserID:     1,
+		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			NamaFile: "Test Modul.pdf",

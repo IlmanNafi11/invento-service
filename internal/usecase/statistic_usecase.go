@@ -9,7 +9,7 @@ import (
 )
 
 type StatisticUsecase interface {
-	GetStatistics(userID uint, userRole string) (*domain.StatisticData, error)
+	GetStatistics(userID string, userRole string) (*domain.StatisticData, error)
 }
 
 type statisticUsecase struct {
@@ -39,7 +39,7 @@ func NewStatisticUsecase(
 	}
 }
 
-func (su *statisticUsecase) GetStatistics(userID uint, userRole string) (*domain.StatisticData, error) {
+func (su *statisticUsecase) GetStatistics(userID string, userRole string) (*domain.StatisticData, error) {
 	result := &domain.StatisticData{}
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")

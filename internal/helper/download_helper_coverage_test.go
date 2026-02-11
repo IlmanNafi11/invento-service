@@ -24,7 +24,7 @@ func TestValidateDownloadRequest_EmptyArrays(t *testing.T) {
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
-	err := dh.ValidateDownloadRequest([]uint{}, []uint{})
+	err := dh.ValidateDownloadRequest([]string{}, []string{})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "harus diisi minimal salah satu")
 }
@@ -34,7 +34,7 @@ func TestValidateDownloadRequest_WithProjects(t *testing.T) {
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
-	err := dh.ValidateDownloadRequest([]uint{1, 2}, []uint{})
+	err := dh.ValidateDownloadRequest([]string{"1", "2"}, []string{})
 	assert.NoError(t, err)
 }
 
@@ -43,7 +43,7 @@ func TestValidateDownloadRequest_WithModuls(t *testing.T) {
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
-	err := dh.ValidateDownloadRequest([]uint{}, []uint{1, 2, 3})
+	err := dh.ValidateDownloadRequest([]string{}, []string{"1", "2", "3"})
 	assert.NoError(t, err)
 }
 
@@ -52,7 +52,7 @@ func TestValidateDownloadRequest_WithBoth(t *testing.T) {
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
-	err := dh.ValidateDownloadRequest([]uint{1}, []uint{2})
+	err := dh.ValidateDownloadRequest([]string{"1"}, []string{"2"})
 	assert.NoError(t, err)
 }
 
@@ -151,7 +151,7 @@ func TestCreateDownloadZip_SingleFile(t *testing.T) {
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
-	zipPath, err := dh.CreateDownloadZip([]string{tmpFile.Name()}, 123)
+	zipPath, err := dh.CreateDownloadZip([]string{tmpFile.Name()}, "123")
 	assert.NoError(t, err)
 	assert.Equal(t, tmpFile.Name(), zipPath)
 }
@@ -161,7 +161,7 @@ func TestCreateDownloadZip_EmptyArray(t *testing.T) {
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
-	zipPath, err := dh.CreateDownloadZip([]string{}, 123)
+	zipPath, err := dh.CreateDownloadZip([]string{}, "123")
 	assert.Error(t, err)
 	assert.Empty(t, zipPath)
 	assert.Contains(t, err.Error(), "tidak ada file")

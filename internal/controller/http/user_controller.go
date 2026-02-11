@@ -7,6 +7,7 @@ import (
 	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,7 +26,7 @@ type UserController struct {
 // NewUserController creates a new UserController instance
 func NewUserController(userUsecase usecase.UserUsecase) *UserController {
 	return &UserController{
-		BaseController: base.NewBaseController(nil, nil),
+		BaseController: base.NewBaseController("", nil),
 		userUsecase:    userUsecase,
 	}
 }
@@ -88,7 +89,7 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 		return nil // validation error response already sent
 	}
 
-	err = ctrl.userUsecase.UpdateUserRole(id, req.Role)
+	err = ctrl.userUsecase.UpdateUserRole(strconv.FormatUint(uint64(id), 10), req.Role)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -120,7 +121,7 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 		return err // error response already sent
 	}
 
-	err = ctrl.userUsecase.DeleteUser(id)
+	err = ctrl.userUsecase.DeleteUser(strconv.FormatUint(uint64(id), 10))
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -159,7 +160,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
 
-	result, err := ctrl.userUsecase.GetUserFiles(id, params)
+	result, err := ctrl.userUsecase.GetUserFiles(strconv.FormatUint(uint64(id), 10), params)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -184,7 +185,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 // @Router /api/v1/profile [get]
 func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil // unauthorized response already sent
 	}
 
@@ -212,7 +213,7 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 // @Router /api/v1/profile [put]
 func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil // unauthorized response already sent
 	}
 
@@ -259,7 +260,7 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 // @Router /api/v1/user/permissions [get]
 func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil // unauthorized response already sent
 	}
 
@@ -301,7 +302,18 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 		return ctrl.SendBadRequest(c, "Project IDs atau Modul IDs harus diisi minimal salah satu")
 	}
 
-	filePath, err := ctrl.userUsecase.DownloadUserFiles(ownerUserID, req.ProjectIDs, req.ModulIDs)
+	// Convert uint IDs to strings
+	projectIDsStr := make([]string, len(req.ProjectIDs))
+	for i, id := range req.ProjectIDs {
+		projectIDsStr[i] = strconv.FormatUint(uint64(id), 10)
+	}
+
+	modulIDsStr := make([]string, len(req.ModulIDs))
+	for i, id := range req.ModulIDs {
+		modulIDsStr[i] = strconv.FormatUint(uint64(id), 10)
+	}
+
+	filePath, err := ctrl.userUsecase.DownloadUserFiles(strconv.FormatUint(uint64(ownerUserID), 10), projectIDsStr, modulIDsStr)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {

@@ -4,7 +4,7 @@ import "time"
 
 type Project struct {
 	ID          uint      `json:"id" gorm:"primaryKey"`
-	UserID      uint      `json:"user_id" gorm:"not null"`
+	UserID      string    `json:"user_id" gorm:"not null;type:uuid"`
 	NamaProject string    `json:"nama_project" gorm:"not null;size:255"`
 	Kategori    string    `json:"kategori" gorm:"not null;size:50"`
 	Semester    int       `json:"semester" gorm:"not null"`

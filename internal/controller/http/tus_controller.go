@@ -28,7 +28,7 @@ type TusController struct {
 // NewTusController creates a new TUS controller instance.
 func NewTusController(tusUsecase usecase.TusUploadUsecase, cfg *config.Config) *TusController {
 	return &TusController{
-		base:       base.NewBaseController(nil, nil),
+		base:       base.NewBaseController("", nil),
 		tusUsecase: tusUsecase,
 		config:     cfg,
 		validator:  validator.New(),
@@ -45,7 +45,7 @@ func NewTusController(tusUsecase usecase.TusUploadUsecase, cfg *config.Config) *
 // Response: JSON with slot availability information
 func (ctrl *TusController) CheckUploadSlot(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -70,7 +70,7 @@ func (ctrl *TusController) CheckUploadSlot(c *fiber.Ctx) error {
 // Response: JSON success message
 func (ctrl *TusController) ResetUploadQueue(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -155,7 +155,7 @@ func (ctrl *TusController) InitiateUpload(c *fiber.Ctx) error {
 func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		helper.SetTusResponseHeaders(c, 0, 0)
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
@@ -194,7 +194,7 @@ func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
 func (ctrl *TusController) GetUploadStatus(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -230,7 +230,7 @@ func (ctrl *TusController) GetUploadStatus(c *fiber.Ctx) error {
 func (ctrl *TusController) GetUploadInfo(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -256,7 +256,7 @@ func (ctrl *TusController) GetUploadInfo(c *fiber.Ctx) error {
 func (ctrl *TusController) CancelUpload(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -293,7 +293,7 @@ func (ctrl *TusController) CancelUpload(c *fiber.Ctx) error {
 func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -353,7 +353,7 @@ func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
 func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		helper.SetTusResponseHeaders(c, 0, 0)
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
@@ -399,7 +399,7 @@ func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
 func (ctrl *TusController) GetProjectUpdateUploadStatus(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -440,7 +440,7 @@ func (ctrl *TusController) GetProjectUpdateUploadStatus(c *fiber.Ctx) error {
 func (ctrl *TusController) GetProjectUpdateUploadInfo(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -472,7 +472,7 @@ func (ctrl *TusController) GetProjectUpdateUploadInfo(c *fiber.Ctx) error {
 func (ctrl *TusController) CancelProjectUpdateUpload(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
+	if userID == "" {
 		return nil
 	}
 
@@ -510,20 +510,20 @@ func (ctrl *TusController) CancelProjectUpdateUpload(c *fiber.Ctx) error {
 
 // getTusAuthContext extracts authenticated user context (ID, email, role).
 // Returns error and sends response if authentication fails.
-func (ctrl *TusController) getTusAuthContext(c *fiber.Ctx) (uint, string, string, error) {
+func (ctrl *TusController) getTusAuthContext(c *fiber.Ctx) (string, string, string, error) {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
-	if userID == 0 {
-		return 0, "", "", fiber.ErrUnauthorized
+	if userID == "" {
+		return "", "", "", fiber.ErrUnauthorized
 	}
 
 	userEmail := ctrl.base.GetAuthenticatedUserEmail(c)
 	if userEmail == "" {
-		return 0, "", "", fiber.ErrUnauthorized
+		return "", "", "", fiber.ErrUnauthorized
 	}
 
 	userRole := ctrl.base.GetAuthenticatedUserRole(c)
 	if userRole == "" {
-		return 0, "", "", fiber.ErrUnauthorized
+		return "", "", "", fiber.ErrUnauthorized
 	}
 
 	return userID, userEmail, userRole, nil

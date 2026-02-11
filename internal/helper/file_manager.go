@@ -21,7 +21,7 @@ func (fm *FileManager) GenerateRandomDirectory() (string, error) {
 	return GenerateRandomString(10)
 }
 
-func (fm *FileManager) GetUserUploadPath(userID uint) (string, error) {
+func (fm *FileManager) GetUserUploadPath(userID string) (string, error) {
 	var basePath string
 
 	if fm.config.App.Env == "production" {
@@ -30,7 +30,7 @@ func (fm *FileManager) GetUserUploadPath(userID uint) (string, error) {
 		basePath = fm.config.Upload.PathDevelopment
 	}
 
-	userDirPath := filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID))
+	userDirPath := filepath.Join(basePath, "projects", userID)
 
 	if err := os.MkdirAll(userDirPath, 0755); err != nil {
 		return "", fmt.Errorf("gagal membuat direktori user: %w", err)
@@ -39,7 +39,7 @@ func (fm *FileManager) GetUserUploadPath(userID uint) (string, error) {
 	return userDirPath, nil
 }
 
-func (fm *FileManager) CreateProjectUploadDirectory(userID uint) (string, string, error) {
+func (fm *FileManager) CreateProjectUploadDirectory(userID string) (string, string, error) {
 	randomDir, err := fm.GenerateRandomDirectory()
 	if err != nil {
 		return "", "", fmt.Errorf("gagal generate random directory: %w", err)
@@ -59,7 +59,7 @@ func (fm *FileManager) CreateProjectUploadDirectory(userID uint) (string, string
 	return projectDirPath, randomDir, nil
 }
 
-func (fm *FileManager) GetProjectFilePath(userID uint, randomDir, filename string) string {
+func (fm *FileManager) GetProjectFilePath(userID string, randomDir, filename string) string {
 	var basePath string
 
 	if fm.config.App.Env == "production" {
@@ -68,10 +68,10 @@ func (fm *FileManager) GetProjectFilePath(userID uint, randomDir, filename strin
 		basePath = fm.config.Upload.PathDevelopment
 	}
 
-	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), randomDir, filename)
+	return filepath.Join(basePath, "projects", userID, randomDir, filename)
 }
 
-func (fm *FileManager) DeleteUserDirectory(userID uint) error {
+func (fm *FileManager) DeleteUserDirectory(userID string) error {
 	var basePath string
 
 	if fm.config.App.Env == "production" {
@@ -80,12 +80,12 @@ func (fm *FileManager) DeleteUserDirectory(userID uint) error {
 		basePath = fm.config.Upload.PathDevelopment
 	}
 
-	userDirPath := filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID))
+	userDirPath := filepath.Join(basePath, "projects", userID)
 
 	return os.RemoveAll(userDirPath)
 }
 
-func (fm *FileManager) DeleteProjectDirectory(userID uint, randomDir string) error {
+func (fm *FileManager) DeleteProjectDirectory(userID string, randomDir string) error {
 	var basePath string
 
 	if fm.config.App.Env == "production" {
@@ -94,7 +94,7 @@ func (fm *FileManager) DeleteProjectDirectory(userID uint, randomDir string) err
 		basePath = fm.config.Upload.PathDevelopment
 	}
 
-	projectDirPath := filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), randomDir)
+	projectDirPath := filepath.Join(basePath, "projects", userID, randomDir)
 
 	return os.RemoveAll(projectDirPath)
 }
@@ -118,9 +118,9 @@ func (fm *FileManager) GetModulBasePath() string {
 	return fm.config.Upload.PathDevelopment
 }
 
-func (fm *FileManager) GetUserModulPath(userID uint) (string, error) {
+func (fm *FileManager) GetUserModulPath(userID string) (string, error) {
 	basePath := fm.GetModulBasePath()
-	userModulPath := filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID))
+	userModulPath := filepath.Join(basePath, "moduls", userID)
 
 	if err := os.MkdirAll(userModulPath, 0755); err != nil {
 		return "", fmt.Errorf("gagal membuat direktori modul user: %w", err)
@@ -129,7 +129,7 @@ func (fm *FileManager) GetUserModulPath(userID uint) (string, error) {
 	return userModulPath, nil
 }
 
-func (fm *FileManager) CreateModulUploadDirectory(userID uint) (string, string, error) {
+func (fm *FileManager) CreateModulUploadDirectory(userID string) (string, string, error) {
 	randomDir, err := GenerateRandomString(10)
 	if err != nil {
 		return "", "", fmt.Errorf("gagal generate random directory: %w", err)
@@ -149,19 +149,19 @@ func (fm *FileManager) CreateModulUploadDirectory(userID uint) (string, string, 
 	return modulDirPath, randomDir, nil
 }
 
-func (fm *FileManager) GetModulFilePath(userID uint, randomDir, filename string) string {
+func (fm *FileManager) GetModulFilePath(userID string, randomDir, filename string) string {
 	basePath := fm.GetModulBasePath()
-	return filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), randomDir, filename)
+	return filepath.Join(basePath, "moduls", userID, randomDir, filename)
 }
 
-func (fm *FileManager) DeleteModulDirectory(userID uint, randomDir string) error {
+func (fm *FileManager) DeleteModulDirectory(userID string, randomDir string) error {
 	basePath := fm.GetModulBasePath()
-	modulDirPath := filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), randomDir)
+	modulDirPath := filepath.Join(basePath, "moduls", userID, randomDir)
 	return os.RemoveAll(modulDirPath)
 }
 
-func (fm *FileManager) DeleteUserModulDirectory(userID uint) error {
+func (fm *FileManager) DeleteUserModulDirectory(userID string) error {
 	basePath := fm.GetModulBasePath()
-	userModulPath := filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID))
+	userModulPath := filepath.Join(basePath, "moduls", userID)
 	return os.RemoveAll(userModulPath)
 }

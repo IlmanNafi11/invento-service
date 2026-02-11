@@ -4,7 +4,6 @@ import (
 	"fiber-boiler-plate/config"
 	app "fiber-boiler-plate/internal/app"
 	"fiber-boiler-plate/internal/logger"
-	testutil "fiber-boiler-plate/internal/testing"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -13,17 +12,32 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
+
+// setupTestDB creates an in-memory SQLite database for testing
+func setupTestDB(t *testing.T) *gorm.DB {
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
+	})
+	require.NoError(t, err, "Failed to connect to test database")
+	return db
+}
+
+// teardownTestDB closes the database connection
+func teardownTestDB(db *gorm.DB) {
+	if sqlDB, err := db.DB(); err == nil {
+		sqlDB.Close()
+	}
+}
 
 // TestNewServer_CreatesFiberApp tests that NewServer creates a valid Fiber app
 func TestNewServer_CreatesFiberApp(t *testing.T) {
 	// Setup test database
-	db, err := testutil.SetupTestDatabase()
-	if err != nil {
-		t.Skip("Skipping test: unable to setup test database")
-		return
-	}
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	cfg := createTestConfig()
 
@@ -45,24 +59,11 @@ func TestNewServer_WithDevelopmentConfig(t *testing.T) {
 			CorsOriginProd: "https://example.com",
 		},
 		Database: config.DatabaseConfig{
-			Host:           "localhost",
-			Port:           "5432",
-			User:           "test",
-			Password:       "test",
-			Name:           "testdb",
-			AutoMigrate:    true,
-			RunSeeder:      false,
-			SeedUsers:      false,
-			MigrateOnStart: false,
-		},
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/test_private.pem",
-			PublicKeyPath:           "../../keys/test_public.pem",
-			PrivateKeyRotationPath:  "../../keys/test_private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/test_public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 168,
-			KeyRotationHours:        168,
+			Host:     "localhost",
+			Port:     "5432",
+			User:     "test",
+			Password: "test",
+			Name:     "testdb",
 		},
 		Upload: config.UploadConfig{
 			MaxSize:              524288000,
@@ -82,17 +83,11 @@ func TestNewServer_WithDevelopmentConfig(t *testing.T) {
 			TusVersion:           "1.0.0",
 			MaxResumeAttempts:    10,
 		},
-		Resend: config.ResendConfig{
-			APIKey:    "test_key",
-			FromEmail: "noreply@test.com",
-			FromName:  "Test Service",
-		},
-		OTP: config.OTPConfig{
-			Length:                6,
-			ExpiryMinutes:         10,
-			MaxAttempts:           5,
-			ResendCooldownSeconds: 60,
-			ResendMaxTimes:        5,
+		Supabase: config.SupabaseConfig{
+			URL:        "https://test.supabase.co",
+			AnonKey:    "test_anon_key",
+			ServiceKey: "test_service_role_key",
+			DBURL:      "postgresql://test:test@localhost:5432/testdb",
 		},
 		Logging: config.LoggingConfig{
 			Level:         "INFO",
@@ -104,9 +99,8 @@ func TestNewServer_WithDevelopmentConfig(t *testing.T) {
 		},
 	}
 
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	assert.NotPanics(t, func() {
 		_ = app.NewServer(cfg, db)
@@ -116,9 +110,8 @@ func TestNewServer_WithDevelopmentConfig(t *testing.T) {
 // TestNewServer_WithProductionConfig tests server creation with production config
 func TestNewServer_WithProductionConfig(t *testing.T) {
 	cfg := createProductionTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	assert.NotPanics(t, func() {
 		_ = app.NewServer(cfg, db)
@@ -128,9 +121,8 @@ func TestNewServer_WithProductionConfig(t *testing.T) {
 // TestServer_ErrorHandler_NotFound tests the custom error handler for 404
 func TestServer_ErrorHandler_NotFound(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -151,9 +143,8 @@ func TestServer_ErrorHandler_NotFound(t *testing.T) {
 // TestServer_ErrorHandler_UploadsPath tests that errors in /uploads path are returned as-is
 func TestServer_ErrorHandler_UploadsPath(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -170,9 +161,8 @@ func TestServer_ErrorHandler_UploadsPath(t *testing.T) {
 // TestServer_ErrorHandler_TusProtocol tests TUS protocol error handling
 func TestServer_ErrorHandler_TusProtocol(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -189,9 +179,8 @@ func TestServer_ErrorHandler_TusProtocol(t *testing.T) {
 // TestServer_RouteRegistration_AuthRoutes tests that auth routes are registered
 func TestServer_RouteRegistration_AuthRoutes(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -229,9 +218,8 @@ func TestServer_RouteRegistration_AuthRoutes(t *testing.T) {
 // TestServer_RouteRegistration_RoleRoutes tests that role routes are registered
 func TestServer_RouteRegistration_RoleRoutes(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -263,9 +251,8 @@ func TestServer_RouteRegistration_RoleRoutes(t *testing.T) {
 // TestServer_RouteRegistration_UserRoutes tests that user routes are registered
 func TestServer_RouteRegistration_UserRoutes(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -296,9 +283,8 @@ func TestServer_RouteRegistration_UserRoutes(t *testing.T) {
 // TestServer_RouteRegistration_ProfileRoutes tests that profile routes are registered
 func TestServer_RouteRegistration_ProfileRoutes(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -325,9 +311,8 @@ func TestServer_RouteRegistration_ProfileRoutes(t *testing.T) {
 // TestServer_RouteRegistration_ProjectRoutes tests that project routes are registered
 func TestServer_RouteRegistration_ProjectRoutes(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -369,9 +354,8 @@ func TestServer_RouteRegistration_ProjectRoutes(t *testing.T) {
 // TestServer_RouteRegistration_ModulRoutes tests that modul routes are registered
 func TestServer_RouteRegistration_ModulRoutes(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -411,9 +395,8 @@ func TestServer_RouteRegistration_ModulRoutes(t *testing.T) {
 // TestServer_RouteRegistration_StatisticsRoutes tests that statistics routes are registered
 func TestServer_RouteRegistration_StatisticsRoutes(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -439,9 +422,8 @@ func TestServer_RouteRegistration_StatisticsRoutes(t *testing.T) {
 // TestServer_RouteRegistration_MonitoringRoutes tests that monitoring routes are registered
 func TestServer_RouteRegistration_MonitoringRoutes(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -471,9 +453,8 @@ func TestServer_RouteRegistration_MonitoringRoutes(t *testing.T) {
 // TestServer_RouteRegistration_SwaggerRoute tests that swagger route is registered
 func TestServer_RouteRegistration_SwaggerRoute(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -490,9 +471,8 @@ func TestServer_RouteRegistration_SwaggerRoute(t *testing.T) {
 // TestServer_Middleware_RequestID tests that RequestID middleware is applied
 func TestServer_Middleware_RequestID(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -511,9 +491,8 @@ func TestServer_Middleware_CORS_Development(t *testing.T) {
 	cfg.App.Env = "development"
 	cfg.App.CorsOriginDev = "http://localhost:3000"
 
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -539,9 +518,8 @@ func TestServer_Middleware_CORS_Production(t *testing.T) {
 	cfg.App.Env = "production"
 	cfg.App.CorsOriginProd = "https://example.com"
 
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -560,9 +538,8 @@ func TestServer_Middleware_CORS_Production(t *testing.T) {
 // TestServer_StaticFileUploads tests that static file serving for uploads is configured
 func TestServer_StaticFileUploads(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -622,9 +599,8 @@ func TestServer_LoggerConfiguration(t *testing.T) {
 			cfg.Logging.Level = tt.logLevel
 			cfg.Logging.Format = tt.logFormat
 
-			db, err := testutil.SetupTestDatabase()
-			require.NoError(t, err, "Failed to setup test database")
-			defer testutil.TeardownTestDatabase(db)
+			db := setupTestDB(t)
+			defer teardownTestDB(db)
 
 			if tt.expectPanic {
 				assert.Panics(t, func() {
@@ -687,9 +663,8 @@ func TestServer_LogFormatParsing(t *testing.T) {
 // TestServer_Shutdown tests graceful shutdown of the server
 func TestServer_Shutdown(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -707,9 +682,8 @@ func TestServer_Shutdown(t *testing.T) {
 // TestServer_ShutdownWithContext tests graceful shutdown with timeout
 func TestServer_ShutdownWithContext(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -736,9 +710,8 @@ func TestServer_ShutdownWithContext(t *testing.T) {
 // TestServer_MultipleRequests tests handling multiple concurrent requests
 func TestServer_MultipleRequests(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -775,9 +748,8 @@ func TestServer_MultipleRequests(t *testing.T) {
 // TestServer_DifferentHTTPMethods tests that the server handles different HTTP methods
 func TestServer_DifferentHTTPMethods(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -798,9 +770,8 @@ func TestServer_DifferentHTTPMethods(t *testing.T) {
 // TestServer_HeaderHandling tests that the server properly handles headers
 func TestServer_HeaderHandling(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -852,27 +823,14 @@ func TestServer_ConfigVariations(t *testing.T) {
 				cfg.Upload.CleanupInterval = 600
 			},
 		},
-		{
-			name: "With custom JWT expiration",
-			modifyFn: func(cfg *config.Config) {
-				cfg.JWT.ExpireHours = 2
-			},
-		},
-		{
-			name: "With custom key rotation",
-			modifyFn: func(cfg *config.Config) {
-				cfg.JWT.KeyRotationHours = 336 // 14 days
-			},
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := createTestConfig()
 			tt.modifyFn(cfg)
-			db, err := testutil.SetupTestDatabase()
-			require.NoError(t, err, "Failed to setup test database")
-			defer testutil.TeardownTestDatabase(db)
+			db := setupTestDB(t)
+			defer teardownTestDB(db)
 
 			assert.NotPanics(t, func() {
 				_ = app.NewServer(cfg, db)
@@ -885,9 +843,8 @@ func TestServer_ConfigVariations(t *testing.T) {
 func TestServer_CORSHeadersVerification(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.App.Env = "development"
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -907,9 +864,8 @@ func TestServer_CORSHeadersVerification(t *testing.T) {
 // TestServer_ErrorHandlerBehavior tests custom error handler behavior
 func TestServer_ErrorHandlerBehavior(t *testing.T) {
 	cfg := createTestConfig()
-	db, err := testutil.SetupTestDatabase()
-	require.NoError(t, err, "Failed to setup test database")
-	defer testutil.TeardownTestDatabase(db)
+	db := setupTestDB(t)
+	defer teardownTestDB(db)
 
 	appInstance := app.NewServer(cfg, db)
 
@@ -971,24 +927,11 @@ func createTestConfig() *config.Config {
 			CorsOriginProd: "https://example.com",
 		},
 		Database: config.DatabaseConfig{
-			Host:           "localhost",
-			Port:           "5432",
-			User:           "test",
-			Password:       "test",
-			Name:           "testdb",
-			AutoMigrate:    false,
-			RunSeeder:      false,
-			SeedUsers:      false,
-			MigrateOnStart: false,
-		},
-		JWT: config.JWTConfig{
-			PrivateKeyPath:          "../../keys/test_private.pem",
-			PublicKeyPath:           "../../keys/test_public.pem",
-			PrivateKeyRotationPath:  "../../keys/test_private_rotation.pem",
-			PublicKeyRotationPath:   "../../keys/test_public_rotation.pem",
-			ExpireHours:             1,
-			RefreshTokenExpireHours: 168,
-			KeyRotationHours:        168,
+			Host:     "localhost",
+			Port:     "5432",
+			User:     "test",
+			Password: "test",
+			Name:     "testdb",
 		},
 		Upload: config.UploadConfig{
 			MaxSize:              524288000,
@@ -1008,17 +951,11 @@ func createTestConfig() *config.Config {
 			TusVersion:           "1.0.0",
 			MaxResumeAttempts:    10,
 		},
-		Resend: config.ResendConfig{
-			APIKey:    "test_key",
-			FromEmail: "noreply@test.com",
-			FromName:  "Test Service",
-		},
-		OTP: config.OTPConfig{
-			Length:                6,
-			ExpiryMinutes:         10,
-			MaxAttempts:           5,
-			ResendCooldownSeconds: 60,
-			ResendMaxTimes:        5,
+		Supabase: config.SupabaseConfig{
+			URL:        "https://test.supabase.co",
+			AnonKey:    "test_anon_key",
+			ServiceKey: "test_service_role_key",
+			DBURL:      "postgresql://test:test@localhost:5432/testdb",
 		},
 		Logging: config.LoggingConfig{
 			Level:         "INFO",

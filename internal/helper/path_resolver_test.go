@@ -93,7 +93,7 @@ func TestPathResolver_GetTempPath_Production(t *testing.T) {
 
 func TestPathResolver_GetProjectPath(t *testing.T) {
 	pr, tempDir := setupPathResolverTest(t)
-	userID := uint(123)
+	userID := "123"
 
 	projectPath := pr.GetProjectPath(userID)
 	expectedPath := filepath.Join(tempDir, "projects", "123")
@@ -103,7 +103,7 @@ func TestPathResolver_GetProjectPath(t *testing.T) {
 
 func TestPathResolver_GetProjectFilePath(t *testing.T) {
 	pr, tempDir := setupPathResolverTest(t)
-	userID := uint(456)
+	userID := "456"
 	identifier := "abc123"
 	filename := "project.zip"
 
@@ -115,7 +115,7 @@ func TestPathResolver_GetProjectFilePath(t *testing.T) {
 
 func TestPathResolver_GetProjectDirectory(t *testing.T) {
 	pr, tempDir := setupPathResolverTest(t)
-	userID := uint(789)
+	userID := "789"
 	identifier := "xyz789"
 
 	dirPath := pr.GetProjectDirectory(userID, identifier)
@@ -205,7 +205,7 @@ func TestPathResolver_FileExists(t *testing.T) {
 
 func TestPathResolver_GetProfilPath(t *testing.T) {
 	pr, tempDir := setupPathResolverTest(t)
-	userID := uint(100)
+	userID := "100"
 
 	profilPath := pr.GetProfilPath(userID)
 	expectedPath := filepath.Join(tempDir, "profil", "100")
@@ -215,7 +215,7 @@ func TestPathResolver_GetProfilPath(t *testing.T) {
 
 func TestPathResolver_GetProfilFilePath(t *testing.T) {
 	pr, tempDir := setupPathResolverTest(t)
-	userID := uint(200)
+	userID := "200"
 	filename := "avatar.jpg"
 
 	filePath := pr.GetProfilFilePath(userID, filename)
@@ -226,7 +226,7 @@ func TestPathResolver_GetProfilFilePath(t *testing.T) {
 
 func TestPathResolver_GetProfilDirectory(t *testing.T) {
 	pr, tempDir := setupPathResolverTest(t)
-	userID := uint(300)
+	userID := "300"
 
 	dirPath := pr.GetProfilDirectory(userID)
 	expectedPath := filepath.Join(tempDir, "profil", "300")

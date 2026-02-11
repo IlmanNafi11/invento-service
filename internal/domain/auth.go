@@ -1,19 +1,67 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
+
+// AuthService defines the authentication operations interface.
+// This interface allows for dependency injection and mocking in tests.
+type AuthService interface {
+	Register(ctx context.Context, req AuthServiceRegisterRequest) (*AuthServiceResponse, error)
+	Login(ctx context.Context, req AuthServiceLoginRequest) (*AuthServiceResponse, error)
+	RefreshToken(ctx context.Context, refreshToken string) (*AuthServiceResponse, error)
+	RequestPasswordReset(ctx context.Context, email string, redirectTo string) error
+	GetUser(ctx context.Context, accessToken string) (*AuthServiceUserInfo, error)
+	DeleteUser(ctx context.Context, uid string) error
+}
+
+// AuthServiceRegisterRequest represents the registration request for auth service.
+type AuthServiceRegisterRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
+	Name     string `json:"name" validate:"required"`
+}
+
+// AuthServiceLoginRequest represents the login request for auth service.
+type AuthServiceLoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+// AuthServiceResponse represents the response from auth service operations.
+type AuthServiceResponse struct {
+	AccessToken  string               `json:"access_token"`
+	RefreshToken string               `json:"refresh_token,omitempty"`
+	TokenType    string               `json:"token_type"`
+	ExpiresIn    int                  `json:"expires_in"`
+	User         *AuthServiceUserInfo `json:"user"`
+}
+
+// AuthServiceUserInfo represents user information from auth service.
+type AuthServiceUserInfo struct {
+	ID           string                 `json:"id"`
+	Email        string                 `json:"email"`
+	Name         string                 `json:"name"`
+	UserMetadata map[string]interface{} `json:"user_metadata"`
+}
 
 type User struct {
-	ID           uint      `json:"id" gorm:"primaryKey"`
-	Email        string    `json:"email" gorm:"uniqueIndex;not null;size:255"`
-	Password     string    `json:"-" gorm:"not null"`
-	Name         string    `json:"name" gorm:"not null"`
-	JenisKelamin *string   `json:"jenis_kelamin,omitempty" gorm:"size:20"`
-	FotoProfil   *string   `json:"foto_profil,omitempty" gorm:"size:500"`
-	RoleID       *uint     `json:"role_id" gorm:"null"`
-	IsActive     bool      `json:"is_active" gorm:"default:true"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           string    `json:"id" gorm:"column:id;type:uuid;primary_key"`
+	Email        string    `json:"email" gorm:"column:email;type:text;not null"`
+	Name         string    `json:"name" gorm:"column:name;type:text;not null"`
+	JenisKelamin *string   `json:"jenis_kelamin,omitempty" gorm:"column:jenis_kelamin;type:text"`
+	FotoProfil   *string   `json:"foto_profil,omitempty" gorm:"column:foto_profil;type:varchar(500)"`
+	RoleID       *int      `json:"role_id,omitempty" gorm:"column:role_id"`
+	IsActive     bool      `json:"is_active" gorm:"column:is_active;type:boolean;default:true"`
+	CreatedAt    time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt    time.Time `json:"updated_at" gorm:"column:updated_at"`
 	Role         *Role     `json:"role,omitempty" gorm:"foreignKey:RoleID"`
+}
+
+// TableName specifies the table name for User model to match Supabase schema
+func (User) TableName() string {
+	return "user_profiles"
 }
 
 type AuthRequest struct {
@@ -51,24 +99,4 @@ type RefreshTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int    `json:"expires_in"`
-}
-
-type RefreshToken struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	UserID    uint      `json:"user_id" gorm:"not null"`
-	Token     string    `json:"token" gorm:"uniqueIndex;not null;size:512"`
-	ExpiresAt time.Time `json:"expires_at" gorm:"not null"`
-	IsRevoked bool      `json:"is_revoked" gorm:"default:false"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	User      User      `json:"user" gorm:"foreignKey:UserID"`
-}
-
-type PasswordResetToken struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	Email     string    `json:"email" gorm:"not null"`
-	Token     string    `json:"token" gorm:"uniqueIndex;not null;size:512"`
-	ExpiresAt time.Time `json:"expires_at" gorm:"not null"`
-	IsUsed    bool      `json:"is_used" gorm:"default:false"`
-	CreatedAt time.Time `json:"created_at"`
 }

@@ -28,7 +28,7 @@ func TestTusUploadUsecase_InitiateUpload_Success(t *testing.T) {
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	userEmail := "test@example.com"
 	userRole := "mahasiswa"
 	fileSize := int64(1024 * 1024) // 1 MB
@@ -71,7 +71,7 @@ func TestTusUploadUsecase_InitiateUpload_QueueFull(t *testing.T) {
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	userEmail := "test@example.com"
 	userRole := "mahasiswa"
 	fileSize := int64(1024 * 1024) // 1 MB
@@ -118,7 +118,7 @@ func TestTusUploadUsecase_InitiateUpload_FileTooLarge(t *testing.T) {
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	userEmail := "test@example.com"
 	userRole := "mahasiswa"
 	fileSize := int64(600 * 1024 * 1024) // 600 MB - exceeds 500 MB limit
@@ -152,7 +152,7 @@ func TestTusUploadUsecase_UploadChunk_Success(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunkData := []byte("test chunk data")
 	chunk := bytes.NewReader(chunkData)
@@ -199,7 +199,7 @@ func TestTusUploadUsecase_UploadChunk_InvalidOffset(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(100) // Wrong offset
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -238,7 +238,7 @@ func TestTusUploadUsecase_UploadChunk_UploadNotFound(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -270,8 +270,8 @@ func TestTusUploadUsecase_UploadChunk_UnauthorizedUser(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2) // Different user
+	ownerID := "user-1"
+	userID := "user-2" // Different user
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -311,7 +311,7 @@ func TestTusUploadUsecase_GetUploadStatus_Success(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	expectedOffset := int64(512)
 	expectedFileSize := int64(1024)
 
@@ -351,8 +351,8 @@ func TestTusUploadUsecase_GetUploadStatus_Unauthorized(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2)
+	ownerID := "user-1"
+	userID := "user-2"
 
 	tusUpload := &domain.TusUpload{
 		ID:     uploadID,
@@ -388,7 +388,7 @@ func TestTusUploadUsecase_GetUploadInfo_Success(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	metadata := domain.TusUploadInitRequest{
 		NamaProject: "Test Project",
@@ -442,7 +442,7 @@ func TestTusUploadUsecase_CancelUpload_Success(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	tusUpload := &domain.TusUpload{
 		ID:     uploadID,
@@ -477,7 +477,7 @@ func TestTusUploadUsecase_CancelUpload_AlreadyCompleted(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	tusUpload := &domain.TusUpload{
 		ID:     uploadID,
@@ -511,7 +511,7 @@ func TestTusUploadUsecase_CheckUploadSlot_Success(t *testing.T) {
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	response, err := uc.CheckUploadSlot(userID)
 
@@ -540,7 +540,7 @@ func TestTusUploadUsecase_ResetUploadQueue_Success(t *testing.T) {
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 
 	err := uc.ResetUploadQueue(userID)
 
@@ -564,7 +564,7 @@ func TestTusUploadUsecase_InitiateProjectUpdateUpload_Success(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	projectID := uint(1)
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024) // 1 MB
 	metadata := domain.TusUploadInitRequest{
 		NamaProject: "Updated Project",
@@ -573,11 +573,11 @@ func TestTusUploadUsecase_InitiateProjectUpdateUpload_Success(t *testing.T) {
 	}
 
 	project := &domain.Project{
-		ID:       projectID,
-		UserID:   userID,
+		ID:          projectID,
+		UserID:      userID,
 		NamaProject: "Old Project",
-		Kategori: "website",
-		Semester: 1,
+		Kategori:    "website",
+		Semester:    1,
 	}
 
 	mockProjectRepo.On("GetByID", projectID).Return(project, nil)
@@ -613,7 +613,7 @@ func TestTusUploadUsecase_InitiateProjectUpdateUpload_ProjectNotFound(t *testing
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	projectID := uint(999)
-	userID := uint(1)
+	userID := "user-1"
 	fileSize := int64(1024 * 1024)
 	metadata := domain.TusUploadInitRequest{
 		NamaProject: "Updated Project",
@@ -650,7 +650,7 @@ func TestTusUploadUsecase_HandleProjectUpdateChunk_Success(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunkData := []byte("test chunk data")
 	chunk := bytes.NewReader(chunkData)
@@ -699,7 +699,7 @@ func TestTusUploadUsecase_HandleProjectUpdateChunk_ProjectMismatch(t *testing.T)
 
 	projectID := uint(2)
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -741,14 +741,14 @@ func TestTusUploadUsecase_GetProjectUpdateUploadStatus_Success(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	uploadProjectID := uint(1)
 	tusUpload := &domain.TusUpload{
-		ID:        uploadID,
-		UserID:    userID,
-		ProjectID: &uploadProjectID,
-		FileSize:  int64(1024),
+		ID:            uploadID,
+		UserID:        userID,
+		ProjectID:     &uploadProjectID,
+		FileSize:      int64(1024),
 		CurrentOffset: int64(512),
 	}
 
@@ -781,7 +781,7 @@ func TestTusUploadUsecase_CancelProjectUpdateUpload_Success(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	uploadProjectID := uint(1)
 	tusUpload := &domain.TusUpload{
@@ -818,7 +818,7 @@ func TestTusUploadUsecase_UploadChunk_CompletedUpload(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(1024)
 	chunk := bytes.NewReader([]byte("more data"))
 
@@ -857,7 +857,7 @@ func TestTusUploadUsecase_UploadChunk_CancelledUpload(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -895,7 +895,7 @@ func TestTusUploadUsecase_CheckUploadSlot_QueueFull(t *testing.T) {
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	userEmail := "test@example.com"
 	userRole := "mahasiswa"
 	fileSize := int64(1024 * 1024)
@@ -943,7 +943,7 @@ func TestTusUploadUsecase_InitiateUpload_NegativeFileSize(t *testing.T) {
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	userEmail := "test@example.com"
 	userRole := "mahasiswa"
 	fileSize := int64(-100)
@@ -975,7 +975,7 @@ func TestTusUploadUsecase_InitiateUpload_RepositoryError(t *testing.T) {
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
-	userID := uint(1)
+	userID := "user-1"
 	userEmail := "test@example.com"
 	userRole := "mahasiswa"
 	fileSize := int64(1024 * 1024)
@@ -1012,7 +1012,7 @@ func TestTusUploadUsecase_UploadChunk_FailedUpload(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -1051,7 +1051,7 @@ func TestTusUploadUsecase_GetUploadInfo_NotFound(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusUploadRepo.On("GetByID", uploadID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -1080,8 +1080,8 @@ func TestTusUploadUsecase_GetUploadInfo_Unauthorized(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2)
+	ownerID := "user-1"
+	userID := "user-2"
 
 	tusUpload := &domain.TusUpload{
 		ID:     uploadID,
@@ -1115,7 +1115,7 @@ func TestTusUploadUsecase_CancelUpload_NotFound(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusUploadRepo.On("GetByID", uploadID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -1143,8 +1143,8 @@ func TestTusUploadUsecase_CancelUpload_Unauthorized(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2)
+	ownerID := "user-1"
+	userID := "user-2"
 
 	tusUpload := &domain.TusUpload{
 		ID:     uploadID,
@@ -1178,7 +1178,7 @@ func TestTusUploadUsecase_CancelUpload_AlreadyCancelled(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	tusUpload := &domain.TusUpload{
 		ID:     uploadID,
@@ -1213,7 +1213,7 @@ func TestTusUploadUsecase_GetUploadStatus_NotFound(t *testing.T) {
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusUploadRepo.On("GetByID", uploadID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -1287,7 +1287,7 @@ func TestTusUploadUsecase_GetUploadStatus_ProgressCalculation(t *testing.T) {
 			uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 			uploadID := "test-upload-id"
-			userID := uint(1)
+			userID := "user-1"
 
 			tusUpload := &domain.TusUpload{
 				ID:            uploadID,
@@ -1326,8 +1326,8 @@ func TestTusUploadUsecase_InitiateProjectUpdateUpload_UnauthorizedProject(t *tes
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg)
 
 	projectID := uint(1)
-	ownerID := uint(2)
-	userID := uint(1)
+	ownerID := "user-2"
+	userID := "user-1"
 	fileSize := int64(1024 * 1024)
 	metadata := domain.TusUploadInitRequest{
 		NamaProject: "Updated Project",
@@ -1336,11 +1336,11 @@ func TestTusUploadUsecase_InitiateProjectUpdateUpload_UnauthorizedProject(t *tes
 	}
 
 	project := &domain.Project{
-		ID:       projectID,
-		UserID:   ownerID,
+		ID:          projectID,
+		UserID:      ownerID,
 		NamaProject: "Old Project",
-		Kategori: "website",
-		Semester: 1,
+		Kategori:    "website",
+		Semester:    1,
 	}
 
 	mockProjectRepo.On("GetByID", projectID).Return(project, nil)
@@ -1371,7 +1371,7 @@ func TestTusUploadUsecase_GetProjectUpdateUploadInfo_Success(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	metadata := domain.TusUploadInitRequest{
 		NamaProject: "Updated Project",
@@ -1381,9 +1381,9 @@ func TestTusUploadUsecase_GetProjectUpdateUploadInfo_Success(t *testing.T) {
 
 	uploadProjectID := uint(1)
 	tusUpload := &domain.TusUpload{
-		ID:        uploadID,
-		UserID:    userID,
-		ProjectID: &uploadProjectID,
+		ID:             uploadID,
+		UserID:         userID,
+		ProjectID:      &uploadProjectID,
 		UploadMetadata: metadata,
 		FileSize:       int64(1024),
 		CurrentOffset:  int64(512),
@@ -1428,7 +1428,7 @@ func TestTusUploadUsecase_GetProjectUpdateUploadInfo_NotFound(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusUploadRepo.On("GetByID", uploadID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -1458,8 +1458,8 @@ func TestTusUploadUsecase_GetProjectUpdateUploadInfo_Unauthorized(t *testing.T) 
 
 	projectID := uint(1)
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2)
+	ownerID := "user-1"
+	userID := "user-2"
 
 	uploadProjectID := uint(1)
 	tusUpload := &domain.TusUpload{
@@ -1496,7 +1496,7 @@ func TestTusUploadUsecase_GetProjectUpdateUploadInfo_ProjectMismatch(t *testing.
 
 	projectID := uint(2)
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	uploadProjectID := uint(1)
 	tusUpload := &domain.TusUpload{
@@ -1533,7 +1533,7 @@ func TestTusUploadUsecase_CancelProjectUpdateUpload_NotFound(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusUploadRepo.On("GetByID", uploadID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -1562,8 +1562,8 @@ func TestTusUploadUsecase_CancelProjectUpdateUpload_Unauthorized(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2)
+	ownerID := "user-1"
+	userID := "user-2"
 
 	uploadProjectID := uint(1)
 	tusUpload := &domain.TusUpload{
@@ -1600,7 +1600,7 @@ func TestTusUploadUsecase_CancelProjectUpdateUpload_ProjectMismatch(t *testing.T
 
 	projectID := uint(2)
 	uploadID := "test-upload-id"
-	userID := uint(1)
+	userID := "user-1"
 
 	uploadProjectID := uint(1)
 	tusUpload := &domain.TusUpload{
@@ -1637,7 +1637,7 @@ func TestTusUploadUsecase_HandleProjectUpdateChunk_NotFound(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -1669,8 +1669,8 @@ func TestTusUploadUsecase_HandleProjectUpdateChunk_Unauthorized(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2)
+	ownerID := "user-1"
+	userID := "user-2"
 	offset := int64(0)
 	chunk := bytes.NewReader([]byte("test data"))
 
@@ -1711,7 +1711,7 @@ func TestTusUploadUsecase_GetProjectUpdateUploadStatus_NotFound(t *testing.T) {
 
 	projectID := uint(1)
 	uploadID := "non-existent-upload"
-	userID := uint(1)
+	userID := "user-1"
 
 	mockTusUploadRepo.On("GetByID", uploadID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -1742,8 +1742,8 @@ func TestTusUploadUsecase_GetProjectUpdateUploadStatus_Unauthorized(t *testing.T
 
 	projectID := uint(1)
 	uploadID := "test-upload-id"
-	ownerID := uint(1)
-	userID := uint(2)
+	ownerID := "user-1"
+	userID := "user-2"
 
 	uploadProjectID := uint(1)
 	tusUpload := &domain.TusUpload{

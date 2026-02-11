@@ -10,42 +10,42 @@ import (
 )
 
 // BaseController provides common functionality for all HTTP controllers.
-// It wraps JWT authentication, RBAC authorization, validation, and response helpers.
+// It wraps RBAC authorization, validation, and response helpers.
 type BaseController struct {
-	JWTManager *helper.JWTManager
-	Casbin     *helper.CasbinEnforcer
-	Validator  *validator.Validate
+	SupabaseURL string
+	Casbin      *helper.CasbinEnforcer
+	Validator   *validator.Validate
 }
 
 // NewBaseController creates a new base controller instance.
 // All parameters are optional; pass nil for components not needed by the controller.
-func NewBaseController(jwtManager *helper.JWTManager, casbin *helper.CasbinEnforcer) *BaseController {
+func NewBaseController(supabaseURL string, casbin *helper.CasbinEnforcer) *BaseController {
 	return &BaseController{
-		JWTManager: jwtManager,
-		Casbin:     casbin,
-		Validator:  validator.New(),
+		SupabaseURL: supabaseURL,
+		Casbin:      casbin,
+		Validator:   validator.New(),
 	}
 }
 
 // GetAuthenticatedUserID extracts the authenticated user ID from context locals.
-// Returns 0 and sends unauthorized response if user ID is not found or invalid.
+// Returns empty string and sends unauthorized response if user ID is not found or invalid.
 //
 // Usage:
 //
 //	userID := ctrl.GetAuthenticatedUserID(c)
-//	if userID == 0 {
+//	if userID == "" {
 //	    return nil // response already sent
 //	}
-func (bc *BaseController) GetAuthenticatedUserID(c *fiber.Ctx) uint {
+func (bc *BaseController) GetAuthenticatedUserID(c *fiber.Ctx) string {
 	userIDVal := c.Locals("user_id")
 	if userIDVal == nil {
 		helper.SendUnauthorizedResponse(c)
-		return 0
+		return ""
 	}
-	userID, ok := userIDVal.(uint)
+	userID, ok := userIDVal.(string)
 	if !ok {
 		helper.SendUnauthorizedResponse(c)
-		return 0
+		return ""
 	}
 	return userID
 }

@@ -15,9 +15,6 @@ func TestNewCookieHelper(t *testing.T) {
 		App: config.AppConfig{
 			Env: "development",
 		},
-		JWT: config.JWTConfig{
-			RefreshTokenExpireHours: 24,
-		},
 	}
 
 	cookieHelper := helper.NewCookieHelper(cfg)
@@ -58,9 +55,6 @@ func TestCookieHelper_SetRefreshTokenCookie(t *testing.T) {
 				App: config.AppConfig{
 					Env: tt.env,
 				},
-				JWT: config.JWTConfig{
-					RefreshTokenExpireHours: 24,
-				},
 			}
 
 			cookieHelper := helper.NewCookieHelper(cfg)
@@ -100,9 +94,6 @@ func TestCookieHelper_SetRefreshTokenCookie_Properties(t *testing.T) {
 		App: config.AppConfig{
 			Env: "development",
 		},
-		JWT: config.JWTConfig{
-			RefreshTokenExpireHours: 48,
-		},
 	}
 
 	cookieHelper := helper.NewCookieHelper(cfg)
@@ -136,18 +127,18 @@ func TestCookieHelper_SetRefreshTokenCookie_Properties(t *testing.T) {
 
 func TestCookieHelper_ClearRefreshTokenCookie(t *testing.T) {
 	tests := []struct {
-		name  string
-		env   string
+		name   string
+		env    string
 		secure bool
 	}{
 		{
-			name:  "Production environment",
-			env:   "production",
+			name:   "Production environment",
+			env:    "production",
 			secure: true,
 		},
 		{
-			name:  "Development environment",
-			env:   "development",
+			name:   "Development environment",
+			env:    "development",
 			secure: false,
 		},
 	}
@@ -157,9 +148,6 @@ func TestCookieHelper_ClearRefreshTokenCookie(t *testing.T) {
 			cfg := &config.Config{
 				App: config.AppConfig{
 					Env: tt.env,
-				},
-				JWT: config.JWTConfig{
-					RefreshTokenExpireHours: 24,
 				},
 			}
 
@@ -269,9 +257,6 @@ func TestCookieHelper_SecurityProperties(t *testing.T) {
 			App: config.AppConfig{
 				Env: "production",
 			},
-			JWT: config.JWTConfig{
-				RefreshTokenExpireHours: 72,
-			},
 		}
 
 		cookieHelper := helper.NewCookieHelper(cfg)
@@ -305,9 +290,6 @@ func TestCookieHelper_SecurityProperties(t *testing.T) {
 		cfg := &config.Config{
 			App: config.AppConfig{
 				Env: "development",
-			},
-			JWT: config.JWTConfig{
-				RefreshTokenExpireHours: 168, // 1 week
 			},
 		}
 
@@ -345,9 +327,6 @@ func TestCookieHelper_EdgeCases(t *testing.T) {
 			App: config.AppConfig{
 				Env: "development",
 			},
-			JWT: config.JWTConfig{
-				RefreshTokenExpireHours: 24,
-			},
 		}
 
 		cookieHelper := helper.NewCookieHelper(cfg)
@@ -380,9 +359,6 @@ func TestCookieHelper_EdgeCases(t *testing.T) {
 		cfg := &config.Config{
 			App: config.AppConfig{
 				Env: "development",
-			},
-			JWT: config.JWTConfig{
-				RefreshTokenExpireHours: 24,
 			},
 		}
 
@@ -417,9 +393,6 @@ func TestCookieHelper_EdgeCases(t *testing.T) {
 		cfg := &config.Config{
 			App: config.AppConfig{
 				Env: "development",
-			},
-			JWT: config.JWTConfig{
-				RefreshTokenExpireHours: 8760, // 1 year
 			},
 		}
 
@@ -457,9 +430,6 @@ func TestCookieHelper_Integration(t *testing.T) {
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Env: "production",
-		},
-		JWT: config.JWTConfig{
-			RefreshTokenExpireHours: 24,
 		},
 	}
 
@@ -551,63 +521,38 @@ func TestCookieHelper_Integration(t *testing.T) {
 }
 
 func TestCookieHelper_MaxAgeCalculation(t *testing.T) {
-	tests := []struct {
-		name           string
-		expireHours    int
-		expectedMaxAge int
-	}{
-		{
-			name:           "1 hour",
-			expireHours:    1,
-			expectedMaxAge: 3600,
-		},
-		{
-			name:           "24 hours",
-			expireHours:    24,
-			expectedMaxAge: 86400,
-		},
-		{
-			name:           "7 days",
-			expireHours:    168,
-			expectedMaxAge: 604800,
+	// CookieHelper uses a fixed 7-day maxAge (604800 seconds) for refresh token
+	// This matches Supabase's default refresh token validity period
+	expectedMaxAge := 604800
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := &config.Config{
-				App: config.AppConfig{
-					Env: "development",
-				},
-				JWT: config.JWTConfig{
-					RefreshTokenExpireHours: tt.expireHours,
-				},
-			}
+	cookieHelper := helper.NewCookieHelper(cfg)
+	app := fiber.New()
 
-			cookieHelper := helper.NewCookieHelper(cfg)
-			app := fiber.New()
+	app.Post("/test", func(c *fiber.Ctx) error {
+		cookieHelper.SetRefreshTokenCookie(c, "test-token")
+		return c.SendString("ok")
+	})
 
-			app.Post("/test", func(c *fiber.Ctx) error {
-				cookieHelper.SetRefreshTokenCookie(c, "test-token")
-				return c.SendString("ok")
-			})
+	req, _ := http.NewRequest("POST", "/test", nil)
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
 
-			req, _ := http.NewRequest("POST", "/test", nil)
-			resp, err := app.Test(req)
-			assert.NoError(t, err)
-
-			cookies := resp.Cookies()
-			var refreshToken *http.Cookie
-			for _, c := range cookies {
-				if c.Name == "refresh_token" {
-					refreshToken = c
-					break
-				}
-			}
-
-			assert.NotNil(t, refreshToken)
-			assert.Equal(t, "test-token", refreshToken.Value)
-			assert.Equal(t, tt.expectedMaxAge, refreshToken.MaxAge)
-		})
+	cookies := resp.Cookies()
+	var refreshToken *http.Cookie
+	for _, c := range cookies {
+		if c.Name == "refresh_token" {
+			refreshToken = c
+			break
+		}
 	}
+
+	assert.NotNil(t, refreshToken)
+	assert.Equal(t, "test-token", refreshToken.Value)
+	assert.Equal(t, expectedMaxAge, refreshToken.MaxAge)
 }

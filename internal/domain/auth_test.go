@@ -9,18 +9,16 @@ import (
 
 func TestUser_Creation(t *testing.T) {
 	user := User{
-		ID:        1,
+		ID:        "user-123",
 		Email:     "test@example.com",
-		Password:  "hashedpassword",
 		Name:      "Test User",
 		IsActive:  true,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
-	assert.Equal(t, uint(1), user.ID)
+	assert.Equal(t, "user-123", user.ID)
 	assert.Equal(t, "test@example.com", user.Email)
-	assert.Equal(t, "hashedpassword", user.Password)
 	assert.Equal(t, "Test User", user.Name)
 	assert.True(t, user.IsActive)
 	assert.NotZero(t, user.CreatedAt)
@@ -134,53 +132,9 @@ func TestRegisterRequest_Validation(t *testing.T) {
 	}
 }
 
-func TestRefreshToken_Creation(t *testing.T) {
-	now := time.Now()
-	refreshToken := RefreshToken{
-		ID:        1,
-		UserID:    1,
-		Token:     "refresh_token_123",
-		ExpiresAt: now.Add(24 * time.Hour),
-		IsRevoked: false,
-		CreatedAt: now,
-		UpdatedAt: now,
-		User: User{
-			ID:    1,
-			Email: "test@example.com",
-			Name:  "Test User",
-		},
-	}
-
-	assert.Equal(t, uint(1), refreshToken.ID)
-	assert.Equal(t, uint(1), refreshToken.UserID)
-	assert.Equal(t, "refresh_token_123", refreshToken.Token)
-	assert.False(t, refreshToken.IsRevoked)
-	assert.NotZero(t, refreshToken.ExpiresAt)
-	assert.Equal(t, uint(1), refreshToken.User.ID)
-}
-
-func TestPasswordResetToken_Creation(t *testing.T) {
-	now := time.Now()
-	resetToken := PasswordResetToken{
-		ID:        1,
-		Email:     "test@example.com",
-		Token:     "reset_token_123",
-		ExpiresAt: now.Add(time.Hour),
-		IsUsed:    false,
-		CreatedAt: now,
-	}
-
-	assert.Equal(t, uint(1), resetToken.ID)
-	assert.Equal(t, "test@example.com", resetToken.Email)
-	assert.Equal(t, "reset_token_123", resetToken.Token)
-	assert.False(t, resetToken.IsUsed)
-	assert.NotZero(t, resetToken.ExpiresAt)
-	assert.NotZero(t, resetToken.CreatedAt)
-}
-
 func TestAuthResponse_Structure(t *testing.T) {
 	user := User{
-		ID:    1,
+		ID:    "user-123",
 		Email: "test@example.com",
 		Name:  "Test User",
 	}

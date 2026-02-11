@@ -22,7 +22,7 @@ func TestProjectUsecase_GetProjectByID_Success(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(1)
 
 	project := &domain.Project{
@@ -55,7 +55,7 @@ func TestProjectUsecase_GetProjectByID_NotFound(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(999)
 
 	mockProjectRepo.On("GetByID", projectID).Return(nil, gorm.ErrRecordNotFound)
@@ -74,12 +74,12 @@ func TestProjectUsecase_GetProjectByID_AccessDenied(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(2)
 
 	project := &domain.Project{
 		ID:          projectID,
-		UserID:      999, // Different user
+		UserID:      "user-999", // Different user
 		NamaProject: "Other User Project",
 		Kategori:    "mobile",
 		Semester:    2,
@@ -105,7 +105,7 @@ func TestProjectUsecase_ListProjects_Success(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	search := "test"
 	filterSemester := 1
 	filterKategori := "website"
@@ -155,7 +155,7 @@ func TestProjectUsecase_ListProjects_Empty(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	search := "nonexistent"
 	filterSemester := 0
 	filterKategori := ""
@@ -182,7 +182,7 @@ func TestProjectUsecase_ListProjects_Pagination(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	search := ""
 	filterSemester := 0
 	filterKategori := ""
@@ -223,7 +223,7 @@ func TestProjectUsecase_UpdateProject_Success(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(1)
 
 	project := &domain.Project{
@@ -259,7 +259,7 @@ func TestProjectUsecase_UpdateProject_NotFound(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(999)
 
 	req := domain.ProjectUpdateRequest{
@@ -281,12 +281,12 @@ func TestProjectUsecase_UpdateProject_AccessDenied(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(2)
 
 	project := &domain.Project{
 		ID:          projectID,
-		UserID:      999, // Different user
+		UserID:      "user-999", // Different user
 		NamaProject: "Other User Project",
 		Kategori:    "mobile",
 		Semester:    2,
@@ -315,7 +315,7 @@ func TestProjectUsecase_DeleteProject_Success(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(1)
 
 	project := &domain.Project{
@@ -345,7 +345,7 @@ func TestProjectUsecase_DeleteProject_NotFound(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(999)
 
 	mockProjectRepo.On("GetByID", projectID).Return(nil, gorm.ErrRecordNotFound)
@@ -363,12 +363,12 @@ func TestProjectUsecase_DeleteProject_AccessDenied(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectID := uint(2)
 
 	project := &domain.Project{
 		ID:          projectID,
-		UserID:      999, // Different user
+		UserID:      "user-999", // Different user
 		NamaProject: "Other User Project",
 		Kategori:    "mobile",
 		Semester:    2,
@@ -396,7 +396,7 @@ func TestProjectUsecase_Download_SingleFile(t *testing.T) {
 	fileManager := helper.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectIDs := []uint{1}
 
 	projects := []domain.Project{
@@ -425,7 +425,7 @@ func TestProjectUsecase_Download_EmptyIDs(t *testing.T) {
 	fileManager := helper.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectIDs := []uint{}
 
 	result, err := projectUC.Download(userID, projectIDs)
@@ -443,7 +443,7 @@ func TestProjectUsecase_Download_NotFound(t *testing.T) {
 	fileManager := helper.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectIDs := []uint{1, 2}
 
 	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return([]domain.Project{}, nil)
@@ -465,7 +465,7 @@ func TestProjectUsecase_Download_Error(t *testing.T) {
 	fileManager := helper.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
-	userID := uint(1)
+	userID := "user-1"
 	projectIDs := []uint{1, 2}
 
 	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(nil, assert.AnError)

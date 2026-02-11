@@ -1,34 +1,19 @@
 package repo
 
 import (
-	"fiber-boiler-plate/internal/domain"
 	"time"
+
+	"fiber-boiler-plate/internal/domain"
 )
 
 type UserRepository interface {
 	GetByEmail(email string) (*domain.User, error)
-	GetByID(id uint) (*domain.User, error)
+	GetByID(id string) (*domain.User, error)
 	Create(user *domain.User) error
-	UpdatePassword(email, hashedPassword string) error
 	GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error)
-	UpdateRole(userID uint, roleID *uint) error
-	UpdateProfile(userID uint, name string, jenisKelamin *string, fotoProfil *string) error
-	Delete(userID uint) error
-}
-
-type RefreshTokenRepository interface {
-	Create(userID uint, token string, expiresAt time.Time) (*domain.RefreshToken, error)
-	GetByToken(token string) (*domain.RefreshToken, error)
-	RevokeToken(token string) error
-	RevokeAllUserTokens(userID uint) error
-	CleanupExpired() error
-}
-
-type PasswordResetTokenRepository interface {
-	Create(email, token string, expiresAt time.Time) (*domain.PasswordResetToken, error)
-	GetByToken(token string) (*domain.PasswordResetToken, error)
-	MarkAsUsed(token string) error
-	CleanupExpired() error
+	UpdateRole(userID string, roleID *int) error
+	UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error
+	Delete(userID string) error
 }
 
 type RoleRepository interface {
@@ -59,10 +44,10 @@ type RolePermissionRepository interface {
 type ProjectRepository interface {
 	Create(project *domain.Project) error
 	GetByID(id uint) (*domain.Project, error)
-	GetByIDs(ids []uint, userID uint) ([]domain.Project, error)
-	GetByIDsForUser(ids []uint, ownerUserID uint) ([]domain.Project, error)
-	GetByUserID(userID uint, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error)
-	CountByUserID(userID uint) (int, error)
+	GetByIDs(ids []uint, userID string) ([]domain.Project, error)
+	GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Project, error)
+	GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error)
+	CountByUserID(userID string) (int, error)
 	Update(project *domain.Project) error
 	Delete(id uint) error
 }
@@ -70,10 +55,10 @@ type ProjectRepository interface {
 type ModulRepository interface {
 	Create(modul *domain.Modul) error
 	GetByID(id uint) (*domain.Modul, error)
-	GetByIDs(ids []uint, userID uint) ([]domain.Modul, error)
-	GetByIDsForUser(ids []uint, ownerUserID uint) ([]domain.Modul, error)
-	GetByUserID(userID uint, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error)
-	CountByUserID(userID uint) (int, error)
+	GetByIDs(ids []uint, userID string) ([]domain.Modul, error)
+	GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Modul, error)
+	GetByUserID(userID string, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error)
+	CountByUserID(userID string) (int, error)
 	Update(modul *domain.Modul) error
 	Delete(id uint) error
 	UpdateMetadata(modul *domain.Modul) error
@@ -82,11 +67,11 @@ type ModulRepository interface {
 type TusUploadRepository interface {
 	Create(upload *domain.TusUpload) error
 	GetByID(id string) (*domain.TusUpload, error)
-	GetByUserID(userID uint) ([]domain.TusUpload, error)
+	GetByUserID(userID string) ([]domain.TusUpload, error)
 	UpdateOffset(id string, offset int64, progress float64) error
 	UpdateStatus(id string, status string) error
 	GetExpired(before time.Time) ([]domain.TusUpload, error)
-	GetByUserIDAndStatus(userID uint, status string) ([]domain.TusUpload, error)
+	GetByUserIDAndStatus(userID string, status string) ([]domain.TusUpload, error)
 	Delete(id string) error
 	ListActive() ([]domain.TusUpload, error)
 	UpdateOffsetOnly(id string, offset int64) error

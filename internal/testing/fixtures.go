@@ -9,12 +9,11 @@ import (
 
 // GetTestUser returns a test user entity
 func GetTestUser() domain.User {
-	roleID := uint(1)
+	roleID := 1
 	return domain.User{
-		ID:        1,
+		ID:        "00000000-0000-0000-0000-000000000001",
 		Name:      "Test User",
 		Email:     "test@example.com",
-		Password:  "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // "password123" hashed
 		RoleID:    &roleID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -23,12 +22,11 @@ func GetTestUser() domain.User {
 
 // GetTestAdminUser returns a test admin user entity
 func GetTestAdminUser() domain.User {
-	roleID := uint(2)
+	roleID := 2
 	return domain.User{
-		ID:        2,
+		ID:        "00000000-0000-0000-0000-000000000002",
 		Name:      "Admin User",
 		Email:     "admin@example.com",
-		Password:  "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // "password123" hashed
 		RoleID:    &roleID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -37,15 +35,14 @@ func GetTestAdminUser() domain.User {
 
 // GetTestUsers returns a slice of test users
 func GetTestUsers() []domain.User {
-	roleID1 := uint(1)
+	roleID1 := 1
 	return []domain.User{
 		GetTestUser(),
 		GetTestAdminUser(),
 		{
-			ID:        3,
+			ID:        "00000000-0000-0000-0000-000000000003",
 			Name:      "Regular User",
 			Email:     "user@example.com",
-			Password:  "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
 			RoleID:    &roleID1,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -90,7 +87,7 @@ func GetTestProject() domain.Project {
 	return domain.Project{
 		ID:          1,
 		NamaProject: "Test Project",
-		UserID:      1,
+		UserID:      "00000000-0000-0000-0000-000000000001",
 		Kategori:    "website",
 		Semester:    1,
 		Ukuran:      "small",
@@ -107,7 +104,7 @@ func GetTestProjects() []domain.Project {
 		{
 			ID:          2,
 			NamaProject: "Another Project",
-			UserID:      1,
+			UserID:      "00000000-0000-0000-0000-000000000001",
 			Kategori:    "mobile",
 			Semester:    2,
 			Ukuran:      "medium",
@@ -125,7 +122,7 @@ func GetTestModul() domain.Modul {
 	return domain.Modul{
 		ID:        1,
 		NamaFile:  "Test Modul",
-		UserID:    1,
+		UserID:    "00000000-0000-0000-0000-000000000001",
 		Tipe:      "pdf",
 		Ukuran:    "small",
 		Semester:  1,
@@ -142,7 +139,7 @@ func GetTestModuls() []domain.Modul {
 		{
 			ID:        2,
 			NamaFile:  "Another Modul",
-			UserID:    1,
+			UserID:    "00000000-0000-0000-0000-000000000001",
 			Tipe:      "video",
 			Ukuran:    "medium",
 			Semester:  1,
@@ -210,7 +207,7 @@ func GetTestUpdateModulRequest() domain.ModulUpdateRequest {
 func GetTestAuthResponse() domain.AuthResponse {
 	return domain.AuthResponse{
 		User: domain.User{
-			ID:    1,
+			ID:    "00000000-0000-0000-0000-000000000001",
 			Name:  "Test User",
 			Email: "test@example.com",
 		},

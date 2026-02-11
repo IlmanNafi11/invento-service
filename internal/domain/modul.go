@@ -4,7 +4,7 @@ import "time"
 
 type Modul struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
-	UserID    uint      `json:"user_id" gorm:"not null"`
+	UserID    string    `json:"user_id" gorm:"not null;type:uuid"`
 	NamaFile  string    `json:"nama_file" gorm:"not null;size:255"`
 	Tipe      string    `json:"tipe" gorm:"not null;size:50"`
 	Ukuran    string    `json:"ukuran" gorm:"not null;size:50"`

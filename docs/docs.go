@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/api/v1/auth/login": {
             "post": {
-                "description": "Autentikasi pengguna dengan email dan password. Refresh token dikirim via httpOnly cookie.",
+                "description": "Autentikasi pengguna melalui Supabase Auth dengan email dan password. Data profil lokal disinkronkan jika diperlukan.",
                 "consumes": [
                     "application/json"
                 ],
@@ -30,7 +30,7 @@ const docTemplate = `{
                 "summary": "Login pengguna",
                 "parameters": [
                     {
-                        "description": "Credential login",
+                        "description": "Credential login (email, password)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -126,490 +126,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/otp/register": {
-            "post": {
-                "description": "Memulai proses registrasi dengan mengirim kode OTP ke email pengguna.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth OTP"
-                ],
-                "summary": "Registrasi dengan OTP",
-                "parameters": [
-                    {
-                        "description": "Data registrasi",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.RegisterRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Kode OTP telah dikirim ke email",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.OTPResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Format request tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Email sudah terdaftar",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Terjadi kesalahan pada server",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/otp/register/resend": {
-            "post": {
-                "description": "Mengirim ulang kode OTP untuk proses registrasi.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth OTP"
-                ],
-                "summary": "Kirim ulang OTP registrasi",
-                "parameters": [
-                    {
-                        "description": "Email untuk kirim ulang OTP",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.ResendOTPRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Kode OTP baru telah dikirim",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.OTPResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Format request tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Email tidak ditemukan",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "429": {
-                        "description": "Terlalu banyak permintaan, coba lagi nanti",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Terjadi kesalahan pada server",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/otp/register/verify": {
-            "post": {
-                "description": "Memverifikasi kode OTP yang dikirim saat registrasi dan membuat akun pengguna.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth OTP"
-                ],
-                "summary": "Verifikasi OTP registrasi",
-                "parameters": [
-                    {
-                        "description": "Email dan kode OTP",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.VerifyOTPRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Verifikasi OTP berhasil, akun dibuat",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.AuthResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Format request tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Kode OTP tidak valid atau expired",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Email tidak ditemukan",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Terjadi kesalahan pada server",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/otp/reset-password": {
-            "post": {
-                "description": "Mengirim kode OTP ke email untuk reset password.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth OTP"
-                ],
-                "summary": "Minta reset password dengan OTP",
-                "parameters": [
-                    {
-                        "description": "Email untuk reset password",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.ResetPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Kode OTP telah dikirim ke email",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.OTPResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Format request tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Email tidak ditemukan",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "429": {
-                        "description": "Terlalu banyak permintaan, coba lagi nanti",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Terjadi kesalahan pada server",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/otp/reset-password/confirm": {
-            "post": {
-                "description": "Mengatur password baru menggunakan OTP yang sudah diverifikasi.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth OTP"
-                ],
-                "summary": "Konfirmasi reset password dengan OTP",
-                "parameters": [
-                    {
-                        "description": "Email, kode OTP, dan password baru",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.ConfirmResetPasswordOTPRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Password berhasil direset",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.AuthResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Format request tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Kode OTP tidak valid atau expired",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Email tidak ditemukan",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Terjadi kesalahan pada server",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/otp/reset-password/resend": {
-            "post": {
-                "description": "Mengirim ulang kode OTP untuk reset password.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth OTP"
-                ],
-                "summary": "Kirim ulang OTP reset password",
-                "parameters": [
-                    {
-                        "description": "Email untuk kirim ulang OTP",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.ResendOTPRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Kode OTP baru telah dikirim",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.OTPResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Format request tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Email tidak ditemukan",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "429": {
-                        "description": "Terlalu banyak permintaan, coba lagi nanti",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Terjadi kesalahan pada server",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/otp/reset-password/verify": {
-            "post": {
-                "description": "Memverifikasi kode OTP untuk reset password.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth OTP"
-                ],
-                "summary": "Verifikasi OTP reset password",
-                "parameters": [
-                    {
-                        "description": "Email dan kode OTP",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.VerifyOTPRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Verifikasi OTP berhasil",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.OTPResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Format request tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Kode OTP tidak valid atau expired",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Email tidak ditemukan",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Terjadi kesalahan pada server",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/auth/refresh": {
             "post": {
                 "description": "Memperbarui access token menggunakan refresh token dari cookie.",
@@ -665,7 +181,7 @@ const docTemplate = `{
         },
         "/api/v1/auth/register": {
             "post": {
-                "description": "Membuat akun pengguna baru dengan email polije.ac.id.",
+                "description": "Membuat akun pengguna baru melalui Supabase Auth dan menyimpan data profil ke database lokal.",
                 "consumes": [
                     "application/json"
                 ],
@@ -678,7 +194,7 @@ const docTemplate = `{
                 "summary": "Registrasi pengguna baru",
                 "parameters": [
                     {
-                        "description": "Data registrasi",
+                        "description": "Data registrasi (name, email, password)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -727,61 +243,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/reset-password/confirm-otp": {
+        "/api/v1/auth/reset-password": {
             "post": {
-                "description": "Mengatur password baru menggunakan token reset yang valid.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Konfirmasi reset password",
-                "parameters": [
-                    {
-                        "description": "Token dan password baru",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.NewPasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Password berhasil direset",
-                        "schema": {
-                            "$ref": "#/definitions/domain.SuccessResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Format request tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Token tidak valid",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Terjadi kesalahan pada server",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/reset-password/otp": {
-            "post": {
-                "description": "Mengirim OTP ke email untuk reset password.",
+                "description": "Mengirim link reset password ke email yang terdaftar melalui Supabase Auth.",
                 "consumes": [
                     "application/json"
                 ],
@@ -3679,26 +3143,6 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ConfirmResetPasswordOTPRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "email",
-                "new_password"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "new_password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
         "domain.DatabaseService": {
             "type": "object",
             "properties": {
@@ -3942,42 +3386,6 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.NewPasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password",
-                "token"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.OTPResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_in": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "token_type": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
-                }
-            }
-        },
         "domain.PaginationData": {
             "type": "object",
             "properties": {
@@ -4097,25 +3505,6 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 8
-                }
-            }
-        },
-        "domain.ResendOTPRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "type"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "register",
-                        "reset_password"
-                    ]
                 }
             }
         },
@@ -4366,7 +3755,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "is_active": {
                     "type": "boolean"
@@ -4395,7 +3784,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "kategori": {
                     "type": "string"
@@ -4443,7 +3832,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -4461,29 +3850,6 @@ const docTemplate = `{
                 },
                 "resource": {
                     "type": "string"
-                }
-            }
-        },
-        "domain.VerifyOTPRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "email",
-                "type"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "register",
-                        "reset_password"
-                    ]
                 }
             }
         }

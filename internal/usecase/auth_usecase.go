@@ -1,13 +1,16 @@
 package usecase
 
 import (
-	"errors"
+	"context"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
+	supabaseAuth "fiber-boiler-plate/internal/supabase"
 	"fiber-boiler-plate/internal/usecase/repo"
-	"time"
+	"strings"
 
+	"github.com/supabase-community/supabase-go"
 	"gorm.io/gorm"
 )
 
@@ -15,185 +18,240 @@ type AuthUsecase interface {
 	Register(req domain.RegisterRequest) (string, *domain.AuthResponse, error)
 	Login(req domain.AuthRequest) (string, *domain.AuthResponse, error)
 	RefreshToken(refreshToken string) (string, *domain.RefreshTokenResponse, error)
-	ResetPassword(req domain.ResetPasswordRequest) error
-	ConfirmResetPassword(req domain.NewPasswordRequest) error
+	RequestPasswordReset(req domain.ResetPasswordRequest) error
 	Logout(token string) error
 }
 
 type authUsecase struct {
-	userRepo         repo.UserRepository
-	refreshTokenRepo repo.RefreshTokenRepository
-	resetTokenRepo   repo.PasswordResetTokenRepository
-	roleRepo         repo.RoleRepository
-	authHelper       *helper.AuthHelper
-	jwtManager       *helper.JWTManager
-	config           *config.Config
-	logger           *helper.Logger
+	userRepo           repo.UserRepository
+	roleRepo           repo.RoleRepository
+	authService        domain.AuthService
+	supabaseClient     *supabase.Client
+	supabaseServiceKey string
+	config             *config.Config
+	logger             *helper.Logger
 }
 
 func NewAuthUsecase(
 	userRepo repo.UserRepository,
-	refreshTokenRepo repo.RefreshTokenRepository,
-	resetTokenRepo repo.PasswordResetTokenRepository,
 	roleRepo repo.RoleRepository,
+	supabaseClient *supabase.Client,
+	supabaseServiceKey string,
 	config *config.Config,
 ) AuthUsecase {
-	jwtManager, err := helper.NewJWTManager(config)
-	if err != nil {
-		panic("Gagal inisialisasi JWT Manager: " + err.Error())
-	}
-
-	authHelper := helper.NewAuthHelper(refreshTokenRepo, jwtManager, config)
+	authURL := config.Supabase.URL + "/auth/v1"
+	authService := supabaseAuth.NewAuthService(supabaseClient, authURL)
+	authService.ServiceKey = supabaseServiceKey
 
 	return &authUsecase{
-		userRepo:         userRepo,
-		refreshTokenRepo: refreshTokenRepo,
-		resetTokenRepo:   resetTokenRepo,
-		roleRepo:         roleRepo,
-		authHelper:       authHelper,
-		jwtManager:       jwtManager,
-		config:           config,
-		logger:           helper.NewLogger(),
+		userRepo:           userRepo,
+		roleRepo:           roleRepo,
+		authService:        authService,
+		supabaseClient:     supabaseClient,
+		supabaseServiceKey: supabaseServiceKey,
+		config:             config,
+		logger:             helper.NewLogger(),
+	}
+}
+
+func NewAuthUsecaseWithDeps(
+	userRepo repo.UserRepository,
+	roleRepo repo.RoleRepository,
+	authService domain.AuthService,
+	config *config.Config,
+) AuthUsecase {
+	return &authUsecase{
+		userRepo:    userRepo,
+		roleRepo:    roleRepo,
+		authService: authService,
+		config:      config,
+		logger:      helper.NewLogger(),
 	}
 }
 
 func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.AuthResponse, error) {
+	ctx := context.Background()
+
 	emailInfo, err := helper.ValidatePolijeEmail(req.Email)
 	if err != nil {
-		return "", nil, err
+		return "", nil, apperrors.NewValidationError(err.Error(), err)
 	}
 
+	// Check if user already exists locally
 	existingUser, _ := uc.userRepo.GetByEmail(req.Email)
 	if existingUser != nil {
-		return "", nil, errors.New("email sudah terdaftar")
+		return "", nil, apperrors.NewConflictError("Email sudah terdaftar")
 	}
 
+	// Get role for the user
 	role, err := uc.roleRepo.GetByName(emailInfo.RoleName)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", nil, errors.New("role tidak tersedia, silakan hubungi administrator")
+		if err == gorm.ErrRecordNotFound {
+			return "", nil, apperrors.NewNotFoundError("Role " + emailInfo.RoleName)
 		}
-		return "", nil, errors.New("gagal mengambil data role")
+		return "", nil, apperrors.NewInternalError(err)
 	}
 
-	hashedPassword, err := helper.HashPassword(req.Password)
+	// Register with Supabase
+	supabaseReq := domain.AuthServiceRegisterRequest{
+		Email:    req.Email,
+		Password: req.Password,
+		Name:     req.Name,
+	}
+
+	authResp, err := uc.authService.Register(ctx, supabaseReq)
 	if err != nil {
-		return "", nil, err
+		// Check if user already exists in Supabase
+		if strings.Contains(err.Error(), "already registered") || strings.Contains(err.Error(), "already exists") {
+			return "", nil, apperrors.NewConflictError("Email sudah terdaftar di sistem autentikasi")
+		}
+		return "", nil, apperrors.NewInternalError(err)
 	}
 
+	// Create user in local database with Supabase user ID
+	roleID := int(role.ID)
 	user := &domain.User{
+		ID:       authResp.User.ID, // Use Supabase user ID
 		Name:     req.Name,
 		Email:    req.Email,
-		Password: hashedPassword,
-		RoleID:   &role.ID,
+		RoleID:   &roleID,
 		IsActive: true,
 	}
 
 	if err := uc.userRepo.Create(user); err != nil {
-		return "", nil, errors.New("gagal membuat user")
+		// Rollback: Delete user from Supabase if local DB creation fails
+		uc.logger.Error("Failed to create local user, rolling back Supabase user", "error", err, "supabase_user_id", authResp.User.ID)
+		if deleteErr := uc.authService.DeleteUser(ctx, authResp.User.ID); deleteErr != nil {
+			uc.logger.Error("Failed to rollback Supabase user deletion", "error", deleteErr, "supabase_user_id", authResp.User.ID)
+		}
+		return "", nil, apperrors.NewInternalError(err)
 	}
 
 	user.Role = role
 
-	return uc.authHelper.GenerateAuthResponse(user)
+	domainAuthResp := &domain.AuthResponse{
+		User:        *user,
+		AccessToken: authResp.AccessToken,
+		TokenType:   authResp.TokenType,
+		ExpiresIn:   authResp.ExpiresIn,
+	}
+
+	return authResp.RefreshToken, domainAuthResp, nil
 }
 
 func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthResponse, error) {
+	ctx := context.Background()
+
+	supabaseReq := domain.AuthServiceLoginRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	authResp, err := uc.authService.Login(ctx, supabaseReq)
+	if err != nil {
+		return "", nil, apperrors.NewUnauthorizedError("Email atau password salah")
+	}
+
 	user, err := uc.userRepo.GetByEmail(req.Email)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", nil, errors.New("email atau password salah")
+		if err == gorm.ErrRecordNotFound {
+			emailInfo, validateErr := helper.ValidatePolijeEmail(req.Email)
+			if validateErr != nil {
+				return "", nil, apperrors.NewValidationError(validateErr.Error(), validateErr)
+			}
+
+			role, roleErr := uc.roleRepo.GetByName(emailInfo.RoleName)
+			if roleErr != nil {
+				return "", nil, apperrors.NewInternalError(roleErr)
+			}
+
+			roleID := int(role.ID)
+			name := authResp.User.Name
+			if name == "" {
+				name = req.Email
+			}
+
+			user = &domain.User{
+				ID:       authResp.User.ID,
+				Name:     name,
+				Email:    req.Email,
+				RoleID:   &roleID,
+				IsActive: true,
+			}
+
+			if createErr := uc.userRepo.Create(user); createErr != nil {
+				uc.logger.Error("Failed to sync Supabase user to local database", "error", createErr, "email", req.Email)
+				return "", nil, apperrors.NewInternalError(createErr)
+			}
+
+			user.Role = role
+		} else {
+			return "", nil, apperrors.NewInternalError(err)
 		}
-		return "", nil, errors.New("gagal mengambil data user")
 	}
 
 	if !user.IsActive {
-		return "", nil, errors.New("akun belum diaktifkan")
+		return "", nil, apperrors.NewForbiddenError("Akun belum diaktifkan")
 	}
 
-	if err := helper.ComparePassword(user.Password, req.Password); err != nil {
-		return "", nil, err
+	if user.RoleID != nil {
+		roleIDUint := uint(*user.RoleID)
+		user.Role, err = uc.roleRepo.GetByID(roleIDUint)
+		if err != nil {
+			return "", nil, apperrors.NewInternalError(err)
+		}
 	}
 
-	refreshToken, authResponse, err := uc.authHelper.GenerateAuthResponse(user)
-	if err != nil {
-		return "", nil, err
+	domainAuthResp := &domain.AuthResponse{
+		User:        *user,
+		AccessToken: authResp.AccessToken,
+		TokenType:   authResp.TokenType,
+		ExpiresIn:   authResp.ExpiresIn,
 	}
 
-	return refreshToken, authResponse, nil
+	return authResp.RefreshToken, domainAuthResp, nil
 }
 
 func (uc *authUsecase) RefreshToken(refreshToken string) (string, *domain.RefreshTokenResponse, error) {
-	hashedToken := helper.HashRefreshToken(refreshToken)
+	ctx := context.Background()
 
-	tokenRecord, err := uc.refreshTokenRepo.GetByToken(hashedToken)
+	authResp, err := uc.authService.RefreshToken(ctx, refreshToken)
 	if err != nil {
-		return "", nil, errors.New("refresh token tidak valid atau sudah expired")
+		return "", nil, apperrors.NewUnauthorizedError("Refresh token tidak valid atau sudah expired")
 	}
 
-	if tokenRecord.IsRevoked {
-		if err := uc.refreshTokenRepo.RevokeAllUserTokens(tokenRecord.UserID); err == nil {
-		}
-		return "", nil, errors.New("refresh token tidak valid atau sudah expired")
+	domainResp := &domain.RefreshTokenResponse{
+		AccessToken: authResp.AccessToken,
+		TokenType:   authResp.TokenType,
+		ExpiresIn:   authResp.ExpiresIn,
 	}
 
-	user, err := uc.userRepo.GetByID(tokenRecord.UserID)
-	if err != nil {
-		return "", nil, errors.New("user tidak ditemukan")
-	}
-
-	return uc.authHelper.RevokeAndGenerateNewTokens(refreshToken, user)
+	return authResp.RefreshToken, domainResp, nil
 }
 
-func (uc *authUsecase) ResetPassword(req domain.ResetPasswordRequest) error {
-	user, err := uc.userRepo.GetByEmail(req.Email)
+func (uc *authUsecase) RequestPasswordReset(req domain.ResetPasswordRequest) error {
+	ctx := context.Background()
+
+	_, err := uc.userRepo.GetByEmail(req.Email)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("email tidak ditemukan")
+		if err == gorm.ErrRecordNotFound {
+			return apperrors.NewNotFoundError("Email")
 		}
-		return errors.New("gagal mengambil data user")
+		return apperrors.NewInternalError(err)
 	}
 
-	resetToken, err := helper.GenerateResetToken()
-	if err != nil {
-		return errors.New("gagal generate reset token")
+	redirectURL := uc.config.App.CorsOriginDev + "/reset-password"
+	if uc.config.App.Env == "production" {
+		redirectURL = uc.config.App.CorsOriginProd + "/reset-password"
 	}
 
-	expiresAt := time.Now().Add(time.Hour * 1)
-	if _, err := uc.resetTokenRepo.Create(user.Email, resetToken, expiresAt); err != nil {
-		return errors.New("gagal simpan reset token")
-	}
-
-	return nil
-}
-
-func (uc *authUsecase) ConfirmResetPassword(req domain.NewPasswordRequest) error {
-	resetToken, err := uc.resetTokenRepo.GetByToken(req.Token)
-	if err != nil {
-		return errors.New("token reset password tidak valid atau sudah expired")
-	}
-
-	hashedPassword, err := helper.HashPassword(req.NewPassword)
-	if err != nil {
-		return err
-	}
-
-	if err := uc.userRepo.UpdatePassword(resetToken.Email, hashedPassword); err != nil {
-		return errors.New("gagal update password")
-	}
-
-	if err := uc.resetTokenRepo.MarkAsUsed(req.Token); err != nil {
-		return errors.New("gagal mark reset token sebagai used")
+	if err := uc.authService.RequestPasswordReset(ctx, req.Email, redirectURL); err != nil {
+		return apperrors.NewInternalError(err)
 	}
 
 	return nil
 }
 
 func (uc *authUsecase) Logout(token string) error {
-	hashedToken := helper.HashRefreshToken(token)
-	if err := uc.refreshTokenRepo.RevokeToken(hashedToken); err != nil {
-		return errors.New("refresh token tidak valid")
-	}
-
 	return nil
 }
