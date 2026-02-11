@@ -102,3 +102,26 @@ func (r *userRepository) UpdateProfile(userID string, name string, jenisKelamin 
 func (r *userRepository) Delete(userID string) error {
 	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
 }
+
+func (r *userRepository) GetByRoleID(roleID uint) ([]domain.UserListItem, error) {
+	var userListItems []domain.UserListItem
+
+	err := r.db.Table("user_profiles").
+		Select("user_profiles.id, user_profiles.email, user_profiles.created_at as dibuat_pada, COALESCE(roles.nama_role, '') as role").
+		Joins("LEFT JOIN roles ON roles.id = user_profiles.role_id").
+		Where("user_profiles.is_active = ? AND user_profiles.role_id = ?", true, roleID).
+		Order("user_profiles.created_at DESC").
+		Scan(&userListItems).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return userListItems, nil
+}
+
+func (r *userRepository) BulkUpdateRole(userIDs []string, roleID uint) error {
+	return r.db.Model(&domain.User{}).
+		Where("id IN ? AND is_active = ?", userIDs, true).
+		Update("role_id", roleID).Error
+}

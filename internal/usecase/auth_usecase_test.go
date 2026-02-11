@@ -106,6 +106,19 @@ func (m *authTestUserRepo) Delete(userID string) error {
 	return args.Error(0)
 }
 
+func (m *authTestUserRepo) GetByRoleID(roleID uint) ([]domain.UserListItem, error) {
+	args := m.Called(roleID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.UserListItem), args.Error(1)
+}
+
+func (m *authTestUserRepo) BulkUpdateRole(userIDs []string, roleID uint) error {
+	args := m.Called(userIDs, roleID)
+	return args.Error(0)
+}
+
 type authTestRoleRepo struct {
 	mock.Mock
 }

@@ -68,3 +68,7 @@ type DownloadUserFilesRequest struct {
 	ProjectIDs []uint `json:"project_ids" validate:"omitempty"`
 	ModulIDs   []uint `json:"modul_ids" validate:"omitempty"`
 }
+
+type BulkAssignRoleRequest struct {
+	UserIDs []string `json:"user_ids" validate:"required,min=1"`
+}

@@ -22,7 +22,7 @@ type roleUsecase struct {
 	roleRepo           repo.RoleRepository
 	permissionRepo     repo.PermissionRepository
 	rolePermissionRepo repo.RolePermissionRepository
-	casbinEnforcer     *helper.CasbinEnforcer
+	casbinEnforcer     helper.CasbinEnforcerInterface
 	rbacHelper         *helper.RBACHelper
 }
 
@@ -30,7 +30,7 @@ func NewRoleUsecase(
 	roleRepo repo.RoleRepository,
 	permissionRepo repo.PermissionRepository,
 	rolePermissionRepo repo.RolePermissionRepository,
-	casbinEnforcer *helper.CasbinEnforcer,
+	casbinEnforcer helper.CasbinEnforcerInterface,
 ) RoleUsecase {
 	rbacHelper := helper.NewRBACHelper(casbinEnforcer)
 

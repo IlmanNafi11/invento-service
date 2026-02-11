@@ -83,6 +83,19 @@ func (m *MockUserUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modu
 	return args.String(0), args.Error(1)
 }
 
+func (m *MockUserUsecase) GetUsersForRole(roleID uint) ([]domain.UserListItem, error) {
+	args := m.Called(roleID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.UserListItem), args.Error(1)
+}
+
+func (m *MockUserUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
+	args := m.Called(userIDs, roleID)
+	return args.Error(0)
+}
+
 // Helper function to create a test app with authenticated middleware for UserController
 func setupTestAppWithAuthForUser(controller *httpcontroller.UserController) *fiber.App {
 	app := fiber.New(fiber.Config{

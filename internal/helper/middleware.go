@@ -6,6 +6,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// CasbinPermissionChecker is an interface for checking permissions.
+// This allows for easy mocking in tests.
+type CasbinPermissionChecker interface {
+	CheckPermission(roleName, resource, action string) (bool, error)
+}
+
 // SupabaseAuthMiddleware validates Supabase JWT tokens and extracts user info
 func SupabaseAuthMiddleware(supabaseURL string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -27,7 +33,7 @@ func SupabaseAuthMiddleware(supabaseURL string) fiber.Handler {
 	}
 }
 
-func RBACMiddleware(casbinEnforcer *CasbinEnforcer, resource string, action string) fiber.Handler {
+func RBACMiddleware(casbinEnforcer CasbinPermissionChecker, resource string, action string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		roleVal := c.Locals("user_role")
 		if roleVal == nil {

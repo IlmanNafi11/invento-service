@@ -6,10 +6,10 @@ import (
 )
 
 type RBACHelper struct {
-	casbinEnforcer *CasbinEnforcer
+	casbinEnforcer CasbinEnforcerInterface
 }
 
-func NewRBACHelper(casbinEnforcer *CasbinEnforcer) *RBACHelper {
+func NewRBACHelper(casbinEnforcer CasbinEnforcerInterface) *RBACHelper {
 	return &RBACHelper{
 		casbinEnforcer: casbinEnforcer,
 	}

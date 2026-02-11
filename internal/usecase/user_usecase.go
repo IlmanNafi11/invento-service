@@ -20,6 +20,8 @@ type UserUsecase interface {
 	UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error)
 	GetUserPermissions(userID string) ([]domain.UserPermissionItem, error)
 	DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error)
+	GetUsersForRole(roleID uint) ([]domain.UserListItem, error)
+	BulkAssignRole(userIDs []string, roleID uint) error
 }
 
 type userUsecase struct {
@@ -99,8 +101,24 @@ func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
 		return nil
 	}
 
+	if uc.casbinEnforcer != nil && user.Role != nil {
+		if err := uc.casbinEnforcer.RemoveRoleForUser(userID, user.Role.NamaRole); err != nil {
+			return errors.New("gagal menghapus role lama dari casbin")
+		}
+	}
+
 	if err := uc.userRepo.UpdateRole(userID, &roleID); err != nil {
 		return errors.New("gagal memperbarui role user")
+	}
+
+	if uc.casbinEnforcer != nil {
+		if err := uc.casbinEnforcer.AddRoleForUser(userID, roleName); err != nil {
+			return errors.New("gagal menambahkan role baru ke casbin")
+		}
+
+		if err := uc.casbinEnforcer.SavePolicy(); err != nil {
+			return errors.New("gagal menyimpan policy casbin")
+		}
 	}
 
 	return nil
@@ -356,4 +374,65 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 	}
 
 	return zipPath, nil
+}
+
+func (uc *userUsecase) GetUsersForRole(roleID uint) ([]domain.UserListItem, error) {
+	_, err := uc.roleRepo.GetByID(roleID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("role tidak ditemukan")
+		}
+		return nil, errors.New("gagal mengambil data role")
+	}
+
+	users, err := uc.userRepo.GetByRoleID(roleID)
+	if err != nil {
+		return nil, errors.New("gagal mengambil daftar user")
+	}
+
+	return users, nil
+}
+
+func (uc *userUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
+	role, err := uc.roleRepo.GetByID(roleID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("role tidak ditemukan")
+		}
+		return errors.New("gagal mengambil data role")
+	}
+
+	for _, userID := range userIDs {
+		user, err := uc.userRepo.GetByID(userID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				continue
+			}
+			return errors.New("gagal mengambil data user")
+		}
+
+		if uc.casbinEnforcer != nil && user.Role != nil {
+			if err := uc.casbinEnforcer.RemoveRoleForUser(userID, user.Role.NamaRole); err != nil {
+				return errors.New("gagal menghapus role lama dari casbin")
+			}
+		}
+
+		if uc.casbinEnforcer != nil {
+			if err := uc.casbinEnforcer.AddRoleForUser(userID, role.NamaRole); err != nil {
+				return errors.New("gagal menambahkan role baru ke casbin")
+			}
+		}
+	}
+
+	if err := uc.userRepo.BulkUpdateRole(userIDs, roleID); err != nil {
+		return errors.New("gagal memperbarui role user")
+	}
+
+	if uc.casbinEnforcer != nil {
+		if err := uc.casbinEnforcer.SavePolicy(); err != nil {
+			return errors.New("gagal menyimpan policy casbin")
+		}
+	}
+
+	return nil
 }

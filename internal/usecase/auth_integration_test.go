@@ -108,6 +108,19 @@ func (r *integrationUserRepository) Delete(userID string) error {
 	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
 }
 
+func (r *integrationUserRepository) GetByRoleID(roleID uint) ([]domain.UserListItem, error) {
+	var users []domain.UserListItem
+	err := r.db.Table("user_profiles").
+		Select("id, email, name, role_id, is_active, created_at").
+		Where("role_id = ? AND is_active = ?", roleID, true).
+		Scan(&users).Error
+	return users, err
+}
+
+func (r *integrationUserRepository) BulkUpdateRole(userIDs []string, roleID uint) error {
+	return r.db.Model(&domain.User{}).Where("id IN ?", userIDs).Update("role_id", roleID).Error
+}
+
 type integrationRoleRepository struct {
 	db *gorm.DB
 }

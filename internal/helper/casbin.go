@@ -9,9 +9,33 @@ import (
 	"gorm.io/gorm"
 )
 
+// CasbinEnforcerInterface defines the interface for Casbin enforcer operations
+type CasbinEnforcerInterface interface {
+	AddPermissionForRole(roleName, resource, action string) error
+	RemovePermissionForRole(roleName, resource, action string) error
+	RemoveAllPermissionsForRole(roleName string) error
+	GetPermissionsForRole(roleName string) ([][]string, error)
+	CheckPermission(roleName, resource, action string) (bool, error)
+	SavePolicy() error
+	LoadPolicy() error
+	DeleteRole(roleName string) error
+	GetEnforcer() *casbin.Enforcer
+	GetAllRoles() ([]string, error)
+	GetAllPolicies() ([][]string, error)
+	HasPolicy(roleName, resource, action string) (bool, error)
+	AddRoleForUser(userID, roleName string) error
+	RemoveRoleForUser(userID, roleName string) error
+	GetRolesForUser(userID string) ([]string, error)
+	GetUsersForRole(roleName string) ([]string, error)
+	DeleteAllRolesForUser(userID string) error
+}
+
 type CasbinEnforcer struct {
 	enforcer *casbin.Enforcer
 }
+
+// Ensure CasbinEnforcer implements CasbinEnforcerInterface
+var _ CasbinEnforcerInterface = (*CasbinEnforcer)(nil)
 
 func NewCasbinEnforcer(db *gorm.DB) (*CasbinEnforcer, error) {
 	adapter, err := gormadapter.NewAdapterByDB(db)
@@ -141,4 +165,44 @@ func (ce *CasbinEnforcer) HasPolicy(roleName, resource, action string) (bool, er
 		return false, fmt.Errorf("gagal memeriksa policy: %w", err)
 	}
 	return hasPolicy, nil
+}
+
+func (ce *CasbinEnforcer) AddRoleForUser(userID, roleName string) error {
+	_, err := ce.enforcer.AddGroupingPolicy(userID, roleName)
+	if err != nil {
+		return fmt.Errorf("gagal menambahkan role untuk user: %w", err)
+	}
+	return nil
+}
+
+func (ce *CasbinEnforcer) RemoveRoleForUser(userID, roleName string) error {
+	_, err := ce.enforcer.RemoveGroupingPolicy(userID, roleName)
+	if err != nil {
+		return fmt.Errorf("gagal menghapus role dari user: %w", err)
+	}
+	return nil
+}
+
+func (ce *CasbinEnforcer) GetRolesForUser(userID string) ([]string, error) {
+	roles, err := ce.enforcer.GetRolesForUser(userID)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil roles untuk user: %w", err)
+	}
+	return roles, nil
+}
+
+func (ce *CasbinEnforcer) GetUsersForRole(roleName string) ([]string, error) {
+	users, err := ce.enforcer.GetUsersForRole(roleName)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil users untuk role: %w", err)
+	}
+	return users, nil
+}
+
+func (ce *CasbinEnforcer) DeleteAllRolesForUser(userID string) error {
+	_, err := ce.enforcer.DeleteRolesForUser(userID)
+	if err != nil {
+		return fmt.Errorf("gagal menghapus semua role dari user: %w", err)
+	}
+	return nil
 }

@@ -324,3 +324,50 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 
 	return c.Download(filePath)
 }
+
+// GetUsersForRole handles GET /api/v1/role/:id/users - Get users for a specific role
+func (ctrl *UserController) GetUsersForRole(c *fiber.Ctx) error {
+	id, err := ctrl.ParsePathID(c)
+	if err != nil {
+		return err
+	}
+
+	result, err := ctrl.userUsecase.GetUsersForRole(uint(id))
+	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
+		}
+		return ctrl.SendInternalError(c)
+	}
+
+	return ctrl.SendSuccess(c, result, "Daftar user untuk role berhasil diambil")
+}
+
+// BulkAssignRole handles POST /api/v1/role/:id/users/bulk - Assign role to multiple users
+func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
+	id, err := ctrl.ParsePathID(c)
+	if err != nil {
+		return err
+	}
+
+	var req domain.BulkAssignRoleRequest
+	if err := c.BodyParser(&req); err != nil {
+		return ctrl.SendBadRequest(c, "Format request tidak valid")
+	}
+
+	if !ctrl.ValidateStruct(c, req) {
+		return nil
+	}
+
+	err = ctrl.userUsecase.BulkAssignRole(req.UserIDs, uint(id))
+	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
+		}
+		return ctrl.SendInternalError(c)
+	}
+
+	return ctrl.SendSuccess(c, nil, "Role berhasil ditetapkan ke user")
+}
