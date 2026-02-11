@@ -32,6 +32,7 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Name     string
+	SeedData bool
 }
 
 type UploadConfig struct {
@@ -54,8 +55,8 @@ type UploadConfig struct {
 }
 
 type LoggingConfig struct {
-	Level         string
-	Format        string
+	Level          string
+	Format         string
 	LogRequestBody bool
 }
 
@@ -91,6 +92,7 @@ func LoadConfig() *Config {
 			User:     getEnv("DB_USER", "root"),
 			Password: getEnvAllowEmpty("DB_PASSWORD", "admin"),
 			Name:     getEnv("DB_NAME", "fiber_boilerplate"),
+			SeedData: getEnvAsBool("DB_SEED_DATA", false),
 		},
 		Upload: UploadConfig{
 			MaxSize:              getEnvAsInt64("UPLOAD_MAX_SIZE", 524288000),
@@ -111,8 +113,8 @@ func LoadConfig() *Config {
 			MaxResumeAttempts:    getEnvAsInt("TUS_MAX_RESUME_ATTEMPTS", 10),
 		},
 		Logging: LoggingConfig{
-			Level:         getEnv("LOG_LEVEL", "INFO"),
-			Format:        getEnv("LOG_FORMAT", "text"),
+			Level:          getEnv("LOG_LEVEL", "INFO"),
+			Format:         getEnv("LOG_FORMAT", "text"),
 			LogRequestBody: getEnvAsBool("LOG_REQUEST_BODY", false),
 		},
 		Swagger: SwaggerConfig{

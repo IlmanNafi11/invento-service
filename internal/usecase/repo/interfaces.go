@@ -14,6 +14,8 @@ type UserRepository interface {
 	UpdateRole(userID string, roleID *int) error
 	UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error
 	Delete(userID string) error
+	GetByRoleID(roleID uint) ([]domain.UserListItem, error)
+	BulkUpdateRole(userIDs []string, roleID uint) error
 }
 
 type RoleRepository interface {
@@ -68,12 +70,29 @@ type TusUploadRepository interface {
 	Create(upload *domain.TusUpload) error
 	GetByID(id string) (*domain.TusUpload, error)
 	GetByUserID(userID string) ([]domain.TusUpload, error)
+	CountActiveByUserID(userID string) (int64, error)
 	UpdateOffset(id string, offset int64, progress float64) error
 	UpdateStatus(id string, status string) error
 	GetExpired(before time.Time) ([]domain.TusUpload, error)
 	GetByUserIDAndStatus(userID string, status string) ([]domain.TusUpload, error)
 	Delete(id string) error
 	ListActive() ([]domain.TusUpload, error)
+	GetActiveUploadIDs() ([]string, error)
 	UpdateOffsetOnly(id string, offset int64) error
 	UpdateUpload(upload *domain.TusUpload) error
+}
+
+type TusModulUploadRepository interface {
+	Create(upload *domain.TusModulUpload) error
+	GetByID(id string) (*domain.TusModulUpload, error)
+	GetByUserID(userID string) ([]domain.TusModulUpload, error)
+	UpdateOffset(id string, offset int64, progress float64) error
+	UpdateStatus(id string, status string) error
+	Complete(id string, modulID uint, filePath string) error
+	Delete(id string) error
+	GetExpiredUploads() ([]domain.TusModulUpload, error)
+	GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error)
+	CountActiveByUserID(userID string) (int, error)
+	GetActiveByUserID(userID string) ([]domain.TusModulUpload, error)
+	GetActiveUploadIDs() ([]string, error)
 }

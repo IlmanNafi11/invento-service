@@ -3,7 +3,6 @@ package helper
 import (
 	"bytes"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"fiber-boiler-plate/config"
+	apperrors "fiber-boiler-plate/internal/errors"
 )
 
 type TusManager struct {
@@ -59,11 +59,11 @@ func (tm *TusManager) CheckUploadSlot() *UploadSlotResponse {
 }
 
 func (tm *TusManager) ResetUploadQueue() error {
-	activeUploadID := tm.queue.GetActiveUpload()
+	activeUploadIDs := tm.queue.GetActiveUploads()
 
-	if activeUploadID != "" {
+	for _, activeUploadID := range activeUploadIDs {
 		if err := tm.store.Terminate(activeUploadID); err != nil {
-			log.Printf("Warning: gagal menghapus upload aktif: %v", err)
+			log.Printf("Warning: gagal menghapus upload aktif %s: %v", activeUploadID, err)
 		}
 	}
 
@@ -91,7 +91,7 @@ func (tm *TusManager) ParseMetadata(metadataHeader string) (map[string]string, e
 
 		value, err := base64.StdEncoding.DecodeString(valueB64)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding metadata key %s: %w", key, err)
+			return nil, apperrors.NewValidationError(fmt.Sprintf("metadata key %s tidak valid", key), err)
 		}
 
 		metadataMap[key] = string(value)
@@ -102,11 +102,11 @@ func (tm *TusManager) ParseMetadata(metadataHeader string) (map[string]string, e
 
 func (tm *TusManager) ValidateProjectMetadata(metadata map[string]string) error {
 	if namaProject, ok := metadata["nama_project"]; !ok || namaProject == "" {
-		return errors.New("nama_project wajib diisi")
+		return apperrors.NewValidationError("nama_project wajib diisi", nil)
 	}
 
 	if len(metadata["nama_project"]) < 3 || len(metadata["nama_project"]) > 255 {
-		return errors.New("nama_project harus antara 3-255 karakter")
+		return apperrors.NewValidationError("nama_project harus antara 3-255 karakter", nil)
 	}
 
 	if kategori, ok := metadata["kategori"]; ok && kategori != "" {
@@ -119,7 +119,7 @@ func (tm *TusManager) ValidateProjectMetadata(metadata map[string]string) error 
 			}
 		}
 		if !isValid {
-			return errors.New("kategori tidak valid")
+			return apperrors.NewValidationError("kategori tidak valid", nil)
 		}
 	} else {
 		metadata["kategori"] = "website"
@@ -128,7 +128,7 @@ func (tm *TusManager) ValidateProjectMetadata(metadata map[string]string) error 
 	if semesterStr, ok := metadata["semester"]; ok && semesterStr != "" {
 		semester, err := strconv.Atoi(semesterStr)
 		if err != nil || semester < 1 || semester > 8 {
-			return errors.New("semester harus antara 1-8")
+			return apperrors.NewValidationError("semester harus antara 1-8", nil)
 		}
 		metadata["semester"] = semesterStr
 	}
@@ -138,11 +138,11 @@ func (tm *TusManager) ValidateProjectMetadata(metadata map[string]string) error 
 
 func (tm *TusManager) ValidateModulMetadata(metadata map[string]string) error {
 	if namaFile, ok := metadata["nama_file"]; !ok || namaFile == "" {
-		return errors.New("nama_file wajib diisi")
+		return apperrors.NewValidationError("nama_file wajib diisi", nil)
 	}
 
 	if len(metadata["nama_file"]) < 3 || len(metadata["nama_file"]) > 255 {
-		return errors.New("nama_file harus antara 3-255 karakter")
+		return apperrors.NewValidationError("nama_file harus antara 3-255 karakter", nil)
 	}
 
 	if tipe, ok := metadata["tipe"]; ok && tipe != "" {
@@ -155,16 +155,16 @@ func (tm *TusManager) ValidateModulMetadata(metadata map[string]string) error {
 			}
 		}
 		if !isValid {
-			return errors.New("tipe file tidak valid, harus salah satu dari: docx, xlsx, pdf, pptx")
+			return apperrors.NewValidationError("tipe file tidak valid, harus salah satu dari: docx, xlsx, pdf, pptx", nil)
 		}
 	} else {
-		return errors.New("tipe wajib diisi")
+		return apperrors.NewValidationError("tipe wajib diisi", nil)
 	}
 
 	if semesterStr, ok := metadata["semester"]; ok && semesterStr != "" {
 		semester, err := strconv.Atoi(semesterStr)
 		if err != nil || semester < 1 || semester > 8 {
-			return errors.New("semester harus antara 1-8")
+			return apperrors.NewValidationError("semester harus antara 1-8", nil)
 		}
 		metadata["semester"] = semesterStr
 	}
@@ -174,14 +174,21 @@ func (tm *TusManager) ValidateModulMetadata(metadata map[string]string) error {
 
 func (tm *TusManager) InitiateUpload(uploadID string, fileSize int64, metadata map[string]string) error {
 	if fileSize > tm.config.Upload.MaxSize {
-		return fmt.Errorf("ukuran file melebihi batas maksimal %d MB", tm.config.Upload.MaxSize/(1024*1024))
+		return apperrors.NewPayloadTooLargeError(fmt.Sprintf("ukuran file melebihi batas maksimal %d MB", tm.config.Upload.MaxSize/(1024*1024)))
 	}
 
 	if fileSize <= 0 {
-		return errors.New("ukuran file tidak valid")
+		return apperrors.NewValidationError("ukuran file tidak valid", nil)
 	}
 
-	return tm.store.InitiateUpload(uploadID, fileSize)
+	info := TusFileInfo{
+		ID:       uploadID,
+		Size:     fileSize,
+		Offset:   0,
+		Metadata: metadata,
+	}
+
+	return tm.store.NewUpload(info)
 }
 
 func (tm *TusManager) HandleChunk(uploadID string, offset int64, chunk io.Reader) (int64, error) {
@@ -235,11 +242,11 @@ func (tm *TusManager) IsActiveUpload(uploadID string) bool {
 
 func (tm *TusManager) ReadChunkFromBody(body []byte, expectedSize int64) (io.Reader, error) {
 	if int64(len(body)) != expectedSize {
-		return nil, fmt.Errorf("ukuran body tidak cocok dengan Content-Length: expected %d, actual %d", expectedSize, len(body))
+		return nil, apperrors.NewValidationError(fmt.Sprintf("ukuran body tidak cocok dengan Content-Length: expected %d, actual %d", expectedSize, len(body)), nil)
 	}
 
 	if len(body) == 0 {
-		return nil, errors.New("body kosong")
+		return nil, apperrors.NewValidationError("body kosong", nil)
 	}
 
 	return bytes.NewReader(body), nil
@@ -248,12 +255,12 @@ func (tm *TusManager) ReadChunkFromBody(body []byte, expectedSize int64) (io.Rea
 func (tm *TusManager) ExtractUserIDFromMetadata(metadata map[string]string) (uint, error) {
 	userIDStr, ok := metadata["user_id"]
 	if !ok {
-		return 0, errors.New("user_id tidak ditemukan dalam metadata")
+		return 0, apperrors.NewValidationError("user_id tidak ditemukan dalam metadata", nil)
 	}
 
 	userID, err := strconv.ParseUint(userIDStr, 10, 32)
 	if err != nil {
-		return 0, fmt.Errorf("user_id tidak valid: %w", err)
+		return 0, apperrors.NewValidationError("user_id tidak valid", err)
 	}
 
 	return uint(userID), nil
@@ -267,12 +274,12 @@ func (tm *TusManager) GetDefaultTusHeaders() map[string]string {
 
 func (tm *TusManager) ValidateFileSize(fileSize int64, maxSize int64) error {
 	if fileSize <= 0 {
-		return errors.New("ukuran file tidak valid")
+		return apperrors.NewValidationError("ukuran file tidak valid", nil)
 	}
 
 	if fileSize > maxSize {
 		maxSizeMB := maxSize / (1024 * 1024)
-		return fmt.Errorf("ukuran file melebihi batas maksimal %d MB", maxSizeMB)
+		return apperrors.NewPayloadTooLargeError(fmt.Sprintf("ukuran file melebihi batas maksimal %d MB", maxSizeMB))
 	}
 
 	return nil
@@ -280,7 +287,7 @@ func (tm *TusManager) ValidateFileSize(fileSize int64, maxSize int64) error {
 
 func (tm *TusManager) ValidateTusVersion(version string) error {
 	if version != tm.config.Upload.TusVersion {
-		return fmt.Errorf("versi TUS protocol tidak didukung, gunakan %s", tm.config.Upload.TusVersion)
+		return apperrors.NewTusVersionMismatchError(tm.config.Upload.TusVersion)
 	}
 
 	return nil
@@ -293,7 +300,7 @@ func (tm *TusManager) ValidateOffset(uploadID string, clientOffset int64) (int64
 	}
 
 	if clientOffset != serverOffset {
-		return serverOffset, fmt.Errorf("offset tidak cocok, client: %d, server: %d", clientOffset, serverOffset)
+		return serverOffset, apperrors.NewTusOffsetMismatchError(serverOffset, clientOffset)
 	}
 
 	return serverOffset, nil
@@ -301,7 +308,7 @@ func (tm *TusManager) ValidateOffset(uploadID string, clientOffset int64) (int64
 
 func (tm *TusManager) ValidateContentType(contentType string) error {
 	if contentType != "application/offset+octet-stream" {
-		return errors.New("Content-Type harus application/offset+octet-stream")
+		return apperrors.NewValidationError("Content-Type harus application/offset+octet-stream", nil)
 	}
 
 	return nil

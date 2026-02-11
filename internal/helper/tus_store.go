@@ -8,13 +8,19 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 type TusStore struct {
 	pathResolver *PathResolver
 	maxFileSize  int64
-	locks        map[string]*sync.RWMutex
+	locks        map[string]*lockEntry
 	locksMutex   sync.RWMutex
+}
+
+type lockEntry struct {
+	mutex      sync.RWMutex
+	lastAccess time.Time
 }
 
 type TusFileInfo struct {
@@ -28,7 +34,7 @@ func NewTusStore(pathResolver *PathResolver, maxFileSize int64) *TusStore {
 	return &TusStore{
 		pathResolver: pathResolver,
 		maxFileSize:  maxFileSize,
-		locks:        make(map[string]*sync.RWMutex),
+		locks:        make(map[string]*lockEntry),
 	}
 }
 
@@ -36,13 +42,16 @@ func (ts *TusStore) getLock(uploadID string) *sync.RWMutex {
 	ts.locksMutex.Lock()
 	defer ts.locksMutex.Unlock()
 
-	if lock, exists := ts.locks[uploadID]; exists {
-		return lock
+	if entry, exists := ts.locks[uploadID]; exists {
+		entry.lastAccess = time.Now()
+		return &entry.mutex
 	}
 
-	lock := &sync.RWMutex{}
-	ts.locks[uploadID] = lock
-	return lock
+	entry := &lockEntry{
+		lastAccess: time.Now(),
+	}
+	ts.locks[uploadID] = entry
+	return &entry.mutex
 }
 
 func (ts *TusStore) removeLock(uploadID string) {
@@ -138,41 +147,6 @@ func (ts *TusStore) GetInfo(uploadID string) (TusFileInfo, error) {
 	}
 
 	return info, nil
-}
-
-func (ts *TusStore) InitiateUpload(uploadID string, fileSize int64) error {
-	if fileSize > ts.maxFileSize {
-		return fmt.Errorf("ukuran file melebihi batas maksimal %d bytes", ts.maxFileSize)
-	}
-
-	if fileSize <= 0 {
-		return errors.New("ukuran file tidak valid")
-	}
-
-	uploadPath := ts.pathResolver.GetUploadPath(uploadID)
-	if err := os.MkdirAll(uploadPath, 0755); err != nil {
-		return fmt.Errorf("gagal membuat direktori upload: %w", err)
-	}
-
-	filePath := ts.pathResolver.GetUploadFilePath(uploadID)
-	file, err := os.Create(filePath)
-	if err != nil {
-		return fmt.Errorf("gagal membuat file upload: %w", err)
-	}
-	defer file.Close()
-
-	if err := file.Truncate(fileSize); err != nil {
-		return fmt.Errorf("gagal alokasi file size: %w", err)
-	}
-
-	info := TusFileInfo{
-		ID:       uploadID,
-		Size:     fileSize,
-		Offset:   0,
-		Metadata: make(map[string]string),
-	}
-
-	return ts.saveInfo(info)
 }
 
 func (ts *TusStore) FinalizeUpload(uploadID string, finalPath string) error {
@@ -282,4 +256,28 @@ func (ts *TusStore) UpdateMetadata(uploadID string, metadata map[string]string) 
 	}
 
 	return ts.saveInfo(info)
+}
+
+func (ts *TusStore) CleanupStaleLocks(ttl time.Duration) int {
+	ts.locksMutex.Lock()
+	defer ts.locksMutex.Unlock()
+
+	removed := 0
+	now := time.Now()
+
+	for uploadID, entry := range ts.locks {
+		if now.Sub(entry.lastAccess) > ttl {
+			delete(ts.locks, uploadID)
+			removed++
+		}
+	}
+
+	return removed
+}
+
+func (ts *TusStore) GetLockCount() int {
+	ts.locksMutex.RLock()
+	defer ts.locksMutex.RUnlock()
+
+	return len(ts.locks)
 }

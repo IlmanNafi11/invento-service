@@ -57,6 +57,19 @@ func (m *MockUserRepository) Delete(userID string) error {
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) GetByRoleID(roleID uint) ([]domain.UserListItem, error) {
+	args := m.Called(roleID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.UserListItem), args.Error(1)
+}
+
+func (m *MockUserRepository) BulkUpdateRole(userIDs []string, roleID uint) error {
+	args := m.Called(userIDs, roleID)
+	return args.Error(0)
+}
+
 // MockRoleRepository is a mock for RoleRepository
 type MockRoleRepository struct {
 	mock.Mock
@@ -308,6 +321,14 @@ func (m *MockTusModulUploadRepository) GetActiveByUserID(userID string) ([]domai
 	return args.Get(0).([]domain.TusModulUpload), args.Error(1)
 }
 
+func (m *MockTusModulUploadRepository) GetActiveUploadIDs() ([]string, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
 // MockTusUploadRepository is a mock for TusUploadRepository
 type MockTusUploadRepository struct {
 	mock.Mock
@@ -381,6 +402,19 @@ func (m *MockTusUploadRepository) UpdateOffsetOnly(id string, offset int64) erro
 func (m *MockTusUploadRepository) UpdateUpload(upload *domain.TusUpload) error {
 	args := m.Called(upload)
 	return args.Error(0)
+}
+
+func (m *MockTusUploadRepository) CountActiveByUserID(userID string) (int64, error) {
+	args := m.Called(userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockTusUploadRepository) GetActiveUploadIDs() ([]string, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
 }
 
 // Helper functions for test configs

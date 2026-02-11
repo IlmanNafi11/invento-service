@@ -7,20 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type TusModulUploadRepository interface {
-	Create(upload *domain.TusModulUpload) error
-	GetByID(id string) (*domain.TusModulUpload, error)
-	GetByUserID(userID string) ([]domain.TusModulUpload, error)
-	UpdateOffset(id string, offset int64, progress float64) error
-	UpdateStatus(id string, status string) error
-	Complete(id string, modulID uint, filePath string) error
-	Delete(id string) error
-	GetExpiredUploads() ([]domain.TusModulUpload, error)
-	GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error)
-	CountActiveByUserID(userID string) (int, error)
-	GetActiveByUserID(userID string) ([]domain.TusModulUpload, error)
-}
-
 type tusModulUploadRepository struct {
 	db *gorm.DB
 }
@@ -126,4 +112,12 @@ func (r *tusModulUploadRepository) GetActiveByUserID(userID string) ([]domain.Tu
 		[]string{domain.ModulUploadStatusQueued, domain.ModulUploadStatusPending, domain.ModulUploadStatusUploading},
 	).Order("created_at ASC").Find(&uploads).Error
 	return uploads, err
+}
+
+func (r *tusModulUploadRepository) GetActiveUploadIDs() ([]string, error) {
+	var ids []string
+	err := r.db.Model(&domain.TusModulUpload{}).
+		Where("status IN (?)", []string{domain.ModulUploadStatusPending, domain.ModulUploadStatusUploading}).
+		Pluck("id", &ids).Error
+	return ids, err
 }

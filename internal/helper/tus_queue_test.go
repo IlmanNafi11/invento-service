@@ -1,325 +1,227 @@
-package helper_test
+package helper
 
 import (
-	"fiber-boiler-plate/internal/helper"
+	"fmt"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestNewTusQueue(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+func TestTusQueue_NewTusQueue_InitializesState(t *testing.T) {
+	queue := NewTusQueue(3)
 
-	assert.NotNil(t, queue)
+	require.NotNil(t, queue)
+	assert.Equal(t, 3, queue.maxConcurrent)
+	assert.Empty(t, queue.queue)
+	assert.Empty(t, queue.activeUploads)
 }
 
-func TestTusQueue_Add(t *testing.T) {
-	queue := helper.NewTusQueue(2)
+func TestTusQueue_Add_ActiveQueueAndDedupBehavior(t *testing.T) {
+	queue := NewTusQueue(2)
 
-	// Add first upload - should become active
-	queue.Add("upload1")
-	assert.Equal(t, "upload1", queue.GetActiveUpload())
-	assert.Equal(t, 0, queue.GetQueueLength())
+	queue.Add("u1")
+	queue.Add("u2")
+	queue.Add("u3")
+	queue.Add("u4")
+	queue.Add("u3")
+	queue.Add("u1")
 
-	// Add second upload - should be queued
-	queue.Add("upload2")
-	assert.Equal(t, "upload1", queue.GetActiveUpload())
-	assert.Equal(t, 1, queue.GetQueueLength())
-
-	// Add third upload - should be queued
-	queue.Add("upload3")
-	assert.Equal(t, "upload1", queue.GetActiveUpload())
-	assert.Equal(t, 2, queue.GetQueueLength())
+	active := queue.GetActiveUploads()
+	assert.Len(t, active, 2)
+	assert.ElementsMatch(t, []string{"u1", "u2"}, active)
+	assert.Equal(t, []string{"u3", "u4"}, queue.GetCurrentQueue())
 }
 
-func TestTusQueue_Add_Duplicate(t *testing.T) {
-	queue := helper.NewTusQueue(2)
+func TestTusQueue_GetActiveUploads_ReturnsAllActiveUploads(t *testing.T) {
+	queue := NewTusQueue(3)
+	queue.Add("u1")
+	queue.Add("u2")
 
-	// Add first upload - becomes active
-	queue.Add("upload1")
-
-	// Add different upload - goes to queue
-	queue.Add("upload2")
-
-	// Try to add upload2 again - should be ignored (already in queue)
-	queue.Add("upload2")
-
-	// Queue length should still be 1 (only upload2 is queued)
-	assert.Equal(t, 1, queue.GetQueueLength())
+	assert.ElementsMatch(t, []string{"u1", "u2"}, queue.GetActiveUploads())
 }
 
-func TestTusQueue_GetActiveUpload(t *testing.T) {
-	queue := helper.NewTusQueue(1)
-
-	// Initially no active upload
-	assert.Empty(t, queue.GetActiveUpload())
-
-	// Add upload
-	queue.Add("upload1")
-	assert.Equal(t, "upload1", queue.GetActiveUpload())
-
-	// Finish active upload
-	queue.FinishActiveUpload()
-	assert.Empty(t, queue.GetActiveUpload())
-}
-
-func TestTusQueue_HasActiveUpload(t *testing.T) {
-	queue := helper.NewTusQueue(1)
-
-	// Initially no active upload
+func TestTusQueue_HasActiveUpload_TrueAndFalseCases(t *testing.T) {
+	queue := NewTusQueue(1)
 	assert.False(t, queue.HasActiveUpload())
 
-	// Add upload
-	queue.Add("upload1")
+	queue.Add("u1")
 	assert.True(t, queue.HasActiveUpload())
 
-	// Finish active upload
-	queue.FinishActiveUpload()
+	require.NoError(t, queue.Remove("u1"))
 	assert.False(t, queue.HasActiveUpload())
 }
 
-func TestTusQueue_GetQueuePosition(t *testing.T) {
-	queue := helper.NewTusQueue(1)
+func TestTusQueue_GetQueueLength_ReturnsCorrectCount(t *testing.T) {
+	queue := NewTusQueue(1)
+	queue.Add("u1")
+	queue.Add("u2")
+	queue.Add("u3")
 
-	// Add uploads
-	queue.Add("upload1") // active
-	queue.Add("upload2") // position 1
-	queue.Add("upload3") // position 2
-
-	// Check positions
-	assert.Equal(t, 0, queue.GetQueuePosition("upload1"))
-	assert.Equal(t, 1, queue.GetQueuePosition("upload2"))
-	assert.Equal(t, 2, queue.GetQueuePosition("upload3"))
-
-	// Non-existent upload
-	assert.Equal(t, -1, queue.GetQueuePosition("upload999"))
-}
-
-func TestTusQueue_GetQueueLength(t *testing.T) {
-	queue := helper.NewTusQueue(2)
-
-	// Initially empty
-	assert.Equal(t, 0, queue.GetQueueLength())
-
-	// Add first upload (active, not queued)
-	queue.Add("upload1")
-	assert.Equal(t, 0, queue.GetQueueLength())
-
-	// Add more uploads (queued)
-	queue.Add("upload2")
-	queue.Add("upload3")
 	assert.Equal(t, 2, queue.GetQueueLength())
 }
 
-func TestTusQueue_Remove(t *testing.T) {
-	queue := helper.NewTusQueue(1)
+func TestTusQueue_GetQueuePosition_ReturnsActiveQueuedAndMissingPositions(t *testing.T) {
+	queue := NewTusQueue(1)
+	queue.Add("u1")
+	queue.Add("u2")
+	queue.Add("u3")
 
-	// Add uploads
-	queue.Add("upload1") // active
-	queue.Add("upload2") // queued
+	assert.Equal(t, 0, queue.GetQueuePosition("u1"))
+	assert.Equal(t, 1, queue.GetQueuePosition("u2"))
+	assert.Equal(t, 2, queue.GetQueuePosition("u3"))
+	assert.Equal(t, -1, queue.GetQueuePosition("missing"))
+}
 
-	// Remove queued upload
-	err := queue.Remove("upload2")
-	assert.NoError(t, err)
+func TestTusQueue_Remove_RemovesFromActiveAndQueue(t *testing.T) {
+	queue := NewTusQueue(1)
+	queue.Add("u1")
+	queue.Add("u2")
+
+	require.NoError(t, queue.Remove("u1"))
+	assert.False(t, queue.IsActiveUpload("u1"))
+
+	require.NoError(t, queue.Remove("u2"))
 	assert.Equal(t, 0, queue.GetQueueLength())
-	assert.Equal(t, -1, queue.GetQueuePosition("upload2"))
 
-	// Remove active upload
-	err = queue.Remove("upload1")
-	assert.NoError(t, err)
-	assert.Empty(t, queue.GetActiveUpload())
-
-	// Try to remove non-existent upload
-	err = queue.Remove("upload999")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "upload tidak ditemukan dalam antrian")
+	err := queue.Remove("missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "upload tidak ditemukan")
 }
 
-func TestTusQueue_FinishActiveUpload(t *testing.T) {
-	queue := helper.NewTusQueue(1)
+func TestTusQueue_FinishUpload_PromotesNextUpload(t *testing.T) {
+	queue := NewTusQueue(1)
+	queue.Add("u1")
+	queue.Add("u2")
+	queue.Add("u3")
 
-	// Add upload
-	queue.Add("upload1")
-	assert.NotEmpty(t, queue.GetActiveUpload())
+	promoted := queue.FinishUpload("u1")
+	assert.Equal(t, "u2", promoted)
+	assert.True(t, queue.IsActiveUpload("u2"))
+	assert.Equal(t, 1, queue.GetQueueLength())
 
-	// Finish active upload
-	queue.FinishActiveUpload()
-	assert.Empty(t, queue.GetActiveUpload())
+	assert.Equal(t, "", queue.FinishUpload("not-active"))
 
-	// Next upload should become active (if any)
-	queue.Add("upload2")
-	queue.Add("upload3")
-	assert.Equal(t, "upload2", queue.GetActiveUpload())
+	promoted = queue.FinishUpload("u2")
+	assert.Equal(t, "u3", promoted)
+
+	assert.Equal(t, "", queue.FinishUpload("u3"))
+	assert.False(t, queue.HasActiveUpload())
 }
 
-func TestTusQueue_Clear(t *testing.T) {
-	queue := helper.NewTusQueue(1)
+func TestTusQueue_CanAcceptUpload_RespectsMaxConcurrent(t *testing.T) {
+	queue := NewTusQueue(2)
+	assert.True(t, queue.CanAcceptUpload())
 
-	// Add uploads
-	queue.Add("upload1") // active
-	queue.Add("upload2") // queued
-	queue.Add("upload3") // queued
+	queue.Add("u1")
+	assert.True(t, queue.CanAcceptUpload())
 
-	// Clear queue
+	queue.Add("u2")
+	assert.False(t, queue.CanAcceptUpload())
+}
+
+func TestTusQueue_IsActiveUpload_ChecksActiveMap(t *testing.T) {
+	queue := NewTusQueue(1)
+	queue.Add("u1")
+
+	assert.True(t, queue.IsActiveUpload("u1"))
+	assert.False(t, queue.IsActiveUpload("u2"))
+}
+
+func TestTusQueue_GetCurrentQueue_ReturnsCopy(t *testing.T) {
+	queue := NewTusQueue(1)
+	queue.Add("u1")
+	queue.Add("u2")
+
+	current := queue.GetCurrentQueue()
+	require.Equal(t, []string{"u2"}, current)
+
+	current[0] = "changed"
+	assert.Equal(t, []string{"u2"}, queue.GetCurrentQueue())
+}
+
+func TestTusQueue_Clear_ResetsQueueAndActiveUploads(t *testing.T) {
+	queue := NewTusQueue(1)
+	queue.Add("u1")
+	queue.Add("u2")
+
 	queue.Clear()
 
-	assert.Empty(t, queue.GetActiveUpload())
+	assert.Empty(t, queue.GetActiveUploads())
+	assert.Empty(t, queue.GetCurrentQueue())
 	assert.Equal(t, 0, queue.GetQueueLength())
-	assert.Equal(t, -1, queue.GetQueuePosition("upload1"))
-	assert.Equal(t, -1, queue.GetQueuePosition("upload2"))
+	assert.Equal(t, 0, queue.GetActiveCount())
 }
 
-func TestTusQueue_CanAcceptUpload(t *testing.T) {
-	queue := helper.NewTusQueue(1)
+func TestTusQueue_LoadFromDB_LoadsActiveThenQueueDeduplicated(t *testing.T) {
+	queue := NewTusQueue(2)
+	queue.LoadFromDB([]string{"u1", "u1", "u2", "u3", "u4"})
 
-	// Initially can accept
-	assert.True(t, queue.CanAcceptUpload())
-
-	// Add upload
-	queue.Add("upload1")
-	assert.False(t, queue.CanAcceptUpload())
-
-	// Finish active upload
-	queue.FinishActiveUpload()
-	assert.True(t, queue.CanAcceptUpload())
+	assert.ElementsMatch(t, []string{"u1", "u2"}, queue.GetActiveUploads())
+	assert.Equal(t, []string{"u3", "u4"}, queue.GetCurrentQueue())
+	assert.Equal(t, 2, queue.GetActiveCount())
 }
 
-func TestTusQueue_IsActiveUpload(t *testing.T) {
-	queue := helper.NewTusQueue(1)
+func TestTusQueue_GetActiveCount_ReturnsCorrectCount(t *testing.T) {
+	queue := NewTusQueue(3)
+	assert.Equal(t, 0, queue.GetActiveCount())
 
-	// No active upload
-	assert.False(t, queue.IsActiveUpload("upload1"))
-
-	// Add upload
-	queue.Add("upload1")
-	assert.True(t, queue.IsActiveUpload("upload1"))
-	assert.False(t, queue.IsActiveUpload("upload2"))
-
-	// Finish active upload
-	queue.FinishActiveUpload()
-	assert.False(t, queue.IsActiveUpload("upload1"))
+	queue.Add("u1")
+	queue.Add("u2")
+	assert.Equal(t, 2, queue.GetActiveCount())
 }
 
-func TestTusQueue_GetCurrentQueue(t *testing.T) {
-	queue := helper.NewTusQueue(1)
+func TestTusQueue_ConcurrentAccess_AddRemoveFinishUploadSafely(t *testing.T) {
+	queue := NewTusQueue(10)
 
-	// Initially empty
-	currentQueue := queue.GetCurrentQueue()
-	assert.Equal(t, 0, len(currentQueue))
+	ids := make([]string, 120)
+	for i := range ids {
+		ids[i] = fmt.Sprintf("upload-%03d", i)
+	}
 
-	// Add uploads
-	queue.Add("upload1") // active
-	queue.Add("upload2") // queued
-	queue.Add("upload3") // queued
-
-	currentQueue = queue.GetCurrentQueue()
-	assert.Equal(t, 2, len(currentQueue))
-	assert.Equal(t, "upload2", currentQueue[0])
-	assert.Equal(t, "upload3", currentQueue[1])
-
-	// Verify it's a copy (modifying shouldn't affect original)
-	currentQueue[0] = "modified"
-	assert.Equal(t, "upload2", queue.GetCurrentQueue()[0])
-}
-
-func TestTusQueue_Workflow(t *testing.T) {
-	queue := helper.NewTusQueue(1)
-
-	// Add first upload
-	queue.Add("upload1")
-	assert.True(t, queue.HasActiveUpload())
-	assert.Equal(t, 0, queue.GetQueuePosition("upload1"))
-
-	// Queue second upload
-	queue.Add("upload2")
-	assert.Equal(t, 1, queue.GetQueuePosition("upload2"))
-
-	// Finish first upload
-	queue.FinishActiveUpload()
-	assert.False(t, queue.HasActiveUpload())
-
-	// Check if can accept new upload
-	assert.True(t, queue.CanAcceptUpload())
-
-	// Add third upload - should become active
-	queue.Add("upload3")
-	assert.True(t, queue.HasActiveUpload())
-	assert.Equal(t, "upload3", queue.GetActiveUpload())
-
-	// Second upload should still be in queue
-	assert.Equal(t, 1, queue.GetQueuePosition("upload2"))
-}
-
-func TestTusQueue_ConcurrentAccess(t *testing.T) {
-	queue := helper.NewTusQueue(10)
 	var wg sync.WaitGroup
 
-	// Simulate concurrent additions
-	numGoroutines := 100
-	uploadsPerGoroutine := 10
-
-	for i := 0; i < numGoroutines; i++ {
+	for _, id := range ids {
 		wg.Add(1)
-		go func(id int) {
+		go func(uploadID string) {
 			defer wg.Done()
-			for j := 0; j < uploadsPerGoroutine; j++ {
-				uploadID, _ := helper.GenerateRandomString(10)
-				queue.Add(uploadID)
-			}
+			queue.Add(uploadID)
+		}(id)
+	}
+
+	for i := 0; i < 80; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			_ = queue.Remove(ids[idx])
+		}(i)
+	}
+
+	for i := 80; i < 120; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			queue.FinishUpload(ids[idx])
 		}(i)
 	}
 
 	wg.Wait()
 
-	// Verify queue state is consistent
-	// We should have one active upload and the rest queued
-	totalUploads := numGoroutines * uploadsPerGoroutine
-	queueLength := queue.GetQueueLength()
-	activeUpload := queue.GetActiveUpload()
+	active := queue.GetActiveUploads()
+	queued := queue.GetCurrentQueue()
 
-	// Total should be active + queued
-	activeCount := 0
-	if activeUpload != "" {
-		activeCount = 1
+	seen := map[string]bool{}
+	for _, id := range active {
+		assert.False(t, seen[id])
+		seen[id] = true
 	}
-	assert.Equal(t, totalUploads, queueLength + activeCount)
-}
+	for _, id := range queued {
+		assert.False(t, seen[id])
+		seen[id] = true
+	}
 
-func TestTusQueue_RemoveAndNext(t *testing.T) {
-	queue := helper.NewTusQueue(1)
-
-	// Build a queue
-	queue.Add("upload1") // active
-	queue.Add("upload2") // queued
-	queue.Add("upload3") // queued
-
-	// Remove active upload
-	err := queue.Remove("upload1")
-	assert.NoError(t, err)
-
-	// No automatic promotion to active in this implementation
-	// Need to check if next upload can be added
-	assert.True(t, queue.CanAcceptUpload())
-
-	// Add new upload - should become active
-	queue.Add("upload4")
-	assert.Equal(t, "upload4", queue.GetActiveUpload())
-}
-
-func TestTusQueue_EmptyQueueOperations(t *testing.T) {
-	queue := helper.NewTusQueue(1)
-
-	// Operations on empty queue
-	assert.False(t, queue.HasActiveUpload())
-	assert.Empty(t, queue.GetActiveUpload())
-	assert.Equal(t, 0, queue.GetQueueLength())
-	assert.True(t, queue.CanAcceptUpload())
-	assert.Equal(t, -1, queue.GetQueuePosition("nonexistent"))
-
-	// Finish when no active upload - should not panic
-	queue.FinishActiveUpload()
-
-	// Clear empty queue - should not panic
-	queue.Clear()
+	assert.LessOrEqual(t, len(active), 10)
+	assert.Equal(t, len(queued), queue.GetQueueLength())
+	assert.Equal(t, len(active), queue.GetActiveCount())
 }

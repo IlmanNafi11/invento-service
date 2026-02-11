@@ -2,7 +2,6 @@ package http
 
 import (
 	"bytes"
-	"encoding/base64"
 	"fiber-boiler-plate/config"
 	base "fiber-boiler-plate/internal/controller/base"
 	"fiber-boiler-plate/internal/domain"
@@ -10,7 +9,6 @@ import (
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
 	"strconv"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -569,25 +567,7 @@ func (ctrl *TusController) parseUploadMetadata(metadataHeader string) (domain.Tu
 		return metadata, fiber.NewError(fiber.StatusBadRequest, "Upload-Metadata header required")
 	}
 
-	pairs := strings.Split(metadataHeader, ",")
-	metadataMap := make(map[string]string)
-
-	for _, pair := range pairs {
-		parts := strings.SplitN(strings.TrimSpace(pair), " ", 2)
-		if len(parts) != 2 {
-			continue
-		}
-
-		key := parts[0]
-		valueB64 := parts[1]
-
-		value, err := base64.StdEncoding.DecodeString(valueB64)
-		if err != nil {
-			return metadata, err
-		}
-
-		metadataMap[key] = string(value)
-	}
+	metadataMap := helper.ParseTusMetadata(metadataHeader)
 
 	if namaProject, ok := metadataMap["nama_project"]; ok {
 		metadata.NamaProject = namaProject

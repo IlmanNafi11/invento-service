@@ -1,17 +1,16 @@
 package usecase
 
 import (
-	"encoding/base64"
 	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
 	"fmt"
 	"io"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,7 +55,7 @@ func NewTusModulUsecase(
 func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error) {
 	activeCount, err := uc.tusModulUploadRepo.CountActiveByUserID(userID)
 	if err != nil {
-		return nil, fmt.Errorf("gagal mengecek slot upload: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal mengecek slot upload: %w", err))
 	}
 
 	maxQueue := uc.config.Upload.MaxQueueModulPerUser
@@ -79,41 +78,23 @@ func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModul
 
 func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*domain.TusModulUploadInitRequest, error) {
 	if metadataHeader == "" {
-		return nil, errors.New("metadata wajib diisi")
+		return nil, apperrors.NewValidationError("metadata wajib diisi", nil)
 	}
 
-	metadataMap := make(map[string]string)
-	pairs := strings.Split(metadataHeader, ",")
-
-	for _, pair := range pairs {
-		parts := strings.SplitN(strings.TrimSpace(pair), " ", 2)
-		if len(parts) != 2 {
-			continue
-		}
-
-		key := parts[0]
-		valueB64 := parts[1]
-
-		value, err := base64.StdEncoding.DecodeString(valueB64)
-		if err != nil {
-			return nil, fmt.Errorf("error decoding metadata key %s: %w", key, err)
-		}
-
-		metadataMap[key] = string(value)
-	}
+	metadataMap := helper.ParseTusMetadata(metadataHeader)
 
 	namaFile, ok := metadataMap["nama_file"]
 	if !ok || namaFile == "" {
-		return nil, errors.New("nama_file wajib diisi")
+		return nil, apperrors.NewValidationError("nama_file wajib diisi", nil)
 	}
 
 	if len(namaFile) < 3 || len(namaFile) > 255 {
-		return nil, errors.New("nama_file harus antara 3-255 karakter")
+		return nil, apperrors.NewValidationError("nama_file harus antara 3-255 karakter", nil)
 	}
 
 	tipe, ok := metadataMap["tipe"]
 	if !ok || tipe == "" {
-		return nil, errors.New("tipe file wajib diisi")
+		return nil, apperrors.NewValidationError("tipe file wajib diisi", nil)
 	}
 
 	validTipe := []string{"docx", "xlsx", "pdf", "pptx"}
@@ -125,17 +106,17 @@ func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*domain.Tu
 		}
 	}
 	if !isValid {
-		return nil, errors.New("tipe file harus salah satu dari: docx, xlsx, pdf, pptx")
+		return nil, apperrors.NewValidationError("tipe file harus salah satu dari: docx, xlsx, pdf, pptx", nil)
 	}
 
 	semesterStr, ok := metadataMap["semester"]
 	if !ok || semesterStr == "" {
-		return nil, errors.New("semester wajib diisi")
+		return nil, apperrors.NewValidationError("semester wajib diisi", nil)
 	}
 
 	semester, err := strconv.Atoi(semesterStr)
 	if err != nil || semester < 1 || semester > 8 {
-		return nil, errors.New("semester harus berupa angka antara 1-8")
+		return nil, apperrors.NewValidationError("semester harus berupa angka antara 1-8", nil)
 	}
 
 	return &domain.TusModulUploadInitRequest{
@@ -147,12 +128,12 @@ func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*domain.Tu
 
 func (uc *tusModulUsecase) validateModulFileSize(fileSize int64) error {
 	if fileSize <= 0 {
-		return errors.New("ukuran file tidak valid")
+		return apperrors.NewValidationError("ukuran file tidak valid", nil)
 	}
 
 	maxSize := uc.config.Upload.MaxSizeModul
 	if fileSize > maxSize {
-		return fmt.Errorf("ukuran file melebihi batas maksimal %d MB", maxSize/(1024*1024))
+		return apperrors.NewPayloadTooLargeError(fmt.Sprintf("ukuran file melebihi batas maksimal %d MB", maxSize/(1024*1024)))
 	}
 
 	return nil
@@ -165,7 +146,7 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, up
 	}
 
 	if !slotCheck.Available {
-		return nil, fmt.Errorf("antrian penuh: %s", slotCheck.Message)
+		return nil, apperrors.NewConflictError(fmt.Sprintf("antrian penuh: %s", slotCheck.Message))
 	}
 
 	if err := uc.validateModulFileSize(fileSize); err != nil {
@@ -179,7 +160,7 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, up
 
 	uploadID := uuid.New().String()
 	uploadURL := fmt.Sprintf("/modul/upload/%s", uploadID)
-	expiresAt := time.Now().Add(time.Duration(uc.config.Upload.IdleTimeout) * time.Minute)
+	expiresAt := time.Now().Add(time.Duration(uc.config.Upload.IdleTimeout) * time.Second)
 
 	tusUpload := &domain.TusModulUpload{
 		ID:             uploadID,
@@ -195,7 +176,7 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, up
 	}
 
 	if err := uc.tusModulUploadRepo.Create(tusUpload); err != nil {
-		return nil, fmt.Errorf("gagal membuat upload record: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal membuat upload record: %w", err))
 	}
 
 	metadataMap := make(map[string]string)
@@ -206,7 +187,7 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, up
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
 		uc.tusModulUploadRepo.Delete(uploadID)
-		return nil, fmt.Errorf("gagal inisiasi TUS upload: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal inisiasi TUS upload: %w", err))
 	}
 
 	return &domain.TusModulUploadResponse{
@@ -221,41 +202,43 @@ func (uc *tusModulUsecase) HandleModulChunk(uploadID string, userID string, offs
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, errors.New("upload tidak ditemukan")
+			return 0, apperrors.NewNotFoundError("Upload")
 		}
-		return 0, fmt.Errorf("gagal mengambil data upload: %v", err)
+		return 0, apperrors.NewInternalError(fmt.Errorf("gagal mengambil data upload: %w", err))
 	}
 
 	if tusUpload.UserID != userID {
-		return 0, errors.New("tidak memiliki akses ke upload ini")
+		return 0, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if tusUpload.Status != domain.ModulUploadStatusPending && tusUpload.Status != domain.ModulUploadStatusUploading {
-		return 0, fmt.Errorf("upload tidak aktif (status: %s)", tusUpload.Status)
+		return 0, apperrors.NewTusInactiveError()
 	}
 
 	if offset != tusUpload.CurrentOffset {
-		return tusUpload.CurrentOffset, fmt.Errorf("offset tidak valid, expected %d got %d", tusUpload.CurrentOffset, offset)
+		return tusUpload.CurrentOffset, apperrors.NewTusOffsetMismatchError(tusUpload.CurrentOffset, offset)
 	}
 
 	if tusUpload.Status == domain.ModulUploadStatusPending {
-		uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.ModulUploadStatusUploading)
+		if err := uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.ModulUploadStatusUploading); err != nil {
+			return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
+		}
 	}
 
 	newOffset, err := uc.tusManager.HandleChunk(uploadID, offset, chunk)
 	if err != nil {
-		return tusUpload.CurrentOffset, fmt.Errorf("gagal menulis chunk: %v", err)
+		return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("gagal menulis chunk: %w", err))
 	}
 
 	progress := float64(newOffset) / float64(tusUpload.FileSize) * 100
 
 	if err := uc.tusModulUploadRepo.UpdateOffset(uploadID, newOffset, progress); err != nil {
-		return newOffset, fmt.Errorf("gagal update offset: %v", err)
+		return newOffset, apperrors.NewInternalError(fmt.Errorf("gagal update offset: %w", err))
 	}
 
 	if newOffset >= tusUpload.FileSize {
 		if err := uc.completeModulUpload(uploadID, userID); err != nil {
-			return newOffset, fmt.Errorf("gagal menyelesaikan upload: %v", err)
+			return newOffset, err
 		}
 	}
 
@@ -265,12 +248,12 @@ func (uc *tusModulUsecase) HandleModulChunk(uploadID string, userID string, offs
 func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID string) error {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return fmt.Errorf("gagal mengambil data upload: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal mengambil data upload: %w", err))
 	}
 
 	dirPath, randomDir, err := uc.fileManager.CreateModulUploadDirectory(userID)
 	if err != nil {
-		return fmt.Errorf("gagal membuat direktori modul: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal membuat direktori modul: %w", err))
 	}
 
 	fileName := fmt.Sprintf("%s.%s", tusUpload.UploadMetadata.NamaFile, tusUpload.UploadMetadata.Tipe)
@@ -278,7 +261,7 @@ func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID string) e
 
 	if err := uc.tusManager.FinalizeUpload(uploadID, finalPath); err != nil {
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
-		return fmt.Errorf("gagal finalisasi upload: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal finalisasi upload: %w", err))
 	}
 
 	fileSize := helper.FormatFileSize(tusUpload.FileSize)
@@ -295,11 +278,11 @@ func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID string) e
 	if err := uc.modulRepo.Create(modul); err != nil {
 		helper.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
-		return fmt.Errorf("gagal menyimpan data modul: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal menyimpan data modul: %w", err))
 	}
 
 	if err := uc.tusModulUploadRepo.Complete(uploadID, modul.ID, finalPath); err != nil {
-		return fmt.Errorf("gagal update status upload: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
 	}
 
 	return nil
@@ -309,13 +292,13 @@ func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID string) (*
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("upload tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("Upload")
 		}
-		return nil, fmt.Errorf("gagal mengambil data upload: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal mengambil data upload: %w", err))
 	}
 
 	if tusUpload.UserID != userID {
-		return nil, errors.New("tidak memiliki akses ke upload ini")
+		return nil, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	response := &domain.TusModulUploadInfoResponse{
@@ -342,13 +325,13 @@ func (uc *tusModulUsecase) GetModulUploadStatus(uploadID string, userID string) 
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, 0, errors.New("upload tidak ditemukan")
+			return 0, 0, apperrors.NewNotFoundError("Upload")
 		}
-		return 0, 0, fmt.Errorf("gagal mengambil data upload: %v", err)
+		return 0, 0, apperrors.NewInternalError(fmt.Errorf("gagal mengambil data upload: %w", err))
 	}
 
 	if tusUpload.UserID != userID {
-		return 0, 0, errors.New("tidak memiliki akses ke upload ini")
+		return 0, 0, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	return tusUpload.CurrentOffset, tusUpload.FileSize, nil
@@ -358,25 +341,25 @@ func (uc *tusModulUsecase) CancelModulUpload(uploadID string, userID string) err
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("upload tidak ditemukan")
+			return apperrors.NewNotFoundError("Upload")
 		}
-		return fmt.Errorf("gagal mengambil data upload: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal mengambil data upload: %w", err))
 	}
 
 	if tusUpload.UserID != userID {
-		return errors.New("tidak memiliki akses ke upload ini")
+		return apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if tusUpload.Status == domain.ModulUploadStatusCompleted {
-		return errors.New("upload sudah selesai dan tidak bisa dibatalkan")
+		return apperrors.NewTusAlreadyCompletedError()
 	}
 
 	if err := uc.tusManager.CancelUpload(uploadID); err != nil {
-		return fmt.Errorf("gagal membatalkan upload: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal membatalkan upload: %w", err))
 	}
 
 	if err := uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.ModulUploadStatusCancelled); err != nil {
-		return fmt.Errorf("gagal update status: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal update status: %w", err))
 	}
 
 	return nil
@@ -386,13 +369,13 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("modul tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("Modul")
 		}
-		return nil, fmt.Errorf("gagal mengambil data modul: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal mengambil data modul: %w", err))
 	}
 
 	if modul.UserID != userID {
-		return nil, errors.New("tidak memiliki akses ke modul ini")
+		return nil, apperrors.NewForbiddenError("Anda tidak memiliki akses ke modul ini")
 	}
 
 	slotCheck, err := uc.CheckModulUploadSlot(userID)
@@ -401,7 +384,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string
 	}
 
 	if !slotCheck.Available {
-		return nil, fmt.Errorf("antrian penuh: %s", slotCheck.Message)
+		return nil, apperrors.NewConflictError(fmt.Sprintf("antrian penuh: %s", slotCheck.Message))
 	}
 
 	if err := uc.validateModulFileSize(fileSize); err != nil {
@@ -415,7 +398,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string
 
 	uploadID := uuid.New().String()
 	uploadURL := fmt.Sprintf("/modul/%d/update/%s", modulID, uploadID)
-	expiresAt := time.Now().Add(time.Duration(uc.config.Upload.IdleTimeout) * time.Minute)
+	expiresAt := time.Now().Add(time.Duration(uc.config.Upload.IdleTimeout) * time.Second)
 
 	tusUpload := &domain.TusModulUpload{
 		ID:             uploadID,
@@ -432,7 +415,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string
 	}
 
 	if err := uc.tusModulUploadRepo.Create(tusUpload); err != nil {
-		return nil, fmt.Errorf("gagal membuat upload record: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal membuat upload record: %w", err))
 	}
 
 	metadataMap := make(map[string]string)
@@ -444,7 +427,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
 		uc.tusModulUploadRepo.Delete(uploadID)
-		return nil, fmt.Errorf("gagal inisiasi TUS upload: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal inisiasi TUS upload: %w", err))
 	}
 
 	return &domain.TusModulUploadResponse{
@@ -459,41 +442,43 @@ func (uc *tusModulUsecase) HandleModulUpdateChunk(uploadID string, userID string
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, errors.New("upload tidak ditemukan")
+			return 0, apperrors.NewNotFoundError("Upload")
 		}
-		return 0, fmt.Errorf("gagal mengambil data upload: %v", err)
+		return 0, apperrors.NewInternalError(fmt.Errorf("gagal mengambil data upload: %w", err))
 	}
 
 	if tusUpload.UserID != userID {
-		return 0, errors.New("tidak memiliki akses ke upload ini")
+		return 0, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if tusUpload.Status != domain.ModulUploadStatusPending && tusUpload.Status != domain.ModulUploadStatusUploading {
-		return 0, fmt.Errorf("upload tidak aktif (status: %s)", tusUpload.Status)
+		return 0, apperrors.NewTusInactiveError()
 	}
 
 	if offset != tusUpload.CurrentOffset {
-		return tusUpload.CurrentOffset, fmt.Errorf("offset tidak valid, expected %d got %d", tusUpload.CurrentOffset, offset)
+		return tusUpload.CurrentOffset, apperrors.NewTusOffsetMismatchError(tusUpload.CurrentOffset, offset)
 	}
 
 	if tusUpload.Status == domain.ModulUploadStatusPending {
-		uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.ModulUploadStatusUploading)
+		if err := uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.ModulUploadStatusUploading); err != nil {
+			return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
+		}
 	}
 
 	newOffset, err := uc.tusManager.HandleChunk(uploadID, offset, chunk)
 	if err != nil {
-		return tusUpload.CurrentOffset, fmt.Errorf("gagal menulis chunk: %v", err)
+		return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("gagal menulis chunk: %w", err))
 	}
 
 	progress := float64(newOffset) / float64(tusUpload.FileSize) * 100
 
 	if err := uc.tusModulUploadRepo.UpdateOffset(uploadID, newOffset, progress); err != nil {
-		return newOffset, fmt.Errorf("gagal update offset: %v", err)
+		return newOffset, apperrors.NewInternalError(fmt.Errorf("gagal update offset: %w", err))
 	}
 
 	if newOffset >= tusUpload.FileSize {
 		if err := uc.completeModulUpdate(uploadID, userID); err != nil {
-			return newOffset, fmt.Errorf("gagal menyelesaikan upload: %v", err)
+			return newOffset, err
 		}
 	}
 
@@ -503,23 +488,23 @@ func (uc *tusModulUsecase) HandleModulUpdateChunk(uploadID string, userID string
 func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID string) error {
 	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return fmt.Errorf("gagal mengambil data upload: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal mengambil data upload: %w", err))
 	}
 
 	if tusUpload.ModulID == nil {
-		return errors.New("modul_id tidak ditemukan dalam upload record")
+		return apperrors.NewValidationError("modul_id tidak ditemukan dalam upload record", nil)
 	}
 
 	modul, err := uc.modulRepo.GetByID(*tusUpload.ModulID)
 	if err != nil {
-		return fmt.Errorf("gagal mengambil data modul: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal mengambil data modul: %w", err))
 	}
 
 	oldFilePath := modul.PathFile
 
 	dirPath, randomDir, err := uc.fileManager.CreateModulUploadDirectory(userID)
 	if err != nil {
-		return fmt.Errorf("gagal membuat direktori modul: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal membuat direktori modul: %w", err))
 	}
 
 	fileName := fmt.Sprintf("%s.%s", tusUpload.UploadMetadata.NamaFile, tusUpload.UploadMetadata.Tipe)
@@ -527,7 +512,7 @@ func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID string) e
 
 	if err := uc.tusManager.FinalizeUpload(uploadID, finalPath); err != nil {
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
-		return fmt.Errorf("gagal finalisasi upload: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal finalisasi upload: %w", err))
 	}
 
 	modul.NamaFile = tusUpload.UploadMetadata.NamaFile
@@ -539,7 +524,7 @@ func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID string) e
 	if err := uc.modulRepo.Update(modul); err != nil {
 		helper.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
-		return fmt.Errorf("gagal update data modul: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal update data modul: %w", err))
 	}
 
 	if err := helper.DeleteFile(oldFilePath); err != nil {
@@ -547,7 +532,7 @@ func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID string) e
 	}
 
 	if err := uc.tusModulUploadRepo.Complete(uploadID, modul.ID, finalPath); err != nil {
-		return fmt.Errorf("gagal update status upload: %v", err)
+		return apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
 	}
 
 	return nil

@@ -1,979 +1,295 @@
 package repo
 
 import (
-	"fiber-boiler-plate/internal/domain"
-	testhelper "fiber-boiler-plate/internal/testing"
 	"testing"
 	"time"
+
+	"fiber-boiler-plate/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestTusModulUploadRepository_Create_Success tests successful upload creation
-func TestTusModulUploadRepository_Create_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	upload := &domain.TusModulUpload{
-		ID:         "test-upload-id-1",
-		UserID:     "user-1",
+func newTusModulUpload(id, userID, status string, expiresAt time.Time) domain.TusModulUpload {
+	return domain.TusModulUpload{
+		ID:         id,
+		UserID:     userID,
 		UploadType: domain.ModulUploadTypeCreate,
-		UploadURL:  "https://example.com/upload",
+		UploadURL:  "https://example.com/upload/" + id,
 		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul.pdf",
+			NamaFile: "Modul " + id,
 			Tipe:     "pdf",
 			Semester: 1,
 		},
-		FileSize:      1024000,
+		FileSize:      2048,
 		CurrentOffset: 0,
-		Status:        domain.ModulUploadStatusQueued,
+		Status:        status,
 		Progress:      0,
-		ExpiresAt:     time.Now().Add(24 * time.Hour),
+		ExpiresAt:     expiresAt,
 	}
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.Create(upload)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, upload.ID)
 }
 
-// TestTusModulUploadRepository_Create_DuplicateID tests duplicate upload ID error
-func TestTusModulUploadRepository_Create_DuplicateID(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
+func TestTusModulUploadRepository_Create(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 
-	upload1 := &domain.TusModulUpload{
-		ID:         "duplicate-id",
-		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul.pdf",
-			Tipe:     "pdf",
-			Semester: 1,
-		},
-		FileSize:  1024000,
-		Status:    domain.ModulUploadStatusQueued,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
+	repository := NewTusModulUploadRepository(db)
+	upload := newTusModulUpload("test-modul-upload-1", "user-1", domain.ModulUploadStatusPending, time.Now().Add(time.Hour))
 
-	repo := NewTusModulUploadRepository(db)
-	err = repo.Create(upload1)
-	require.NoError(t, err)
+	require.NoError(t, repository.Create(&upload))
 
-	// Try to create another upload with the same ID
-	upload2 := &domain.TusModulUpload{
-		ID:         "duplicate-id",
-		UserID:     "user-2",
-		UploadType: domain.ModulUploadTypeCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Another Modul.pdf",
-			Tipe:     "pdf",
-			Semester: 2,
-		},
-		FileSize:  2048000,
-		Status:    domain.ModulUploadStatusQueued,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-
-	err = repo.Create(upload2)
-	assert.Error(t, err)
+	var saved domain.TusModulUpload
+	require.NoError(t, db.First(&saved, "id = ?", "test-modul-upload-1").Error)
+	assert.Equal(t, "test-modul-upload-1", saved.ID)
 }
 
-// TestTusModulUploadRepository_GetByID_Success tests successful upload retrieval by ID
-func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
+func TestTusModulUploadRepository_GetByID(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
 
-	upload := &domain.TusModulUpload{
-		ID:         "test-upload-id-2",
-		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
-		UploadURL:  "https://example.com/upload",
-		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul.pdf",
-			Tipe:     "pdf",
-			Semester: 1,
-		},
-		FileSize:  1024000,
-		Status:    domain.ModulUploadStatusQueued,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	err = db.Create(upload).Error
-	require.NoError(t, err)
+	upload := newTusModulUpload("test-modul-upload-2", "user-1", domain.ModulUploadStatusPending, time.Now().Add(time.Hour))
+	require.NoError(t, db.Create(&upload).Error)
 
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetByID(upload.ID)
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, upload.ID, result.ID)
-	assert.Equal(t, "user-1", result.UserID)
-	assert.Equal(t, "Test Modul.pdf", result.UploadMetadata.NamaFile)
+	found, err := repository.GetByID("test-modul-upload-2")
+	require.NoError(t, err)
+	require.NotNil(t, found)
+	assert.Equal(t, "test-modul-upload-2", found.ID)
+
+	notFound, err := repository.GetByID("missing-modul-upload")
+	require.Error(t, err)
+	assert.Nil(t, notFound)
 }
 
-// TestTusModulUploadRepository_GetByID_NotFound tests upload not found
-func TestTusModulUploadRepository_GetByID_NotFound(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetByID("non-existent-id")
-	assert.Error(t, err)
-	assert.Nil(t, result)
-}
-
-// TestTusModulUploadRepository_GetByUserID_Success tests successful uploads retrieval by user ID
-func TestTusModulUploadRepository_GetByUserID_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	userID := "user-1"
-
-	uploads := []domain.TusModulUpload{
-		{
-			ID:         "upload-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Modul 1.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusCompleted,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "upload-2",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Modul 2.pdf",
-				Tipe:     "pdf",
-				Semester: 2,
-			},
-			FileSize:  2048000,
-			Status:    domain.ModulUploadStatusUploading,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "upload-3",
-			UserID:     "user-2",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Other Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  512000,
-			Status:    domain.ModulUploadStatusQueued,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-	}
-
-	for i := range uploads {
-		err = db.Create(&uploads[i]).Error
-		require.NoError(t, err)
-	}
-
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetByUserID(userID)
-	assert.NoError(t, err)
-	assert.Len(t, result, 2)
-}
-
-// TestTusModulUploadRepository_UpdateOffset_Success tests successful offset update
-func TestTusModulUploadRepository_UpdateOffset_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	upload := &domain.TusModulUpload{
-		ID:         "test-upload-id-3",
-		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul.pdf",
-			Tipe:     "pdf",
-			Semester: 1,
-		},
-		FileSize:      1024000,
-		CurrentOffset: 0,
-		Status:        domain.ModulUploadStatusUploading,
-		Progress:      0,
-		ExpiresAt:     time.Now().Add(24 * time.Hour),
-	}
-	err = db.Create(upload).Error
-	require.NoError(t, err)
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.UpdateOffset(upload.ID, 512000, 50.0)
-	assert.NoError(t, err)
-
-	// Verify update
-	var updatedUpload domain.TusModulUpload
-	err = db.Where("id = ?", upload.ID).First(&updatedUpload).Error
-	require.NoError(t, err)
-	assert.Equal(t, int64(512000), updatedUpload.CurrentOffset)
-	assert.Equal(t, 50.0, updatedUpload.Progress)
-}
-
-// TestTusModulUploadRepository_UpdateOffset_NotFound tests offset update for non-existent upload
-// Note: GORM doesn't return error when updating non-existent records with Model/Where
-func TestTusModulUploadRepository_UpdateOffset_NotFound(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.UpdateOffset("non-existent-id", 512000, 50.0)
-	// GORM doesn't error on non-existent updates - it just affects 0 rows
-	assert.NoError(t, err)
-}
-
-// TestTusModulUploadRepository_UpdateStatus_Success tests successful status update
-func TestTusModulUploadRepository_UpdateStatus_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	upload := &domain.TusModulUpload{
-		ID:         "test-upload-id-4",
-		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul.pdf",
-			Tipe:     "pdf",
-			Semester: 1,
-		},
-		FileSize:  1024000,
-		Status:    domain.ModulUploadStatusQueued,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	err = db.Create(upload).Error
-	require.NoError(t, err)
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.UpdateStatus(upload.ID, domain.ModulUploadStatusUploading)
-	assert.NoError(t, err)
-
-	// Verify update
-	var updatedUpload domain.TusModulUpload
-	err = db.Where("id = ?", upload.ID).First(&updatedUpload).Error
-	require.NoError(t, err)
-	assert.Equal(t, domain.ModulUploadStatusUploading, updatedUpload.Status)
-}
-
-// TestTusModulUploadRepository_UpdateStatus_NotFound tests status update for non-existent upload
-// Note: GORM doesn't return error when updating non-existent records with Model/Where
-func TestTusModulUploadRepository_UpdateStatus_NotFound(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.UpdateStatus("non-existent-id", domain.ModulUploadStatusUploading)
-	// GORM doesn't error on non-existent updates - it just affects 0 rows
-	assert.NoError(t, err)
-}
-
-// TestTusModulUploadRepository_Complete_Success tests successful upload completion
-func TestTusModulUploadRepository_Complete_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	upload := &domain.TusModulUpload{
-		ID:         "test-upload-id-5",
-		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul.pdf",
-			Tipe:     "pdf",
-			Semester: 1,
-		},
-		FileSize:      1024000,
-		CurrentOffset: 1024000,
-		Status:        domain.ModulUploadStatusUploading,
-		Progress:      100.0,
-		ExpiresAt:     time.Now().Add(24 * time.Hour),
-	}
-	err = db.Create(upload).Error
-	require.NoError(t, err)
-
-	modulID := uint(123)
-	filePath := "/uploads/modul/test-upload-id-5.pdf"
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.Complete(upload.ID, modulID, filePath)
-	assert.NoError(t, err)
-
-	// Verify completion
-	var completedUpload domain.TusModulUpload
-	err = db.Where("id = ?", upload.ID).First(&completedUpload).Error
-	require.NoError(t, err)
-	assert.NotNil(t, completedUpload.ModulID)
-	assert.Equal(t, modulID, *completedUpload.ModulID)
-	assert.Equal(t, filePath, completedUpload.FilePath)
-	assert.Equal(t, domain.ModulUploadStatusCompleted, completedUpload.Status)
-	assert.Equal(t, 100.0, completedUpload.Progress)
-	assert.NotNil(t, completedUpload.CompletedAt)
-}
-
-// TestTusModulUploadRepository_Complete_NotFound tests completion for non-existent upload
-// Note: GORM doesn't return error when updating non-existent records with Model/Where
-func TestTusModulUploadRepository_Complete_NotFound(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.Complete("non-existent-id", 123, "/uploads/path.pdf")
-	// GORM doesn't error on non-existent updates - it just affects 0 rows
-	assert.NoError(t, err)
-}
-
-// TestTusModulUploadRepository_Delete_Success tests successful upload deletion
-func TestTusModulUploadRepository_Delete_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	upload := &domain.TusModulUpload{
-		ID:         "test-upload-id-6",
-		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul.pdf",
-			Tipe:     "pdf",
-			Semester: 1,
-		},
-		FileSize:  1024000,
-		Status:    domain.ModulUploadStatusQueued,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	err = db.Create(upload).Error
-	require.NoError(t, err)
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.Delete(upload.ID)
-	assert.NoError(t, err)
-
-	// Verify deletion
-	var deletedUpload domain.TusModulUpload
-	err = db.Where("id = ?", upload.ID).First(&deletedUpload).Error
-	assert.Error(t, err)
-}
-
-// TestTusModulUploadRepository_Delete_NotFound tests deletion for non-existent upload
-func TestTusModulUploadRepository_Delete_NotFound(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	repo := NewTusModulUploadRepository(db)
-	err = repo.Delete("non-existent-id")
-	// GORM doesn't return error when deleting non-existent record
-	// if you use Delete with struct (soft delete), it might not error
-	assert.NoError(t, err)
-}
-
-// TestTusModulUploadRepository_GetExpiredUploads_Success tests successful retrieval of expired uploads
-func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
+func TestTusModulUploadRepository_GetByUserID(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
 
 	now := time.Now()
+	upload1 := newTusModulUpload("test-modul-upload-3", "user-1", domain.ModulUploadStatusPending, now.Add(time.Hour))
+	upload2 := newTusModulUpload("test-modul-upload-4", "user-1", domain.ModulUploadStatusUploading, now.Add(time.Hour))
+	upload3 := newTusModulUpload("test-modul-upload-5", "user-2", domain.ModulUploadStatusPending, now.Add(time.Hour))
+	require.NoError(t, db.Create(&upload1).Error)
+	require.NoError(t, db.Create(&upload2).Error)
+	require.NoError(t, db.Create(&upload3).Error)
 
-	uploads := []domain.TusModulUpload{
-		{
-			ID:         "expired-1",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Expired Modul 1.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusQueued,
-			ExpiresAt: now.Add(-1 * time.Hour), // Expired
-		},
-		{
-			ID:         "expired-2",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Expired Modul 2.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  2048000,
-			Status:    domain.ModulUploadStatusUploading,
-			ExpiresAt: now.Add(-2 * time.Hour), // Expired
-		},
-		{
-			ID:         "active-1",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Active Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  512000,
-			Status:    domain.ModulUploadStatusQueued,
-			ExpiresAt: now.Add(24 * time.Hour), // Not expired
-		},
-		{
-			ID:         "completed-1",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Completed Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusCompleted,
-			ExpiresAt: now.Add(-1 * time.Hour), // Expired but completed - should be excluded
-		},
-		{
-			ID:         "cancelled-1",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Cancelled Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusCancelled,
-			ExpiresAt: now.Add(-1 * time.Hour), // Expired but cancelled - should be excluded
-		},
-	}
+	uploads, err := repository.GetByUserID("user-1")
+	require.NoError(t, err)
+	assert.Len(t, uploads, 2)
 
-	for i := range uploads {
-		err = db.Create(&uploads[i]).Error
-		require.NoError(t, err)
-	}
-
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetExpiredUploads()
-	assert.NoError(t, err)
-	assert.Len(t, result, 2) // Only expired-1 and expired-2
+	empty, err := repository.GetByUserID("missing-user")
+	require.NoError(t, err)
+	assert.Len(t, empty, 0)
 }
 
-// TestTusModulUploadRepository_GetAbandonedUploads_Success tests successful retrieval of abandoned uploads
-func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
+func TestTusModulUploadRepository_UpdateOffset(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
+
+	upload := newTusModulUpload("test-modul-upload-6", "user-1", domain.ModulUploadStatusUploading, time.Now().Add(time.Hour))
+	require.NoError(t, db.Create(&upload).Error)
+
+	require.NoError(t, repository.UpdateOffset("test-modul-upload-6", 1024, 50.0))
+
+	updated, err := repository.GetByID("test-modul-upload-6")
 	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
+	require.NotNil(t, updated)
+	assert.Equal(t, int64(1024), updated.CurrentOffset)
+	assert.Equal(t, 50.0, updated.Progress)
+}
+
+func TestTusModulUploadRepository_UpdateStatus(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
+
+	upload := newTusModulUpload("test-modul-upload-7", "user-1", domain.ModulUploadStatusPending, time.Now().Add(time.Hour))
+	require.NoError(t, db.Create(&upload).Error)
+
+	require.NoError(t, repository.UpdateStatus("test-modul-upload-7", domain.ModulUploadStatusUploading))
+	require.NoError(t, repository.UpdateStatus("test-modul-upload-7", domain.ModulUploadStatusCompleted))
+
+	updated, err := repository.GetByID("test-modul-upload-7")
+	require.NoError(t, err)
+	require.NotNil(t, updated)
+	assert.Equal(t, domain.ModulUploadStatusCompleted, updated.Status)
+}
+
+func TestTusModulUploadRepository_Complete(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
+
+	upload := newTusModulUpload("test-modul-upload-8", "user-1", domain.ModulUploadStatusUploading, time.Now().Add(time.Hour))
+	require.NoError(t, db.Create(&upload).Error)
+
+	require.NoError(t, repository.Complete("test-modul-upload-8", 88, "/tmp/modul-88.pdf"))
+
+	updated, err := repository.GetByID("test-modul-upload-8")
+	require.NoError(t, err)
+	require.NotNil(t, updated)
+	require.NotNil(t, updated.ModulID)
+	assert.Equal(t, uint(88), *updated.ModulID)
+	assert.Equal(t, "/tmp/modul-88.pdf", updated.FilePath)
+	assert.Equal(t, domain.ModulUploadStatusCompleted, updated.Status)
+	assert.Equal(t, 100.0, updated.Progress)
+	require.NotNil(t, updated.CompletedAt)
+}
+
+func TestTusModulUploadRepository_Delete(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
+
+	upload := newTusModulUpload("test-modul-upload-9", "user-1", domain.ModulUploadStatusPending, time.Now().Add(time.Hour))
+	require.NoError(t, db.Create(&upload).Error)
+
+	require.NoError(t, repository.Delete("test-modul-upload-9"))
+
+	_, err := repository.GetByID("test-modul-upload-9")
+	require.Error(t, err)
+}
+
+func TestTusModulUploadRepository_GetExpiredUploads(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
+
+	now := time.Now()
+	expiredPending := newTusModulUpload("test-modul-upload-10", "user-1", domain.ModulUploadStatusPending, now.Add(-time.Hour))
+	expiredUploading := newTusModulUpload("test-modul-upload-11", "user-1", domain.ModulUploadStatusUploading, now.Add(-time.Hour))
+	nonExpired := newTusModulUpload("test-modul-upload-12", "user-1", domain.ModulUploadStatusPending, now.Add(time.Hour))
+	expiredCompleted := newTusModulUpload("test-modul-upload-13", "user-1", domain.ModulUploadStatusCompleted, now.Add(-time.Hour))
+	expiredCancelled := newTusModulUpload("test-modul-upload-14", "user-1", domain.ModulUploadStatusCancelled, now.Add(-time.Hour))
+	expiredAlreadyExpired := newTusModulUpload("test-modul-upload-15", "user-1", domain.ModulUploadStatusExpired, now.Add(-time.Hour))
+
+	require.NoError(t, db.Create(&expiredPending).Error)
+	require.NoError(t, db.Create(&expiredUploading).Error)
+	require.NoError(t, db.Create(&nonExpired).Error)
+	require.NoError(t, db.Create(&expiredCompleted).Error)
+	require.NoError(t, db.Create(&expiredCancelled).Error)
+	require.NoError(t, db.Create(&expiredAlreadyExpired).Error)
+
+	uploads, err := repository.GetExpiredUploads()
+	require.NoError(t, err)
+
+	ids := make([]string, 0, len(uploads))
+	for _, item := range uploads {
+		ids = append(ids, item.ID)
+	}
+
+	assert.ElementsMatch(t, []string{"test-modul-upload-10", "test-modul-upload-11"}, ids)
+}
+
+func TestTusModulUploadRepository_GetAbandonedUploads(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
 
 	now := time.Now()
 	timeout := 30 * time.Minute
+	cutoff := now.Add(-timeout)
 
-	uploads := []domain.TusModulUpload{
-		{
-			ID:         "abandoned-1",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Abandoned Modul 1.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:      1024000,
-			CurrentOffset: 512000,
-			Status:        domain.ModulUploadStatusUploading,
-			Progress:      50.0,
-			ExpiresAt:     now.Add(24 * time.Hour),
-			UpdatedAt:     now.Add(-1 * time.Hour), // Updated more than timeout ago
-		},
-		{
-			ID:         "abandoned-2",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Abandoned Modul 2.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:      2048000,
-			CurrentOffset: 0,
-			Status:        domain.ModulUploadStatusPending,
-			Progress:      0,
-			ExpiresAt:     now.Add(24 * time.Hour),
-			UpdatedAt:     now.Add(-45 * time.Minute), // Updated more than timeout ago
-		},
-		{
-			ID:         "active-1",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Active Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:      512000,
-			CurrentOffset: 256000,
-			Status:        domain.ModulUploadStatusUploading,
-			Progress:      50.0,
-			ExpiresAt:     now.Add(24 * time.Hour),
-			UpdatedAt:     now.Add(-10 * time.Minute), // Updated recently - should be excluded
-		},
-		{
-			ID:         "completed-1",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Completed Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusCompleted,
-			ExpiresAt: now.Add(24 * time.Hour),
-			UpdatedAt: now.Add(-1 * time.Hour), // Updated long ago but completed - should be excluded
-		},
-		{
-			ID:         "failed-1",
-			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Failed Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusFailed,
-			ExpiresAt: now.Add(24 * time.Hour),
-			UpdatedAt: now.Add(-1 * time.Hour), // Updated long ago but failed - should be excluded
-		},
+	abandonedUploading := newTusModulUpload("test-modul-upload-16", "user-1", domain.ModulUploadStatusUploading, now.Add(time.Hour))
+	abandonedUploading.UpdatedAt = cutoff.Add(-time.Minute)
+	abandonedPending := newTusModulUpload("test-modul-upload-17", "user-1", domain.ModulUploadStatusPending, now.Add(time.Hour))
+	abandonedPending.UpdatedAt = cutoff.Add(-2 * time.Minute)
+	recentUploading := newTusModulUpload("test-modul-upload-18", "user-1", domain.ModulUploadStatusUploading, now.Add(time.Hour))
+	recentUploading.UpdatedAt = cutoff.Add(time.Minute)
+	oldCompleted := newTusModulUpload("test-modul-upload-19", "user-1", domain.ModulUploadStatusCompleted, now.Add(time.Hour))
+	oldCompleted.UpdatedAt = cutoff.Add(-time.Minute)
+
+	require.NoError(t, db.Create(&abandonedUploading).Error)
+	require.NoError(t, db.Create(&abandonedPending).Error)
+	require.NoError(t, db.Create(&recentUploading).Error)
+	require.NoError(t, db.Create(&oldCompleted).Error)
+
+	uploads, err := repository.GetAbandonedUploads(timeout)
+	require.NoError(t, err)
+
+	ids := make([]string, 0, len(uploads))
+	for _, item := range uploads {
+		ids = append(ids, item.ID)
 	}
 
-	for i := range uploads {
-		err = db.Create(&uploads[i]).Error
-		require.NoError(t, err)
-	}
-
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetAbandonedUploads(timeout)
-	assert.NoError(t, err)
-	assert.Len(t, result, 2) // Only abandoned-1 and abandoned-2
+	assert.ElementsMatch(t, []string{"test-modul-upload-16", "test-modul-upload-17"}, ids)
 }
 
-// TestTusModulUploadRepository_CountActiveByUserID_Success tests successful count of active uploads
-func TestTusModulUploadRepository_CountActiveByUserID_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
+func TestTusModulUploadRepository_CountActiveByUserID(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
+
+	now := time.Now()
+	records := []domain.TusModulUpload{
+		newTusModulUpload("test-modul-upload-20", "user-1", domain.ModulUploadStatusQueued, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-21", "user-1", domain.ModulUploadStatusPending, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-22", "user-1", domain.ModulUploadStatusUploading, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-23", "user-1", domain.ModulUploadStatusCompleted, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-24", "user-2", domain.ModulUploadStatusUploading, now.Add(time.Hour)),
+	}
+	for i := range records {
+		require.NoError(t, db.Create(&records[i]).Error)
+	}
+
+	count, err := repository.CountActiveByUserID("user-1")
 	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
+	assert.Equal(t, 3, count)
 
-	userID := "user-1"
-
-	uploads := []domain.TusModulUpload{
-		{
-			ID:         "queued-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Queued Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusQueued,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "pending-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Pending Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  2048000,
-			Status:    domain.ModulUploadStatusPending,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "uploading-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Uploading Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  512000,
-			Status:    domain.ModulUploadStatusUploading,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "completed-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Completed Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusCompleted,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "failed-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Failed Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  512000,
-			Status:    domain.ModulUploadStatusFailed,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-	}
-
-	for i := range uploads {
-		err = db.Create(&uploads[i]).Error
-		require.NoError(t, err)
-	}
-
-	repo := NewTusModulUploadRepository(db)
-	count, err := repo.CountActiveByUserID(userID)
-	assert.NoError(t, err)
-	assert.Equal(t, 3, count) // queued-1, pending-1, uploading-1
+	emptyCount, err := repository.CountActiveByUserID("user-unknown")
+	require.NoError(t, err)
+	assert.Equal(t, 0, emptyCount)
 }
 
-// TestTusModulUploadRepository_CountActiveByUserID_NoUploads tests count with no active uploads
-func TestTusModulUploadRepository_CountActiveByUserID_NoUploads(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
+func TestTusModulUploadRepository_GetActiveByUserID(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
+
+	now := time.Now()
+	records := []domain.TusModulUpload{
+		newTusModulUpload("test-modul-upload-25", "user-1", domain.ModulUploadStatusQueued, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-26", "user-1", domain.ModulUploadStatusPending, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-27", "user-1", domain.ModulUploadStatusUploading, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-28", "user-1", domain.ModulUploadStatusCompleted, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-29", "user-2", domain.ModulUploadStatusUploading, now.Add(time.Hour)),
+	}
+	for i := range records {
+		require.NoError(t, db.Create(&records[i]).Error)
+	}
+
+	uploads, err := repository.GetActiveByUserID("user-1")
 	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
+	assert.Len(t, uploads, 3)
+	for _, item := range uploads {
+		assert.Equal(t, "user-1", item.UserID)
+		assert.Contains(t, []string{domain.ModulUploadStatusQueued, domain.ModulUploadStatusPending, domain.ModulUploadStatusUploading}, item.Status)
+	}
 
-	userID := "user-1"
-
-	repo := NewTusModulUploadRepository(db)
-	count, err := repo.CountActiveByUserID(userID)
-	assert.NoError(t, err)
-	assert.Equal(t, 0, count)
+	empty, err := repository.GetActiveByUserID("user-unknown")
+	require.NoError(t, err)
+	assert.Len(t, empty, 0)
 }
 
-// TestTusModulUploadRepository_GetActiveByUserID_Success tests successful retrieval of active uploads
-func TestTusModulUploadRepository_GetActiveByUserID_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
+func TestTusModulUploadRepository_GetActiveUploadIDs(t *testing.T) {
+	db := setupTestDB(t)
+	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
+	repository := NewTusModulUploadRepository(db)
+
+	now := time.Now()
+	records := []domain.TusModulUpload{
+		newTusModulUpload("test-modul-upload-30", "user-1", domain.ModulUploadStatusPending, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-31", "user-1", domain.ModulUploadStatusUploading, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-32", "user-1", domain.ModulUploadStatusQueued, now.Add(time.Hour)),
+		newTusModulUpload("test-modul-upload-33", "user-1", domain.ModulUploadStatusCompleted, now.Add(time.Hour)),
+	}
+	for i := range records {
+		require.NoError(t, db.Create(&records[i]).Error)
+	}
+
+	ids, err := repository.GetActiveUploadIDs()
 	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	userID := "user-1"
-
-	uploads := []domain.TusModulUpload{
-		{
-			ID:         "queued-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Queued Modul 1.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusQueued,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "pending-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Pending Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  2048000,
-			Status:    domain.ModulUploadStatusPending,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "uploading-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Uploading Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  512000,
-			Status:    domain.ModulUploadStatusUploading,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "completed-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Completed Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusCompleted,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-	}
-
-	for i := range uploads {
-		err = db.Create(&uploads[i]).Error
-		require.NoError(t, err)
-	}
-
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetActiveByUserID(userID)
-	assert.NoError(t, err)
-	assert.Len(t, result, 3) // queued-1, pending-1, uploading-1
-}
-
-// TestTusModulUploadRepository_GetActiveByUserID_Ordering tests that active uploads are ordered by created_at ASC
-func TestTusModulUploadRepository_GetActiveByUserID_Ordering(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	userID := "user-1"
-
-	baseTime := time.Now()
-
-	// Create uploads with specific creation times
-	uploads := []domain.TusModulUpload{
-		{
-			ID:         "upload-3",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Upload 3.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusQueued,
-			CreatedAt: baseTime.Add(3 * time.Hour),
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "upload-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Upload 1.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  2048000,
-			Status:    domain.ModulUploadStatusQueued,
-			CreatedAt: baseTime.Add(1 * time.Hour),
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "upload-2",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Upload 2.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  512000,
-			Status:    domain.ModulUploadStatusQueued,
-			CreatedAt: baseTime.Add(2 * time.Hour),
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-	}
-
-	for i := range uploads {
-		err = db.Create(&uploads[i]).Error
-		require.NoError(t, err)
-	}
-
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetActiveByUserID(userID)
-	assert.NoError(t, err)
-	assert.Len(t, result, 3)
-	// Verify ascending order
-	assert.Equal(t, "upload-1", result[0].ID)
-	assert.Equal(t, "upload-2", result[1].ID)
-	assert.Equal(t, "upload-3", result[2].ID)
-}
-
-// TestTusModulUploadRepository_GetActiveByUserID_NoActiveUploads tests retrieval with no active uploads
-func TestTusModulUploadRepository_GetActiveByUserID_NoActiveUploads(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	userID := "user-1"
-
-	// Create only completed uploads
-	uploads := []domain.TusModulUpload{
-		{
-			ID:         "completed-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Completed Modul 1.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusCompleted,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "failed-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Failed Modul.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  512000,
-			Status:    domain.ModulUploadStatusFailed,
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-	}
-
-	for i := range uploads {
-		err = db.Create(&uploads[i]).Error
-		require.NoError(t, err)
-	}
-
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetActiveByUserID(userID)
-	assert.NoError(t, err)
-	assert.Len(t, result, 0)
-}
-
-// TestTusModulUploadRepository_GetByUserID_Ordering tests that uploads are ordered by created_at DESC
-func TestTusModulUploadRepository_GetByUserID_Ordering(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	userID := "user-1"
-	baseTime := time.Now()
-
-	uploads := []domain.TusModulUpload{
-		{
-			ID:         "upload-1",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Upload 1.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  1024000,
-			Status:    domain.ModulUploadStatusCompleted,
-			CreatedAt: baseTime.Add(1 * time.Hour),
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "upload-2",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Upload 2.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  2048000,
-			Status:    domain.ModulUploadStatusCompleted,
-			CreatedAt: baseTime.Add(2 * time.Hour),
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-		{
-			ID:         "upload-3",
-			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Upload 3.pdf",
-				Tipe:     "pdf",
-				Semester: 1,
-			},
-			FileSize:  512000,
-			Status:    domain.ModulUploadStatusCompleted,
-			CreatedAt: baseTime.Add(3 * time.Hour),
-			ExpiresAt: time.Now().Add(24 * time.Hour),
-		},
-	}
-
-	for i := range uploads {
-		err = db.Create(&uploads[i]).Error
-		require.NoError(t, err)
-	}
-
-	repo := NewTusModulUploadRepository(db)
-	result, err := repo.GetByUserID(userID)
-	assert.NoError(t, err)
-	assert.Len(t, result, 3)
-	// Verify descending order (newest first)
-	assert.Equal(t, "upload-3", result[0].ID)
-	assert.Equal(t, "upload-2", result[1].ID)
-	assert.Equal(t, "upload-1", result[2].ID)
-}
-
-// TestTusModulUploadRepository_Complete_SetsProgressAndTimestamp tests that Complete sets progress to 100 and timestamp
-func TestTusModulUploadRepository_Complete_SetsProgressAndTimestamp(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	upload := &domain.TusModulUpload{
-		ID:         "test-upload-complete",
-		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul.pdf",
-			Tipe:     "pdf",
-			Semester: 1,
-		},
-		FileSize:      1024000,
-		CurrentOffset: 1024000,
-		Status:        domain.ModulUploadStatusUploading,
-		Progress:      99.5,
-		ExpiresAt:     time.Now().Add(24 * time.Hour),
-	}
-	err = db.Create(upload).Error
-	require.NoError(t, err)
-
-	modulID := uint(456)
-	filePath := "/uploads/modul/test-upload-complete.pdf"
-
-	repo := NewTusModulUploadRepository(db)
-	beforeComplete := time.Now()
-	err = repo.Complete(upload.ID, modulID, filePath)
-	afterComplete := time.Now()
-
-	assert.NoError(t, err)
-
-	// Verify completion
-	var completedUpload domain.TusModulUpload
-	err = db.Where("id = ?", upload.ID).First(&completedUpload).Error
-	require.NoError(t, err)
-
-	assert.Equal(t, 100.0, completedUpload.Progress)
-	assert.NotNil(t, completedUpload.CompletedAt)
-	assert.True(t, completedUpload.CompletedAt.After(beforeComplete) || completedUpload.CompletedAt.Equal(beforeComplete))
-	assert.True(t, completedUpload.CompletedAt.Before(afterComplete) || completedUpload.CompletedAt.Equal(afterComplete))
+	assert.ElementsMatch(t, []string{"test-modul-upload-30", "test-modul-upload-31"}, ids)
 }

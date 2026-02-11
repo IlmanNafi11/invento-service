@@ -42,6 +42,14 @@ func (r *tusUploadRepository) GetByUserID(userID string) ([]domain.TusUpload, er
 	return uploads, err
 }
 
+func (r *tusUploadRepository) CountActiveByUserID(userID string) (int64, error) {
+	var count int64
+	err := r.db.Model(&domain.TusUpload{}).
+		Where("user_id = ? AND status IN (?)", userID, []string{domain.UploadStatusPending, domain.UploadStatusUploading}).
+		Count(&count).Error
+	return count, err
+}
+
 func (r *tusUploadRepository) UpdateOffset(id string, offset int64, progress float64) error {
 	return r.db.Model(&domain.TusUpload{}).
 		Where("id = ?", id).
@@ -103,4 +111,12 @@ func (r *tusUploadRepository) ListActive() ([]domain.TusUpload, error) {
 		domain.UploadStatusUploading,
 	}).Find(&uploads).Error
 	return uploads, err
+}
+
+func (r *tusUploadRepository) GetActiveUploadIDs() ([]string, error) {
+	var ids []string
+	err := r.db.Model(&domain.TusUpload{}).
+		Where("status IN (?)", []string{domain.UploadStatusPending, domain.UploadStatusUploading}).
+		Pluck("id", &ids).Error
+	return ids, err
 }

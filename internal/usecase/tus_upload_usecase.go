@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -9,6 +8,7 @@ import (
 
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
 
@@ -75,15 +75,15 @@ func (uc *tusUploadUsecase) ResetUploadQueue(userID string) error {
 
 func (uc *tusUploadUsecase) InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error) {
 	if fileSize > uc.config.Upload.MaxSizeProject {
-		return nil, fmt.Errorf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSizeProject/(1024*1024))
+		return nil, apperrors.NewPayloadTooLargeError(fmt.Sprintf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSizeProject/(1024*1024)))
 	}
 
 	if fileSize <= 0 {
-		return nil, errors.New("ukuran file tidak valid")
+		return nil, apperrors.NewValidationError("ukuran file tidak valid", nil)
 	}
 
 	if !uc.tusManager.CanAcceptUpload() {
-		return nil, errors.New("slot upload tidak tersedia, silakan coba lagi nanti")
+		return nil, apperrors.NewConflictError("slot upload tidak tersedia, silakan coba lagi nanti")
 	}
 
 	uploadID := uuid.New().String()
@@ -98,13 +98,13 @@ func (uc *tusUploadUsecase) InitiateUpload(userID string, userEmail string, user
 		UploadMetadata: metadata,
 		FileSize:       fileSize,
 		CurrentOffset:  0,
-		Status:         domain.UploadStatusUploading,
+		Status:         domain.UploadStatusPending,
 		Progress:       0,
 		ExpiresAt:      expiresAt,
 	}
 
 	if err := uc.tusUploadRepo.Create(tusUpload); err != nil {
-		return nil, fmt.Errorf("gagal membuat upload record: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal membuat upload record: %w", err))
 	}
 
 	metadataMap := make(map[string]string)
@@ -115,7 +115,7 @@ func (uc *tusUploadUsecase) InitiateUpload(userID string, userEmail string, user
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
 		uc.tusUploadRepo.Delete(uploadID)
-		return nil, errors.New("gagal menginisiasi upload storage")
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal menginisiasi upload storage: %w", err))
 	}
 
 	uc.tusManager.AddToQueue(uploadID)
@@ -134,18 +134,18 @@ func (uc *tusUploadUsecase) HandleChunk(uploadID string, userID string, offset i
 
 	upload, err := uc.tusUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return 0, errors.New("upload tidak ditemukan")
+		return 0, apperrors.NewNotFoundError("Upload")
 	}
 	if upload.UserID != userID {
-		return 0, errors.New("tidak memiliki akses ke upload ini")
+		return 0, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if upload.Status == domain.UploadStatusCompleted {
-		return upload.FileSize, nil
+		return upload.FileSize, apperrors.NewTusAlreadyCompletedError()
 	}
 
 	if upload.Status == domain.UploadStatusCancelled || upload.Status == domain.UploadStatusFailed {
-		return 0, errors.New("upload sudah dibatalkan atau gagal")
+		return 0, apperrors.NewTusInactiveError()
 	}
 
 	newOffset, err := uc.tusManager.HandleChunk(uploadID, offset, chunk)
@@ -153,9 +153,16 @@ func (uc *tusUploadUsecase) HandleChunk(uploadID string, userID string, offset i
 		return offset, err
 	}
 
+	if upload.Status == domain.UploadStatusPending && newOffset > 0 {
+		if err := uc.tusUploadRepo.UpdateStatus(uploadID, domain.UploadStatusUploading); err != nil {
+			return newOffset, apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
+		}
+		upload.Status = domain.UploadStatusUploading
+	}
+
 	progress := (float64(newOffset) / float64(upload.FileSize)) * 100
 	if err := uc.tusUploadRepo.UpdateOffset(uploadID, newOffset, progress); err != nil {
-		return newOffset, errors.New("gagal update offset upload")
+		return newOffset, apperrors.NewInternalError(fmt.Errorf("gagal update offset upload: %w", err))
 	}
 	if newOffset >= upload.FileSize {
 		if err := uc.completeUpload(upload); err != nil {
@@ -170,17 +177,17 @@ func (uc *tusUploadUsecase) completeUpload(upload *domain.TusUpload) error {
 
 	randomDir, err := uc.fileManager.GenerateRandomDirectory()
 	if err != nil {
-		return errors.New("gagal generate random directory")
+		return apperrors.NewInternalError(fmt.Errorf("gagal generate random directory: %w", err))
 	}
 
 	finalFilePath := uc.fileManager.GetProjectFilePath(upload.UserID, randomDir, "project.zip")
 
 	if err := uc.tusManager.FinalizeUpload(upload.ID, finalFilePath); err != nil {
-		return errors.New("gagal finalisasi upload")
+		return apperrors.NewInternalError(fmt.Errorf("gagal finalisasi upload: %w", err))
 	}
 
 	if err := uc.tusUploadRepo.UpdateStatus(upload.ID, domain.UploadStatusCompleted); err != nil {
-		return errors.New("gagal update status upload")
+		return apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
 	}
 
 	if upload.UploadType == domain.UploadTypeProjectCreate {
@@ -206,7 +213,7 @@ func (uc *tusUploadUsecase) completeProjectCreate(upload *domain.TusUpload, fina
 	}
 
 	if err := uc.projectRepo.Create(project); err != nil {
-		return errors.New("gagal membuat project")
+		return apperrors.NewInternalError(fmt.Errorf("gagal membuat project: %w", err))
 	}
 
 	return nil
@@ -215,11 +222,11 @@ func (uc *tusUploadUsecase) completeProjectCreate(upload *domain.TusUpload, fina
 func (uc *tusUploadUsecase) GetUploadInfo(uploadID string, userID string) (*domain.TusUploadInfoResponse, error) {
 	upload, err := uc.tusUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return nil, errors.New("upload tidak ditemukan")
+		return nil, apperrors.NewNotFoundError("Upload")
 	}
 
 	if upload.UserID != userID {
-		return nil, errors.New("tidak memiliki akses ke upload ini")
+		return nil, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	response := &domain.TusUploadInfoResponse{
@@ -245,19 +252,19 @@ func (uc *tusUploadUsecase) GetUploadInfo(uploadID string, userID string) (*doma
 func (uc *tusUploadUsecase) CancelUpload(uploadID string, userID string) error {
 	upload, err := uc.tusUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return errors.New("upload tidak ditemukan")
+		return apperrors.NewNotFoundError("Upload")
 	}
 
 	if upload.UserID != userID {
-		return errors.New("tidak memiliki akses ke upload ini")
+		return apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if upload.Status == domain.UploadStatusCompleted {
-		return errors.New("upload sudah selesai dan tidak bisa dibatalkan")
+		return apperrors.NewTusAlreadyCompletedError()
 	}
 
 	if err := uc.tusUploadRepo.UpdateStatus(uploadID, domain.UploadStatusCancelled); err != nil {
-		return errors.New("gagal membatalkan upload")
+		return apperrors.NewInternalError(fmt.Errorf("gagal membatalkan upload: %w", err))
 	}
 
 	if err := uc.tusManager.CancelUpload(uploadID); err != nil {
@@ -272,11 +279,11 @@ func (uc *tusUploadUsecase) CancelUpload(uploadID string, userID string) error {
 func (uc *tusUploadUsecase) GetUploadStatus(uploadID string, userID string) (int64, int64, error) {
 	upload, err := uc.tusUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return 0, 0, errors.New("upload tidak ditemukan")
+		return 0, 0, apperrors.NewNotFoundError("Upload")
 	}
 
 	if upload.UserID != userID {
-		return 0, 0, errors.New("tidak memiliki akses ke upload ini")
+		return 0, 0, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	return upload.CurrentOffset, upload.FileSize, nil
@@ -285,23 +292,23 @@ func (uc *tusUploadUsecase) GetUploadStatus(uploadID string, userID string) (int
 func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error) {
 	project, err := uc.projectRepo.GetByID(projectID)
 	if err != nil {
-		return nil, errors.New("project tidak ditemukan")
+		return nil, apperrors.NewNotFoundError("Project")
 	}
 
 	if project.UserID != userID {
-		return nil, errors.New("tidak memiliki akses ke project ini")
+		return nil, apperrors.NewForbiddenError("Anda tidak memiliki akses ke project ini")
 	}
 
-	if fileSize > uc.config.Upload.MaxSize {
-		return nil, fmt.Errorf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSizeProject/(1024*1024))
+	if fileSize > uc.config.Upload.MaxSizeProject {
+		return nil, apperrors.NewPayloadTooLargeError(fmt.Sprintf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSizeProject/(1024*1024)))
 	}
 
 	if fileSize <= 0 {
-		return nil, errors.New("ukuran file tidak valid")
+		return nil, apperrors.NewValidationError("ukuran file tidak valid", nil)
 	}
 
 	if !uc.tusManager.CanAcceptUpload() {
-		return nil, errors.New("slot upload tidak tersedia, silakan coba lagi nanti")
+		return nil, apperrors.NewConflictError("slot upload tidak tersedia, silakan coba lagi nanti")
 	}
 
 	uploadID := uuid.New().String()
@@ -332,7 +339,7 @@ func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID s
 	}
 
 	if err := uc.tusUploadRepo.Create(tusUpload); err != nil {
-		return nil, fmt.Errorf("gagal membuat upload record: %v", err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal membuat upload record: %w", err))
 	}
 
 	metadataMap := make(map[string]string)
@@ -344,7 +351,7 @@ func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID s
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
 		uc.tusUploadRepo.Delete(uploadID)
-		return nil, errors.New("gagal menginisiasi upload storage")
+		return nil, apperrors.NewInternalError(fmt.Errorf("gagal menginisiasi upload storage: %w", err))
 	}
 
 	uc.tusManager.AddToQueue(uploadID)
@@ -362,23 +369,23 @@ func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID s
 func (uc *tusUploadUsecase) HandleProjectUpdateChunk(projectID uint, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
 	upload, err := uc.tusUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return 0, errors.New("upload tidak ditemukan")
+		return 0, apperrors.NewNotFoundError("Upload")
 	}
 
 	if upload.UserID != userID {
-		return 0, errors.New("tidak memiliki akses ke upload ini")
+		return 0, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if upload.ProjectID == nil || *upload.ProjectID != projectID {
-		return 0, errors.New("project ID tidak cocok")
+		return 0, apperrors.NewValidationError("project ID tidak cocok", nil)
 	}
 
 	if upload.Status == domain.UploadStatusCompleted {
-		return upload.FileSize, nil
+		return upload.FileSize, apperrors.NewTusAlreadyCompletedError()
 	}
 
 	if upload.Status == domain.UploadStatusCancelled || upload.Status == domain.UploadStatusFailed {
-		return 0, errors.New("upload sudah dibatalkan atau gagal")
+		return 0, apperrors.NewTusInactiveError()
 	}
 
 	newOffset, err := uc.tusManager.HandleChunk(uploadID, offset, chunk)
@@ -388,7 +395,7 @@ func (uc *tusUploadUsecase) HandleProjectUpdateChunk(projectID uint, uploadID st
 
 	progress := (float64(newOffset) / float64(upload.FileSize)) * 100
 	if err := uc.tusUploadRepo.UpdateOffset(uploadID, newOffset, progress); err != nil {
-		return newOffset, errors.New("gagal update offset upload")
+		return newOffset, apperrors.NewInternalError(fmt.Errorf("gagal update offset upload: %w", err))
 	}
 
 	if newOffset >= upload.FileSize {
@@ -403,15 +410,15 @@ func (uc *tusUploadUsecase) HandleProjectUpdateChunk(projectID uint, uploadID st
 func (uc *tusUploadUsecase) GetProjectUpdateUploadStatus(projectID uint, uploadID string, userID string) (int64, int64, error) {
 	upload, err := uc.tusUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return 0, 0, errors.New("upload tidak ditemukan")
+		return 0, 0, apperrors.NewNotFoundError("Upload")
 	}
 
 	if upload.UserID != userID {
-		return 0, 0, errors.New("tidak memiliki akses ke upload ini")
+		return 0, 0, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if upload.ProjectID == nil || *upload.ProjectID != projectID {
-		return 0, 0, errors.New("project ID tidak cocok")
+		return 0, 0, apperrors.NewValidationError("project ID tidak cocok", nil)
 	}
 
 	return upload.CurrentOffset, upload.FileSize, nil
@@ -420,15 +427,15 @@ func (uc *tusUploadUsecase) GetProjectUpdateUploadStatus(projectID uint, uploadI
 func (uc *tusUploadUsecase) GetProjectUpdateUploadInfo(projectID uint, uploadID string, userID string) (*domain.TusUploadInfoResponse, error) {
 	upload, err := uc.tusUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return nil, errors.New("upload tidak ditemukan")
+		return nil, apperrors.NewNotFoundError("Upload")
 	}
 
 	if upload.UserID != userID {
-		return nil, errors.New("tidak memiliki akses ke upload ini")
+		return nil, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if upload.ProjectID == nil || *upload.ProjectID != projectID {
-		return nil, errors.New("project ID tidak cocok")
+		return nil, apperrors.NewValidationError("project ID tidak cocok", nil)
 	}
 
 	response := &domain.TusUploadInfoResponse{
@@ -451,23 +458,23 @@ func (uc *tusUploadUsecase) GetProjectUpdateUploadInfo(projectID uint, uploadID 
 func (uc *tusUploadUsecase) CancelProjectUpdateUpload(projectID uint, uploadID string, userID string) error {
 	upload, err := uc.tusUploadRepo.GetByID(uploadID)
 	if err != nil {
-		return errors.New("upload tidak ditemukan")
+		return apperrors.NewNotFoundError("Upload")
 	}
 
 	if upload.UserID != userID {
-		return errors.New("tidak memiliki akses ke upload ini")
+		return apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
 	}
 
 	if upload.ProjectID == nil || *upload.ProjectID != projectID {
-		return errors.New("project ID tidak cocok")
+		return apperrors.NewValidationError("project ID tidak cocok", nil)
 	}
 
 	if upload.Status == domain.UploadStatusCompleted {
-		return errors.New("upload sudah selesai dan tidak bisa dibatalkan")
+		return apperrors.NewTusAlreadyCompletedError()
 	}
 
 	if err := uc.tusUploadRepo.UpdateStatus(uploadID, domain.UploadStatusCancelled); err != nil {
-		return errors.New("gagal membatalkan upload")
+		return apperrors.NewInternalError(fmt.Errorf("gagal membatalkan upload: %w", err))
 	}
 
 	if err := uc.tusManager.CancelUpload(uploadID); err != nil {
@@ -483,22 +490,22 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload) erro
 
 	randomDir, err := uc.fileManager.GenerateRandomDirectory()
 	if err != nil {
-		return errors.New("gagal generate random directory")
+		return apperrors.NewInternalError(fmt.Errorf("gagal generate random directory: %w", err))
 	}
 
 	finalFilePath := uc.fileManager.GetProjectFilePath(upload.UserID, randomDir, "project.zip")
 
 	if err := uc.tusManager.FinalizeUpload(upload.ID, finalFilePath); err != nil {
-		return errors.New("gagal finalisasi upload")
+		return apperrors.NewInternalError(fmt.Errorf("gagal finalisasi upload: %w", err))
 	}
 
 	if err := uc.tusUploadRepo.UpdateStatus(upload.ID, domain.UploadStatusCompleted); err != nil {
-		return errors.New("gagal update status upload")
+		return apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
 	}
 
 	project, err := uc.projectRepo.GetByID(*upload.ProjectID)
 	if err != nil {
-		return errors.New("project tidak ditemukan")
+		return apperrors.NewNotFoundError("Project")
 	}
 
 	if project.PathFile != "" {
@@ -514,7 +521,7 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload) erro
 	project.PathFile = finalFilePath
 
 	if err := uc.projectRepo.Update(project); err != nil {
-		return errors.New("gagal update project")
+		return apperrors.NewInternalError(fmt.Errorf("gagal update project: %w", err))
 	}
 
 	uc.tusManager.RemoveFromQueue(upload.ID)
