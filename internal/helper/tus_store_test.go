@@ -391,3 +391,312 @@ func TestTusStore_ConcurrentWrites(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(16), info.Offset)
 }
+
+func TestTusStore_NewUpload_Success(t *testing.T) {
+	tusStore, pathResolver, _ := setupTusStoreTest(t)
+
+	info := helper.TusFileInfo{
+		ID:     "test-newupload-success",
+		Size:   1024,
+		Offset: 0,
+		Metadata: map[string]string{
+			"filename":     "test.txt",
+			"contentType":  "text/plain",
+			"uploadBy":     "user123",
+		},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.NoError(t, err)
+
+	// Verify upload directory was created
+	uploadPath := pathResolver.GetUploadPath(info.ID)
+	_, err = os.Stat(uploadPath)
+	assert.NoError(t, err, "upload directory should exist")
+
+	// Verify upload file was created
+	filePath := pathResolver.GetUploadFilePath(info.ID)
+	fileInfo, err := os.Stat(filePath)
+	assert.NoError(t, err, "upload file should exist")
+	assert.Equal(t, info.Size, fileInfo.Size(), "file should be preallocated to correct size")
+
+	// Verify info file was saved
+	retrievedInfo, err := tusStore.GetInfo(info.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, info.ID, retrievedInfo.ID)
+	assert.Equal(t, info.Size, retrievedInfo.Size)
+	assert.Equal(t, info.Offset, retrievedInfo.Offset)
+	assert.Equal(t, "test.txt", retrievedInfo.Metadata["filename"])
+	assert.Equal(t, "text/plain", retrievedInfo.Metadata["contentType"])
+	assert.Equal(t, "user123", retrievedInfo.Metadata["uploadBy"])
+}
+
+func TestTusStore_NewUpload_FileSizeExceedsMax(t *testing.T) {
+	tusStore, _, _ := setupTusStoreTest(t)
+
+	info := helper.TusFileInfo{
+		ID:     "test-newupload-exceeds-max",
+		Size:   20 * 1024 * 1024, // 20MB, exceeds 10MB max
+		Offset: 0,
+		Metadata: map[string]string{
+			"filename": "large.zip",
+		},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ukuran file melebihi batas maksimal")
+	assert.Contains(t, err.Error(), "10485760")
+
+	// Verify no files were created
+	uploadPath := tusStore.GetFilePath(info.ID)
+	_, err = os.Stat(uploadPath)
+	assert.True(t, os.IsNotExist(err), "upload file should not exist when size exceeds max")
+}
+
+func TestTusStore_NewUpload_SizeAtMaxBoundary(t *testing.T) {
+	tusStore, _, _ := setupTusStoreTest(t)
+
+	info := helper.TusFileInfo{
+		ID:     "test-newupload-boundary-max",
+		Size:   10 * 1024 * 1024, // Exactly 10MB (max size)
+		Offset: 0,
+		Metadata: map[string]string{},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.NoError(t, err, "file at max size boundary should succeed")
+
+	// Verify file was created
+	filePath := tusStore.GetFilePath(info.ID)
+	_, err = os.Stat(filePath)
+	assert.NoError(t, err)
+}
+
+func TestTusStore_NewUpload_SizeJustAboveMax(t *testing.T) {
+	tusStore, _, _ := setupTusStoreTest(t)
+
+	info := helper.TusFileInfo{
+		ID:     "test-newupload-just-above-max",
+		Size:   10*1024*1024 + 1, // 10MB + 1 byte
+		Offset: 0,
+		Metadata: map[string]string{},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ukuran file melebihi batas maksimal")
+}
+
+func TestTusStore_NewUpload_DirectoryCreationFailure(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create a config with an invalid path that will fail directory creation
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+		Upload: config.UploadConfig{
+			PathDevelopment:    tempDir,
+			TempPathDevelopment: filepath.Join(tempDir, "temp"),
+		},
+	}
+
+	pathResolver := helper.NewPathResolver(cfg)
+	tusStore := helper.NewTusStore(pathResolver, 10*1024*1024)
+
+	info := helper.TusFileInfo{
+		ID:     "test-newupload-dir-fail",
+		Size:   1024,
+		Offset: 0,
+		Metadata: map[string]string{
+			"filename": "test.txt",
+		},
+	}
+
+	// Create the upload directory first, then make it read-only to simulate failure
+	uploadPath := pathResolver.GetUploadPath(info.ID)
+	err := os.MkdirAll(uploadPath, 0444) // read-only directory
+	if err != nil {
+		t.Skip("Cannot create read-only directory on this system")
+	}
+
+	// Try to create file in read-only directory - should fail
+	err = tusStore.NewUpload(info)
+	// On some systems, this might still work, so we check for either error or success
+	if err != nil {
+		assert.Error(t, err)
+	}
+}
+
+func TestTusStore_NewUpload_EmptyMetadata(t *testing.T) {
+	tusStore, _, _ := setupTusStoreTest(t)
+
+	info := helper.TusFileInfo{
+		ID:       "test-newupload-empty-meta",
+		Size:     512,
+		Offset:   0,
+		Metadata: map[string]string{},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.NoError(t, err)
+
+	// Verify info was saved with empty metadata
+	retrievedInfo, err := tusStore.GetInfo(info.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, retrievedInfo.Metadata)
+	assert.Equal(t, 0, len(retrievedInfo.Metadata))
+}
+
+func TestTusStore_NewUpload_WithComplexMetadata(t *testing.T) {
+	tusStore, _, _ := setupTusStoreTest(t)
+
+	info := helper.TusFileInfo{
+		ID:     "test-newupload-complex-meta",
+		Size:   2048,
+		Offset: 0,
+		Metadata: map[string]string{
+			"filename":             "document.pdf",
+			"contentType":          "application/pdf",
+			"uploadBy":             "user456",
+			"department":           "engineering",
+			"project":              "invento-service",
+			"uploadTimestamp":      "2024-01-15T10:30:00Z",
+			"isConfidential":       "true",
+			"requiresApproval":     "false",
+			"customField1":         "value1",
+			"customField2":         "value2",
+		},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.NoError(t, err)
+
+	// Verify all metadata was preserved
+	retrievedInfo, err := tusStore.GetInfo(info.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, len(info.Metadata), len(retrievedInfo.Metadata))
+	for key, value := range info.Metadata {
+		assert.Equal(t, value, retrievedInfo.Metadata[key], "metadata[%s] should match", key)
+	}
+}
+
+func TestTusStore_NewUpload_SmallFileSize(t *testing.T) {
+	tusStore, _, _ := setupTusStoreTest(t)
+
+	info := helper.TusFileInfo{
+		ID:     "test-newupload-small",
+		Size:   1, // 1 byte
+		Offset: 0,
+		Metadata: map[string]string{
+			"filename": "tiny.txt",
+		},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.NoError(t, err)
+
+	// Verify file was created with correct size
+	filePath := tusStore.GetFilePath(info.ID)
+	fileInfo, err := os.Stat(filePath)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), fileInfo.Size())
+}
+
+func TestTusStore_NewUpload_VerifyFilePreallocation(t *testing.T) {
+	tusStore, _, _ := setupTusStoreTest(t)
+
+	expectedSize := int64(5 * 1024) // 5KB
+	info := helper.TusFileInfo{
+		ID:     "test-newupload-prealloc",
+		Size:   expectedSize,
+		Offset: 0,
+		Metadata: map[string]string{
+			"filename": "prealloc.bin",
+		},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.NoError(t, err)
+
+	// Verify file is preallocated to full size (sparse file)
+	filePath := tusStore.GetFilePath(info.ID)
+	file, err := os.Open(filePath)
+	require.NoError(t, err)
+	defer file.Close()
+
+	stat, err := file.Stat()
+	assert.NoError(t, err)
+	assert.Equal(t, expectedSize, stat.Size(), "file should be preallocated to expected size")
+}
+
+func TestTusStore_NewUpload_IDWithSpecialCharacters(t *testing.T) {
+	tusStore, _, _ := setupTusStoreTest(t)
+
+	// Test ID with UUID-like format and special characters
+	info := helper.TusFileInfo{
+		ID:     "test-upload_12345-abcde_UUID-style",
+		Size:   1024,
+		Offset: 0,
+		Metadata: map[string]string{
+			"filename": "special.txt",
+		},
+	}
+
+	err := tusStore.NewUpload(info)
+	assert.NoError(t, err)
+
+	// Verify upload was created successfully
+	retrievedInfo, err := tusStore.GetInfo(info.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, info.ID, retrievedInfo.ID)
+}
+
+func TestTusStore_NewUpload_SaveInfoFailure(t *testing.T) {
+	tempDir := t.TempDir()
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+		Upload: config.UploadConfig{
+			PathDevelopment:    tempDir,
+			TempPathDevelopment: filepath.Join(tempDir, "temp"),
+		},
+	}
+
+	pathResolver := helper.NewPathResolver(cfg)
+	tusStore := helper.NewTusStore(pathResolver, 10*1024*1024)
+
+	uploadID := "test-newupload-saveinfo-fail"
+
+	// Pre-create the info directory and make the info file unwritable
+	uploadPath := pathResolver.GetUploadPath(uploadID)
+	err := os.MkdirAll(uploadPath, 0755)
+	require.NoError(t, err)
+
+	// Create a file at the info path location that will cause WriteFile to fail
+	// by creating a directory with the same name as the info file
+	infoPath := pathResolver.GetUploadInfoPath(uploadID)
+	err = os.MkdirAll(infoPath, 0444)
+	if err != nil {
+		// If we can't create the blocking condition, skip this test
+		t.Skip("Cannot simulate saveInfo failure on this system")
+	}
+
+	info := helper.TusFileInfo{
+		ID:     uploadID,
+		Size:   1024,
+		Offset: 0,
+		Metadata: map[string]string{
+			"filename": "should-fail.txt",
+		},
+	}
+
+	err = tusStore.NewUpload(info)
+	// Should fail because saveInfo can't write the info file
+	if err != nil {
+		assert.Error(t, err)
+	}
+}

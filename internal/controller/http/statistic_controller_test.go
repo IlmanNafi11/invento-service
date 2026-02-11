@@ -3,7 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	"errors"
-	apphttp "fiber-boiler-plate/internal/controller/http"
+	
 	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
 	"net/http/httptest"
@@ -12,6 +12,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	// Import alias for the http package to test it
+	httpcontroller "fiber-boiler-plate/internal/controller/http"
 )
 
 // MockStatisticUsecase is a mock for usecase.StatisticUsecase
@@ -28,7 +30,7 @@ func (m *MockStatisticUsecase) GetStatistics(userID uint, userRole string) (*dom
 }
 
 // Helper function to create a test app with authenticated context for StatisticController
-func setupTestAppWithAuthForStatistic(controller *apphttp.StatisticController) *fiber.App {
+func setupTestAppWithAuthForStatistic(controller *httpcontroller.StatisticController) *fiber.App {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		EnablePrintRoutes:     false,
@@ -50,7 +52,7 @@ func setupTestAppWithAuthForStatistic(controller *apphttp.StatisticController) *
 // TestStatisticController_GetStatistics_AdminUser_Success tests successful statistics retrieval for admin user
 func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
-	controller := apphttp.NewStatisticController(mockStatisticUC)
+	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)
@@ -96,7 +98,7 @@ func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 // TestStatisticController_GetStatistics_RegularUser_PartialData tests statistics retrieval for regular user with limited permissions
 func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
-	controller := apphttp.NewStatisticController(mockStatisticUC)
+	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)
@@ -140,7 +142,7 @@ func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T)
 // TestStatisticController_GetStatistics_EmptyData tests statistics retrieval when user has no data
 func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
-	controller := apphttp.NewStatisticController(mockStatisticUC)
+	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)
@@ -182,7 +184,7 @@ func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 // TestStatisticController_GetStatistics_Unauthorized tests statistics retrieval without authentication
 func TestStatisticController_GetStatistics_Unauthorized(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
-	controller := apphttp.NewStatisticController(mockStatisticUC)
+	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
@@ -203,7 +205,7 @@ func TestStatisticController_GetStatistics_Unauthorized(t *testing.T) {
 // TestStatisticController_GetStatistics_InternalError tests statistics retrieval with internal server error
 func TestStatisticController_GetStatistics_InternalError(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
-	controller := apphttp.NewStatisticController(mockStatisticUC)
+	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)
@@ -225,7 +227,7 @@ func TestStatisticController_GetStatistics_InternalError(t *testing.T) {
 // TestStatisticController_GetStatistics_AppError tests statistics retrieval with AppError
 func TestStatisticController_GetStatistics_AppError(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
-	controller := apphttp.NewStatisticController(mockStatisticUC)
+	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)
@@ -253,7 +255,7 @@ func TestStatisticController_GetStatistics_AppError(t *testing.T) {
 // TestStatisticController_GetStatistics_ResponseHeaders tests that response includes required headers
 func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
-	controller := apphttp.NewStatisticController(mockStatisticUC)
+	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)
@@ -287,7 +289,7 @@ func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
 // TestStatisticController_GetStatistics_ResponseStructure tests that response has correct structure
 func TestStatisticController_GetStatistics_ResponseStructure(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
-	controller := apphttp.NewStatisticController(mockStatisticUC)
+	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)

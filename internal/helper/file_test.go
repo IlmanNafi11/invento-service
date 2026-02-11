@@ -366,6 +366,263 @@ func TestMoveFile(t *testing.T) {
 	assert.Equal(t, content, dstContent)
 }
 
+func TestMoveFile_NonExistentSource(t *testing.T) {
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "nonexistent.txt")
+	dstPath := filepath.Join(tempDir, "dest.txt")
+
+	// Try to move non-existent file
+	err := helper.MoveFile(srcPath, dstPath)
+	assert.Error(t, err)
+
+	// Verify destination was not created
+	_, err = os.Stat(dstPath)
+	assert.True(t, os.IsNotExist(err))
+}
+
+func TestMoveFile_SameSourceAndDestination(t *testing.T) {
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "file.txt")
+	dstPath := srcPath
+
+	// Create source file
+	content := []byte("test content")
+	err := os.WriteFile(srcPath, content, 0644)
+	require.NoError(t, err)
+
+	// Move file to itself should succeed (no-op)
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.NoError(t, err)
+
+	// Verify file still exists and content is unchanged
+	savedContent, err := os.ReadFile(srcPath)
+	assert.NoError(t, err)
+	assert.Equal(t, content, savedContent)
+}
+
+func TestMoveFile_DestinationDirectoryNotExists(t *testing.T) {
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "source.txt")
+	dstPath := filepath.Join(tempDir, "subdir", "dest.txt")
+
+	// Create source file
+	content := []byte("test content for move")
+	err := os.WriteFile(srcPath, content, 0644)
+	require.NoError(t, err)
+
+	// Move file to non-existent directory - should fail or create parent dir
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.Error(t, err)
+
+	// Verify source still exists (move failed)
+	_, err = os.Stat(srcPath)
+	assert.NoError(t, err)
+}
+
+func TestMoveFile_OverwriteExistingDestination(t *testing.T) {
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "source.txt")
+	dstPath := filepath.Join(tempDir, "dest.txt")
+
+	// Create source file with content
+	srcContent := []byte("source content")
+	err := os.WriteFile(srcPath, srcContent, 0644)
+	require.NoError(t, err)
+
+	// Create destination file with different content
+	dstContent := []byte("destination content")
+	err = os.WriteFile(dstPath, dstContent, 0644)
+	require.NoError(t, err)
+
+	// Move file - should overwrite destination
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.NoError(t, err)
+
+	// Verify source is gone
+	_, err = os.Stat(srcPath)
+	assert.True(t, os.IsNotExist(err))
+
+	// Verify destination now has source content
+	resultContent, err := os.ReadFile(dstPath)
+	assert.NoError(t, err)
+	assert.Equal(t, srcContent, resultContent)
+}
+
+func TestMoveFile_MoveToSubdirectory(t *testing.T) {
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "source.txt")
+	subDir := filepath.Join(tempDir, "subdir")
+	dstPath := filepath.Join(subDir, "dest.txt")
+
+	// Create subdirectory
+	err := os.MkdirAll(subDir, 0755)
+	require.NoError(t, err)
+
+	// Create source file
+	content := []byte("test content")
+	err = os.WriteFile(srcPath, content, 0644)
+	require.NoError(t, err)
+
+	// Move file to subdirectory
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.NoError(t, err)
+
+	// Verify source is gone
+	_, err = os.Stat(srcPath)
+	assert.True(t, os.IsNotExist(err))
+
+	// Verify destination exists
+	dstContent, err := os.ReadFile(dstPath)
+	assert.NoError(t, err)
+	assert.Equal(t, content, dstContent)
+}
+
+func TestMoveFile_CopyFallbackPath(t *testing.T) {
+	// This test exercises the fallback path when os.Rename fails
+	// (e.g., cross-device move). We simulate this by making the destination
+	// a directory first, which causes rename to fail with a specific error.
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "source.txt")
+	dstPath := filepath.Join(tempDir, "dest.txt")
+
+	// Create source file
+	content := []byte("test content for fallback path")
+	err := os.WriteFile(srcPath, content, 0644)
+	require.NoError(t, err)
+
+	// Create destination as a directory to force rename failure
+	err = os.MkdirAll(dstPath, 0755)
+	require.NoError(t, err)
+
+	// Try to move - should fail because dst is a directory
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.Error(t, err)
+
+	// Clean up the directory
+	os.RemoveAll(dstPath)
+
+	// Now move to a proper file path - this should work
+	// and on most systems will use the direct rename path
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.NoError(t, err)
+
+	// Verify source is gone
+	_, err = os.Stat(srcPath)
+	assert.True(t, os.IsNotExist(err))
+
+	// Verify destination exists with correct content
+	dstContent, err := os.ReadFile(dstPath)
+	assert.NoError(t, err)
+	assert.Equal(t, content, dstContent)
+}
+
+func TestMoveFile_EmptyFile(t *testing.T) {
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "empty.txt")
+	dstPath := filepath.Join(tempDir, "dest_empty.txt")
+
+	// Create empty source file
+	err := os.WriteFile(srcPath, []byte{}, 0644)
+	require.NoError(t, err)
+
+	// Move empty file
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.NoError(t, err)
+
+	// Verify source is gone
+	_, err = os.Stat(srcPath)
+	assert.True(t, os.IsNotExist(err))
+
+	// Verify destination exists and is empty
+	dstContent, err := os.ReadFile(dstPath)
+	assert.NoError(t, err)
+	assert.Equal(t, []byte{}, dstContent)
+}
+
+func TestMoveFile_LargeFile(t *testing.T) {
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "large.txt")
+	dstPath := filepath.Join(tempDir, "dest_large.txt")
+
+	// Create a larger source file (1MB of data)
+	largeContent := make([]byte, 1024*1024)
+	for i := range largeContent {
+		largeContent[i] = byte(i % 256)
+	}
+	err := os.WriteFile(srcPath, largeContent, 0644)
+	require.NoError(t, err)
+
+	// Move large file
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.NoError(t, err)
+
+	// Verify source is gone
+	_, err = os.Stat(srcPath)
+	assert.True(t, os.IsNotExist(err))
+
+	// Verify destination exists with correct content
+	dstContent, err := os.ReadFile(dstPath)
+	assert.NoError(t, err)
+	assert.Equal(t, largeContent, dstContent)
+}
+
+func TestMoveFile_WithRelativePath(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Change to temp directory to test relative paths
+	originalDir, err := os.Getwd()
+	require.NoError(t, err)
+	defer os.Chdir(originalDir)
+
+	err = os.Chdir(tempDir)
+	require.NoError(t, err)
+
+	srcPath := "source.txt"
+	dstPath := "dest.txt"
+
+	// Create source file with relative path
+	content := []byte("relative path test")
+	err = os.WriteFile(srcPath, content, 0644)
+	require.NoError(t, err)
+
+	// Move file using relative paths
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.NoError(t, err)
+
+	// Verify source is gone
+	_, err = os.Stat(srcPath)
+	assert.True(t, os.IsNotExist(err))
+
+	// Verify destination exists
+	dstContent, err := os.ReadFile(dstPath)
+	assert.NoError(t, err)
+	assert.Equal(t, content, dstContent)
+}
+
+func TestMoveFile_SpecialCharactersInFilename(t *testing.T) {
+	tempDir := t.TempDir()
+	srcPath := filepath.Join(tempDir, "file with spaces & special-chars_123.txt")
+	dstPath := filepath.Join(tempDir, "dest file (1).txt")
+
+	// Create source file with special characters
+	content := []byte("special chars test")
+	err := os.WriteFile(srcPath, content, 0644)
+	require.NoError(t, err)
+
+	// Move file
+	err = helper.MoveFile(srcPath, dstPath)
+	assert.NoError(t, err)
+
+	// Verify source is gone
+	_, err = os.Stat(srcPath)
+	assert.True(t, os.IsNotExist(err))
+
+	// Verify destination exists
+	dstContent, err := os.ReadFile(dstPath)
+	assert.NoError(t, err)
+	assert.Equal(t, content, dstContent)
+}
+
 func TestFormatFileSize(t *testing.T) {
 	tests := []struct {
 		name        string

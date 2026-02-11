@@ -1,8 +1,8 @@
-package http
+package http_test
 
 import (
 	"encoding/json"
-	"fiber-boiler-plate/internal/controller/http"
+	httpcontroller "fiber-boiler-plate/internal/controller/http"
 	"fiber-boiler-plate/internal/domain"
 	"net/http/httptest"
 	"testing"
@@ -39,7 +39,7 @@ func (m *MockHealthUsecase) GetApplicationStatus() *domain.ApplicationStatus {
 
 func TestHealthController_BasicHealthCheck_Success(t *testing.T) {
 	mockUsecase := new(MockHealthUsecase)
-	controller := http.NewHealthController(mockUsecase)
+	controller := httpcontroller.NewHealthController(mockUsecase)
 
 	expectedData := &domain.BasicHealthCheck{
 		Status:    domain.HealthStatusHealthy,
@@ -70,7 +70,7 @@ func TestHealthController_BasicHealthCheck_Success(t *testing.T) {
 
 func TestHealthController_ComprehensiveHealthCheck_Success(t *testing.T) {
 	mockUsecase := new(MockHealthUsecase)
-	controller := http.NewHealthController(mockUsecase)
+	controller := httpcontroller.NewHealthController(mockUsecase)
 
 	expectedData := &domain.ComprehensiveHealthCheck{
 		Status: domain.HealthStatusHealthy,
@@ -115,7 +115,7 @@ func TestHealthController_ComprehensiveHealthCheck_Success(t *testing.T) {
 
 func TestHealthController_ComprehensiveHealthCheck_Unhealthy(t *testing.T) {
 	mockUsecase := new(MockHealthUsecase)
-	controller := http.NewHealthController(mockUsecase)
+	controller := httpcontroller.NewHealthController(mockUsecase)
 
 	expectedData := &domain.ComprehensiveHealthCheck{
 		Status: domain.HealthStatusUnhealthy,
@@ -160,7 +160,7 @@ func TestHealthController_ComprehensiveHealthCheck_Unhealthy(t *testing.T) {
 
 func TestHealthController_GetSystemMetrics_Success(t *testing.T) {
 	mockUsecase := new(MockHealthUsecase)
-	controller := http.NewHealthController(mockUsecase)
+	controller := httpcontroller.NewHealthController(mockUsecase)
 
 	expectedData := &domain.SystemMetrics{
 		App: domain.AppInfo{
@@ -225,7 +225,7 @@ func TestHealthController_GetSystemMetrics_Success(t *testing.T) {
 
 func TestHealthController_GetApplicationStatus_Success(t *testing.T) {
 	mockUsecase := new(MockHealthUsecase)
-	controller := http.NewHealthController(mockUsecase)
+	controller := httpcontroller.NewHealthController(mockUsecase)
 
 	expectedData := &domain.ApplicationStatus{
 		App: domain.AppInfo{

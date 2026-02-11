@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/controller/http"
+	httpcontroller "fiber-boiler-plate/internal/controller/http"
 	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
@@ -154,7 +154,7 @@ func encodeTusMetadata(metadata map[string]string) string {
 func TestInitiateUpload_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -205,7 +205,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 func TestInitiateUpload_InvalidHeaders(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -225,7 +225,7 @@ func TestInitiateUpload_InvalidHeaders(t *testing.T) {
 func TestInitiateUpload_InvalidTusVersion(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -247,7 +247,7 @@ func TestInitiateUpload_InvalidTusVersion(t *testing.T) {
 func TestInitiateUpload_Unauthorized(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Post("/api/v1/tus/upload", controller.InitiateUpload)
@@ -265,7 +265,7 @@ func TestInitiateUpload_Unauthorized(t *testing.T) {
 func TestUploadChunk_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -298,7 +298,7 @@ func TestUploadChunk_Success(t *testing.T) {
 func TestUploadChunk_InvalidOffset(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -329,7 +329,7 @@ func TestUploadChunk_InvalidOffset(t *testing.T) {
 func TestUploadChunk_Unauthorized(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Patch("/api/v1/tus/upload/:id", controller.UploadChunk)
@@ -349,7 +349,7 @@ func TestUploadChunk_Unauthorized(t *testing.T) {
 func TestUploadChunk_InvalidContentType(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -373,7 +373,7 @@ func TestUploadChunk_InvalidContentType(t *testing.T) {
 func TestGetUploadStatus_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -403,7 +403,7 @@ func TestGetUploadStatus_Success(t *testing.T) {
 func TestGetUploadStatus_NotFound(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -428,7 +428,7 @@ func TestGetUploadStatus_NotFound(t *testing.T) {
 func TestGetUploadInfo_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -464,7 +464,7 @@ func TestGetUploadInfo_Success(t *testing.T) {
 func TestGetUploadInfo_Forbidden(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -486,7 +486,7 @@ func TestGetUploadInfo_Forbidden(t *testing.T) {
 func TestCancelUpload_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -511,7 +511,7 @@ func TestCancelUpload_Success(t *testing.T) {
 func TestCancelUpload_AlreadyCompleted(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -540,7 +540,7 @@ func TestCancelUpload_AlreadyCompleted(t *testing.T) {
 func TestInitiateProjectUpdateUpload_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -590,7 +590,7 @@ func TestInitiateProjectUpdateUpload_Success(t *testing.T) {
 func TestInitiateProjectUpdateUpload_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -617,7 +617,7 @@ func TestInitiateProjectUpdateUpload_ProjectNotFound(t *testing.T) {
 func TestUploadProjectUpdateChunk_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -649,7 +649,7 @@ func TestUploadProjectUpdateChunk_Success(t *testing.T) {
 func TestUploadProjectUpdateChunk_ProjectMismatch(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -678,7 +678,7 @@ func TestUploadProjectUpdateChunk_ProjectMismatch(t *testing.T) {
 func TestGetProjectUpdateUploadStatus_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -712,7 +712,7 @@ func TestGetProjectUpdateUploadStatus_Success(t *testing.T) {
 func TestCheckUploadSlot_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -743,7 +743,7 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 func TestResetUploadQueue_Success(t *testing.T) {
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
-	controller := http.NewTusController(mockUC, cfg)
+	controller := httpcontroller.NewTusController(mockUC, cfg)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -757,6 +757,146 @@ func TestResetUploadQueue_Success(t *testing.T) {
 	resp := app_testing.MakeRequest(app, "POST", "/api/v1/tus/reset", nil, "")
 
 	app_testing.AssertSuccess(t, resp)
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestGetProjectUpdateUploadInfo_Success tests GET for project update upload metadata
+func TestGetProjectUpdateUploadInfo_Success(t *testing.T) {
+	mockUC := new(MockTusUploadUsecase)
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusController(mockUC, cfg)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, 1, "test@example.com", "user")
+		return c.Next()
+	})
+	app.Get("/api/v1/project/:id/upload/:upload_id", controller.GetProjectUpdateUploadInfo)
+
+	expectedInfo := &domain.TusUploadInfoResponse{
+		UploadID:  "test-project-upload-id",
+		Status:    domain.UploadStatusUploading,
+		Progress:  50.0,
+		Offset:    524288,
+		Length:    1048576,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	mockUC.On("GetProjectUpdateUploadInfo", uint(1), "test-project-upload-id", uint(1)).Return(expectedInfo, nil)
+
+	resp := app_testing.MakeRequest(app, "GET", "/api/v1/project/1/upload/test-project-upload-id", nil, "")
+
+	app_testing.AssertSuccess(t, resp)
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestGetProjectUpdateUploadInfo_Unauthorized tests GET without authentication
+func TestGetProjectUpdateUploadInfo_Unauthorized(t *testing.T) {
+	mockUC := new(MockTusUploadUsecase)
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusController(mockUC, cfg)
+
+	app := fiber.New()
+	app.Get("/api/v1/project/:id/upload/:upload_id", controller.GetProjectUpdateUploadInfo)
+
+	resp := app_testing.MakeRequest(app, "GET", "/api/v1/project/1/upload/test-project-upload-id", nil, "")
+
+	// Should return error due to missing auth
+	assert.Equal(t, 401, resp.StatusCode)
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestGetProjectUpdateUploadInfo_NotFound tests GET with non-existent upload
+func TestGetProjectUpdateUploadInfo_NotFound(t *testing.T) {
+	mockUC := new(MockTusUploadUsecase)
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusController(mockUC, cfg)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, 1, "test@example.com", "user")
+		return c.Next()
+	})
+	app.Get("/api/v1/project/:id/upload/:upload_id", controller.GetProjectUpdateUploadInfo)
+
+	mockUC.On("GetProjectUpdateUploadInfo", uint(1), "nonexistent-upload-id", uint(1)).Return(nil, apperrors.NewNotFoundError("Upload not found"))
+
+	resp := app_testing.MakeRequest(app, "GET", "/api/v1/project/1/upload/nonexistent-upload-id", nil, "")
+
+	assert.Equal(t, 404, resp.StatusCode)
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestCancelProjectUpdateUpload_Success tests DELETE for project update upload cancellation
+func TestCancelProjectUpdateUpload_Success(t *testing.T) {
+	mockUC := new(MockTusUploadUsecase)
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusController(mockUC, cfg)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, 1, "test@example.com", "user")
+		return c.Next()
+	})
+	app.Delete("/api/v1/project/:id/upload/:upload_id", controller.CancelProjectUpdateUpload)
+
+	mockUC.On("CancelProjectUpdateUpload", uint(1), "test-project-upload-id", uint(1)).Return(nil)
+
+	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/test-project-upload-id", nil)
+	req.Header.Set("Tus-Resumable", "1.0.0")
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestCancelProjectUpdateUpload_Unauthorized tests DELETE without authentication
+func TestCancelProjectUpdateUpload_Unauthorized(t *testing.T) {
+	mockUC := new(MockTusUploadUsecase)
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusController(mockUC, cfg)
+
+	app := fiber.New()
+	app.Delete("/api/v1/project/:id/upload/:upload_id", controller.CancelProjectUpdateUpload)
+
+	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/test-project-upload-id", nil)
+	req.Header.Set("Tus-Resumable", "1.0.0")
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 401, resp.StatusCode)
+
+	mockUC.AssertExpectations(t)
+}
+
+// TestCancelProjectUpdateUpload_NotFound tests DELETE with non-existent upload
+func TestCancelProjectUpdateUpload_NotFound(t *testing.T) {
+	mockUC := new(MockTusUploadUsecase)
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusController(mockUC, cfg)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, 1, "test@example.com", "user")
+		return c.Next()
+	})
+	app.Delete("/api/v1/project/:id/upload/:upload_id", controller.CancelProjectUpdateUpload)
+
+	mockUC.On("CancelProjectUpdateUpload", uint(1), "nonexistent-upload-id", uint(1)).Return(apperrors.NewNotFoundError("Upload not found"))
+
+	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/nonexistent-upload-id", nil)
+	req.Header.Set("Tus-Resumable", "1.0.0")
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
 
 	mockUC.AssertExpectations(t)
 }

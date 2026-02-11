@@ -181,5 +181,10 @@ func TestExample_URLBuilder(t *testing.T) {
 		"order": "asc",
 	})
 
-	assert.Equal(t, "/api/v1/users?page=1&limit=10&sort=name&order=asc", url)
+	// Check that all expected parameters are present (order doesn't matter in URLs)
+	assert.Contains(t, url, "/api/v1/users?")
+	assert.Contains(t, url, "page=1")
+	assert.Contains(t, url, "limit=10")
+	assert.Contains(t, url, "sort=name")
+	assert.Contains(t, url, "order=asc")
 }

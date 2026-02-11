@@ -126,6 +126,12 @@ func (uc *authOTPUsecase) VerifyRegisterOTP(req domain.VerifyOTPRequest) (string
 		return "", nil, errors.New("gagal mengambil data kode otp")
 	}
 
+	// Check if OTP is expired
+	if time.Now().After(otpRecord.ExpiresAt) {
+		uc.otpRepo.MarkAsUsed(otpRecord.ID)
+		return "", nil, errors.New("kode otp sudah kadaluarsa")
+	}
+
 	if err := uc.otpValidator.ValidateOTPRecord(otpRecord.Attempts, otpRecord.MaxAttempts); err != nil {
 		return "", nil, err
 	}
@@ -170,8 +176,10 @@ func (uc *authOTPUsecase) VerifyRegisterOTP(req domain.VerifyOTPRequest) (string
 		return "", nil, errors.New("gagal menghapus kode otp")
 	}
 
-	if err := uc.casbinEnforcer.LoadPolicy(); err != nil {
-		uc.logger.Error("Gagal reload policy casbin setelah registrasi: %v", err)
+	if uc.casbinEnforcer != nil {
+		if err := uc.casbinEnforcer.LoadPolicy(); err != nil {
+			uc.logger.Error("Gagal reload policy casbin setelah registrasi: %v", err)
+		}
 	}
 
 	refreshToken, authResp, err := uc.authHelper.GenerateAuthResponse(user)
@@ -317,8 +325,10 @@ func (uc *authOTPUsecase) ConfirmResetPasswordWithOTP(email string, newPassword 
 		return "", nil, errors.New("gagal menghapus kode otp")
 	}
 
-	if err := uc.casbinEnforcer.LoadPolicy(); err != nil {
-		uc.logger.Error("Gagal reload policy casbin setelah reset password: %v", err)
+	if uc.casbinEnforcer != nil {
+		if err := uc.casbinEnforcer.LoadPolicy(); err != nil {
+			uc.logger.Error("Gagal reload policy casbin setelah reset password: %v", err)
+		}
 	}
 
 	refreshToken, authResp, err := uc.authHelper.GenerateAuthResponse(user)

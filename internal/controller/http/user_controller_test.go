@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fiber-boiler-plate/internal/controller/http"
+	httpcontroller "fiber-boiler-plate/internal/controller/http"
 	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
 	app_testing "fiber-boiler-plate/internal/testing"
@@ -84,7 +84,7 @@ func (m *MockUserUsecase) DownloadUserFiles(ownerUserID uint, projectIDs, modulI
 }
 
 // Helper function to create a test app with authenticated middleware for UserController
-func setupTestAppWithAuthForUser(controller *http.UserController) *fiber.App {
+func setupTestAppWithAuthForUser(controller *httpcontroller.UserController) *fiber.App {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		EnablePrintRoutes:     false,
@@ -110,7 +110,7 @@ func setupTestAppWithAuthForUser(controller *http.UserController) *fiber.App {
 // Test 1: GetUserList_Success
 func TestUserController_GetUserList_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
@@ -166,7 +166,7 @@ func TestUserController_GetUserList_Success(t *testing.T) {
 // Test 2: GetUserList_WithSearchAndFilter
 func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
@@ -219,7 +219,7 @@ func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 // Test 3: UpdateUserRole_Success
 func TestUserController_UpdateUserRole_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
@@ -251,7 +251,7 @@ func TestUserController_UpdateUserRole_Success(t *testing.T) {
 // Test 4: UpdateUserRole_UserNotFound
 func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
@@ -278,7 +278,7 @@ func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
 // Test 5: DeleteUser_Success
 func TestUserController_DeleteUser_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
@@ -304,7 +304,7 @@ func TestUserController_DeleteUser_Success(t *testing.T) {
 // Test 6: GetUserFiles_Success
 func TestUserController_GetUserFiles_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
@@ -360,7 +360,7 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 // Test 7: GetUserFiles_WithSearch
 func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
@@ -411,7 +411,7 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 // Test 8: GetProfile_Success
 func TestUserController_GetProfile_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := setupTestAppWithAuthForUser(controller)
 	app.Get("/api/v1/profile", controller.GetProfile)
@@ -451,7 +451,7 @@ func TestUserController_GetProfile_Success(t *testing.T) {
 // Test 9: UpdateProfile_Success
 func TestUserController_UpdateProfile_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := setupTestAppWithAuthForUser(controller)
 	app.Put("/api/v1/profile", controller.UpdateProfile)
@@ -498,7 +498,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 // Test 10: UpdateProfile_WithPhoto
 func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := setupTestAppWithAuthForUser(controller)
 	app.Put("/api/v1/profile", controller.UpdateProfile)
@@ -547,7 +547,7 @@ func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 // Test 11: GetUserPermissions_Success
 func TestUserController_GetUserPermissions_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := setupTestAppWithAuthForUser(controller)
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
@@ -591,7 +591,7 @@ func TestUserController_GetUserPermissions_Success(t *testing.T) {
 // Test 12: GetUserPermissions_EmptyPermissions
 func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := setupTestAppWithAuthForUser(controller)
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
@@ -621,7 +621,7 @@ func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 // Test 13: DownloadUserFiles_Success
 func TestUserController_DownloadUserFiles_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
@@ -657,7 +657,7 @@ func TestUserController_DownloadUserFiles_Success(t *testing.T) {
 // Test 14: DownloadUserFiles_EmptyIDs
 func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
@@ -686,7 +686,7 @@ func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
 // Test 15: DownloadUserFiles_UserNotFound
 func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
@@ -714,7 +714,7 @@ func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
 // Test 16: GetUserList_InternalError
 func TestUserController_GetUserList_InternalError(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
@@ -741,7 +741,7 @@ func TestUserController_GetUserList_InternalError(t *testing.T) {
 // Test 17: UpdateUserRole_InvalidRole
 func TestUserController_UpdateUserRole_InvalidRole(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
-	controller := http.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC)
 
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
@@ -758,6 +758,264 @@ func TestUserController_UpdateUserRole_InvalidRole(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+}
+
+// Test 18: GetUserFiles_UserNotFound
+func TestUserController_GetUserFiles_UserNotFound(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
+
+	params := domain.UserFilesQueryParams{
+		Page:  1,
+		Limit: 10,
+	}
+
+	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
+	mockUserUC.On("GetUserFiles", uint(999), params).Return(nil, appErr)
+
+	req := app_testing.GetRequestURL("/api/v1/user/999/files", map[string]string{
+		"page":  "1",
+		"limit": "10",
+	})
+
+	resp := app_testing.MakeRequest(app, "GET", req, nil, "")
+
+	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+// Test 19: UpdateProfile_UserNotFound
+func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := setupTestAppWithAuthForUser(controller)
+	app.Put("/api/v1/profile", controller.UpdateProfile)
+
+	reqBody := domain.UpdateProfileRequest{
+		Name:         "Updated User",
+		JenisKelamin: "Perempuan",
+	}
+
+	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
+	mockUserUC.On("UpdateProfile", uint(1), reqBody, nil).Return(nil, appErr)
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	req := httptest.NewRequest("PUT", "/api/v1/profile", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-Test-User-ID", "1")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+// Test 20: UpdateProfile_ValidationError
+func TestUserController_UpdateProfile_ValidationError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := setupTestAppWithAuthForUser(controller)
+	app.Put("/api/v1/profile", controller.UpdateProfile)
+
+	reqBody := map[string]string{
+		"name": "", // Empty name should fail validation
+	}
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	req := httptest.NewRequest("PUT", "/api/v1/profile", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-Test-User-ID", "1")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+}
+
+// Test 21: UpdateProfile_InvalidJenisKelamin
+func TestUserController_UpdateProfile_InvalidJenisKelamin(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := setupTestAppWithAuthForUser(controller)
+	app.Put("/api/v1/profile", controller.UpdateProfile)
+
+	reqBody := domain.UpdateProfileRequest{
+		Name:         "Test User",
+		JenisKelamin: "Invalid", // Invalid value
+	}
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	token := app_testing.GenerateTestToken(1, "test@example.com", "user")
+	req := httptest.NewRequest("PUT", "/api/v1/profile", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-Test-User-ID", "1")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+}
+
+// Test 22: UpdateUserRole_Forbidden
+func TestUserController_UpdateUserRole_Forbidden(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
+
+	reqBody := domain.UpdateUserRoleRequest{
+		Role: "admin",
+	}
+
+	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses untuk mengubah role ini")
+	mockUserUC.On("UpdateUserRole", uint(1), "admin").Return(appErr)
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusForbidden, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+// Test 24: DeleteUser_Forbidden
+func TestUserController_DeleteUser_Forbidden(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Delete("/api/v1/user/:id", controller.DeleteUser)
+
+	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses untuk menghapus user ini")
+	mockUserUC.On("DeleteUser", uint(1)).Return(appErr)
+
+	req := httptest.NewRequest("DELETE", "/api/v1/user/1", nil)
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusForbidden, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+// Test 25: DeleteUser_InternalError
+func TestUserController_DeleteUser_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Delete("/api/v1/user/:id", controller.DeleteUser)
+
+	mockUserUC.On("DeleteUser", uint(1)).Return(errors.New("database error"))
+
+	req := httptest.NewRequest("DELETE", "/api/v1/user/1", nil)
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+// Test 26: GetUserFiles_InternalError
+func TestUserController_GetUserFiles_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
+
+	params := domain.UserFilesQueryParams{
+		Page:  1,
+		Limit: 10,
+	}
+
+	mockUserUC.On("GetUserFiles", uint(1), params).Return(nil, errors.New("database error"))
+
+	req := app_testing.GetRequestURL("/api/v1/user/1/files", map[string]string{
+		"page":  "1",
+		"limit": "10",
+	})
+
+	resp := app_testing.MakeRequest(app, "GET", req, nil, "")
+
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+// Test 27: UpdateUserRole_InternalError
+func TestUserController_UpdateUserRole_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
+
+	reqBody := domain.UpdateUserRoleRequest{
+		Role: "admin",
+	}
+
+	mockUserUC.On("UpdateUserRole", uint(1), "admin").Return(errors.New("database error"))
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+// Test 28: DownloadUserFiles_InternalError
+func TestUserController_DownloadUserFiles_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
+
+	reqBody := domain.DownloadUserFilesRequest{
+		ProjectIDs: []uint{1},
+		ModulIDs:   []uint{},
+	}
+
+	mockUserUC.On("DownloadUserFiles", uint(1), reqBody.ProjectIDs, reqBody.ModulIDs).Return("", errors.New("zip creation failed"))
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("POST", "/api/v1/user/1/download", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
 }
 
 // Helper function

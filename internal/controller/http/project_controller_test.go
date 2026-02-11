@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"fiber-boiler-plate/internal/controller/http"
+	httpcontroller "fiber-boiler-plate/internal/controller/http"
 	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
 	app_testing "fiber-boiler-plate/internal/testing"
@@ -58,7 +58,7 @@ func (m *MockProjectUsecase) Download(userID uint, projectIDs []uint) (string, e
 // Test 1: GetByID_Success
 func TestProjectController_GetByID_Success(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	expectedProject := &domain.ProjectResponse{
 		ID:          1,
@@ -107,7 +107,7 @@ func TestProjectController_GetByID_Success(t *testing.T) {
 // Test 2: GetByID_ProjectNotFound
 func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	appErr := apperrors.NewNotFoundError("Project")
 	mockUC.On("GetByID", uint(999), uint(1)).Return(nil, appErr)
@@ -143,7 +143,7 @@ func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 // Test 5: GetList_WithFilters
 func TestProjectController_GetList_WithFilters(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	expectedData := &domain.ProjectListData{
 		Items: []domain.ProjectListItem{
@@ -195,7 +195,7 @@ func TestProjectController_GetList_WithFilters(t *testing.T) {
 // Test 6: UpdateMetadata_Success
 func TestProjectController_UpdateMetadata_Success(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	updateReq := domain.ProjectUpdateRequest{
 		NamaProject: "Updated Project",
@@ -236,7 +236,7 @@ func TestProjectController_UpdateMetadata_Success(t *testing.T) {
 // Test 7: Delete_Success
 func TestProjectController_Delete_Success(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	mockUC.On("Delete", uint(1), uint(1)).Return(nil)
 
@@ -269,7 +269,7 @@ func TestProjectController_Delete_Success(t *testing.T) {
 // Test 8: Download_SingleFile
 func TestProjectController_Download_SingleFile(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	downloadReq := domain.ProjectDownloadRequest{
 		IDs: []uint{1},
@@ -302,7 +302,7 @@ func TestProjectController_Download_SingleFile(t *testing.T) {
 // Test 9: UpdateMetadata_AccessDenied
 func TestProjectController_UpdateMetadata_AccessDenied(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	updateReq := domain.ProjectUpdateRequest{
 		NamaProject: "Updated Project",
@@ -369,7 +369,7 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
-			controller := http.NewProjectController(mockUC, nil, nil)
+			controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{},
@@ -413,7 +413,7 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 // Test 11: UpdateMetadata_InvalidRequestBody
 func TestProjectController_UpdateMetadata_InvalidRequestBody(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -440,7 +440,7 @@ func TestProjectController_UpdateMetadata_InvalidRequestBody(t *testing.T) {
 // Test 12: UpdateMetadata_ValidationFailure
 func TestProjectController_UpdateMetadata_ValidationFailure(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	// Invalid update request (name too short, invalid semester)
 	updateReq := domain.ProjectUpdateRequest{
@@ -474,7 +474,7 @@ func TestProjectController_UpdateMetadata_ValidationFailure(t *testing.T) {
 // Test 13: Delete_ProjectNotFound
 func TestProjectController_Delete_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	appErr := apperrors.NewNotFoundError("Project")
 	mockUC.On("Delete", uint(999), uint(1)).Return(appErr)
@@ -508,7 +508,7 @@ func TestProjectController_Delete_ProjectNotFound(t *testing.T) {
 // Test 14: Download_EmptyIDs
 func TestProjectController_Download_EmptyIDs(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -536,7 +536,7 @@ func TestProjectController_Download_EmptyIDs(t *testing.T) {
 // Test 15: Download_InvalidRequestBody
 func TestProjectController_Download_InvalidRequestBody(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -563,7 +563,7 @@ func TestProjectController_Download_InvalidRequestBody(t *testing.T) {
 // Test 16: Download_ProjectNotFound
 func TestProjectController_Download_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	downloadReq := domain.ProjectDownloadRequest{
 		IDs: []uint{1, 2},
@@ -603,7 +603,7 @@ func TestProjectController_Download_ProjectNotFound(t *testing.T) {
 // Test 17: GetList_UseCaseError
 func TestProjectController_GetList_UseCaseError(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
-	controller := http.NewProjectController(mockUC, nil, nil)
+	controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 	appErr := apperrors.NewInternalError(fmt.Errorf("Database error"))
 	mockUC.On("GetList", uint(1), "search", 0, "", 1, 10).Return(nil, appErr)
@@ -660,7 +660,7 @@ func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
-			controller := http.NewProjectController(mockUC, nil, nil)
+			controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{
@@ -757,7 +757,7 @@ func TestProjectController_GetList_FilterKategoriBoundaryCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
-			controller := http.NewProjectController(mockUC, nil, nil)
+			controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{
@@ -859,7 +859,7 @@ func TestProjectController_GetList_PaginationBoundaries(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
-			controller := http.NewProjectController(mockUC, nil, nil)
+			controller := httpcontroller.NewProjectController(mockUC, nil, nil)
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{},

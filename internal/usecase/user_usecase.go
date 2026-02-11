@@ -284,6 +284,11 @@ func (uc *userUsecase) GetUserPermissions(userID uint) ([]domain.UserPermissionI
 		return []domain.UserPermissionItem{}, nil
 	}
 
+	// Handle nil casbinEnforcer gracefully
+	if uc.casbinEnforcer == nil {
+		return []domain.UserPermissionItem{}, nil
+	}
+
 	permissions, err := uc.casbinEnforcer.GetPermissionsForRole(user.Role.NamaRole)
 	if err != nil {
 		return nil, errors.New("gagal mengambil permissions user")

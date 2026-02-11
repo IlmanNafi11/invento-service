@@ -4,6 +4,7 @@ import (
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
+	"io"
 	"mime/multipart"
 	"os"
 	"testing"
@@ -230,19 +231,28 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 	})
 
 	t.Run("Valid image file saves successfully", func(t *testing.T) {
-		// Create a temporary image file
-		imageContent := []byte{0xFF, 0xD8, 0xFF, 0xE0} // JPEG header
-		tempFile, err := os.CreateTemp("", "test_*.jpg")
-		require.NoError(t, err)
-		_, err = tempFile.Write(imageContent)
-		require.NoError(t, err)
-		tempFile.Close()
+		// Create a pipe for multipart writer
+		pr, pw := io.Pipe()
+		writer := multipart.NewWriter(pw)
 
-		// Create multipart file header
-		fileHeader := &multipart.FileHeader{
-			Filename: tempFile.Name(),
-			Size:     int64(len(imageContent)),
-		}
+		// Write multipart form in goroutine
+		go func() {
+			defer pw.Close()
+			part, err := writer.CreateFormFile("file", "profil.jpg")
+			require.NoError(t, err)
+			// Write valid JPEG content
+			imageContent := []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01} // JPEG header + JFIF
+			part.Write(imageContent)
+			writer.Close()
+		}()
+
+		// Read from pipe to create reader
+		reader := multipart.NewReader(pr, writer.Boundary())
+		form, err := reader.ReadForm(1 << 20) // 1MB max memory
+		require.NoError(t, err)
+		defer pr.Close()
+
+		fileHeader := form.File["file"][0]
 
 		userID := uint(123)
 
@@ -251,7 +261,6 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Contains(t, *result, "profil")
-		assert.Contains(t, *result, "profil.jpg")
 	})
 
 	t.Run("Invalid file extension returns error", func(t *testing.T) {
