@@ -7,6 +7,16 @@ import (
 	"log"
 )
 
+// @title Invento Service API
+// @version 1.0
+// @description REST API service for managing projects, modules, users, and file uploads with JWT authentication and RBAC.
+// @host localhost:3000
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"
+
 func main() {
 	cfg := config.LoadConfig()
 	db := config.ConnectDatabase(cfg)

@@ -40,7 +40,16 @@ func NewTusController(tusUsecase usecase.TusUploadUsecase, cfg *config.Config) *
 // CheckUploadSlot checks if an upload slot is available for the user.
 // This endpoint uses standard REST response format.
 //
-// Response: JSON with slot availability information
+// @Summary Check upload slot availability
+// @Description Check if an upload slot is available for the current user
+// @Tags Upload
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.SuccessResponse "Slot availability info"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/upload/slot/check [get]
 func (ctrl *TusController) CheckUploadSlot(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -65,7 +74,16 @@ func (ctrl *TusController) CheckUploadSlot(c *fiber.Ctx) error {
 // ResetUploadQueue resets the user's upload queue.
 // This endpoint uses standard REST response format.
 //
-// Response: JSON success message
+// @Summary Reset upload queue
+// @Description Reset the user's upload queue
+// @Tags Upload
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.SuccessResponse "Queue reset successfully"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/upload/queue/reset [post]
 func (ctrl *TusController) ResetUploadQueue(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -86,13 +104,22 @@ func (ctrl *TusController) ResetUploadQueue(c *fiber.Ctx) error {
 
 // InitiateUpload initiates a new TUS upload session for a project.
 //
-// TUS Protocol: POST /upload
-// Request Headers:
-//   - Tus-Resumable: 1.0.0
-//   - Upload-Length: [total file size]
-//   - Upload-Metadata: [base64 encoded metadata]
-//
-// Response: 201 Created with Location header and JSON body
+// @Summary Initiate TUS upload
+// @Description Initiate a new resumable upload session using TUS protocol
+// @Tags Upload
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Length header int true "Total file size in bytes"
+// @Param Upload-Metadata header string true "Base64 encoded metadata (nama_project, kategori, semester)"
+// @Success 201 {object} domain.SuccessResponse "Upload initiated successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid headers or metadata"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 413 {object} domain.ErrorResponse "File size exceeds limit"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/upload [post]
 func (ctrl *TusController) InitiateUpload(c *fiber.Ctx) error {
 	// Get authenticated user context
 	userID, userEmail, userRole, err := ctrl.getTusAuthContext(c)
@@ -142,14 +169,23 @@ func (ctrl *TusController) InitiateUpload(c *fiber.Ctx) error {
 
 // UploadChunk uploads a chunk of data for an existing upload session.
 //
-// TUS Protocol: PATCH /upload/{id}
-// Request Headers:
-//   - Tus-Resumable: 1.0.0
-//   - Upload-Offset: [current offset]
-//   - Content-Type: application/offset+octet-stream
-//   - Content-Length: [chunk size]
-//
-// Response: 204 No Content with Upload-Offset header
+// @Summary Upload chunk (TUS PATCH)
+// @Description Upload a chunk of data for an existing upload session
+// @Tags Upload
+// @Accept application/offset+octet-stream
+// @Security BearerAuth
+// @Param id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Offset header int true "Current upload offset"
+// @Param Content-Length header int true "Chunk size in bytes"
+// @Success 204 "Chunk uploaded successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid request"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 409 {object} domain.ErrorResponse "Offset mismatch"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/upload/{id} [patch]
 func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -187,8 +223,18 @@ func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
 
 // GetUploadStatus retrieves the current upload status (TUS HEAD request).
 //
-// TUS Protocol: HEAD /upload/{id}
-// Response: 200 OK with Upload-Offset and Upload-Length headers
+// @Summary Get upload status (TUS HEAD)
+// @Description Retrieve current upload offset and length
+// @Tags Upload
+// @Security BearerAuth
+// @Param id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 200 "Upload status with Upload-Offset and Upload-Length headers"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/upload/{id} [head]
 func (ctrl *TusController) GetUploadStatus(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -221,10 +267,19 @@ func (ctrl *TusController) GetUploadStatus(c *fiber.Ctx) error {
 
 // GetUploadInfo retrieves detailed information about an upload (REST endpoint).
 //
-// This is NOT a TUS protocol endpoint - it returns standard JSON response.
-// Use this for getting upload metadata, progress percentage, etc.
-//
-// Response: JSON with upload information
+// @Summary Get upload info
+// @Description Retrieve detailed upload information including progress percentage
+// @Tags Upload
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Upload ID"
+// @Success 200 {object} domain.SuccessResponse "Upload info retrieved successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid upload ID"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/upload/{id}/info [get]
 func (ctrl *TusController) GetUploadInfo(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -249,8 +304,18 @@ func (ctrl *TusController) GetUploadInfo(c *fiber.Ctx) error {
 
 // CancelUpload cancels an active upload session.
 //
-// TUS Protocol: DELETE /upload/{id}
-// Response: 204 No Content
+// @Summary Cancel upload (TUS DELETE)
+// @Description Cancel and clean up an active upload session
+// @Tags Upload
+// @Security BearerAuth
+// @Param id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 204 "Upload cancelled successfully"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/upload/{id} [delete]
 func (ctrl *TusController) CancelUpload(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -286,8 +351,25 @@ func (ctrl *TusController) CancelUpload(c *fiber.Ctx) error {
 
 // InitiateProjectUpdateUpload initiates a new TUS upload session for project update.
 //
-// TUS Protocol: POST /project/{id}/upload
-// Response: 201 Created with Location header and JSON body
+// @Summary Initiate project update upload
+// @Description Initiate a new resumable upload session for updating a project
+// @Tags Upload
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Project ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Length header int true "Total file size in bytes"
+// @Param Upload-Metadata header string false "Base64 encoded metadata"
+// @Success 201 {object} domain.SuccessResponse "Upload initiated successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid headers or project ID"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to project"
+// @Failure 404 {object} domain.ErrorResponse "Project not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 413 {object} domain.ErrorResponse "File size exceeds limit"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/project/{id}/upload [post]
 func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -346,8 +428,24 @@ func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
 
 // UploadProjectUpdateChunk uploads a chunk for project update.
 //
-// TUS Protocol: PATCH /project/{id}/upload/{upload_id}
-// Response: 204 No Content with Upload-Offset header
+// @Summary Upload project update chunk (TUS PATCH)
+// @Description Upload a chunk of data for a project update upload session
+// @Tags Upload
+// @Accept application/offset+octet-stream
+// @Security BearerAuth
+// @Param id path int true "Project ID"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Offset header int true "Current upload offset"
+// @Param Content-Length header int true "Chunk size in bytes"
+// @Success 204 "Chunk uploaded successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid request"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 409 {object} domain.ErrorResponse "Offset mismatch"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/project/{id}/upload/{upload_id} [patch]
 func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -392,8 +490,19 @@ func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
 
 // GetProjectUpdateUploadStatus retrieves project update upload status (TUS HEAD).
 //
-// TUS Protocol: HEAD /project/{id}/upload/{upload_id}
-// Response: 200 OK with Upload-Offset and Upload-Length headers
+// @Summary Get project update upload status (TUS HEAD)
+// @Description Retrieve current upload offset and length for project update
+// @Tags Upload
+// @Security BearerAuth
+// @Param id path int true "Project ID"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 200 "Upload status with Upload-Offset and Upload-Length headers"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/project/{id}/upload/{upload_id} [head]
 func (ctrl *TusController) GetProjectUpdateUploadStatus(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -432,9 +541,20 @@ func (ctrl *TusController) GetProjectUpdateUploadStatus(c *fiber.Ctx) error {
 
 // GetProjectUpdateUploadInfo retrieves project update upload info (REST endpoint).
 //
-// This is NOT a TUS protocol endpoint - it returns standard JSON response.
-//
-// Response: JSON with upload information
+// @Summary Get project update upload info
+// @Description Retrieve detailed upload information for project update
+// @Tags Upload
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Project ID"
+// @Param upload_id path string true "Upload ID"
+// @Success 200 {object} domain.SuccessResponse "Upload info retrieved successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid upload ID"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/project/{id}/upload/{upload_id}/info [get]
 func (ctrl *TusController) GetProjectUpdateUploadInfo(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -465,8 +585,19 @@ func (ctrl *TusController) GetProjectUpdateUploadInfo(c *fiber.Ctx) error {
 
 // CancelProjectUpdateUpload cancels project update upload.
 //
-// TUS Protocol: DELETE /project/{id}/upload/{upload_id}
-// Response: 204 No Content
+// @Summary Cancel project update upload (TUS DELETE)
+// @Description Cancel and clean up an active project update upload session
+// @Tags Upload
+// @Security BearerAuth
+// @Param id path int true "Project ID"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 204 "Upload cancelled successfully"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/project/{id}/upload/{upload_id} [delete]
 func (ctrl *TusController) CancelProjectUpdateUpload(c *fiber.Ctx) error {
 	// Get authenticated user ID
 	userID := ctrl.base.GetAuthenticatedUserID(c)

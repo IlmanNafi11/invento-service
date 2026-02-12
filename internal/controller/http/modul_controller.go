@@ -33,6 +33,24 @@ func NewModulController(
 	}
 }
 
+// GetList handles GET /api/v1/modul
+//
+// @Summary Get list of modules
+// @Description Retrieve paginated list of modules with optional filters
+// @Tags Modul
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param search query string false "Search by module name"
+// @Param filter_type query string false "Filter by file type"
+// @Param filter_semester query int false "Filter by semester (1-8)"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
+// @Success 200 {object} domain.SuccessResponse{data=domain.ModulListData} "List retrieved successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid query parameters"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul [get]
 func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -63,6 +81,22 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	return ctrl.SendSuccess(c, result, "Daftar modul berhasil diambil")
 }
 
+// Delete handles DELETE /api/v1/modul/:id
+//
+// @Summary Delete a module
+// @Description Permanently delete a module by ID
+// @Tags Modul
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Module ID"
+// @Success 200 {object} domain.SuccessResponse "Module deleted successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid module ID"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this module"
+// @Failure 404 {object} domain.ErrorResponse "Module not found"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/{id} [delete]
 func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -86,6 +120,23 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 	return ctrl.SendSuccess(c, nil, "Modul berhasil dihapus")
 }
 
+// UpdateMetadata handles PATCH /api/v1/modul/:id
+//
+// @Summary Update module metadata
+// @Description Update nama_file or semester of an existing module
+// @Tags Modul
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Module ID"
+// @Param request body domain.ModulUpdateRequest true "Update request"
+// @Success 200 {object} domain.SuccessResponse "Metadata updated successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid request format"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this module"
+// @Failure 404 {object} domain.ErrorResponse "Module not found"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/{id} [patch]
 func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -118,6 +169,21 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 	return ctrl.SendSuccess(c, nil, "Metadata modul berhasil diperbarui")
 }
 
+// Download handles POST /api/v1/modul/download
+//
+// @Summary Download modules as ZIP
+// @Description Download one or more modules as a ZIP file
+// @Tags Modul
+// @Accept json
+// @Produce application/zip
+// @Security BearerAuth
+// @Param request body domain.ModulDownloadRequest true "Download request with module IDs"
+// @Success 200 {file} binary "ZIP file containing module files"
+// @Failure 400 {object} domain.ErrorResponse "Invalid request format or empty IDs"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "One or more modules not found"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/download [post]
 func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {

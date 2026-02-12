@@ -29,6 +29,18 @@ func NewTusModulController(tusModulUsecase usecase.TusModulUsecase, cfg *config.
 	}
 }
 
+// CheckUploadSlot checks if a modul upload slot is available.
+//
+// @Summary Check modul upload slot availability
+// @Description Check if a modul upload slot is available for the current user
+// @Tags Modul
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} domain.SuccessResponse "Slot availability info"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/upload/slot/check [get]
 func (ctrl *TusModulController) CheckUploadSlot(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -46,6 +58,25 @@ func (ctrl *TusModulController) CheckUploadSlot(c *fiber.Ctx) error {
 	return ctrl.base.SendSuccess(c, response, "Status slot upload berhasil didapat")
 }
 
+// InitiateUpload initiates a new TUS upload session for a modul.
+//
+// @Summary Initiate modul TUS upload
+// @Description Initiate a new resumable upload session for a modul using TUS protocol
+// @Tags Modul
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Length header int true "Total file size in bytes"
+// @Param Upload-Metadata header string true "Base64 encoded metadata (modul_id, filename)"
+// @Success 201 {object} domain.SuccessResponse "Upload initiated successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid headers or metadata"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 413 {object} domain.ErrorResponse "File size exceeds limit"
+// @Failure 429 {object} domain.ErrorResponse "Too many concurrent uploads"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/upload [post]
 func (ctrl *TusModulController) InitiateUpload(c *fiber.Ctx) error {
 	userID, _, _, err := ctrl.getTusAuthContext(c)
 	if err != nil {
@@ -95,6 +126,26 @@ func (ctrl *TusModulController) InitiateUpload(c *fiber.Ctx) error {
 	return ctrl.base.SendCreated(c, result, "Upload modul berhasil diinisiasi")
 }
 
+// UploadChunk uploads a chunk for modul upload.
+//
+// @Summary Upload modul chunk (TUS PATCH)
+// @Description Upload a chunk of data for an existing modul upload session
+// @Tags Modul
+// @Accept application/offset+octet-stream
+// @Security BearerAuth
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Offset header int true "Current upload offset"
+// @Param Content-Length header int true "Chunk size in bytes"
+// @Success 204 "Chunk uploaded successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid request"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 409 {object} domain.ErrorResponse "Offset mismatch"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 413 {object} domain.ErrorResponse "Chunk too large"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/upload/{upload_id} [patch]
 func (ctrl *TusModulController) UploadChunk(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -141,6 +192,20 @@ func (ctrl *TusModulController) UploadChunk(c *fiber.Ctx) error {
 	return helper.SendTusChunkResponse(c, newOffset)
 }
 
+// GetUploadStatus retrieves modul upload status (TUS HEAD).
+//
+// @Summary Get modul upload status (TUS HEAD)
+// @Description Retrieve current upload offset and length for modul upload
+// @Tags Modul
+// @Security BearerAuth
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 200 "Upload status with Upload-Offset and Upload-Length headers"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/upload/{upload_id} [head]
 func (ctrl *TusModulController) GetUploadStatus(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -163,6 +228,21 @@ func (ctrl *TusModulController) GetUploadStatus(c *fiber.Ctx) error {
 	return helper.SendTusHeadResponse(c, offset, length)
 }
 
+// GetUploadInfo retrieves modul upload info (REST endpoint).
+//
+// @Summary Get modul upload info
+// @Description Retrieve detailed upload information for modul upload
+// @Tags Modul
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param upload_id path string true "Upload ID"
+// @Success 200 {object} domain.SuccessResponse "Upload info retrieved successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid upload ID"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/upload/{upload_id}/info [get]
 func (ctrl *TusModulController) GetUploadInfo(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -182,6 +262,20 @@ func (ctrl *TusModulController) GetUploadInfo(c *fiber.Ctx) error {
 	return ctrl.base.SendSuccess(c, info, "Informasi upload berhasil didapat")
 }
 
+// CancelUpload cancels modul upload (TUS DELETE).
+//
+// @Summary Cancel modul upload (TUS DELETE)
+// @Description Cancel and clean up an active modul upload session
+// @Tags Modul
+// @Security BearerAuth
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 204 "Upload cancelled successfully"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/upload/{upload_id} [delete]
 func (ctrl *TusModulController) CancelUpload(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -204,6 +298,28 @@ func (ctrl *TusModulController) CancelUpload(c *fiber.Ctx) error {
 	return helper.SendTusDeleteResponse(c)
 }
 
+// InitiateModulUpdateUpload initiates a new TUS upload session for modul update.
+//
+// @Summary Initiate modul update upload
+// @Description Initiate a new resumable upload session for updating a modul
+// @Tags Modul
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Modul ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Length header int true "Total file size in bytes"
+// @Param Upload-Metadata header string true "Base64 encoded metadata"
+// @Success 201 {object} domain.SuccessResponse "Upload initiated successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid headers or modul ID"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to modul"
+// @Failure 404 {object} domain.ErrorResponse "Modul not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 413 {object} domain.ErrorResponse "File size exceeds limit"
+// @Failure 429 {object} domain.ErrorResponse "Too many concurrent uploads"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/{id}/upload [post]
 func (ctrl *TusModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 	userID, _, _, err := ctrl.getTusAuthContext(c)
 	if err != nil {
@@ -249,6 +365,27 @@ func (ctrl *TusModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 	return ctrl.base.SendCreated(c, result, "Update upload modul berhasil diinisiasi")
 }
 
+// UploadModulUpdateChunk uploads a chunk for modul update.
+//
+// @Summary Upload modul update chunk (TUS PATCH)
+// @Description Upload a chunk of data for a modul update upload session
+// @Tags Modul
+// @Accept application/offset+octet-stream
+// @Security BearerAuth
+// @Param id path int true "Modul ID"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Offset header int true "Current upload offset"
+// @Param Content-Length header int true "Chunk size in bytes"
+// @Success 204 "Chunk uploaded successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid request"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 409 {object} domain.ErrorResponse "Offset mismatch"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 413 {object} domain.ErrorResponse "Chunk too large"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/{id}/upload/{upload_id} [patch]
 func (ctrl *TusModulController) UploadModulUpdateChunk(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -295,6 +432,21 @@ func (ctrl *TusModulController) UploadModulUpdateChunk(c *fiber.Ctx) error {
 	return helper.SendTusChunkResponse(c, newOffset)
 }
 
+// GetModulUpdateUploadStatus retrieves modul update upload status (TUS HEAD).
+//
+// @Summary Get modul update upload status (TUS HEAD)
+// @Description Retrieve current upload offset and length for modul update
+// @Tags Modul
+// @Security BearerAuth
+// @Param id path int true "Modul ID"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 200 "Upload status with Upload-Offset and Upload-Length headers"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/{id}/upload/{upload_id} [head]
 func (ctrl *TusModulController) GetModulUpdateUploadStatus(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -317,6 +469,22 @@ func (ctrl *TusModulController) GetModulUpdateUploadStatus(c *fiber.Ctx) error {
 	return helper.SendTusHeadResponse(c, offset, length)
 }
 
+// GetModulUpdateUploadInfo retrieves modul update upload info (REST endpoint).
+//
+// @Summary Get modul update upload info
+// @Description Retrieve detailed upload information for modul update
+// @Tags Modul
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Modul ID"
+// @Param upload_id path string true "Upload ID"
+// @Success 200 {object} domain.SuccessResponse "Upload info retrieved successfully"
+// @Failure 400 {object} domain.ErrorResponse "Invalid upload ID"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/{id}/upload/{upload_id}/info [get]
 func (ctrl *TusModulController) GetModulUpdateUploadInfo(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -336,6 +504,21 @@ func (ctrl *TusModulController) GetModulUpdateUploadInfo(c *fiber.Ctx) error {
 	return ctrl.base.SendSuccess(c, info, "Informasi update upload berhasil didapat")
 }
 
+// CancelModulUpdateUpload cancels modul update upload (TUS DELETE).
+//
+// @Summary Cancel modul update upload (TUS DELETE)
+// @Description Cancel and clean up an active modul update upload session
+// @Tags Modul
+// @Security BearerAuth
+// @Param id path int true "Modul ID"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 204 "Upload cancelled successfully"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Failure 404 {object} domain.ErrorResponse "Upload not found"
+// @Failure 412 {object} domain.ErrorResponse "Unsupported TUS version"
+// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Router /api/v1/modul/{id}/upload/{upload_id} [delete]
 func (ctrl *TusModulController) CancelModulUpdateUpload(c *fiber.Ctx) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {

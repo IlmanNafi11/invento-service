@@ -1,8 +1,13 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "REST API service for managing projects, modules, users, and file uploads with JWT authentication and RBAC.",
+        "title": "Invento Service API",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:3000",
+    "basePath": "/api/v1",
     "paths": {
         "/api/v1/auth/login": {
             "post": {
@@ -291,7 +296,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve paginated list of modules with optional filtering",
+                "description": "Retrieve paginated list of modules with optional filters",
                 "consumes": [
                     "application/json"
                 ],
@@ -305,7 +310,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Search keyword",
+                        "description": "Search by module name",
                         "name": "search",
                         "in": "query"
                     },
@@ -338,7 +343,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "List retrieved successfully",
                         "schema": {
                             "allOf": [
                                 {
@@ -355,6 +360,12 @@
                             ]
                         }
                     },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -362,7 +373,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -377,7 +388,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Download selected modules as a ZIP archive",
+                "description": "Download one or more modules as a ZIP file",
                 "consumes": [
                     "application/json"
                 ],
@@ -387,7 +398,7 @@
                 "tags": [
                     "Modul"
                 ],
-                "summary": "Download modules",
+                "summary": "Download modules as ZIP",
                 "parameters": [
                     {
                         "description": "Download request with module IDs",
@@ -401,13 +412,13 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "ZIP file containing modules",
+                        "description": "ZIP file containing module files",
                         "schema": {
                             "type": "file"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request format or empty IDs",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -419,13 +430,13 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "One or more modules not found",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -440,107 +451,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Start a new resumable upload using TUS protocol",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Modul Upload"
-                ],
-                "summary": "Initiate TUS upload",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "TUS protocol version (1.0.0)",
-                        "name": "Tus-Resumable",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Total file size in bytes",
-                        "name": "Upload-Length",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Base64-encoded metadata (filename, etc.)",
-                        "name": "Upload-Metadata",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "TUS error response",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "TUS error response",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "412": {
-                        "description": "TUS version mismatch",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "413": {
-                        "description": "File too large",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "429": {
-                        "description": "Upload queue full",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/modul/upload/slot": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Check if the user has an available upload slot (queue status)",
+                "description": "Initiate a new resumable upload session for a modul using TUS protocol",
                 "consumes": [
                     "application/json"
                 ],
@@ -550,25 +461,100 @@
                 "tags": [
                     "Modul"
                 ],
-                "summary": "Check upload slot availability",
+                "summary": "Initiate modul TUS upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total file size in bytes",
+                        "name": "Upload-Length",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Base64 encoded metadata (modul_id, filename)",
+                        "name": "Upload-Metadata",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Upload initiated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid headers or metadata",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "File size exceeds limit",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many concurrent uploads",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/modul/upload/slot/check": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check if a modul upload slot is available for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Modul"
+                ],
+                "summary": "Check modul upload slot availability",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Slot availability info",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "401": {
@@ -578,7 +564,7 @@
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -593,17 +579,11 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Cancel an ongoing upload and clean up resources",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
+                "description": "Cancel and clean up an active modul upload session",
                 "tags": [
-                    "Modul Upload"
+                    "Modul"
                 ],
-                "summary": "Cancel upload (TUS DELETE)",
+                "summary": "Cancel modul upload (TUS DELETE)",
                 "parameters": [
                     {
                         "type": "string",
@@ -611,55 +591,42 @@
                         "name": "upload_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "204": {
-                        "description": "No content (upload cancelled)",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "headers": {
-                            "Tus-Resumable": {
-                                "type": "string",
-                                "description": "TUS protocol version"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid upload ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "description": "Upload cancelled successfully"
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Upload not found",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
-                    "409": {
-                        "description": "Upload already completed",
+                    "412": {
+                        "description": "Unsupported TUS version",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Internal server error",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -670,17 +637,11 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Check the current progress of an upload using TUS HEAD request",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
+                "description": "Retrieve current upload offset and length for modul upload",
                 "tags": [
-                    "Modul Upload"
+                    "Modul"
                 ],
-                "summary": "Get upload status (TUS HEAD)",
+                "summary": "Get modul upload status (TUS HEAD)",
                 "parameters": [
                     {
                         "type": "string",
@@ -688,57 +649,42 @@
                         "name": "upload_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "TUS headers with current offset and length",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "headers": {
-                            "Tus-Resumable": {
-                                "type": "string",
-                                "description": "TUS protocol version"
-                            },
-                            "Upload-Length": {
-                                "type": "string",
-                                "description": "Total file length"
-                            },
-                            "Upload-Offset": {
-                                "type": "string",
-                                "description": "Current offset in bytes"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid upload ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "description": "Upload status with Upload-Offset and Upload-Length headers"
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Upload not found",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Internal server error",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -749,48 +695,39 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Upload a chunk of file data as part of a resumable upload",
+                "description": "Upload a chunk of data for an existing modul upload session",
                 "consumes": [
                     "application/offset+octet-stream"
                 ],
-                "produces": [
-                    "application/json"
-                ],
                 "tags": [
-                    "Modul Upload"
+                    "Modul"
                 ],
-                "summary": "Upload chunk (TUS PATCH)",
+                "summary": "Upload modul chunk (TUS PATCH)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Upload ID from InitiateUpload",
+                        "description": "Upload ID",
                         "name": "upload_id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "TUS protocol version (1.0.0)",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
                         "name": "Tus-Resumable",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Current offset in bytes",
+                        "type": "integer",
+                        "description": "Current upload offset",
                         "name": "Upload-Offset",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Must be application/offset+octet-stream",
-                        "name": "Content-Type",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Chunk size in bytes",
                         "name": "Content-Length",
                         "in": "header",
@@ -799,73 +736,48 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "No content (upload continuing)",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "headers": {
-                            "Tus-Resumable": {
-                                "type": "string",
-                                "description": "TUS protocol version"
-                            },
-                            "Upload-Offset": {
-                                "type": "string",
-                                "description": "New offset after this chunk"
-                            }
-                        }
+                        "description": "Chunk uploaded successfully"
                     },
                     "400": {
-                        "description": "Invalid chunk or offset",
+                        "description": "Invalid request",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Upload not found",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Offset mismatch",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "412": {
-                        "description": "TUS version mismatch",
+                        "description": "Unsupported TUS version",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "413": {
                         "description": "Chunk too large",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "415": {
-                        "description": "Invalid content type",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Internal server error",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -878,7 +790,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get detailed upload info as JSON (not part of TUS protocol)",
+                "description": "Retrieve detailed upload information for modul upload",
                 "consumes": [
                     "application/json"
                 ],
@@ -886,9 +798,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Modul Upload"
+                    "Modul"
                 ],
-                "summary": "Get upload information",
+                "summary": "Get modul upload info",
                 "parameters": [
                     {
                         "type": "string",
@@ -900,26 +812,13 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Upload info retrieved successfully",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid upload ID",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -930,20 +829,14 @@
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Upload not found",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -958,7 +851,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Permanently delete a module owned by the authenticated user",
+                "description": "Permanently delete a module by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -980,9 +873,15 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Module deleted successfully",
                         "schema": {
                             "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid module ID",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
@@ -992,19 +891,19 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Forbidden - no access to this module",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Module not found",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -1017,7 +916,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update module name and/or semester for a module owned by the user",
+                "description": "Update nama_file or semester of an existing module",
                 "consumes": [
                     "application/json"
                 ],
@@ -1048,13 +947,13 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Metadata updated successfully",
                         "schema": {
                             "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request format",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -1066,412 +965,21 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Forbidden - no access to this module",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Module not found",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/modul/{id}/update/{upload_id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get detailed update upload info as JSON (not part of TUS protocol)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Modul Update"
-                ],
-                "summary": "Get update upload information",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Module ID being updated",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Upload ID",
-                        "name": "upload_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Cancel an ongoing modul update upload and clean up resources",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Modul Update"
-                ],
-                "summary": "Cancel update upload (TUS DELETE)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Module ID being updated",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Upload ID",
-                        "name": "upload_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No content (upload cancelled)",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "headers": {
-                            "Tus-Resumable": {
-                                "type": "string",
-                                "description": "TUS protocol version"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid upload ID",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Upload not found",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "409": {
-                        "description": "Upload already completed",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "head": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Check the current progress of a modul update upload",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Modul Update"
-                ],
-                "summary": "Get update upload status (TUS HEAD)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Module ID being updated",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Upload ID",
-                        "name": "upload_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "TUS headers with current offset and length",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "headers": {
-                            "Tus-Resumable": {
-                                "type": "string",
-                                "description": "TUS protocol version"
-                            },
-                            "Upload-Length": {
-                                "type": "string",
-                                "description": "Total file length"
-                            },
-                            "Upload-Offset": {
-                                "type": "string",
-                                "description": "Current offset in bytes"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid upload ID",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Upload not found",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Upload a chunk of file data for updating an existing module",
-                "consumes": [
-                    "application/offset+octet-stream"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Modul Update"
-                ],
-                "summary": "Upload update chunk (TUS PATCH)",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Module ID being updated",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Upload ID from InitiateModulUpdateUpload",
-                        "name": "upload_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "TUS protocol version (1.0.0)",
-                        "name": "Tus-Resumable",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Current offset in bytes",
-                        "name": "Upload-Offset",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Must be application/offset+octet-stream",
-                        "name": "Content-Type",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Chunk size in bytes",
-                        "name": "Content-Length",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No content (upload continuing)",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "headers": {
-                            "Tus-Resumable": {
-                                "type": "string",
-                                "description": "TUS protocol version"
-                            },
-                            "Upload-Offset": {
-                                "type": "string",
-                                "description": "New offset after this chunk"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid chunk or offset",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Upload not found",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "409": {
-                        "description": "Offset mismatch",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "412": {
-                        "description": "TUS version mismatch",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "413": {
-                        "description": "Chunk too large",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "415": {
-                        "description": "Invalid content type",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "schema": {
-                            "type": "string"
                         }
                     }
                 }
@@ -1484,7 +992,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Start a new TUS upload for updating an existing module file",
+                "description": "Initiate a new resumable upload session for updating a modul",
                 "consumes": [
                     "application/json"
                 ],
@@ -1492,26 +1000,27 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Modul Update"
+                    "Modul"
                 ],
-                "summary": "Initiate modul update upload (TUS POST)",
+                "summary": "Initiate modul update upload",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Module ID to update",
+                        "description": "Modul ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "TUS protocol version (1.0.0)",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
                         "name": "Tus-Resumable",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Total file size in bytes",
                         "name": "Upload-Length",
                         "in": "header",
@@ -1519,7 +1028,7 @@
                     },
                     {
                         "type": "string",
-                        "description": "Base64-encoded metadata (filename, etc.)",
+                        "description": "Base64 encoded metadata",
                         "name": "Upload-Metadata",
                         "in": "header",
                         "required": true
@@ -1527,70 +1036,357 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Upload initiated successfully",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
-                        "description": "TUS error response",
+                        "description": "Invalid headers or modul ID",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "401": {
-                        "description": "TUS error response",
+                        "description": "Unauthorized",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Forbidden - no access to modul",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Module not found",
+                        "description": "Modul not found",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "412": {
-                        "description": "TUS version mismatch",
+                        "description": "Unsupported TUS version",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "413": {
-                        "description": "File too large",
+                        "description": "File size exceeds limit",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "429": {
-                        "description": "Upload queue full",
+                        "description": "Too many concurrent uploads",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Internal server error",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/modul/{id}/upload/{upload_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel and clean up an active modul update upload session",
+                "tags": [
+                    "Modul"
+                ],
+                "summary": "Cancel modul update upload (TUS DELETE)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Modul ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Upload cancelled successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "head": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve current upload offset and length for modul update",
+                "tags": [
+                    "Modul"
+                ],
+                "summary": "Get modul update upload status (TUS HEAD)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Modul ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload status with Upload-Offset and Upload-Length headers"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a chunk of data for a modul update upload session",
+                "consumes": [
+                    "application/offset+octet-stream"
+                ],
+                "tags": [
+                    "Modul"
+                ],
+                "summary": "Upload modul update chunk (TUS PATCH)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Modul ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Current upload offset",
+                        "name": "Upload-Offset",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Chunk size in bytes",
+                        "name": "Content-Length",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Chunk uploaded successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Offset mismatch",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "Chunk too large",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/modul/{id}/upload/{upload_id}/info": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve detailed upload information for modul update",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Modul"
+                ],
+                "summary": "Get modul update upload info",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Modul ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload info retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid upload ID",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
                         }
                     }
                 }
@@ -2181,6 +1977,400 @@
                 }
             }
         },
+        "/api/v1/project/{id}/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Initiate a new resumable upload session for updating a project",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Initiate project update upload",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total file size in bytes",
+                        "name": "Upload-Length",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Base64 encoded metadata",
+                        "name": "Upload-Metadata",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Upload initiated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid headers or project ID",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - no access to project",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Project not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "File size exceeds limit",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/project/{id}/upload/{upload_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel and clean up an active project update upload session",
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Cancel project update upload (TUS DELETE)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Upload cancelled successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "head": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve current upload offset and length for project update",
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Get project update upload status (TUS HEAD)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload status with Upload-Offset and Upload-Length headers"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a chunk of data for a project update upload session",
+                "consumes": [
+                    "application/offset+octet-stream"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Upload project update chunk (TUS PATCH)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Current upload offset",
+                        "name": "Upload-Offset",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Chunk size in bytes",
+                        "name": "Content-Length",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Chunk uploaded successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Offset mismatch",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/project/{id}/upload/{upload_id}/info": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve detailed upload information for project update",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Get project update upload info",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload info retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid upload ID",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/role": {
             "get": {
                 "security": [
@@ -2553,6 +2743,434 @@
                     },
                     "500": {
                         "description": "Terjadi kesalahan pada server",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Initiate a new resumable upload session using TUS protocol",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Initiate TUS upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total file size in bytes",
+                        "name": "Upload-Length",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Base64 encoded metadata (nama_project, kategori, semester)",
+                        "name": "Upload-Metadata",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Upload initiated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid headers or metadata",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "File size exceeds limit",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/upload/queue/reset": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reset the user's upload queue",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Reset upload queue",
+                "responses": {
+                    "200": {
+                        "description": "Queue reset successfully",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/upload/slot/check": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check if an upload slot is available for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Check upload slot availability",
+                "responses": {
+                    "200": {
+                        "description": "Slot availability info",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/upload/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel and clean up an active upload session",
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Cancel upload (TUS DELETE)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Upload cancelled successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "head": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve current upload offset and length",
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Get upload status (TUS HEAD)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload status with Upload-Offset and Upload-Length headers"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a chunk of data for an existing upload session",
+                "consumes": [
+                    "application/offset+octet-stream"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Upload chunk (TUS PATCH)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Current upload offset",
+                        "name": "Upload-Offset",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Chunk size in bytes",
+                        "name": "Content-Length",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Chunk uploaded successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Offset mismatch",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "412": {
+                        "description": "Unsupported TUS version",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/upload/{id}/info": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve detailed upload information including progress percentage",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "Get upload info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload info retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid upload ID",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -3841,6 +4459,14 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

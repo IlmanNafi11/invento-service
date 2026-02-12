@@ -1,3 +1,4 @@
+basePath: /api/v1
 definitions:
   domain.AppInfo:
     properties:
@@ -552,8 +553,13 @@ definitions:
       resource:
         type: string
     type: object
+host: localhost:3000
 info:
   contact: {}
+  description: REST API service for managing projects, modules, users, and file uploads
+    with JWT authentication and RBAC.
+  title: Invento Service API
+  version: "1.0"
 paths:
   /api/v1/auth/login:
     post:
@@ -737,9 +743,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve paginated list of modules with optional filtering
+      description: Retrieve paginated list of modules with optional filters
       parameters:
-      - description: Search keyword
+      - description: Search by module name
         in: query
         name: search
         type: string
@@ -765,7 +771,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: List retrieved successfully
           schema:
             allOf:
             - $ref: '#/definitions/domain.SuccessResponse'
@@ -773,12 +779,16 @@ paths:
                 data:
                   $ref: '#/definitions/domain.ModulListData'
               type: object
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       security:
@@ -790,7 +800,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Permanently delete a module owned by the authenticated user
+      description: Permanently delete a module by ID
       parameters:
       - description: Module ID
         in: path
@@ -801,23 +811,27 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Module deleted successfully
           schema:
             $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid module ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "403":
-          description: Forbidden
+          description: Forbidden - no access to this module
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "404":
-          description: Not Found
+          description: Module not found
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       security:
@@ -828,7 +842,7 @@ paths:
     patch:
       consumes:
       - application/json
-      description: Update module name and/or semester for a module owned by the user
+      description: Update nama_file or semester of an existing module
       parameters:
       - description: Module ID
         in: path
@@ -845,11 +859,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Metadata updated successfully
           schema:
             $ref: '#/definitions/domain.SuccessResponse'
         "400":
-          description: Bad Request
+          description: Invalid request format
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "401":
@@ -857,15 +871,15 @@ paths:
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "403":
-          description: Forbidden
+          description: Forbidden - no access to this module
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "404":
-          description: Not Found
+          description: Module not found
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       security:
@@ -873,274 +887,19 @@ paths:
       summary: Update module metadata
       tags:
       - Modul
-  /api/v1/modul/{id}/update/{upload_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Cancel an ongoing modul update upload and clean up resources
-      parameters:
-      - description: Module ID being updated
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Upload ID
-        in: path
-        name: upload_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No content (upload cancelled)
-          headers:
-            Tus-Resumable:
-              description: TUS protocol version
-              type: string
-          schema:
-            type: string
-        "400":
-          description: Invalid upload ID
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            type: string
-        "404":
-          description: Upload not found
-          schema:
-            type: string
-        "409":
-          description: Upload already completed
-          schema:
-            type: string
-        "500":
-          description: Server error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Cancel update upload (TUS DELETE)
-      tags:
-      - Modul Update
-    get:
-      consumes:
-      - application/json
-      description: Get detailed update upload info as JSON (not part of TUS protocol)
-      parameters:
-      - description: Module ID being updated
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Upload ID
-        in: path
-        name: upload_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get update upload information
-      tags:
-      - Modul Update
-    head:
-      consumes:
-      - application/json
-      description: Check the current progress of a modul update upload
-      parameters:
-      - description: Module ID being updated
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Upload ID
-        in: path
-        name: upload_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: TUS headers with current offset and length
-          headers:
-            Tus-Resumable:
-              description: TUS protocol version
-              type: string
-            Upload-Length:
-              description: Total file length
-              type: string
-            Upload-Offset:
-              description: Current offset in bytes
-              type: string
-          schema:
-            type: string
-        "400":
-          description: Invalid upload ID
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            type: string
-        "404":
-          description: Upload not found
-          schema:
-            type: string
-        "500":
-          description: Server error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get update upload status (TUS HEAD)
-      tags:
-      - Modul Update
-    patch:
-      consumes:
-      - application/offset+octet-stream
-      description: Upload a chunk of file data for updating an existing module
-      parameters:
-      - description: Module ID being updated
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Upload ID from InitiateModulUpdateUpload
-        in: path
-        name: upload_id
-        required: true
-        type: string
-      - description: TUS protocol version (1.0.0)
-        in: header
-        name: Tus-Resumable
-        required: true
-        type: string
-      - description: Current offset in bytes
-        in: header
-        name: Upload-Offset
-        required: true
-        type: string
-      - description: Must be application/offset+octet-stream
-        in: header
-        name: Content-Type
-        required: true
-        type: string
-      - description: Chunk size in bytes
-        in: header
-        name: Content-Length
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No content (upload continuing)
-          headers:
-            Tus-Resumable:
-              description: TUS protocol version
-              type: string
-            Upload-Offset:
-              description: New offset after this chunk
-              type: string
-          schema:
-            type: string
-        "400":
-          description: Invalid chunk or offset
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            type: string
-        "404":
-          description: Upload not found
-          schema:
-            type: string
-        "409":
-          description: Offset mismatch
-          schema:
-            type: string
-        "412":
-          description: TUS version mismatch
-          schema:
-            type: string
-        "413":
-          description: Chunk too large
-          schema:
-            type: string
-        "415":
-          description: Invalid content type
-          schema:
-            type: string
-        "500":
-          description: Server error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Upload update chunk (TUS PATCH)
-      tags:
-      - Modul Update
   /api/v1/modul/{id}/upload:
     post:
       consumes:
       - application/json
-      description: Start a new TUS upload for updating an existing module file
+      description: Initiate a new resumable upload session for updating a modul
       parameters:
-      - description: Module ID to update
+      - description: Modul ID
         in: path
         name: id
         required: true
         type: integer
-      - description: TUS protocol version (1.0.0)
+      - default: 1.0.0
+        description: TUS protocol version
         in: header
         name: Tus-Resumable
         required: true
@@ -1149,8 +908,8 @@ paths:
         in: header
         name: Upload-Length
         required: true
-        type: string
-      - description: Base64-encoded metadata (filename, etc.)
+        type: integer
+      - description: Base64 encoded metadata
         in: header
         name: Upload-Metadata
         required: true
@@ -1159,57 +918,249 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Upload initiated successfully
           schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
+            $ref: '#/definitions/domain.SuccessResponse'
         "400":
-          description: TUS error response
+          description: Invalid headers or modul ID
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "401":
-          description: TUS error response
+          description: Unauthorized
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "403":
-          description: Forbidden
+          description: Forbidden - no access to modul
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "404":
-          description: Module not found
+          description: Modul not found
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "412":
-          description: TUS version mismatch
+          description: Unsupported TUS version
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "413":
-          description: File too large
+          description: File size exceeds limit
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "429":
-          description: Upload queue full
+          description: Too many concurrent uploads
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Server error
+          description: Internal server error
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Initiate modul update upload (TUS POST)
+      summary: Initiate modul update upload
       tags:
-      - Modul Update
+      - Modul
+  /api/v1/modul/{id}/upload/{upload_id}:
+    delete:
+      description: Cancel and clean up an active modul update upload session
+      parameters:
+      - description: Modul ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Upload cancelled successfully
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel modul update upload (TUS DELETE)
+      tags:
+      - Modul
+    head:
+      description: Retrieve current upload offset and length for modul update
+      parameters:
+      - description: Modul ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Upload status with Upload-Offset and Upload-Length headers
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get modul update upload status (TUS HEAD)
+      tags:
+      - Modul
+    patch:
+      consumes:
+      - application/offset+octet-stream
+      description: Upload a chunk of data for a modul update upload session
+      parameters:
+      - description: Modul ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Current upload offset
+        in: header
+        name: Upload-Offset
+        required: true
+        type: integer
+      - description: Chunk size in bytes
+        in: header
+        name: Content-Length
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Chunk uploaded successfully
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "409":
+          description: Offset mismatch
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "413":
+          description: Chunk too large
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload modul update chunk (TUS PATCH)
+      tags:
+      - Modul
+  /api/v1/modul/{id}/upload/{upload_id}/info:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed upload information for modul update
+      parameters:
+      - description: Modul ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upload info retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid upload ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get modul update upload info
+      tags:
+      - Modul
   /api/v1/modul/download:
     post:
       consumes:
       - application/json
-      description: Download selected modules as a ZIP archive
+      description: Download one or more modules as a ZIP file
       parameters:
       - description: Download request with module IDs
         in: body
@@ -1221,11 +1172,11 @@ paths:
       - application/zip
       responses:
         "200":
-          description: ZIP file containing modules
+          description: ZIP file containing module files
           schema:
             type: file
         "400":
-          description: Bad Request
+          description: Invalid request format or empty IDs
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "401":
@@ -1233,25 +1184,26 @@ paths:
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "404":
-          description: Not Found
+          description: One or more modules not found
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Download modules
+      summary: Download modules as ZIP
       tags:
       - Modul
   /api/v1/modul/upload:
     post:
       consumes:
       - application/json
-      description: Start a new resumable upload using TUS protocol
+      description: Initiate a new resumable upload session for a modul using TUS protocol
       parameters:
-      - description: TUS protocol version (1.0.0)
+      - default: 1.0.0
+        description: TUS protocol version
         in: header
         name: Tus-Resumable
         required: true
@@ -1260,8 +1212,8 @@ paths:
         in: header
         name: Upload-Length
         required: true
-        type: string
-      - description: Base64-encoded metadata (filename, etc.)
+        type: integer
+      - description: Base64 encoded metadata (modul_id, filename)
         in: header
         name: Upload-Metadata
         required: true
@@ -1270,237 +1222,182 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Upload initiated successfully
           schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
+            $ref: '#/definitions/domain.SuccessResponse'
         "400":
-          description: TUS error response
+          description: Invalid headers or metadata
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "401":
-          description: TUS error response
+          description: Unauthorized
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "412":
-          description: TUS version mismatch
+          description: Unsupported TUS version
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "413":
-          description: File too large
+          description: File size exceeds limit
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "429":
-          description: Upload queue full
+          description: Too many concurrent uploads
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Server error
+          description: Internal server error
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Initiate TUS upload
+      summary: Initiate modul TUS upload
       tags:
-      - Modul Upload
+      - Modul
   /api/v1/modul/upload/{upload_id}:
     delete:
-      consumes:
-      - application/json
-      description: Cancel an ongoing upload and clean up resources
+      description: Cancel and clean up an active modul upload session
       parameters:
       - description: Upload ID
         in: path
         name: upload_id
         required: true
         type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No content (upload cancelled)
-          headers:
-            Tus-Resumable:
-              description: TUS protocol version
-              type: string
-          schema:
-            type: string
-        "400":
-          description: Invalid upload ID
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            type: string
-        "404":
-          description: Upload not found
-          schema:
-            type: string
-        "409":
-          description: Upload already completed
-          schema:
-            type: string
-        "500":
-          description: Server error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Cancel upload (TUS DELETE)
-      tags:
-      - Modul Upload
-    head:
-      consumes:
-      - application/json
-      description: Check the current progress of an upload using TUS HEAD request
-      parameters:
-      - description: Upload ID
-        in: path
-        name: upload_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: TUS headers with current offset and length
-          headers:
-            Tus-Resumable:
-              description: TUS protocol version
-              type: string
-            Upload-Length:
-              description: Total file length
-              type: string
-            Upload-Offset:
-              description: Current offset in bytes
-              type: string
-          schema:
-            type: string
-        "400":
-          description: Invalid upload ID
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            type: string
-        "404":
-          description: Upload not found
-          schema:
-            type: string
-        "500":
-          description: Server error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get upload status (TUS HEAD)
-      tags:
-      - Modul Upload
-    patch:
-      consumes:
-      - application/offset+octet-stream
-      description: Upload a chunk of file data as part of a resumable upload
-      parameters:
-      - description: Upload ID from InitiateUpload
-        in: path
-        name: upload_id
-        required: true
-        type: string
-      - description: TUS protocol version (1.0.0)
+      - default: 1.0.0
+        description: TUS protocol version
         in: header
         name: Tus-Resumable
         required: true
         type: string
-      - description: Current offset in bytes
+      responses:
+        "204":
+          description: Upload cancelled successfully
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel modul upload (TUS DELETE)
+      tags:
+      - Modul
+    head:
+      description: Retrieve current upload offset and length for modul upload
+      parameters:
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Upload status with Upload-Offset and Upload-Length headers
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get modul upload status (TUS HEAD)
+      tags:
+      - Modul
+    patch:
+      consumes:
+      - application/offset+octet-stream
+      description: Upload a chunk of data for an existing modul upload session
+      parameters:
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Current upload offset
         in: header
         name: Upload-Offset
         required: true
-        type: string
-      - description: Must be application/offset+octet-stream
-        in: header
-        name: Content-Type
-        required: true
-        type: string
+        type: integer
       - description: Chunk size in bytes
         in: header
         name: Content-Length
         required: true
-        type: string
-      produces:
-      - application/json
+        type: integer
       responses:
         "204":
-          description: No content (upload continuing)
-          headers:
-            Tus-Resumable:
-              description: TUS protocol version
-              type: string
-            Upload-Offset:
-              description: New offset after this chunk
-              type: string
-          schema:
-            type: string
+          description: Chunk uploaded successfully
         "400":
-          description: Invalid chunk or offset
+          description: Invalid request
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            type: string
-        "403":
-          description: Forbidden
-          schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "404":
           description: Upload not found
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "409":
           description: Offset mismatch
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "412":
-          description: TUS version mismatch
+          description: Unsupported TUS version
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "413":
           description: Chunk too large
           schema:
-            type: string
-        "415":
-          description: Invalid content type
-          schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Server error
+          description: Internal server error
           schema:
-            type: string
+            $ref: '#/definitions/domain.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Upload chunk (TUS PATCH)
+      summary: Upload modul chunk (TUS PATCH)
       tags:
-      - Modul Upload
+      - Modul
   /api/v1/modul/upload/{upload_id}/info:
     get:
       consumes:
       - application/json
-      description: Get detailed upload info as JSON (not part of TUS protocol)
+      description: Retrieve detailed upload information for modul upload
       parameters:
       - description: Upload ID
         in: path
@@ -1511,69 +1408,53 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Upload info retrieved successfully
           schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
+            $ref: '#/definitions/domain.SuccessResponse'
         "400":
-          description: Bad Request
+          description: Invalid upload ID
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
         "404":
-          description: Not Found
+          description: Upload not found
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get upload information
+      summary: Get modul upload info
       tags:
-      - Modul Upload
-  /api/v1/modul/upload/slot:
+      - Modul
+  /api/v1/modul/upload/slot/check:
     get:
       consumes:
       - application/json
-      description: Check if the user has an available upload slot (queue status)
+      description: Check if a modul upload slot is available for the current user
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Slot availability info
           schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
+            $ref: '#/definitions/domain.SuccessResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Check upload slot availability
+      summary: Check modul upload slot availability
       tags:
       - Modul
   /api/v1/monitoring/app-status:
@@ -1904,6 +1785,266 @@ paths:
       summary: Update project metadata
       tags:
       - Project
+  /api/v1/project/{id}/upload:
+    post:
+      consumes:
+      - application/json
+      description: Initiate a new resumable upload session for updating a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Total file size in bytes
+        in: header
+        name: Upload-Length
+        required: true
+        type: integer
+      - description: Base64 encoded metadata
+        in: header
+        name: Upload-Metadata
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Upload initiated successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid headers or project ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "403":
+          description: Forbidden - no access to project
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "413":
+          description: File size exceeds limit
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Initiate project update upload
+      tags:
+      - Upload
+  /api/v1/project/{id}/upload/{upload_id}:
+    delete:
+      description: Cancel and clean up an active project update upload session
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Upload cancelled successfully
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel project update upload (TUS DELETE)
+      tags:
+      - Upload
+    head:
+      description: Retrieve current upload offset and length for project update
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Upload status with Upload-Offset and Upload-Length headers
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get project update upload status (TUS HEAD)
+      tags:
+      - Upload
+    patch:
+      consumes:
+      - application/offset+octet-stream
+      description: Upload a chunk of data for a project update upload session
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Current upload offset
+        in: header
+        name: Upload-Offset
+        required: true
+        type: integer
+      - description: Chunk size in bytes
+        in: header
+        name: Content-Length
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Chunk uploaded successfully
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "409":
+          description: Offset mismatch
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload project update chunk (TUS PATCH)
+      tags:
+      - Upload
+  /api/v1/project/{id}/upload/{upload_id}/info:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed upload information for project update
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upload info retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid upload ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get project update upload info
+      tags:
+      - Upload
   /api/v1/project/download:
     post:
       consumes:
@@ -2196,6 +2337,284 @@ paths:
       summary: Get User Statistics
       tags:
       - Statistics
+  /api/v1/upload:
+    post:
+      consumes:
+      - application/json
+      description: Initiate a new resumable upload session using TUS protocol
+      parameters:
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Total file size in bytes
+        in: header
+        name: Upload-Length
+        required: true
+        type: integer
+      - description: Base64 encoded metadata (nama_project, kategori, semester)
+        in: header
+        name: Upload-Metadata
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Upload initiated successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid headers or metadata
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "413":
+          description: File size exceeds limit
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Initiate TUS upload
+      tags:
+      - Upload
+  /api/v1/upload/{id}:
+    delete:
+      description: Cancel and clean up an active upload session
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Upload cancelled successfully
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel upload (TUS DELETE)
+      tags:
+      - Upload
+    head:
+      description: Retrieve current upload offset and length
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Upload status with Upload-Offset and Upload-Length headers
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get upload status (TUS HEAD)
+      tags:
+      - Upload
+    patch:
+      consumes:
+      - application/offset+octet-stream
+      description: Upload a chunk of data for an existing upload session
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Current upload offset
+        in: header
+        name: Upload-Offset
+        required: true
+        type: integer
+      - description: Chunk size in bytes
+        in: header
+        name: Content-Length
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Chunk uploaded successfully
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "409":
+          description: Offset mismatch
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "412":
+          description: Unsupported TUS version
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload chunk (TUS PATCH)
+      tags:
+      - Upload
+  /api/v1/upload/{id}/info:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed upload information including progress percentage
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upload info retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Invalid upload ID
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get upload info
+      tags:
+      - Upload
+  /api/v1/upload/queue/reset:
+    post:
+      consumes:
+      - application/json
+      description: Reset the user's upload queue
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Queue reset successfully
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Reset upload queue
+      tags:
+      - Upload
+  /api/v1/upload/slot/check:
+    get:
+      consumes:
+      - application/json
+      description: Check if an upload slot is available for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Slot availability info
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Check upload slot availability
+      tags:
+      - Upload
   /api/v1/user:
     get:
       consumes:
@@ -2477,4 +2896,11 @@ paths:
       summary: Basic Health Check
       tags:
       - Monitoring
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT Authorization header using the Bearer scheme. Example: "Bearer
+      {token}"'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
