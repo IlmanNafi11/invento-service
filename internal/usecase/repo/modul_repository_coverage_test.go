@@ -85,31 +85,6 @@ func TestModulRepository_GetByIDs_Success(t *testing.T) {
 	assert.Len(t, result, 2)
 }
 
-// TestModulRepository_GetByIDsForUser_Success tests successful modul retrieval for user
-func TestModulRepository_GetByIDsForUser_Success(t *testing.T) {
-	db, err := testhelper.SetupTestDatabase()
-	require.NoError(t, err)
-	defer testhelper.TeardownTestDatabase(db)
-
-	userID := "user-1"
-
-	moduls := []domain.Modul{
-		{Judul: "Modul 1", Deskripsi: "Deskripsi 1", UserID: userID, FileName: "test1.pdf", FilePath: "/test1", FileSize: 1024, MimeType: "application/pdf", Status: "completed"},
-		{Judul: "Modul 2", Deskripsi: "Deskripsi 2", UserID: "user-2", FileName: "test2.pdf", FilePath: "/test2", FileSize: 2048, MimeType: "application/pdf", Status: "completed"},
-	}
-
-	for i := range moduls {
-		err = db.Create(&moduls[i]).Error
-		require.NoError(t, err)
-	}
-
-	modulRepo := repo.NewModulRepository(db)
-	ids := []string{moduls[0].ID, moduls[1].ID}
-	result, err := modulRepo.GetByIDsForUser(ids, userID)
-	assert.NoError(t, err)
-	assert.Len(t, result, 1) // Only user's modul
-}
-
 // TestModulRepository_GetByUserID_Success tests successful modul retrieval by user ID
 func TestModulRepository_GetByUserID_Success(t *testing.T) {
 	db, err := testhelper.SetupTestDatabase()

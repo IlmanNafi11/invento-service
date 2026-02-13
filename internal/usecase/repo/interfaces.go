@@ -60,7 +60,6 @@ type ModulRepository interface {
 	Create(modul *domain.Modul) error
 	GetByID(id string) (*domain.Modul, error)
 	GetByIDs(ids []string, userID string) ([]domain.Modul, error)
-	GetByIDsForUser(ids []string, ownerUserID string) ([]domain.Modul, error)
 	GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]domain.ModulListItem, int, error)
 	CountByUserID(userID string) (int, error)
 	Update(modul *domain.Modul) error
