@@ -957,8 +957,8 @@ func (m *MockTusModulControllerUsecase) InitiateModulUpdateUpload(modulID string
 	return args.Get(0).(*domain.TusModulUploadResponse), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	args := m.Called(uploadID, userID, offset, mock.Anything)
+func (m *MockTusModulControllerUsecase) HandleModulUpdateChunk(modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	args := m.Called(modulID, uploadID, userID, offset, mock.Anything)
 	return args.Get(0).(int64), args.Error(1)
 }
 
@@ -1157,7 +1157,7 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 		Offset:    0,
 		Length:    4096,
 	}, nil).Once()
-	mockUC.On("HandleModulUpdateChunk", "update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(4), nil).Once()
+	mockUC.On("HandleModulUpdateChunk", modulID, "update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(4), nil).Once()
 	mockUC.On("GetModulUpdateUploadStatus", modulID, "update-upload-id", "user-123").Return(int64(4), int64(4096), nil).Once()
 	mockUC.On("GetModulUpdateUploadInfo", modulID, "update-upload-id", "user-123").Return(&domain.TusModulUploadInfoResponse{UploadID: "update-upload-id"}, nil).Once()
 	mockUC.On("CancelModulUpdateUpload", modulID, "update-upload-id", "user-123").Return(nil).Once()

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -60,81 +59,6 @@ func (m *MockModulUsecase) Download(userID string, modulIDs []string) (string, e
 	return args.String(0), args.Error(1)
 }
 
-// MockTusModulUsecase mocks the TusModulUsecase interface (not tested in CRUD tests)
-type MockTusModulUsecase struct {
-	mock.Mock
-}
-
-func (m *MockTusModulUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
-	args := m.Called(userID, fileSize, uploadMetadata)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.TusModulUploadResponse), args.Error(1)
-}
-
-func (m *MockTusModulUsecase) HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	args := m.Called(uploadID, userID, offset, chunk)
-	return args.Get(0).(int64), args.Error(1)
-}
-
-func (m *MockTusModulUsecase) GetModulUploadInfo(uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
-	args := m.Called(uploadID, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.TusModulUploadInfoResponse), args.Error(1)
-}
-
-func (m *MockTusModulUsecase) GetModulUploadStatus(uploadID string, userID string) (int64, int64, error) {
-	args := m.Called(uploadID, userID)
-	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
-}
-
-func (m *MockTusModulUsecase) CancelModulUpload(uploadID string, userID string) error {
-	args := m.Called(uploadID, userID)
-	return args.Error(0)
-}
-
-func (m *MockTusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error) {
-	args := m.Called(userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.TusModulUploadSlotResponse), args.Error(1)
-}
-
-func (m *MockTusModulUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
-	args := m.Called(modulID, userID, fileSize, uploadMetadata)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.TusModulUploadResponse), args.Error(1)
-}
-
-func (m *MockTusModulUsecase) GetModulUpdateUploadStatus(modulID string, uploadID string, userID uint) (int64, int64, error) {
-	args := m.Called(modulID, uploadID, userID)
-	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
-}
-
-func (m *MockTusModulUsecase) GetModulUpdateUploadInfo(modulID string, uploadID string, userID uint) (*domain.TusModulUploadInfoResponse, error) {
-	args := m.Called(modulID, uploadID, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.TusModulUploadInfoResponse), args.Error(1)
-}
-
-func (m *MockTusModulUsecase) CancelModulUpdateUpload(modulID string, uploadID string, userID uint) error {
-	args := m.Called(modulID, uploadID, userID)
-	return args.Error(0)
-}
-
-func (m *MockTusModulUsecase) HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	args := m.Called(uploadID, userID, offset, chunk)
-	return args.Get(0).(int64), args.Error(1)
-}
-
 // Helper function to create test base controller
 func getTestBaseController() *base.BaseController {
 	casbin := &helper.CasbinEnforcer{}
@@ -151,10 +75,9 @@ func setAuthenticatedUser(c *fiber.Ctx, userID string, email, role string) {
 // TestModulController_GetList_Success tests successful retrieval of module list
 func TestModulController_GetList_Success(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 
@@ -175,7 +98,6 @@ func TestModulController_GetList_Success(t *testing.T) {
 				FileName:           "modul1.pdf",
 				MimeType:           "application/pdf",
 				FileSize:           2621440,
-				FilePath:           "/uploads/modul1.pdf",
 				Status:             "completed",
 				TerakhirDiperbarui: time.Now(),
 			},
@@ -186,7 +108,6 @@ func TestModulController_GetList_Success(t *testing.T) {
 				FileName:           "modul2.docx",
 				MimeType:           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 				FileSize:           1258291,
-				FilePath:           "/uploads/modul2.docx",
 				Status:             "completed",
 				TerakhirDiperbarui: time.Now(),
 			},
@@ -199,7 +120,7 @@ func TestModulController_GetList_Success(t *testing.T) {
 		},
 	}
 
-	mockModulUC.On("GetList", "user-1", "", "", "", 1, 10).Return(expectedData, nil)
+	mockModulUC.On("GetList", "user-1", "", "", "", 0, 0).Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/modul", nil)
 	resp, err := app.Test(req)
@@ -212,10 +133,9 @@ func TestModulController_GetList_Success(t *testing.T) {
 // TestModulController_GetList_WithSearchAndFilters tests with search and filters
 func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -233,7 +153,6 @@ func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 				FileName:           "math.pdf",
 				MimeType:           "application/pdf",
 				FileSize:           3145728,
-				FilePath:           "/uploads/math.pdf",
 				Status:             "completed",
 				TerakhirDiperbarui: time.Now(),
 			},
@@ -267,10 +186,9 @@ func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 // TestModulController_GetList_Unauthorized tests unauthorized access
 func TestModulController_GetList_Unauthorized(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Get("/api/v1/modul", controller.GetList)
@@ -283,10 +201,9 @@ func TestModulController_GetList_Unauthorized(t *testing.T) {
 // TestModulController_UpdateMetadata_Success tests successful metadata update
 func TestModulController_UpdateMetadata_Success(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -315,10 +232,9 @@ func TestModulController_UpdateMetadata_Success(t *testing.T) {
 // TestModulController_UpdateMetadata_NotFound tests update on non-existent module
 func TestModulController_UpdateMetadata_NotFound(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -344,10 +260,9 @@ func TestModulController_UpdateMetadata_NotFound(t *testing.T) {
 // TestModulController_UpdateMetadata_ValidationError tests validation error
 func TestModulController_UpdateMetadata_ValidationError(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -369,10 +284,9 @@ func TestModulController_UpdateMetadata_ValidationError(t *testing.T) {
 // TestModulController_Delete_Success tests successful module deletion
 func TestModulController_Delete_Success(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -394,10 +308,9 @@ func TestModulController_Delete_Success(t *testing.T) {
 // TestModulController_Delete_NotFound tests deletion of non-existent module
 func TestModulController_Delete_NotFound(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -419,10 +332,9 @@ func TestModulController_Delete_NotFound(t *testing.T) {
 // TestModulController_Delete_Forbidden tests deletion of module owned by another user
 func TestModulController_Delete_Forbidden(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -444,10 +356,9 @@ func TestModulController_Delete_Forbidden(t *testing.T) {
 // TestModulController_Delete_InvalidID tests deletion with invalid ID
 func TestModulController_Delete_InvalidID(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -464,10 +375,9 @@ func TestModulController_Delete_InvalidID(t *testing.T) {
 // TestModulController_Download_Success tests successful module download
 func TestModulController_Download_Success(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -496,10 +406,9 @@ func TestModulController_Download_Success(t *testing.T) {
 // TestModulController_Download_EmptyIDs tests download with empty ID list
 func TestModulController_Download_EmptyIDs(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -520,10 +429,9 @@ func TestModulController_Download_EmptyIDs(t *testing.T) {
 // TestModulController_Download_NotFound tests download with non-existent module
 func TestModulController_Download_NotFound(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
@@ -549,10 +457,9 @@ func TestModulController_Download_NotFound(t *testing.T) {
 // TestModulController_Download_Unauthorized tests unauthorized download
 func TestModulController_Download_Unauthorized(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -569,10 +476,9 @@ func TestModulController_Download_Unauthorized(t *testing.T) {
 // TestModulController_Download_InternalError tests internal server error during download
 func TestModulController_Download_InternalError(t *testing.T) {
 	mockModulUC := new(MockModulUsecase)
-	mockTusUC := new(MockTusModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
-	controller := httpcontroller.NewModulController(mockModulUC, mockTusUC, cfg, baseCtrl)
+	controller := httpcontroller.NewModulController(mockModulUC, cfg, baseCtrl)
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {

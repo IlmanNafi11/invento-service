@@ -7,7 +7,6 @@ import (
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -15,7 +14,6 @@ type TusModulController struct {
 	base            *base.BaseController
 	tusModulUsecase usecase.TusModulUsecase
 	config          *config.Config
-	validator       *validator.Validate
 }
 
 func NewTusModulController(tusModulUsecase usecase.TusModulUsecase, cfg *config.Config, baseCtrl *base.BaseController) *TusModulController {
@@ -23,7 +21,6 @@ func NewTusModulController(tusModulUsecase usecase.TusModulUsecase, cfg *config.
 		base:            baseCtrl,
 		tusModulUsecase: tusModulUsecase,
 		config:          cfg,
-		validator:       validator.New(),
 	}
 }
 
@@ -131,7 +128,7 @@ func (ctrl *TusModulController) uploadChunk(c *fiber.Ctx, modulID *string) error
 	if modulID == nil {
 		newOffset, err = ctrl.tusModulUsecase.HandleModulChunk(uploadID, userID, offset, bodyReader)
 	} else {
-		newOffset, err = ctrl.tusModulUsecase.HandleModulUpdateChunk(uploadID, userID, offset, bodyReader)
+		newOffset, err = ctrl.tusModulUsecase.HandleModulUpdateChunk(*modulID, uploadID, userID, offset, bodyReader)
 	}
 	if err != nil {
 		return handleTusChunkError(c, err, ctrl.config.Upload.TusVersion)

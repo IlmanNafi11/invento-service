@@ -8,28 +8,28 @@ import (
 	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type ModulController struct {
 	*base.BaseController
-	modulUsecase    usecase.ModulUsecase
-	tusModulUsecase any
-	config          *config.Config
+	modulUsecase usecase.ModulUsecase
+	config       *config.Config
 }
 
 func NewModulController(
 	modulUsecase usecase.ModulUsecase,
-	tusModulUsecase any,
 	config *config.Config,
 	baseCtrl *base.BaseController,
 ) *ModulController {
 	return &ModulController{
-		BaseController:  baseCtrl,
-		modulUsecase:    modulUsecase,
-		tusModulUsecase: tusModulUsecase,
-		config:          config,
+		BaseController: baseCtrl,
+		modulUsecase:   modulUsecase,
+		config:         config,
 	}
 }
 
@@ -60,13 +60,6 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	var params domain.ModulListQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
-	}
-
-	if params.Page <= 0 {
-		params.Page = 1
-	}
-	if params.Limit <= 0 {
-		params.Limit = 10
 	}
 
 	result, err := ctrl.modulUsecase.GetList(userID, params.Search, params.FilterType, params.FilterStatus, params.Page, params.Limit)
@@ -212,5 +205,15 @@ func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 		return ctrl.SendInternalError(c)
 	}
 
-	return c.Download(filePath)
+	err = c.Download(filePath)
+	if err != nil {
+		return err
+	}
+
+	cleanPath := filepath.ToSlash(filepath.Clean(filePath))
+	if strings.Contains(cleanPath, "/uploads/temp/") || strings.HasPrefix(cleanPath, "uploads/temp/") || strings.HasPrefix(cleanPath, "./uploads/temp/") {
+		_ = os.Remove(filePath)
+	}
+
+	return nil
 }
