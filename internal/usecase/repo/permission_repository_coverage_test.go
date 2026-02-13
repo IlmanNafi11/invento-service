@@ -1,8 +1,9 @@
-package repo
+package repo_test
 
 import (
 	"fiber-boiler-plate/internal/domain"
 	testhelper "fiber-boiler-plate/internal/testing"
+	"fiber-boiler-plate/internal/usecase/repo"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,8 @@ func TestPermissionRepository_Create_Success(t *testing.T) {
 		Label:    "Read users",
 	}
 
-	repo := NewPermissionRepository(db)
-	err = repo.Create(permission)
+	permissionRepo := repo.NewPermissionRepository(db)
+	err = permissionRepo.Create(permission)
 	assert.NoError(t, err)
 	assert.NotZero(t, permission.ID)
 }
@@ -41,8 +42,8 @@ func TestPermissionRepository_GetByID_Success(t *testing.T) {
 	err = db.Create(permission).Error
 	require.NoError(t, err)
 
-	repo := NewPermissionRepository(db)
-	result, err := repo.GetByID(permission.ID)
+	permissionRepo := repo.NewPermissionRepository(db)
+	result, err := permissionRepo.GetByID(permission.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, permission.ID, result.ID)
@@ -63,8 +64,8 @@ func TestPermissionRepository_GetByResourceAndAction_Success(t *testing.T) {
 	err = db.Create(permission).Error
 	require.NoError(t, err)
 
-	repo := NewPermissionRepository(db)
-	result, err := repo.GetByResourceAndAction("users", "write")
+	permissionRepo := repo.NewPermissionRepository(db)
+	result, err := permissionRepo.GetByResourceAndAction("users", "write")
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, "users", result.Resource)
@@ -88,8 +89,8 @@ func TestPermissionRepository_GetAll_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewPermissionRepository(db)
-	result, err := repo.GetAll()
+	permissionRepo := repo.NewPermissionRepository(db)
+	result, err := permissionRepo.GetAll()
 	assert.NoError(t, err)
 	assert.Len(t, result, 3)
 }
@@ -112,8 +113,8 @@ func TestPermissionRepository_GetAvailablePermissions_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewPermissionRepository(db)
-	result, err := repo.GetAvailablePermissions()
+	permissionRepo := repo.NewPermissionRepository(db)
+	result, err := permissionRepo.GetAvailablePermissions()
 	assert.NoError(t, err)
 	assert.Len(t, result, 2) // 2 resources: users, projects
 
@@ -139,12 +140,72 @@ func TestPermissionRepository_BulkCreate_Success(t *testing.T) {
 		{Resource: "users", Action: "delete", Label: "Delete users"},
 	}
 
-	repo := NewPermissionRepository(db)
-	err = repo.BulkCreate(permissions)
+	permissionRepo := repo.NewPermissionRepository(db)
+	err = permissionRepo.BulkCreate(permissions)
 	assert.NoError(t, err)
 
 	// Verify all created
 	var count int64
 	db.Model(&domain.Permission{}).Count(&count)
 	assert.Equal(t, int64(3), count)
+}
+
+func TestPermissionRepository_GetAllByResourceActions_Success(t *testing.T) {
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	seed := []domain.Permission{
+		{Resource: "users", Action: "read", Label: "Read users"},
+		{Resource: "users", Action: "write", Label: "Write users"},
+		{Resource: "projects", Action: "create", Label: "Create projects"},
+	}
+	for i := range seed {
+		err = db.Create(&seed[i]).Error
+		require.NoError(t, err)
+	}
+
+	permissionRepo := repo.NewPermissionRepository(db)
+	result, err := permissionRepo.GetAllByResourceActions(map[string][]string{
+		"users":    {"read"},
+		"projects": {"create"},
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	actions := map[string]bool{}
+	for _, perm := range result {
+		actions[perm.Resource+":"+perm.Action] = true
+	}
+	assert.True(t, actions["users:read"])
+	assert.True(t, actions["projects:create"])
+}
+
+func TestPermissionRepository_GetAllByResourceActions_Empty(t *testing.T) {
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	permissionRepo := repo.NewPermissionRepository(db)
+	result, err := permissionRepo.GetAllByResourceActions(map[string][]string{})
+
+	assert.NoError(t, err)
+	assert.Nil(t, result)
+}
+
+func TestPermissionRepository_GetAllByResourceActions_NotFound(t *testing.T) {
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	err = db.Create(&domain.Permission{Resource: "users", Action: "read", Label: "Read users"}).Error
+	require.NoError(t, err)
+
+	permissionRepo := repo.NewPermissionRepository(db)
+	result, err := permissionRepo.GetAllByResourceActions(map[string][]string{
+		"projects": {"delete"},
+	})
+
+	assert.NoError(t, err)
+	assert.Empty(t, result)
 }

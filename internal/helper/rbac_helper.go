@@ -5,6 +5,18 @@ import (
 	"fiber-boiler-plate/internal/domain"
 )
 
+// RBACPermissionRepository defines the permission repo methods needed by RBACHelper.
+// This avoids importing repo package (which would create import cycles with testing).
+type RBACPermissionRepository interface {
+	GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error)
+}
+
+// RBACRolePermissionRepository defines the role-permission repo methods needed by RBACHelper.
+type RBACRolePermissionRepository interface {
+	BulkCreate(rolePermissions []domain.RolePermission) error
+	DeleteByRoleID(roleID uint) error
+}
+
 type RBACHelper struct {
 	casbinEnforcer CasbinEnforcerInterface
 }
@@ -15,26 +27,41 @@ func NewRBACHelper(casbinEnforcer CasbinEnforcerInterface) *RBACHelper {
 	}
 }
 
-func (rh *RBACHelper) SyncPermissionsToRole(roleName string, permissions map[string][]string, permissionRepo interface{}) ([]domain.RolePermissionDetail, int, error) {
-	type PermissionRepo interface {
-		GetByResourceAndAction(resource, action string) (*domain.Permission, error)
+func (rh *RBACHelper) SetRolePermissions(
+	roleID uint,
+	roleName string,
+	permissions map[string][]string,
+	permissionRepo RBACPermissionRepository,
+	rolePermissionRepo RBACRolePermissionRepository,
+) ([]domain.RolePermissionDetail, int, error) {
+	dbPermissions, err := permissionRepo.GetAllByResourceActions(permissions)
+	if err != nil {
+		return nil, 0, errors.New("gagal mengambil data permission")
 	}
 
-	repo, ok := permissionRepo.(PermissionRepo)
-	if !ok {
-		return nil, 0, errors.New("invalid permission repository")
+	permLookup := make(map[string]*domain.Permission)
+	for i := range dbPermissions {
+		key := dbPermissions[i].Resource + ":" + dbPermissions[i].Action
+		permLookup[key] = &dbPermissions[i]
 	}
 
+	var rolePermissions []domain.RolePermission
 	var permissionDetails []domain.RolePermissionDetail
 	permissionCount := 0
 
 	for resource, actions := range permissions {
 		var resourceActions []string
 		for _, action := range actions {
-			_, err := repo.GetByResourceAndAction(resource, action)
-			if err != nil {
+			key := resource + ":" + action
+			perm, exists := permLookup[key]
+			if !exists {
 				continue
 			}
+
+			rolePermissions = append(rolePermissions, domain.RolePermission{
+				RoleID:       roleID,
+				PermissionID: perm.ID,
+			})
 
 			if err := rh.casbinEnforcer.AddPermissionForRole(roleName, resource, action); err != nil {
 				continue
@@ -52,74 +79,17 @@ func (rh *RBACHelper) SyncPermissionsToRole(roleName string, permissions map[str
 		}
 	}
 
-	return permissionDetails, permissionCount, nil
-}
-
-func (rh *RBACHelper) CreateRolePermissions(roleID uint, permissions map[string][]string, permissionRepo interface{}, rolePermissionRepo interface{}) ([]domain.RolePermissionDetail, int, error) {
-	type PermissionRepo interface {
-		GetByResourceAndAction(resource, action string) (*domain.Permission, error)
-	}
-
-	type RolePermissionRepo interface {
-		Create(rolePermission *domain.RolePermission) error
-	}
-
-	pRepo, ok := permissionRepo.(PermissionRepo)
-	if !ok {
-		return nil, 0, errors.New("invalid permission repository")
-	}
-
-	rpRepo, ok := rolePermissionRepo.(RolePermissionRepo)
-	if !ok {
-		return nil, 0, errors.New("invalid role permission repository")
-	}
-
-	var permissionDetails []domain.RolePermissionDetail
-	permissionCount := 0
-
-	for resource, actions := range permissions {
-		var resourceActions []string
-		for _, action := range actions {
-			permission, err := pRepo.GetByResourceAndAction(resource, action)
-			if err != nil {
-				continue
-			}
-
-			rolePermission := &domain.RolePermission{
-				RoleID:       roleID,
-				PermissionID: permission.ID,
-			}
-
-			if err := rpRepo.Create(rolePermission); err != nil {
-				continue
-			}
-
-			resourceActions = append(resourceActions, action)
-			permissionCount++
-		}
-
-		if len(resourceActions) > 0 {
-			permissionDetails = append(permissionDetails, domain.RolePermissionDetail{
-				Resource: resource,
-				Actions:  resourceActions,
-			})
+	if len(rolePermissions) > 0 {
+		if err := rolePermissionRepo.BulkCreate(rolePermissions); err != nil {
+			return nil, 0, errors.New("gagal membuat role permission")
 		}
 	}
 
 	return permissionDetails, permissionCount, nil
 }
 
-func (rh *RBACHelper) RemoveAllRolePermissions(roleID uint, roleName string, rolePermissionRepo interface{}) error {
-	type RolePermissionRepo interface {
-		DeleteByRoleID(roleID uint) error
-	}
-
-	repo, ok := rolePermissionRepo.(RolePermissionRepo)
-	if !ok {
-		return errors.New("invalid role permission repository")
-	}
-
-	if err := repo.DeleteByRoleID(roleID); err != nil {
+func (rh *RBACHelper) RemoveAllRolePermissions(roleID uint, roleName string, rolePermissionRepo RBACRolePermissionRepository) error {
+	if err := rolePermissionRepo.DeleteByRoleID(roleID); err != nil {
 		return errors.New("gagal menghapus permission lama")
 	}
 

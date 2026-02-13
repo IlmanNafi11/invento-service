@@ -1,8 +1,9 @@
-package repo
+package repo_test
 
 import (
 	"fiber-boiler-plate/internal/domain"
 	testhelper "fiber-boiler-plate/internal/testing"
+	"fiber-boiler-plate/internal/usecase/repo"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,8 +25,8 @@ func TestProjectRepository_Create_Success(t *testing.T) {
 		PathFile:    "/test/path",
 	}
 
-	repo := NewProjectRepository(db)
-	err = repo.Create(project)
+	projectRepo := repo.NewProjectRepository(db)
+	err = projectRepo.Create(project)
 	assert.NoError(t, err)
 	assert.NotZero(t, project.ID)
 }
@@ -47,8 +48,8 @@ func TestProjectRepository_GetByID_Success(t *testing.T) {
 	err = db.Create(project).Error
 	require.NoError(t, err)
 
-	repo := NewProjectRepository(db)
-	result, err := repo.GetByID(project.ID)
+	projectRepo := repo.NewProjectRepository(db)
+	result, err := projectRepo.GetByID(project.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, project.ID, result.ID)
@@ -72,9 +73,9 @@ func TestProjectRepository_GetByIDs_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewProjectRepository(db)
+	projectRepo := repo.NewProjectRepository(db)
 	ids := []uint{projects[0].ID, projects[1].ID}
-	result, err := repo.GetByIDs(ids, userID)
+	result, err := projectRepo.GetByIDs(ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 }
@@ -96,9 +97,9 @@ func TestProjectRepository_GetByIDsForUser_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewProjectRepository(db)
+	projectRepo := repo.NewProjectRepository(db)
 	ids := []uint{projects[0].ID, projects[1].ID}
-	result, err := repo.GetByIDsForUser(ids, userID)
+	result, err := projectRepo.GetByIDsForUser(ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 }
@@ -122,28 +123,28 @@ func TestProjectRepository_GetByUserID_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewProjectRepository(db)
+	projectRepo := repo.NewProjectRepository(db)
 
 	// Test without filters
-	result, total, err := repo.GetByUserID(userID, "", 0, "", 1, 10)
+	result, total, err := projectRepo.GetByUserID(userID, "", 0, "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 	assert.Equal(t, 2, total)
 
 	// Test with search
-	result, total, err = repo.GetByUserID(userID, "Project 1", 0, "", 1, 10)
+	result, total, err = projectRepo.GetByUserID(userID, "Project 1", 0, "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with semester filter
-	result, total, err = repo.GetByUserID(userID, "", 2, "", 1, 10)
+	result, total, err = projectRepo.GetByUserID(userID, "", 2, "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with category filter
-	result, total, err = repo.GetByUserID(userID, "", 0, "website", 1, 10)
+	result, total, err = projectRepo.GetByUserID(userID, "", 0, "website", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
@@ -167,8 +168,8 @@ func TestProjectRepository_CountByUserID_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewProjectRepository(db)
-	count, err := repo.CountByUserID(userID)
+	projectRepo := repo.NewProjectRepository(db)
+	count, err := projectRepo.CountByUserID(userID)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
 }
@@ -190,10 +191,10 @@ func TestProjectRepository_Update_Success(t *testing.T) {
 	err = db.Create(project).Error
 	require.NoError(t, err)
 
-	repo := NewProjectRepository(db)
+	projectRepo := repo.NewProjectRepository(db)
 	project.NamaProject = "New Name"
 	project.Kategori = "mobile"
-	err = repo.Update(project)
+	err = projectRepo.Update(project)
 	assert.NoError(t, err)
 
 	// Verify update
@@ -221,8 +222,8 @@ func TestProjectRepository_Delete_Success(t *testing.T) {
 	err = db.Create(project).Error
 	require.NoError(t, err)
 
-	repo := NewProjectRepository(db)
-	err = repo.Delete(project.ID)
+	projectRepo := repo.NewProjectRepository(db)
+	err = projectRepo.Delete(project.ID)
 	assert.NoError(t, err)
 
 	// Verify deletion

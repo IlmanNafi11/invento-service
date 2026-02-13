@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
 
@@ -46,7 +47,7 @@ func NewRoleUsecase(
 func (uc *roleUsecase) GetAvailablePermissions() ([]domain.ResourcePermissions, error) {
 	permissions, err := uc.permissionRepo.GetAvailablePermissions()
 	if err != nil {
-		return nil, errors.New("gagal mengambil daftar permission")
+		return nil, apperrors.NewInternalError(err)
 	}
 	return permissions, nil
 }
@@ -56,7 +57,7 @@ func (uc *roleUsecase) GetRoleList(params domain.RoleListQueryParams) (*domain.R
 
 	roles, total, err := uc.roleRepo.GetAll(params.Search, paginationParams.Page, paginationParams.Limit)
 	if err != nil {
-		return nil, errors.New("gagal mengambil daftar role")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	pagination := helper.CalculatePagination(paginationParams.Page, paginationParams.Limit, total)
@@ -69,12 +70,12 @@ func (uc *roleUsecase) GetRoleList(params domain.RoleListQueryParams) (*domain.R
 
 func (uc *roleUsecase) CreateRole(req domain.RoleCreateRequest) (*domain.RoleDetailResponse, error) {
 	if err := uc.rbacHelper.ValidatePermissionFormat(req.Permissions); err != nil {
-		return nil, err
+		return nil, apperrors.NewValidationError(err.Error(), err)
 	}
 
 	existingRole, _ := uc.roleRepo.GetByName(req.NamaRole)
 	if existingRole != nil {
-		return nil, errors.New("nama role sudah ada")
+		return nil, apperrors.NewConflictError("Nama role sudah ada")
 	}
 
 	role := &domain.Role{
@@ -82,30 +83,22 @@ func (uc *roleUsecase) CreateRole(req domain.RoleCreateRequest) (*domain.RoleDet
 	}
 
 	if err := uc.roleRepo.Create(role); err != nil {
-		return nil, errors.New("gagal membuat role")
+		return nil, apperrors.NewInternalError(err)
 	}
 
-	permissionDetails, permissionCount, err := uc.rbacHelper.CreateRolePermissions(
+	permissionDetails, permissionCount, err := uc.rbacHelper.SetRolePermissions(
 		role.ID,
+		role.NamaRole,
 		req.Permissions,
 		uc.permissionRepo,
 		uc.rolePermissionRepo,
 	)
 	if err != nil {
-		return nil, err
-	}
-
-	_, _, err = uc.rbacHelper.SyncPermissionsToRole(
-		role.NamaRole,
-		req.Permissions,
-		uc.permissionRepo,
-	)
-	if err != nil {
-		return nil, errors.New("gagal sync permissions ke casbin")
+		return nil, apperrors.NewInternalError(errors.New(err.Error()))
 	}
 
 	if err := uc.rbacHelper.SavePolicy(); err != nil {
-		return nil, errors.New("gagal menyimpan policy casbin")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	return &domain.RoleDetailResponse{
@@ -122,14 +115,14 @@ func (uc *roleUsecase) GetRoleDetail(id uint) (*domain.RoleDetailResponse, error
 	role, err := uc.roleRepo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("role tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("Role")
 		}
-		return nil, errors.New("gagal mengambil detail role")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	permissions, err := uc.rolePermissionRepo.GetPermissionsForRole(id)
 	if err != nil {
-		return nil, errors.New("gagal mengambil permission role")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	return uc.rbacHelper.BuildRoleDetailResponse(role, permissions), nil
@@ -137,21 +130,21 @@ func (uc *roleUsecase) GetRoleDetail(id uint) (*domain.RoleDetailResponse, error
 
 func (uc *roleUsecase) UpdateRole(id uint, req domain.RoleUpdateRequest) (*domain.RoleDetailResponse, error) {
 	if err := uc.rbacHelper.ValidatePermissionFormat(req.Permissions); err != nil {
-		return nil, err
+		return nil, apperrors.NewValidationError(err.Error(), err)
 	}
 
 	role, err := uc.roleRepo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("role tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("Role")
 		}
-		return nil, errors.New("gagal mengambil role")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	if role.NamaRole != req.NamaRole {
 		existingRole, _ := uc.roleRepo.GetByName(req.NamaRole)
 		if existingRole != nil {
-			return nil, errors.New("nama role sudah ada")
+			return nil, apperrors.NewConflictError("Nama role sudah ada")
 		}
 	}
 
@@ -159,34 +152,26 @@ func (uc *roleUsecase) UpdateRole(id uint, req domain.RoleUpdateRequest) (*domai
 	role.NamaRole = req.NamaRole
 
 	if err := uc.roleRepo.Update(role); err != nil {
-		return nil, errors.New("gagal memperbarui role")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	if err := uc.rbacHelper.RemoveAllRolePermissions(id, oldRoleName, uc.rolePermissionRepo); err != nil {
-		return nil, err
+		return nil, apperrors.NewInternalError(errors.New(err.Error()))
 	}
 
-	permissionDetails, permissionCount, err := uc.rbacHelper.CreateRolePermissions(
+	permissionDetails, permissionCount, err := uc.rbacHelper.SetRolePermissions(
 		role.ID,
+		role.NamaRole,
 		req.Permissions,
 		uc.permissionRepo,
 		uc.rolePermissionRepo,
 	)
 	if err != nil {
-		return nil, err
-	}
-
-	_, _, err = uc.rbacHelper.SyncPermissionsToRole(
-		role.NamaRole,
-		req.Permissions,
-		uc.permissionRepo,
-	)
-	if err != nil {
-		return nil, errors.New("gagal sync permissions ke casbin")
+		return nil, apperrors.NewInternalError(errors.New(err.Error()))
 	}
 
 	if err := uc.rbacHelper.SavePolicy(); err != nil {
-		return nil, errors.New("gagal menyimpan policy casbin")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	return &domain.RoleDetailResponse{
@@ -203,25 +188,25 @@ func (uc *roleUsecase) DeleteRole(id uint) error {
 	role, err := uc.roleRepo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("role tidak ditemukan")
+			return apperrors.NewNotFoundError("Role")
 		}
-		return errors.New("gagal mengambil role")
+		return apperrors.NewInternalError(err)
 	}
 
 	if err := uc.rbacHelper.RemoveAllRolePermissions(id, role.NamaRole, uc.rolePermissionRepo); err != nil {
-		return err
+		return apperrors.NewInternalError(errors.New(err.Error()))
 	}
 
 	if err := uc.casbinEnforcer.DeleteRole(role.NamaRole); err != nil {
-		return errors.New("gagal menghapus role dari casbin")
+		return apperrors.NewInternalError(err)
 	}
 
 	if err := uc.roleRepo.Delete(id); err != nil {
-		return errors.New("gagal menghapus role")
+		return apperrors.NewInternalError(err)
 	}
 
 	if err := uc.rbacHelper.SavePolicy(); err != nil {
-		return errors.New("gagal menyimpan policy casbin")
+		return apperrors.NewInternalError(err)
 	}
 
 	return nil

@@ -1,8 +1,9 @@
-package repo
+package repo_test
 
 import (
 	"fiber-boiler-plate/internal/domain"
 	testhelper "fiber-boiler-plate/internal/testing"
+	"fiber-boiler-plate/internal/usecase/repo"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,8 +16,8 @@ func TestRolePermissionRepository_NewRolePermissionRepository(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	repo := NewRolePermissionRepository(db)
-	assert.NotNil(t, repo)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	assert.NotNil(t, rolePermissionRepo)
 }
 
 // TestRolePermissionRepository_Create_Success tests successful role-permission creation
@@ -44,8 +45,8 @@ func TestRolePermissionRepository_Create_Success(t *testing.T) {
 		PermissionID: permission.ID,
 	}
 
-	repo := NewRolePermissionRepository(db)
-	err = repo.Create(rolePermission)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.Create(rolePermission)
 	assert.NoError(t, err)
 	assert.NotZero(t, rolePermission.ID)
 
@@ -81,8 +82,8 @@ func TestRolePermissionRepository_Create_Duplicate(t *testing.T) {
 		RoleID:       role.ID,
 		PermissionID: permission.ID,
 	}
-	repo := NewRolePermissionRepository(db)
-	err = repo.Create(rolePermission)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.Create(rolePermission)
 	assert.NoError(t, err)
 
 	// Note: SQLite with GORM AutoMigrate doesn't create unique constraints by default
@@ -92,7 +93,7 @@ func TestRolePermissionRepository_Create_Duplicate(t *testing.T) {
 		RoleID:       role.ID,
 		PermissionID: permission.ID,
 	}
-	err = repo.Create(duplicateRP)
+	err = rolePermissionRepo.Create(duplicateRP)
 	// With proper unique constraint, this would error
 	// For now, we verify both records can coexist in test environment
 	_ = duplicateRP // Document behavior
@@ -119,8 +120,8 @@ func TestRolePermissionRepository_Create_InvalidRoleID(t *testing.T) {
 		PermissionID: permission.ID,
 	}
 
-	repo := NewRolePermissionRepository(db)
-	err = repo.Create(rolePermission)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.Create(rolePermission)
 	// Note: SQLite doesn't enforce foreign keys by default
 	// In production with proper FK constraints, this would fail
 	// This test documents the expected behavior
@@ -157,8 +158,8 @@ func TestRolePermissionRepository_GetByRoleID_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewRolePermissionRepository(db)
-	result, err := repo.GetByRoleID(role.ID)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	result, err := rolePermissionRepo.GetByRoleID(role.ID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 3)
 
@@ -175,8 +176,8 @@ func TestRolePermissionRepository_GetByRoleID_NotFound(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	repo := NewRolePermissionRepository(db)
-	result, err := repo.GetByRoleID(999)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	result, err := rolePermissionRepo.GetByRoleID(999)
 	assert.NoError(t, err)
 	assert.Empty(t, result)
 	assert.Len(t, result, 0)
@@ -208,8 +209,8 @@ func TestRolePermissionRepository_GetByRoleID_WithPreload(t *testing.T) {
 	err = db.Create(rolePermission).Error
 	require.NoError(t, err)
 
-	repo := NewRolePermissionRepository(db)
-	result, err := repo.GetByRoleID(role.ID)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	result, err := rolePermissionRepo.GetByRoleID(role.ID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 
@@ -254,8 +255,8 @@ func TestRolePermissionRepository_DeleteByRoleID_Success(t *testing.T) {
 	assert.Equal(t, int64(2), countBefore)
 
 	// Delete all permissions for role
-	repo := NewRolePermissionRepository(db)
-	err = repo.DeleteByRoleID(role.ID)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.DeleteByRoleID(role.ID)
 	assert.NoError(t, err)
 
 	// Verify deletion
@@ -275,8 +276,8 @@ func TestRolePermissionRepository_DeleteByRoleID_NoAssociations(t *testing.T) {
 	err = db.Create(role).Error
 	require.NoError(t, err)
 
-	repo := NewRolePermissionRepository(db)
-	err = repo.DeleteByRoleID(role.ID)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.DeleteByRoleID(role.ID)
 	assert.NoError(t, err) // Should succeed even with no associations
 }
 
@@ -286,8 +287,8 @@ func TestRolePermissionRepository_DeleteByRoleID_NonExistentRole(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	repo := NewRolePermissionRepository(db)
-	err = repo.DeleteByRoleID(999)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.DeleteByRoleID(999)
 	assert.NoError(t, err) // GORM doesn't error on deleting non-existent records
 }
 
@@ -321,8 +322,8 @@ func TestRolePermissionRepository_GetPermissionsForRole_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewRolePermissionRepository(db)
-	result, err := repo.GetPermissionsForRole(role.ID)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	result, err := rolePermissionRepo.GetPermissionsForRole(role.ID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 4)
 
@@ -347,8 +348,8 @@ func TestRolePermissionRepository_GetPermissionsForRole_NoPermissions(t *testing
 	err = db.Create(role).Error
 	require.NoError(t, err)
 
-	repo := NewRolePermissionRepository(db)
-	result, err := repo.GetPermissionsForRole(role.ID)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	result, err := rolePermissionRepo.GetPermissionsForRole(role.ID)
 	assert.NoError(t, err)
 	assert.Empty(t, result)
 }
@@ -359,8 +360,8 @@ func TestRolePermissionRepository_GetPermissionsForRole_NonExistentRole(t *testi
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	repo := NewRolePermissionRepository(db)
-	result, err := repo.GetPermissionsForRole(999)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	result, err := rolePermissionRepo.GetPermissionsForRole(999)
 	assert.NoError(t, err)
 	assert.Empty(t, result)
 }
@@ -403,15 +404,15 @@ func TestRolePermissionRepository_GetPermissionsForRole_MultipleRoles(t *testing
 		require.NoError(t, err)
 	}
 
-	repo := NewRolePermissionRepository(db)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
 
 	// Get admin permissions
-	adminResult, err := repo.GetPermissionsForRole(role1.ID)
+	adminResult, err := rolePermissionRepo.GetPermissionsForRole(role1.ID)
 	assert.NoError(t, err)
 	assert.Len(t, adminResult, 2)
 
 	// Get user permissions
-	userResult, err := repo.GetPermissionsForRole(role2.ID)
+	userResult, err := rolePermissionRepo.GetPermissionsForRole(role2.ID)
 	assert.NoError(t, err)
 	assert.Len(t, userResult, 2)
 
@@ -439,7 +440,7 @@ func TestRolePermissionRepository_Integration_FullWorkflow(t *testing.T) {
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
 
-	repo := NewRolePermissionRepository(db)
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
 
 	// Step 1: Create role and permissions
 	role := &domain.Role{NamaRole: "manager"}
@@ -464,17 +465,17 @@ func TestRolePermissionRepository_Integration_FullWorkflow(t *testing.T) {
 			RoleID:       role.ID,
 			PermissionID: perm.ID,
 		}
-		err = repo.Create(rolePermission)
+		err = rolePermissionRepo.Create(rolePermission)
 		assert.NoError(t, err)
 	}
 
 	// Step 3: Get role permissions with preload
-	rolePermissions, err := repo.GetByRoleID(role.ID)
+	rolePermissions, err := rolePermissionRepo.GetByRoleID(role.ID)
 	assert.NoError(t, err)
 	assert.Len(t, rolePermissions, 3)
 
 	// Step 4: Get permissions via JOIN
-	permissionsViaJoin, err := repo.GetPermissionsForRole(role.ID)
+	permissionsViaJoin, err := rolePermissionRepo.GetPermissionsForRole(role.ID)
 	assert.NoError(t, err)
 	assert.Len(t, permissionsViaJoin, 3)
 
@@ -482,16 +483,88 @@ func TestRolePermissionRepository_Integration_FullWorkflow(t *testing.T) {
 	assert.Len(t, rolePermissions, len(permissionsViaJoin))
 
 	// Step 6: Delete all permissions for role
-	err = repo.DeleteByRoleID(role.ID)
+	err = rolePermissionRepo.DeleteByRoleID(role.ID)
 	assert.NoError(t, err)
 
 	// Step 7: Verify deletion via GetByRoleID
-	rolePermissionsAfter, err := repo.GetByRoleID(role.ID)
+	rolePermissionsAfter, err := rolePermissionRepo.GetByRoleID(role.ID)
 	assert.NoError(t, err)
 	assert.Len(t, rolePermissionsAfter, 0, "GetByRoleID should return 0 after deletion")
 
 	// Step 8: Verify deletion via GetPermissionsForRole
-	permissionsAfter, err := repo.GetPermissionsForRole(role.ID)
+	permissionsAfter, err := rolePermissionRepo.GetPermissionsForRole(role.ID)
 	assert.NoError(t, err)
 	assert.Len(t, permissionsAfter, 0, "GetPermissionsForRole should return 0 after deletion")
+}
+
+func TestRolePermissionRepository_BulkCreate_Success(t *testing.T) {
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	role := &domain.Role{NamaRole: "bulk-admin"}
+	err = db.Create(role).Error
+	require.NoError(t, err)
+
+	permissions := []domain.Permission{
+		{Resource: "users", Action: "read", Label: "Read users"},
+		{Resource: "users", Action: "write", Label: "Write users"},
+	}
+	for i := range permissions {
+		err = db.Create(&permissions[i]).Error
+		require.NoError(t, err)
+	}
+
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.BulkCreate([]domain.RolePermission{
+		{RoleID: role.ID, PermissionID: permissions[0].ID},
+		{RoleID: role.ID, PermissionID: permissions[1].ID},
+	})
+
+	assert.NoError(t, err)
+	result, err := rolePermissionRepo.GetByRoleID(role.ID)
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+}
+
+func TestRolePermissionRepository_BulkCreate_Empty(t *testing.T) {
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.BulkCreate([]domain.RolePermission{})
+
+	assert.NoError(t, err)
+}
+
+func TestRolePermissionRepository_BulkCreate_DuplicateKey(t *testing.T) {
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	role := &domain.Role{NamaRole: "bulk-dup"}
+	err = db.Create(role).Error
+	require.NoError(t, err)
+
+	permission := &domain.Permission{Resource: "projects", Action: "read", Label: "Read projects"}
+	err = db.Create(permission).Error
+	require.NoError(t, err)
+
+	rolePermissionRepo := repo.NewRolePermissionRepository(db)
+	err = rolePermissionRepo.BulkCreate([]domain.RolePermission{{RoleID: role.ID, PermissionID: permission.ID}})
+	require.NoError(t, err)
+
+	err = rolePermissionRepo.BulkCreate([]domain.RolePermission{{RoleID: role.ID, PermissionID: permission.ID}})
+	if err != nil {
+		assert.Error(t, err)
+		return
+	}
+
+	var count int64
+	err = db.Model(&domain.RolePermission{}).Where("role_id = ? AND permission_id = ?", role.ID, permission.ID).Count(&count).Error
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, count, int64(1))
+	assert.LessOrEqual(t, count, int64(2))
+	assert.NoError(t, err)
 }

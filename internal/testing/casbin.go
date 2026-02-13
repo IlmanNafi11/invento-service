@@ -1,33 +1,13 @@
 package testing
 
 import (
+	"fiber-boiler-plate/internal/helper"
 	"fmt"
 
 	"github.com/casbin/casbin/v2"
 	casbinmodel "github.com/casbin/casbin/v2/model"
 	fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
 )
-
-// CasbinEnforcerInterface defines the interface that CasbinEnforcer implements.
-type CasbinEnforcerInterface interface {
-	AddPermissionForRole(roleName, resource, action string) error
-	RemovePermissionForRole(roleName, resource, action string) error
-	RemoveAllPermissionsForRole(roleName string) error
-	GetPermissionsForRole(roleName string) ([][]string, error)
-	CheckPermission(roleName, resource, action string) (bool, error)
-	SavePolicy() error
-	LoadPolicy() error
-	DeleteRole(roleName string) error
-	GetEnforcer() *casbin.Enforcer
-	GetAllRoles() ([]string, error)
-	GetAllPolicies() ([][]string, error)
-	HasPolicy(roleName, resource, action string) (bool, error)
-	AddRoleForUser(userID, roleName string) error
-	RemoveRoleForUser(userID, roleName string) error
-	GetRolesForUser(userID string) ([]string, error)
-	GetUsersForRole(roleName string) ([]string, error)
-	DeleteAllRolesForUser(userID string) error
-}
 
 const CasbinModelText = `[request_definition]
 r = sub, obj, act
@@ -49,7 +29,7 @@ type TestCasbinEnforcer struct {
 	enforcer *casbin.Enforcer
 }
 
-func NewTestCasbinEnforcer() (*TestCasbinEnforcer, error) {
+func NewTestCasbinEnforcer() (helper.CasbinEnforcerInterface, error) {
 	m, err := casbinmodel.NewModelFromString(CasbinModelText)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create casbin model: %w", err)
@@ -63,24 +43,29 @@ func NewTestCasbinEnforcer() (*TestCasbinEnforcer, error) {
 	return &TestCasbinEnforcer{enforcer: e}, nil
 }
 
-func NewTestCasbinEnforcerWithPolicies(policies [][]string) (*TestCasbinEnforcer, error) {
+func NewTestCasbinEnforcerWithPolicies(policies [][]string) (helper.CasbinEnforcerInterface, error) {
 	te, err := NewTestCasbinEnforcer()
 	if err != nil {
 		return nil, err
 	}
 
+	testEnforcer, ok := te.(*TestCasbinEnforcer)
+	if !ok {
+		return nil, fmt.Errorf("invalid test casbin enforcer type")
+	}
+
 	for _, policy := range policies {
 		if len(policy) >= 3 {
-			if _, err := te.enforcer.AddPolicy(policy[0], policy[1], policy[2]); err != nil {
+			if _, err := testEnforcer.enforcer.AddPolicy(policy[0], policy[1], policy[2]); err != nil {
 				return nil, fmt.Errorf("failed to add policy %v: %w", policy, err)
 			}
 		}
 	}
 
-	return te, nil
+	return testEnforcer, nil
 }
 
-func NewTestCasbinEnforcerFromFile(policyPath string) (*TestCasbinEnforcer, error) {
+func NewTestCasbinEnforcerFromFile(policyPath string) (helper.CasbinEnforcerInterface, error) {
 	m, err := casbinmodel.NewModelFromString(CasbinModelText)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create casbin model: %w", err)
@@ -235,4 +220,4 @@ func (te *TestCasbinEnforcer) Reset() error {
 	return nil
 }
 
-var _ CasbinEnforcerInterface = (*TestCasbinEnforcer)(nil)
+var _ helper.CasbinEnforcerInterface = (*TestCasbinEnforcer)(nil)

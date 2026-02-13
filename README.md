@@ -5,11 +5,11 @@ Backend boilerplate menggunakan Fiber Framework dengan implementasi Clean Archit
 ## Fitur
 
 - ✅ Clean Architecture dengan Domain Driven Design
-- ✅ Authentication System (Register, Login, Refresh Token, Reset Password, Logout)
-- ✅ PostgreSQL Integration dengan GORM
-- ✅ Redis Integration dengan Health Check & Monitoring
-- ✅ JWT Token Authentication dengan Access & Refresh Token
-- ✅ Password Hashing dengan BCrypt
+- ✅ Authentication System via Supabase Auth (Register, Login, Refresh Token, Reset Password, Logout)
+- ✅ Supabase PostgreSQL Integration dengan GORM
+- ✅ RBAC Authorization via Casbin (Admin, Dosen, Mahasiswa)
+- ✅ JWT Token Verification (Supabase HMAC tokens, local verification)
+- ✅ Persistent Sessions via httpOnly Cookies (access + refresh tokens)
 - ✅ Request Validation dengan Comprehensive Error Handling
 - ✅ Standardized API Response dengan Pagination Support
 - ✅ Database Migration & Seeder Otomatis
@@ -27,11 +27,12 @@ Backend boilerplate menggunakan Fiber Framework dengan implementasi Clean Archit
 - **Framework**: Fiber v2.52.9
 - **Database**: PostgreSQL dengan GORM v1.25.12
 - **Cache**: Redis v9.14.0 dengan go-redis
-- **Authentication**: JWT v4.5.2
+- **Authentication**: Supabase Auth (HMAC JWT verification via golang-jwt v4.5.2)
+- **Authorization**: Casbin RBAC v2
 - **Validation**: Go Playground Validator v10.27.0
 - **Config**: Viper v1.21.0
-- **Password Hash**: BCrypt
 - **UUID**: Google UUID v1.6.0
+- **File Upload**: TUS Protocol (resumable uploads)
 - **Testing**: Go Testing dengan Testify
 
 ## Struktur Project
@@ -59,13 +60,21 @@ fiber-boiler-plate/
 │   │   ├── health_controller.go
 │   │   └── test/            # Controller tests
 │   ├── domain/              # Domain entities & models
-│   │   ├── auth.go          # Authentication entities
-│   │   ├── health.go        # Health check entities dengan Redis
+│   │   ├── auth.go          # Authentication entities (Supabase Auth types)
+│   │   ├── health.go        # Health check entities
 │   │   ├── response.go      # Response models
 │   │   ├── user.go          # User entities
 │   │   └── test/            # Domain tests
+│   ├── supabase/            # Supabase integration
+│   │   ├── auth.go          # Supabase Auth service implementation
+│   │   ├── client.go        # Supabase client initialization
+│   │   ├── errors.go        # Supabase error parsing
+│   │   ├── jwt_verifier.go  # JWT HMAC verification
+│   │   └── types.go         # Supabase types
 │   ├── helper/              # Utilities & helpers
-│   │   ├── jwt.go           # JWT utilities
+│   │   ├── middleware.go    # Auth & RBAC middleware
+│   │   ├── cookie_helper.go # Cookie management (httpOnly tokens)
+│   │   ├── casbin.go        # Casbin RBAC enforcer
 │   │   ├── response.go      # Response helpers
 │   │   ├── validation.go    # Validation helpers
 │   │   └── test/            # Helper tests
@@ -73,10 +82,8 @@ fiber-boiler-plate/
 │       ├── auth_usecase.go  # Authentication use cases
 │       ├── health_usecase.go # Health check use cases
 │       ├── repo/            # Repository layer
-│       │   ├── password_reset_token_repository.go
-│       │   ├── redis_repository.go  # Redis repository implementation
-│       │   ├── refresh_token_repository.go
 │       │   ├── user_repository.go
+│       │   ├── role_repository.go
 │       │   └── test/        # Repository tests
 │       └── test/            # Use case tests
 ├── migrations/app/          # Database migrations
@@ -96,8 +103,7 @@ fiber-boiler-plate/
 ### 1. Prerequisites
 
 - Go 1.24+
-- PostgreSQL 13+
-- Redis 6.0+ (Optional, aplikasi tetap berjalan tanpa Redis)
+- Supabase Project (untuk authentication dan database)
 - Git
 
 ### 2. Clone Repository
@@ -120,81 +126,33 @@ Edit file `.env` sesuai konfigurasi environment Anda:
 ```env
 # Application Configuration
 APP_ENV=development
-APP_NAME=Fiber Boilerplate
+APP_NAME=Invento Service
 APP_PORT=3000
+CORS_ORIGIN_DEV=http://localhost:5173
+CORS_ORIGIN_PROD=https://yourdomain.com
 
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=your-password
-DB_NAME=fiber_boilerplate
-DB_SSL_MODE=disable
-DB_AUTO_MIGRATE=true
-DB_SEED_DATA=true
-
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_EXPIRE_HOURS=24
-REFRESH_TOKEN_EXPIRE_HOURS=168
-
-# Mail Configuration (untuk reset password)
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
-MAIL_FROM=noreply@yourapp.com
-
-# Redis Configuration (Optional)
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_DB=0
-REDIS_MAX_RETRIES=3
-REDIS_POOL_SIZE=10
-REDIS_POOL_TIMEOUT=30
-REDIS_IDLE_TIMEOUT=300
-REDIS_IDLE_CHECK_FREQUENCY=60
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_JWT_SECRET=your-jwt-secret
+SUPABASE_DB_URL=postgresql://postgres:password@db.your-project.supabase.co:5432/postgres
 ```
 
-### 4. Database Setup
+### 4. Supabase Setup
 
-Buat database PostgreSQL:
+Buat project di [Supabase](https://supabase.com) dan konfigurasi:
+1. Copy URL, Service Role Key, Anon Key, dan JWT Secret dari project settings
+2. Aktifkan email provider di Authentication settings
+3. Jalankan migration untuk membuat tabel `user_profiles` dan `roles`
 
-```sql
-CREATE DATABASE fiber_boilerplate;
-```
-
-### 5. Redis Setup (Optional)
-
-Install dan jalankan Redis server:
-
-**Ubuntu/Debian:**
-```bash
-sudo apt update
-sudo apt install redis-server
-sudo systemctl start redis-server
-sudo systemctl enable redis-server
-```
-
-**macOS:**
-```bash
-brew install redis
-brew services start redis
-```
-
-**Docker:**
-```bash
-docker run -d --name redis -p 6379:6379 redis:alpine
-```
-
-### 6. Install Dependencies
+### 5. Install Dependencies
 
 ```bash
 go mod tidy
 ```
 
-### 7. Run Application
+### 6. Run Application
 
 **Development mode:**
 ```bash
@@ -220,11 +178,10 @@ Server akan berjalan di http://localhost:3000
 
 | Method | Endpoint | Deskripsi | Auth Required |
 |--------|----------|-----------|---------------|
-| POST | `/api/v1/auth/register` | Registrasi user baru | ❌ |
-| POST | `/api/v1/auth/login` | Login user | ❌ |
-| POST | `/api/v1/auth/refresh` | Refresh access token | ❌ |
-| POST | `/api/v1/auth/reset-password` | Request reset password | ❌ |
-| POST | `/api/v1/auth/reset-password/confirm` | Konfirmasi reset password | ❌ |
+| POST | `/api/v1/auth/register` | Registrasi user baru (via Supabase Auth) | ❌ |
+| POST | `/api/v1/auth/login` | Login user (via Supabase Auth) | ❌ |
+| POST | `/api/v1/auth/refresh` | Refresh access token (via refresh cookie) | ❌ |
+| POST | `/api/v1/auth/reset-password` | Request reset password link (via Supabase) | ❌ |
 | POST | `/api/v1/auth/logout` | Logout user | ✅ |
 
 ### Health Check & Monitoring
@@ -244,7 +201,7 @@ curl -X POST http://localhost:3000/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "name": "John Doe",
-    "email": "john@example.com",
+    "email": "john@student.polije.ac.id",
     "password": "password123"
   }'
 ```
@@ -254,7 +211,7 @@ curl -X POST http://localhost:3000/api/v1/auth/register \
 curl -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "john@example.com",
+    "email": "john@student.polije.ac.id",
     "password": "password123"
   }'
 ```

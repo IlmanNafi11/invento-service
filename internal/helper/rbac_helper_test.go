@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockCasbinEnforcerForRBAC is a mock implementation of CasbinEnforcerInterface for testing RBACHelper
 type MockCasbinEnforcerForRBAC struct {
 	mock.Mock
 }
@@ -119,37 +118,35 @@ func (m *MockCasbinEnforcerForRBAC) DeleteAllRolesForUser(userID string) error {
 	return args.Error(0)
 }
 
-// MockPermissionRepoForRBAC is a mock implementation of the permission repository
 type MockPermissionRepoForRBAC struct {
-	mock.Mock
+	GetAllByResourceActionsFunc func(permissions map[string][]string) ([]domain.Permission, error)
 }
 
-func (m *MockPermissionRepoForRBAC) GetByResourceAndAction(resource, action string) (*domain.Permission, error) {
-	args := m.Called(resource, action)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
+func (m *MockPermissionRepoForRBAC) GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error) {
+	if m.GetAllByResourceActionsFunc == nil {
+		return nil, nil
 	}
-	return args.Get(0).(*domain.Permission), args.Error(1)
+	return m.GetAllByResourceActionsFunc(permissions)
 }
 
-// MockRolePermissionRepoForRBAC is a mock implementation of the role permission repository
 type MockRolePermissionRepoForRBAC struct {
-	mock.Mock
+	BulkCreateFunc     func(rolePermissions []domain.RolePermission) error
+	DeleteByRoleIDFunc func(roleID uint) error
+}
+
+func (m *MockRolePermissionRepoForRBAC) BulkCreate(rolePermissions []domain.RolePermission) error {
+	if m.BulkCreateFunc == nil {
+		return nil
+	}
+	return m.BulkCreateFunc(rolePermissions)
 }
 
 func (m *MockRolePermissionRepoForRBAC) DeleteByRoleID(roleID uint) error {
-	args := m.Called(roleID)
-	return args.Error(0)
+	if m.DeleteByRoleIDFunc == nil {
+		return nil
+	}
+	return m.DeleteByRoleIDFunc(roleID)
 }
-
-func (m *MockRolePermissionRepoForRBAC) Create(rolePermission *domain.RolePermission) error {
-	args := m.Called(rolePermission)
-	return args.Error(0)
-}
-
-// =============================================================================
-// Tests for NewRBACHelper
-// =============================================================================
 
 func TestNewRBACHelper(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
@@ -165,10 +162,6 @@ func TestNewRBACHelper_NilEnforcer(t *testing.T) {
 	assert.NotNil(t, rh)
 	assert.Nil(t, rh.casbinEnforcer)
 }
-
-// =============================================================================
-// Tests for ValidatePermissionFormat
-// =============================================================================
 
 func TestRBACHelper_ValidatePermissionFormat_EmptyPermissions(t *testing.T) {
 	rh := NewRBACHelper(nil)
@@ -252,337 +245,245 @@ func TestRBACHelper_ValidatePermissionFormat_SingleResourceSingleAction(t *testi
 	assert.NoError(t, err)
 }
 
-// =============================================================================
-// Tests for SyncPermissionsToRole
-// =============================================================================
-
-func TestRBACHelper_SyncPermissionsToRole_InvalidPermissionRepo(t *testing.T) {
+func TestRBACHelper_SetRolePermissions_Success(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	rh := NewRBACHelper(mockCasbin)
-
-	permissions := map[string][]string{
-		"users": {"read"},
-	}
-
-	_, _, err := rh.SyncPermissionsToRole("admin", permissions, "invalid")
-
-	assert.Error(t, err)
-	assert.Equal(t, "invalid permission repository", err.Error())
-}
-
-func TestRBACHelper_SyncPermissionsToRole_PermissionNotFound(t *testing.T) {
-	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
-	rh := NewRBACHelper(mockCasbin)
-
-	permissions := map[string][]string{
-		"users": {"read"},
-	}
-
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(nil, errors.New("not found"))
-
-	details, count, err := rh.SyncPermissionsToRole("admin", permissions, mockPermRepo)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 0, count)
-	assert.Empty(t, details)
-	mockPermRepo.AssertExpectations(t)
-}
-
-func TestRBACHelper_SyncPermissionsToRole_CasbinAddError(t *testing.T) {
-	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
-	rh := NewRBACHelper(mockCasbin)
-
-	permissions := map[string][]string{
-		"users": {"read"},
-	}
-
-	permission := &domain.Permission{ID: 1, Resource: "users", Action: "read"}
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(permission, nil)
-	mockCasbin.On("AddPermissionForRole", "admin", "users", "read").Return(errors.New("casbin error"))
-
-	details, count, err := rh.SyncPermissionsToRole("admin", permissions, mockPermRepo)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 0, count)
-	assert.Empty(t, details)
-	mockPermRepo.AssertExpectations(t)
-	mockCasbin.AssertExpectations(t)
-}
-
-func TestRBACHelper_SyncPermissionsToRole_Success(t *testing.T) {
-	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
 	permissions := map[string][]string{
 		"users": {"read", "write"},
 	}
 
-	permission1 := &domain.Permission{ID: 1, Resource: "users", Action: "read"}
-	permission2 := &domain.Permission{ID: 2, Resource: "users", Action: "write"}
+	mockPermRepo := &MockPermissionRepoForRBAC{
+		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+			assert.Equal(t, permissions, input)
+			return []domain.Permission{
+				{ID: 1, Resource: "users", Action: "read"},
+				{ID: 2, Resource: "users", Action: "write"},
+			}, nil
+		},
+	}
 
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(permission1, nil)
-	mockPermRepo.On("GetByResourceAndAction", "users", "write").Return(permission2, nil)
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
+		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+			assert.Len(t, rolePermissions, 2)
+			assert.Equal(t, uint(10), rolePermissions[0].RoleID)
+			assert.Equal(t, uint(10), rolePermissions[1].RoleID)
+			return nil
+		},
+	}
+
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "read").Return(nil)
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "write").Return(nil)
 
-	details, count, err := rh.SyncPermissionsToRole("admin", permissions, mockPermRepo)
+	details, count, err := rh.SetRolePermissions(10, "admin", permissions, mockPermRepo, mockRolePermRepo)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
 	assert.Len(t, details, 1)
 	assert.Equal(t, "users", details[0].Resource)
-	assert.Len(t, details[0].Actions, 2)
-	mockPermRepo.AssertExpectations(t)
+	assert.ElementsMatch(t, []string{"read", "write"}, details[0].Actions)
 	mockCasbin.AssertExpectations(t)
 }
 
-func TestRBACHelper_SyncPermissionsToRole_MultipleResources(t *testing.T) {
+func TestRBACHelper_SetRolePermissions_PermissionRepoError(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
+	rh := NewRBACHelper(mockCasbin)
+
+	mockPermRepo := &MockPermissionRepoForRBAC{
+		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+			return nil, errors.New("db error")
+		},
+	}
+
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{}
+
+	details, count, err := rh.SetRolePermissions(1, "admin", map[string][]string{"users": {"read"}}, mockPermRepo, mockRolePermRepo)
+
+	assert.Error(t, err)
+	assert.Equal(t, "gagal mengambil data permission", err.Error())
+	assert.Nil(t, details)
+	assert.Equal(t, 0, count)
+}
+
+func TestRBACHelper_SetRolePermissions_BulkCreateError(t *testing.T) {
+	mockCasbin := new(MockCasbinEnforcerForRBAC)
+	rh := NewRBACHelper(mockCasbin)
+
+	permissions := map[string][]string{"users": {"read"}}
+	mockPermRepo := &MockPermissionRepoForRBAC{
+		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+			return []domain.Permission{{ID: 1, Resource: "users", Action: "read"}}, nil
+		},
+	}
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
+		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+			return errors.New("insert error")
+		},
+	}
+
+	mockCasbin.On("AddPermissionForRole", "admin", "users", "read").Return(nil)
+
+	details, count, err := rh.SetRolePermissions(1, "admin", permissions, mockPermRepo, mockRolePermRepo)
+
+	assert.Error(t, err)
+	assert.Equal(t, "gagal membuat role permission", err.Error())
+	assert.Nil(t, details)
+	assert.Equal(t, 0, count)
+	mockCasbin.AssertExpectations(t)
+}
+
+func TestRBACHelper_SetRolePermissions_EmptyPermissions(t *testing.T) {
+	mockCasbin := new(MockCasbinEnforcerForRBAC)
+	rh := NewRBACHelper(mockCasbin)
+
+	mockPermRepo := &MockPermissionRepoForRBAC{
+		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+			assert.Empty(t, input)
+			return nil, nil
+		},
+	}
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
+		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+			t.Fatalf("BulkCreate tidak boleh dipanggil untuk permission kosong")
+			return nil
+		},
+	}
+
+	details, count, err := rh.SetRolePermissions(1, "admin", map[string][]string{}, mockPermRepo, mockRolePermRepo)
+
+	assert.NoError(t, err)
+	assert.Empty(t, details)
+	assert.Equal(t, 0, count)
+}
+
+func TestRBACHelper_SetRolePermissions_MultipleResourcesMultipleActions(t *testing.T) {
+	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
 	permissions := map[string][]string{
-		"users":    {"read"},
-		"projects": {"create"},
+		"users":    {"read", "write"},
+		"projects": {"create", "delete"},
 	}
 
-	permission1 := &domain.Permission{ID: 1, Resource: "users", Action: "read"}
-	permission2 := &domain.Permission{ID: 2, Resource: "projects", Action: "create"}
+	mockPermRepo := &MockPermissionRepoForRBAC{
+		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+			return []domain.Permission{
+				{ID: 1, Resource: "users", Action: "read"},
+				{ID: 2, Resource: "users", Action: "write"},
+				{ID: 3, Resource: "projects", Action: "create"},
+				{ID: 4, Resource: "projects", Action: "delete"},
+			}, nil
+		},
+	}
 
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(permission1, nil)
-	mockPermRepo.On("GetByResourceAndAction", "projects", "create").Return(permission2, nil)
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
+		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+			assert.Len(t, rolePermissions, 4)
+			return nil
+		},
+	}
+
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "read").Return(nil)
+	mockCasbin.On("AddPermissionForRole", "admin", "users", "write").Return(nil)
 	mockCasbin.On("AddPermissionForRole", "admin", "projects", "create").Return(nil)
+	mockCasbin.On("AddPermissionForRole", "admin", "projects", "delete").Return(nil)
 
-	details, count, err := rh.SyncPermissionsToRole("admin", permissions, mockPermRepo)
+	details, count, err := rh.SetRolePermissions(1, "admin", permissions, mockPermRepo, mockRolePermRepo)
 
 	assert.NoError(t, err)
-	assert.Equal(t, 2, count)
+	assert.Equal(t, 4, count)
 	assert.Len(t, details, 2)
-	mockPermRepo.AssertExpectations(t)
 	mockCasbin.AssertExpectations(t)
 }
 
-func TestRBACHelper_SyncPermissionsToRole_PartialSuccess(t *testing.T) {
+func TestRBACHelper_SetRolePermissions_PermissionsNotFoundInDBAreSkipped(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
 	permissions := map[string][]string{
 		"users": {"read", "write", "delete"},
 	}
 
-	permission1 := &domain.Permission{ID: 1, Resource: "users", Action: "read"}
-	permission2 := &domain.Permission{ID: 2, Resource: "users", Action: "write"}
+	mockPermRepo := &MockPermissionRepoForRBAC{
+		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+			return []domain.Permission{
+				{ID: 1, Resource: "users", Action: "read"},
+				{ID: 2, Resource: "users", Action: "write"},
+			}, nil
+		},
+	}
 
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(permission1, nil)
-	mockPermRepo.On("GetByResourceAndAction", "users", "write").Return(permission2, nil)
-	mockPermRepo.On("GetByResourceAndAction", "users", "delete").Return(nil, errors.New("not found"))
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
+		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+			assert.Len(t, rolePermissions, 2)
+			return nil
+		},
+	}
 
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "read").Return(nil)
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "write").Return(nil)
 
-	details, count, err := rh.SyncPermissionsToRole("admin", permissions, mockPermRepo)
+	details, count, err := rh.SetRolePermissions(1, "admin", permissions, mockPermRepo, mockRolePermRepo)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
 	assert.Len(t, details, 1)
-	assert.Equal(t, "users", details[0].Resource)
-	assert.Len(t, details[0].Actions, 2)
-	mockPermRepo.AssertExpectations(t)
+	assert.ElementsMatch(t, []string{"read", "write"}, details[0].Actions)
 	mockCasbin.AssertExpectations(t)
-}
-
-// =============================================================================
-// Tests for CreateRolePermissions
-// =============================================================================
-
-func TestRBACHelper_CreateRolePermissions_InvalidPermissionRepo(t *testing.T) {
-	rh := NewRBACHelper(nil)
-
-	permissions := map[string][]string{
-		"users": {"read"},
-	}
-
-	_, _, err := rh.CreateRolePermissions(1, permissions, "invalid", nil)
-
-	assert.Error(t, err)
-	assert.Equal(t, "invalid permission repository", err.Error())
-}
-
-func TestRBACHelper_CreateRolePermissions_InvalidRolePermissionRepo(t *testing.T) {
-	rh := NewRBACHelper(nil)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
-
-	permissions := map[string][]string{
-		"users": {"read"},
-	}
-
-	_, _, err := rh.CreateRolePermissions(1, permissions, mockPermRepo, "invalid")
-
-	assert.Error(t, err)
-	assert.Equal(t, "invalid role permission repository", err.Error())
-}
-
-func TestRBACHelper_CreateRolePermissions_PermissionNotFound(t *testing.T) {
-	rh := NewRBACHelper(nil)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
-	mockRolePermRepo := new(MockRolePermissionRepoForRBAC)
-
-	permissions := map[string][]string{
-		"users": {"read"},
-	}
-
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(nil, errors.New("not found"))
-
-	details, count, err := rh.CreateRolePermissions(1, permissions, mockPermRepo, mockRolePermRepo)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 0, count)
-	assert.Empty(t, details)
-	mockPermRepo.AssertExpectations(t)
-}
-
-func TestRBACHelper_CreateRolePermissions_CreateError(t *testing.T) {
-	rh := NewRBACHelper(nil)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
-	mockRolePermRepo := new(MockRolePermissionRepoForRBAC)
-
-	permissions := map[string][]string{
-		"users": {"read"},
-	}
-
-	permission := &domain.Permission{ID: 1, Resource: "users", Action: "read"}
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(permission, nil)
-	mockRolePermRepo.On("Create", mock.AnythingOfType("*domain.RolePermission")).Return(errors.New("db error"))
-
-	details, count, err := rh.CreateRolePermissions(1, permissions, mockPermRepo, mockRolePermRepo)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 0, count)
-	assert.Empty(t, details)
-	mockPermRepo.AssertExpectations(t)
-	mockRolePermRepo.AssertExpectations(t)
-}
-
-func TestRBACHelper_CreateRolePermissions_Success(t *testing.T) {
-	rh := NewRBACHelper(nil)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
-	mockRolePermRepo := new(MockRolePermissionRepoForRBAC)
-
-	permissions := map[string][]string{
-		"users": {"read", "write"},
-	}
-
-	permission1 := &domain.Permission{ID: 1, Resource: "users", Action: "read"}
-	permission2 := &domain.Permission{ID: 2, Resource: "users", Action: "write"}
-
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(permission1, nil)
-	mockPermRepo.On("GetByResourceAndAction", "users", "write").Return(permission2, nil)
-	mockRolePermRepo.On("Create", mock.AnythingOfType("*domain.RolePermission")).Return(nil).Twice()
-
-	details, count, err := rh.CreateRolePermissions(1, permissions, mockPermRepo, mockRolePermRepo)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 2, count)
-	assert.Len(t, details, 1)
-	assert.Equal(t, "users", details[0].Resource)
-	assert.Len(t, details[0].Actions, 2)
-	mockPermRepo.AssertExpectations(t)
-	mockRolePermRepo.AssertExpectations(t)
-}
-
-func TestRBACHelper_CreateRolePermissions_MultipleResources(t *testing.T) {
-	rh := NewRBACHelper(nil)
-	mockPermRepo := new(MockPermissionRepoForRBAC)
-	mockRolePermRepo := new(MockRolePermissionRepoForRBAC)
-
-	permissions := map[string][]string{
-		"users":    {"read"},
-		"projects": {"create"},
-	}
-
-	permission1 := &domain.Permission{ID: 1, Resource: "users", Action: "read"}
-	permission2 := &domain.Permission{ID: 2, Resource: "projects", Action: "create"}
-
-	mockPermRepo.On("GetByResourceAndAction", "users", "read").Return(permission1, nil)
-	mockPermRepo.On("GetByResourceAndAction", "projects", "create").Return(permission2, nil)
-	mockRolePermRepo.On("Create", mock.AnythingOfType("*domain.RolePermission")).Return(nil).Twice()
-
-	details, count, err := rh.CreateRolePermissions(1, permissions, mockPermRepo, mockRolePermRepo)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 2, count)
-	assert.Len(t, details, 2)
-	mockPermRepo.AssertExpectations(t)
-	mockRolePermRepo.AssertExpectations(t)
-}
-
-// =============================================================================
-// Tests for RemoveAllRolePermissions
-// =============================================================================
-
-func TestRBACHelper_RemoveAllRolePermissions_InvalidRepo(t *testing.T) {
-	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	rh := NewRBACHelper(mockCasbin)
-
-	err := rh.RemoveAllRolePermissions(1, "admin", "invalid")
-
-	assert.Error(t, err)
-	assert.Equal(t, "invalid role permission repository", err.Error())
 }
 
 func TestRBACHelper_RemoveAllRolePermissions_DeleteByRoleIDError(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	mockRolePermRepo := new(MockRolePermissionRepoForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
-	mockRolePermRepo.On("DeleteByRoleID", uint(1)).Return(errors.New("db error"))
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
+		DeleteByRoleIDFunc: func(roleID uint) error {
+			assert.Equal(t, uint(1), roleID)
+			return errors.New("db error")
+		},
+	}
 
 	err := rh.RemoveAllRolePermissions(1, "admin", mockRolePermRepo)
 
 	assert.Error(t, err)
 	assert.Equal(t, "gagal menghapus permission lama", err.Error())
-	mockRolePermRepo.AssertExpectations(t)
 }
 
 func TestRBACHelper_RemoveAllRolePermissions_CasbinRemoveError(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	mockRolePermRepo := new(MockRolePermissionRepoForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
-	mockRolePermRepo.On("DeleteByRoleID", uint(1)).Return(nil)
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
+		DeleteByRoleIDFunc: func(roleID uint) error {
+			return nil
+		},
+	}
 	mockCasbin.On("RemoveAllPermissionsForRole", "admin").Return(errors.New("casbin error"))
 
 	err := rh.RemoveAllRolePermissions(1, "admin", mockRolePermRepo)
 
 	assert.Error(t, err)
 	assert.Equal(t, "gagal menghapus policy casbin lama", err.Error())
-	mockRolePermRepo.AssertExpectations(t)
 	mockCasbin.AssertExpectations(t)
 }
 
 func TestRBACHelper_RemoveAllRolePermissions_Success(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
-	mockRolePermRepo := new(MockRolePermissionRepoForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
-	mockRolePermRepo.On("DeleteByRoleID", uint(1)).Return(nil)
+	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
+		DeleteByRoleIDFunc: func(roleID uint) error {
+			assert.Equal(t, uint(1), roleID)
+			return nil
+		},
+	}
 	mockCasbin.On("RemoveAllPermissionsForRole", "admin").Return(nil)
 
 	err := rh.RemoveAllRolePermissions(1, "admin", mockRolePermRepo)
 
 	assert.NoError(t, err)
-	mockRolePermRepo.AssertExpectations(t)
 	mockCasbin.AssertExpectations(t)
 }
-
-// =============================================================================
-// Tests for BuildRoleDetailResponse
-// =============================================================================
 
 func TestRBACHelper_BuildRoleDetailResponse_WithPermissions(t *testing.T) {
 	rh := NewRBACHelper(nil)
@@ -605,7 +506,7 @@ func TestRBACHelper_BuildRoleDetailResponse_WithPermissions(t *testing.T) {
 	assert.Equal(t, role.ID, response.ID)
 	assert.Equal(t, role.NamaRole, response.NamaRole)
 	assert.Equal(t, 3, response.JumlahPermission)
-	assert.Len(t, response.Permissions, 2) // 2 unique resources
+	assert.Len(t, response.Permissions, 2)
 	assert.Equal(t, role.CreatedAt, response.CreatedAt)
 	assert.Equal(t, role.UpdatedAt, response.UpdatedAt)
 }
@@ -653,10 +554,6 @@ func TestRBACHelper_BuildRoleDetailResponse_SingleResource(t *testing.T) {
 	assert.Len(t, response.Permissions[0].Actions, 2)
 }
 
-// =============================================================================
-// Tests for CheckUserPermission
-// =============================================================================
-
 func TestRBACHelper_CheckUserPermission_Allowed(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
@@ -695,10 +592,6 @@ func TestRBACHelper_CheckUserPermission_Error(t *testing.T) {
 	assert.False(t, allowed)
 	mockCasbin.AssertExpectations(t)
 }
-
-// =============================================================================
-// Tests for SavePolicy
-// =============================================================================
 
 func TestRBACHelper_SavePolicy_Success(t *testing.T) {
 	mockCasbin := new(MockCasbinEnforcerForRBAC)

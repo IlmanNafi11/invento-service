@@ -13,7 +13,7 @@ type Permission struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	Resource  string    `json:"resource" gorm:"not null;size:100"`
 	Action    string    `json:"action" gorm:"not null;size:50"`
-	Label     string    `json:"label" gorm:"not null;size:255"`
+	Label     string    `json:"label" gorm:"size:255"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

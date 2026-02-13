@@ -46,14 +46,13 @@ func (r *roleRepository) Delete(id uint) error {
 }
 
 func (r *roleRepository) GetAll(search string, page, limit int) ([]domain.RoleListItem, int, error) {
-	var roles []domain.Role
 	var total int64
 
 	query := r.db.Model(&domain.Role{})
 
 	if search != "" {
 		searchPattern := fmt.Sprintf("%%%s%%", search)
-		query = query.Where("nama_role LIKE ?", searchPattern)
+		query = query.Where("nama_role ILIKE ?", searchPattern)
 	}
 
 	if err := query.Count(&total).Error; err != nil {
@@ -61,21 +60,27 @@ func (r *roleRepository) GetAll(search string, page, limit int) ([]domain.RoleLi
 	}
 
 	offset := (page - 1) * limit
-	if err := query.Offset(offset).Limit(limit).Order("updated_at DESC").Find(&roles).Error; err != nil {
+	var roleListItems []domain.RoleListItem
+
+	listQuery := r.db.Model(&domain.Role{}).
+		Select("roles.id, roles.nama_role, roles.updated_at as tanggal_diperbarui, COUNT(role_permissions.id) as jumlah_permission").
+		Joins("LEFT JOIN role_permissions ON role_permissions.role_id = roles.id").
+		Group("roles.id").
+		Order("roles.updated_at DESC").
+		Offset(offset).
+		Limit(limit)
+
+	if search != "" {
+		searchPattern := fmt.Sprintf("%%%s%%", search)
+		listQuery = listQuery.Where("roles.nama_role ILIKE ?", searchPattern)
+	}
+
+	if err := listQuery.Scan(&roleListItems).Error; err != nil {
 		return nil, 0, err
 	}
 
-	var roleListItems []domain.RoleListItem
-	for _, role := range roles {
-		var permissionCount int64
-		r.db.Model(&domain.RolePermission{}).Where("role_id = ?", role.ID).Count(&permissionCount)
-
-		roleListItems = append(roleListItems, domain.RoleListItem{
-			ID:                role.ID,
-			NamaRole:          role.NamaRole,
-			JumlahPermission:  int(permissionCount),
-			TanggalDiperbarui: role.UpdatedAt,
-		})
+	if roleListItems == nil {
+		roleListItems = []domain.RoleListItem{}
 	}
 
 	return roleListItems, int(total), nil

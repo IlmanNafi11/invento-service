@@ -18,6 +18,13 @@ func (r *rolePermissionRepository) Create(rolePermission *domain.RolePermission)
 	return r.db.Create(rolePermission).Error
 }
 
+func (r *rolePermissionRepository) BulkCreate(rolePermissions []domain.RolePermission) error {
+	if len(rolePermissions) == 0 {
+		return nil
+	}
+	return r.db.Create(&rolePermissions).Error
+}
+
 func (r *rolePermissionRepository) GetByRoleID(roleID uint) ([]domain.RolePermission, error) {
 	var rolePermissions []domain.RolePermission
 	err := r.db.Where("role_id = ?", roleID).Preload("Permission").Find(&rolePermissions).Error

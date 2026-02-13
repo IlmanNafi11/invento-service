@@ -1,8 +1,9 @@
-package repo
+package repo_test
 
 import (
 	"fiber-boiler-plate/internal/domain"
 	testhelper "fiber-boiler-plate/internal/testing"
+	"fiber-boiler-plate/internal/usecase/repo"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,8 +27,8 @@ func TestModulRepository_Create_Success(t *testing.T) {
 		Status:    "completed",
 	}
 
-	repo := NewModulRepository(db)
-	err = repo.Create(modul)
+	modulRepo := repo.NewModulRepository(db)
+	err = modulRepo.Create(modul)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, modul.ID)
 }
@@ -51,8 +52,8 @@ func TestModulRepository_GetByID_Success(t *testing.T) {
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
-	repo := NewModulRepository(db)
-	result, err := repo.GetByID(modul.ID)
+	modulRepo := repo.NewModulRepository(db)
+	result, err := modulRepo.GetByID(modul.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, modul.ID, result.ID)
@@ -77,9 +78,9 @@ func TestModulRepository_GetByIDs_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db)
 	ids := []string{moduls[0].ID, moduls[1].ID}
-	result, err := repo.GetByIDs(ids, userID)
+	result, err := modulRepo.GetByIDs(ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 }
@@ -102,9 +103,9 @@ func TestModulRepository_GetByIDsForUser_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db)
 	ids := []string{moduls[0].ID, moduls[1].ID}
-	result, err := repo.GetByIDsForUser(ids, userID)
+	result, err := modulRepo.GetByIDsForUser(ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1) // Only user's modul
 }
@@ -128,28 +129,28 @@ func TestModulRepository_GetByUserID_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db)
 
 	// Test without filters
-	result, total, err := repo.GetByUserID(userID, "", "", "", 1, 10)
+	result, total, err := modulRepo.GetByUserID(userID, "", "", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 	assert.Equal(t, 2, total)
 
 	// Test with search
-	result, total, err = repo.GetByUserID(userID, "Modul 1", "", "", 1, 10)
+	result, total, err = modulRepo.GetByUserID(userID, "Modul 1", "", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with type filter
-	result, total, err = repo.GetByUserID(userID, "", "application/pdf", "", 1, 10)
+	result, total, err = modulRepo.GetByUserID(userID, "", "application/pdf", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with status filter
-	result, total, err = repo.GetByUserID(userID, "", "", "pending", 1, 10)
+	result, total, err = modulRepo.GetByUserID(userID, "", "", "pending", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
@@ -173,8 +174,8 @@ func TestModulRepository_CountByUserID_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	repo := NewModulRepository(db)
-	count, err := repo.CountByUserID(userID)
+	modulRepo := repo.NewModulRepository(db)
+	count, err := modulRepo.CountByUserID(userID)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
 }
@@ -198,10 +199,10 @@ func TestModulRepository_Update_Success(t *testing.T) {
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
-	repo := NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db)
 	modul.Judul = "New Name"
 	modul.Status = "pending"
-	err = repo.Update(modul)
+	err = modulRepo.Update(modul)
 	assert.NoError(t, err)
 
 	// Verify update
@@ -231,8 +232,8 @@ func TestModulRepository_Delete_Success(t *testing.T) {
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
-	repo := NewModulRepository(db)
-	err = repo.Delete(modul.ID)
+	modulRepo := repo.NewModulRepository(db)
+	err = modulRepo.Delete(modul.ID)
 	assert.NoError(t, err)
 
 	// Verify deletion
@@ -260,10 +261,10 @@ func TestModulRepository_UpdateMetadata_Success(t *testing.T) {
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
-	repo := NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db)
 	modul.Judul = "Updated Name"
 	modul.Deskripsi = "Updated Deskripsi"
-	err = repo.UpdateMetadata(modul)
+	err = modulRepo.UpdateMetadata(modul)
 	assert.NoError(t, err)
 
 	// Verify metadata update

@@ -31,6 +31,7 @@ type PermissionRepository interface {
 	Create(permission *domain.Permission) error
 	GetByID(id uint) (*domain.Permission, error)
 	GetByResourceAndAction(resource, action string) (*domain.Permission, error)
+	GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error)
 	GetAll() ([]domain.Permission, error)
 	GetAvailablePermissions() ([]domain.ResourcePermissions, error)
 	BulkCreate(permissions []domain.Permission) error
@@ -38,6 +39,7 @@ type PermissionRepository interface {
 
 type RolePermissionRepository interface {
 	Create(rolePermission *domain.RolePermission) error
+	BulkCreate(rolePermissions []domain.RolePermission) error
 	GetByRoleID(roleID uint) ([]domain.RolePermission, error)
 	DeleteByRoleID(roleID uint) error
 	GetPermissionsForRole(roleID uint) ([]domain.Permission, error)

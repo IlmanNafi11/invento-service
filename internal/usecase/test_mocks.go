@@ -518,6 +518,14 @@ func (m *MockPermissionRepository) GetByResourceAndAction(resource, action strin
 	return args.Get(0).(*domain.Permission), args.Error(1)
 }
 
+func (m *MockPermissionRepository) GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error) {
+	args := m.Called(permissions)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.Permission), args.Error(1)
+}
+
 func (m *MockPermissionRepository) GetAll() ([]domain.Permission, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
@@ -546,6 +554,11 @@ type MockRolePermissionRepository struct {
 
 func (m *MockRolePermissionRepository) Create(rolePermission *domain.RolePermission) error {
 	args := m.Called(rolePermission)
+	return args.Error(0)
+}
+
+func (m *MockRolePermissionRepository) BulkCreate(rolePermissions []domain.RolePermission) error {
+	args := m.Called(rolePermissions)
 	return args.Error(0)
 }
 
