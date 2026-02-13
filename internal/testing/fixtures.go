@@ -211,7 +211,7 @@ func GetTestUpdateModulRequest() domain.ModulUpdateRequest {
 // GetTestAuthResponse returns a test auth response
 func GetTestAuthResponse() domain.AuthResponse {
 	return domain.AuthResponse{
-		User: &domain.User{
+		User: &domain.AuthUserResponse{
 			ID:    "00000000-0000-0000-0000-000000000001",
 			Name:  "Test User",
 			Email: "test@example.com",

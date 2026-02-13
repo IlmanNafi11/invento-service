@@ -94,25 +94,6 @@ func TestValidateStruct_RefreshTokenRequest(t *testing.T) {
 	assert.NotEmpty(t, invalidErrors)
 }
 
-func TestValidateStruct_NewPasswordRequest(t *testing.T) {
-	validReq := domain.NewPasswordRequest{
-		Token:       "valid_token",
-		NewPassword: "newpassword123",
-	}
-
-	validErrors := helper.ValidateStruct(validReq)
-	assert.Empty(t, validErrors)
-
-	invalidReq := domain.NewPasswordRequest{
-		Token:       "",
-		NewPassword: "123",
-	}
-
-	invalidErrors := helper.ValidateStruct(invalidReq)
-	assert.NotEmpty(t, invalidErrors)
-	assert.Greater(t, len(invalidErrors), 1)
-}
-
 // Test structs for various validation tags
 
 type TestRequired struct {

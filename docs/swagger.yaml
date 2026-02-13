@@ -48,7 +48,20 @@ definitions:
       token_type:
         type: string
       user:
-        $ref: '#/definitions/domain.User'
+        $ref: '#/definitions/domain.AuthUserResponse'
+    type: object
+  domain.AuthUserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
     type: object
   domain.BasicHealthCheck:
     properties:
@@ -344,17 +357,6 @@ definitions:
       min:
         type: string
     type: object
-  domain.Role:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      nama_role:
-        type: string
-      updated_at:
-        type: string
-    type: object
   domain.RoleCreateRequest:
     properties:
       nama_role:
@@ -486,29 +488,6 @@ definitions:
         type: string
     required:
     - role
-    type: object
-  domain.User:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      foto_profil:
-        type: string
-      id:
-        type: string
-      is_active:
-        type: boolean
-      jenis_kelamin:
-        type: string
-      name:
-        type: string
-      role:
-        $ref: '#/definitions/domain.Role'
-      role_id:
-        type: integer
-      updated_at:
-        type: string
     type: object
   domain.UserFileItem:
     properties:

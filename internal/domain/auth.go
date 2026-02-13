@@ -88,17 +88,22 @@ type ResetPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
-type NewPasswordRequest struct {
-	Token       string `json:"token" validate:"required"`
-	NewPassword string `json:"new_password" validate:"required,min=8"`
+// AuthUserResponse represents safe user data returned in auth responses.
+// Excludes sensitive fields like RoleID, IsActive from client exposure.
+type AuthUserResponse struct {
+	ID        string `json:"id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Role      string `json:"role,omitempty"`
+	CreatedAt string `json:"created_at,omitempty"`
 }
 
 type AuthResponse struct {
-	User        *User  `json:"user"`
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-	ExpiresAt   int64  `json:"expires_at"`
+	User        *AuthUserResponse `json:"user"`
+	AccessToken string            `json:"access_token"`
+	TokenType   string            `json:"token_type"`
+	ExpiresIn   int               `json:"expires_in"`
+	ExpiresAt   int64             `json:"expires_at"`
 }
 
 type RefreshTokenResponse struct {

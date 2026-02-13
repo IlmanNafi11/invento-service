@@ -129,8 +129,19 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 
 	user.Role = role
 
+	roleName := ""
+	if user.Role != nil {
+		roleName = user.Role.NamaRole
+	}
+
 	domainAuthResp := &domain.AuthResponse{
-		User:        user,
+		User: &domain.AuthUserResponse{
+			ID:        user.ID,
+			Email:     user.Email,
+			Name:      user.Name,
+			Role:      roleName,
+			CreatedAt: user.CreatedAt.Format(time.RFC3339),
+		},
 		AccessToken: authResp.AccessToken,
 		TokenType:   authResp.TokenType,
 		ExpiresIn:   authResp.ExpiresIn,
@@ -190,8 +201,19 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 		return "", nil, apperrors.NewForbiddenError("Akun belum diaktifkan")
 	}
 
+	roleName := ""
+	if user.Role != nil {
+		roleName = user.Role.NamaRole
+	}
+
 	domainAuthResp := &domain.AuthResponse{
-		User:        user,
+		User: &domain.AuthUserResponse{
+			ID:        user.ID,
+			Email:     user.Email,
+			Name:      user.Name,
+			Role:      roleName,
+			CreatedAt: user.CreatedAt.Format(time.RFC3339),
+		},
 		AccessToken: authResp.AccessToken,
 		TokenType:   authResp.TokenType,
 		ExpiresIn:   authResp.ExpiresIn,

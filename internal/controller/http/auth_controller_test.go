@@ -94,7 +94,7 @@ func TestAuthController_Register_Success(t *testing.T) {
 	}
 
 	expectedResponse := &domain.AuthResponse{
-		User: &domain.User{
+		User: &domain.AuthUserResponse{
 			ID:    "user-123",
 			Name:  reqBody.Name,
 			Email: reqBody.Email,
@@ -171,7 +171,7 @@ func TestAuthController_Login_Success(t *testing.T) {
 
 	reqBody := domain.AuthRequest{Email: "test@example.com", Password: "password123"}
 	expectedResponse := &domain.AuthResponse{
-		User:        &domain.User{ID: "user-123", Email: reqBody.Email},
+		User:        &domain.AuthUserResponse{ID: "user-123", Email: reqBody.Email},
 		AccessToken: "access_token",
 		TokenType:   "Bearer",
 		ExpiresIn:   3600,
@@ -290,4 +290,161 @@ func TestAuthController_Logout_ClearsCookies(t *testing.T) {
 	assert.True(t, cleared[helper.RefreshTokenCookieName])
 
 	mockAuthUC.AssertExpectations(t)
+}
+
+func TestAuthController_RequestPasswordReset(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockAuthUC := new(MockAuthUsecase)
+		cfg := getTestConfig()
+		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg)
+
+		app := fiber.New()
+		app.Post("/api/v1/auth/reset-password", controller.RequestPasswordReset)
+
+		reqBody := domain.ResetPasswordRequest{Email: "test@example.com"}
+		mockAuthUC.On("RequestPasswordReset", reqBody).Return(nil)
+
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/v1/auth/reset-password", bytes.NewReader(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := app.Test(req)
+		require.NoError(t, err)
+		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		body := decodeBodyMap(t, resp)
+		assert.Equal(t, true, body["success"])
+		assert.Equal(t, "Link reset password telah dikirim ke email Anda", body["message"])
+
+		mockAuthUC.AssertExpectations(t)
+	})
+
+	t.Run("validation error invalid email format", func(t *testing.T) {
+		mockAuthUC := new(MockAuthUsecase)
+		cfg := getTestConfig()
+		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg)
+
+		app := fiber.New()
+		app.Post("/api/v1/auth/reset-password", controller.RequestPasswordReset)
+
+		reqBody := domain.ResetPasswordRequest{Email: "invalid-email"}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/v1/auth/reset-password", bytes.NewReader(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := app.Test(req)
+		require.NoError(t, err)
+		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+
+		body := decodeBodyMap(t, resp)
+		assert.Equal(t, false, body["success"])
+		assert.Equal(t, "Data validasi tidak valid", body["message"])
+
+		mockAuthUC.AssertNotCalled(t, "RequestPasswordReset", mock.Anything)
+	})
+}
+
+func TestAuthController_Register_ValidationError(t *testing.T) {
+	t.Run("missing required fields", func(t *testing.T) {
+		mockAuthUC := new(MockAuthUsecase)
+		cfg := getTestConfig()
+		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg)
+
+		app := fiber.New()
+		app.Post("/register", controller.Register)
+
+		req := httptest.NewRequest("POST", "/register", bytes.NewReader([]byte(`{}`)))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := app.Test(req)
+		require.NoError(t, err)
+		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+
+		body := decodeBodyMap(t, resp)
+		assert.Equal(t, false, body["success"])
+		assert.Equal(t, "Data validasi tidak valid", body["message"])
+
+		mockAuthUC.AssertNotCalled(t, "Register", mock.Anything)
+	})
+}
+
+func TestAuthController_Login_EmptyBody(t *testing.T) {
+	t.Run("empty body returns bad request", func(t *testing.T) {
+		mockAuthUC := new(MockAuthUsecase)
+		cfg := getTestConfig()
+		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg)
+
+		app := fiber.New()
+		app.Post("/login", controller.Login)
+
+		req := httptest.NewRequest("POST", "/login", nil)
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := app.Test(req)
+		require.NoError(t, err)
+		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+
+		body := decodeBodyMap(t, resp)
+		assert.Equal(t, false, body["success"])
+		assert.Equal(t, "Format request tidak valid", body["message"])
+
+		mockAuthUC.AssertNotCalled(t, "Login", mock.Anything)
+	})
+}
+
+func TestAuthController_RefreshToken_InvalidToken(t *testing.T) {
+	t.Run("expired or invalid refresh token", func(t *testing.T) {
+		mockAuthUC := new(MockAuthUsecase)
+		cfg := getTestConfig()
+		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg)
+
+		app := fiber.New()
+		app.Post("/api/v1/auth/refresh", controller.RefreshToken)
+
+		mockAuthUC.On("RefreshToken", "invalid_refresh_token").Return("", (*domain.RefreshTokenResponse)(nil), apperrors.NewUnauthorizedError("Refresh token tidak valid atau sudah expired"))
+
+		req := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
+		req.AddCookie(&http.Cookie{Name: helper.RefreshTokenCookieName, Value: "invalid_refresh_token"})
+
+		resp, err := app.Test(req)
+		require.NoError(t, err)
+		assert.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
+
+		body := decodeBodyMap(t, resp)
+		assert.Equal(t, false, body["success"])
+		assert.Equal(t, "Refresh token tidak valid atau sudah expired", body["message"])
+
+		mockAuthUC.AssertExpectations(t)
+	})
+}
+
+func TestAuthController_Logout_WithoutAccessToken(t *testing.T) {
+	t.Run("logout succeeds and clears cookies without token", func(t *testing.T) {
+		mockAuthUC := new(MockAuthUsecase)
+		cfg := getTestConfig()
+		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg)
+
+		app := fiber.New()
+		app.Post("/api/v1/auth/logout", controller.Logout)
+
+		req := httptest.NewRequest("POST", "/api/v1/auth/logout", nil)
+		resp, err := app.Test(req)
+		require.NoError(t, err)
+		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+		body := decodeBodyMap(t, resp)
+		assert.Equal(t, true, body["success"])
+		assert.Equal(t, "Logout berhasil", body["message"])
+
+		cleared := map[string]bool{}
+		for _, c := range resp.Cookies() {
+			if c.Name == helper.AccessTokenCookieName || c.Name == helper.RefreshTokenCookieName {
+				cleared[c.Name] = c.Value == ""
+			}
+		}
+		assert.True(t, cleared[helper.AccessTokenCookieName])
+		assert.True(t, cleared[helper.RefreshTokenCookieName])
+
+		mockAuthUC.AssertNotCalled(t, "Logout", mock.Anything)
+	})
 }

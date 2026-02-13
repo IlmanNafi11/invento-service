@@ -141,10 +141,12 @@ func TestRegisterRequest_Validation(t *testing.T) {
 }
 
 func TestAuthResponse_Structure(t *testing.T) {
-	user := User{
-		ID:    "user-123",
-		Email: "test@example.com",
-		Name:  "Test User",
+	user := AuthUserResponse{
+		ID:        "user-123",
+		Email:     "test@example.com",
+		Name:      "Test User",
+		Role:      "mahasiswa",
+		CreatedAt: time.Now().Format(time.RFC3339),
 	}
 
 	authResponse := AuthResponse{
@@ -160,6 +162,7 @@ func TestAuthResponse_Structure(t *testing.T) {
 	assert.Equal(t, "Bearer", authResponse.TokenType)
 	assert.Equal(t, 3600, authResponse.ExpiresIn)
 	assert.NotZero(t, authResponse.ExpiresAt)
+	assert.Equal(t, "mahasiswa", authResponse.User.Role)
 }
 
 func TestRefreshTokenResponse_Structure(t *testing.T) {
