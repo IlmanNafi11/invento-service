@@ -3,11 +3,15 @@ package usecase
 import (
 	"errors"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -42,7 +46,7 @@ func (uc *projectUsecase) GetList(userID string, search string, filterSemester i
 
 	projects, total, err := uc.projectRepo.GetByUserID(userID, search, filterSemester, filterKategori, page, limit)
 	if err != nil {
-		return nil, errors.New("gagal mengambil data project")
+		return nil, newInternalError("gagal mengambil data project", err)
 	}
 
 	totalPages := (total + limit - 1) / limit
@@ -59,16 +63,9 @@ func (uc *projectUsecase) GetList(userID string, search string, filterSemester i
 }
 
 func (uc *projectUsecase) GetByID(projectID uint, userID string) (*domain.ProjectResponse, error) {
-	project, err := uc.projectRepo.GetByID(projectID)
+	project, err := uc.getOwnedProject(projectID, userID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("project tidak ditemukan")
-		}
-		return nil, errors.New("gagal mengambil data project")
-	}
-
-	if project.UserID != userID {
-		return nil, errors.New("tidak memiliki akses ke project ini")
+		return nil, err
 	}
 
 	return &domain.ProjectResponse{
@@ -84,16 +81,9 @@ func (uc *projectUsecase) GetByID(projectID uint, userID string) (*domain.Projec
 }
 
 func (uc *projectUsecase) UpdateMetadata(projectID uint, userID string, req domain.ProjectUpdateRequest) error {
-	project, err := uc.projectRepo.GetByID(projectID)
+	project, err := uc.getOwnedProject(projectID, userID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("project tidak ditemukan")
-		}
-		return errors.New("gagal mengambil data project")
-	}
-
-	if project.UserID != userID {
-		return errors.New("tidak memiliki akses ke project ini")
+		return err
 	}
 
 	if req.NamaProject != "" {
@@ -107,29 +97,26 @@ func (uc *projectUsecase) UpdateMetadata(projectID uint, userID string, req doma
 	}
 
 	if err := uc.projectRepo.Update(project); err != nil {
-		return errors.New("gagal update metadata project")
+		return newInternalError("gagal mengupdate project", err)
 	}
 
 	return nil
 }
 
 func (uc *projectUsecase) Delete(projectID uint, userID string) error {
-	project, err := uc.projectRepo.GetByID(projectID)
+	project, err := uc.getOwnedProject(projectID, userID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("project tidak ditemukan")
-		}
-		return errors.New("gagal mengambil data project")
+		return err
 	}
-
-	if project.UserID != userID {
-		return errors.New("tidak memiliki akses ke project ini")
-	}
-
-	helper.DeleteFile(project.PathFile)
 
 	if err := uc.projectRepo.Delete(projectID); err != nil {
-		return errors.New("gagal menghapus project")
+		return newInternalError("gagal menghapus project", err)
+	}
+
+	if project.PathFile != "" {
+		if err := helper.DeleteFile(project.PathFile); err != nil {
+			log.Printf("WARNING: gagal menghapus file project %s: %v", project.PathFile, err)
+		}
 	}
 
 	return nil
@@ -137,43 +124,96 @@ func (uc *projectUsecase) Delete(projectID uint, userID string) error {
 
 func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, error) {
 	if len(projectIDs) == 0 {
-		return "", errors.New("id project tidak boleh kosong")
+		return "", apperrors.NewValidationError("id project tidak boleh kosong", nil)
+	}
+
+	if len(projectIDs) == 1 {
+		project, err := uc.getOwnedProject(projectIDs[0], userID)
+		if err != nil {
+			return "", err
+		}
+
+		if project.PathFile == "" {
+			return "", apperrors.NewNotFoundError("file project")
+		}
+
+		cleanPath := filepath.Clean(project.PathFile)
+		if strings.Contains(cleanPath, "..") {
+			return "", apperrors.NewValidationError("path file tidak valid", nil)
+		}
+
+		return cleanPath, nil
 	}
 
 	projects, err := uc.projectRepo.GetByIDs(projectIDs, userID)
 	if err != nil {
-		return "", errors.New("gagal mengambil data project")
+		return "", newInternalError("gagal mengambil data project", err)
 	}
 
 	if len(projects) == 0 {
-		return "", errors.New("project tidak ditemukan")
-	}
-
-	if len(projects) == 1 {
-		return projects[0].PathFile, nil
+		return "", apperrors.NewNotFoundError("project")
 	}
 
 	var filePaths []string
 	for _, project := range projects {
-		filePaths = append(filePaths, project.PathFile)
+		if project.PathFile == "" {
+			return "", apperrors.NewNotFoundError("file project")
+		}
+
+		cleanPath := filepath.Clean(project.PathFile)
+		if strings.Contains(cleanPath, "..") {
+			return "", apperrors.NewValidationError("path file tidak valid", nil)
+		}
+
+		filePaths = append(filePaths, cleanPath)
 	}
 
 	tempDir := "./uploads/temp"
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
-		return "", errors.New("gagal membuat direktori temp")
+		return "", newInternalError("gagal membuat direktori temp", err)
 	}
 
 	identifier, err := helper.GenerateUniqueIdentifier(8)
 	if err != nil {
-		return "", errors.New("gagal generate identifier")
+		return "", newInternalError("gagal generate identifier", err)
 	}
 
 	zipFileName := fmt.Sprintf("projects_%s.zip", identifier)
 	zipFilePath := filepath.Join(tempDir, zipFileName)
 
 	if err := helper.CreateZipArchive(filePaths, zipFilePath); err != nil {
-		return "", errors.New("gagal membuat file zip")
+		return "", newInternalError("gagal membuat file zip", err)
 	}
 
+	go func(zipPath string) {
+		time.Sleep(5 * time.Minute)
+		if err := os.Remove(zipPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			log.Printf("WARNING: gagal menghapus file zip sementara %s: %v", zipPath, err)
+		}
+	}(zipFilePath)
+
 	return zipFilePath, nil
+}
+
+func (uc *projectUsecase) getOwnedProject(projectID uint, userID string) (*domain.Project, error) {
+	project, err := uc.projectRepo.GetByID(projectID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperrors.NewNotFoundError("project")
+		}
+
+		return nil, newInternalError("gagal mengambil data project", err)
+	}
+
+	if project.UserID != userID {
+		return nil, apperrors.NewForbiddenError("anda tidak memiliki akses ke project ini")
+	}
+
+	return project, nil
+}
+
+func newInternalError(message string, err error) *apperrors.AppError {
+	appErr := apperrors.NewInternalError(err)
+	appErr.Message = message
+	return appErr
 }

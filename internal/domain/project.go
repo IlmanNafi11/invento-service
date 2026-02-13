@@ -60,10 +60,6 @@ type ProjectResponse struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-type ProjectCreateResponse struct {
-	Items []ProjectResponse `json:"items"`
-}
-
 type ProjectDownloadRequest struct {
 	IDs []uint `json:"ids" validate:"required,min=1"`
 }

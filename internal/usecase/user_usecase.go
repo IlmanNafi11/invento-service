@@ -340,7 +340,7 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 		projectIDsUint = append(projectIDsUint, uint(id))
 	}
 
-	projects, err := uc.projectRepo.GetByIDsForUser(projectIDsUint, ownerUserID)
+	projects, err := uc.projectRepo.GetByIDs(projectIDsUint, ownerUserID)
 	if err != nil {
 		return "", errors.New("gagal mengambil data project")
 	}

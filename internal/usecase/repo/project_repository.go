@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fiber-boiler-plate/internal/domain"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -29,19 +30,10 @@ func (r *projectRepository) GetByID(id uint) (*domain.Project, error) {
 
 func (r *projectRepository) GetByIDs(ids []uint, userID string) ([]domain.Project, error) {
 	var projects []domain.Project
-	err := r.db.Where("id IN ? AND user_id = ?", ids, userID).Find(&projects).Error
-	if err != nil {
-		return nil, err
-	}
-	return projects, nil
-}
-
-func (r *projectRepository) GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Project, error) {
-	var projects []domain.Project
 	if len(ids) == 0 {
 		return projects, nil
 	}
-	err := r.db.Where("id IN ? AND user_id = ?", ids, ownerUserID).Find(&projects).Error
+	err := r.db.Where("id IN ? AND user_id = ?", ids, userID).Find(&projects).Error
 	if err != nil {
 		return nil, err
 	}
@@ -54,16 +46,22 @@ func (r *projectRepository) GetByUserID(userID string, search string, filterSeme
 
 	offset := (page - 1) * limit
 
+	escapedSearch := search
+	if search != "" {
+		replacer := strings.NewReplacer("%", "\\%", "_", "\\_", "\\", "\\\\")
+		escapedSearch = replacer.Replace(search)
+	}
+
 	countQuery := `
 		SELECT COUNT(*) as total
 		FROM projects
 		WHERE user_id = ?
-			AND (? = '' OR LOWER(nama_project) LIKE '%' || LOWER(?) || '%')
+			AND (? = '' OR LOWER(nama_project) LIKE '%' || LOWER(?) || '%' ESCAPE '\')
 			AND (? = 0 OR semester = ?)
 			AND (? = '' OR kategori = ?)
 	`
 
-	if err := r.db.Raw(countQuery, userID, search, search, filterSemester, filterSemester, filterKategori, filterKategori).Scan(&total).Error; err != nil {
+	if err := r.db.Raw(countQuery, userID, search, escapedSearch, filterSemester, filterSemester, filterKategori, filterKategori).Scan(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -75,17 +73,17 @@ func (r *projectRepository) GetByUserID(userID string, search string, filterSeme
 			semester,
 			ukuran,
 			path_file,
-			updated_at as terakhir_diperbarui
+		updated_at as terakhir_diperbarui
 		FROM projects
 		WHERE user_id = ?
-			AND (? = '' OR LOWER(nama_project) LIKE '%' || LOWER(?) || '%')
+			AND (? = '' OR LOWER(nama_project) LIKE '%' || LOWER(?) || '%' ESCAPE '\')
 			AND (? = 0 OR semester = ?)
 			AND (? = '' OR kategori = ?)
 		ORDER BY updated_at DESC
 		LIMIT ? OFFSET ?
 	`
 
-	if err := r.db.Raw(dataQuery, userID, search, search, filterSemester, filterSemester, filterKategori, filterKategori, limit, offset).Scan(&projectListItems).Error; err != nil {
+	if err := r.db.Raw(dataQuery, userID, search, escapedSearch, filterSemester, filterSemester, filterKategori, filterKategori, limit, offset).Scan(&projectListItems).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -99,7 +97,13 @@ func (r *projectRepository) CountByUserID(userID string) (int, error) {
 }
 
 func (r *projectRepository) Update(project *domain.Project) error {
-	return r.db.Save(project).Error
+	return r.db.Model(project).Updates(map[string]interface{}{
+		"nama_project": project.NamaProject,
+		"kategori":     project.Kategori,
+		"semester":     project.Semester,
+		"ukuran":       project.Ukuran,
+		"path_file":    project.PathFile,
+	}).Error
 }
 
 func (r *projectRepository) Delete(id uint) error {

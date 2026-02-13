@@ -287,40 +287,6 @@ func TestProjectResponse(t *testing.T) {
 	})
 }
 
-func TestProjectCreateResponse(t *testing.T) {
-	t.Run("ProjectCreateResponse with items", func(t *testing.T) {
-		items := []ProjectResponse{
-			{ID: 1, NamaProject: "Project A", Kategori: "website", Semester: 1},
-			{ID: 2, NamaProject: "Project B", Kategori: "mobile", Semester: 2},
-		}
-
-		resp := ProjectCreateResponse{
-			Items: items,
-		}
-
-		if len(resp.Items) != 2 {
-			t.Errorf("Expected 2 items, got %d", len(resp.Items))
-		}
-	})
-
-	t.Run("ProjectCreateResponse with single item", func(t *testing.T) {
-		items := []ProjectResponse{
-			{ID: 1, NamaProject: "Single Project", Kategori: "iot", Semester: 5},
-		}
-
-		resp := ProjectCreateResponse{
-			Items: items,
-		}
-
-		if len(resp.Items) != 1 {
-			t.Errorf("Expected 1 item, got %d", len(resp.Items))
-		}
-		if resp.Items[0].NamaProject != "Single Project" {
-			t.Errorf("Expected NamaProject 'Single Project', got %s", resp.Items[0].NamaProject)
-		}
-	})
-}
-
 func TestProjectDownloadRequest(t *testing.T) {
 	t.Run("ProjectDownloadRequest with multiple IDs", func(t *testing.T) {
 		req := ProjectDownloadRequest{
@@ -707,28 +673,6 @@ func TestProjectPaginationData(t *testing.T) {
 		}
 		if pagination.TotalPages != 0 {
 			t.Errorf("Expected TotalPages 0, got %d", pagination.TotalPages)
-		}
-	})
-}
-
-func TestProjectCreateResponseEdgeCases(t *testing.T) {
-	t.Run("Empty items array", func(t *testing.T) {
-		resp := ProjectCreateResponse{
-			Items: []ProjectResponse{},
-		}
-
-		if len(resp.Items) != 0 {
-			t.Errorf("Expected 0 items, got %d", len(resp.Items))
-		}
-	})
-
-	t.Run("Nil items", func(t *testing.T) {
-		resp := ProjectCreateResponse{
-			Items: nil,
-		}
-
-		if resp.Items != nil {
-			t.Errorf("Expected nil Items, got %v", resp.Items)
 		}
 	})
 }

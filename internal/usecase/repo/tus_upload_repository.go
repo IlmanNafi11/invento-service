@@ -44,7 +44,7 @@ func (r *tusUploadRepository) GetByUserID(userID string) ([]domain.TusUpload, er
 
 func (r *tusUploadRepository) GetActiveByUserID(userID string) ([]domain.TusUpload, error) {
 	var uploads []domain.TusUpload
-	err := r.db.Where("user_id = ? AND status IN (?)", userID, []string{domain.UploadStatusPending, domain.UploadStatusUploading}).
+	err := r.db.Where("user_id = ? AND status IN (?)", userID, []string{domain.UploadStatusQueued, domain.UploadStatusPending, domain.UploadStatusUploading}).
 		Order("created_at ASC").
 		Find(&uploads).Error
 	return uploads, err
@@ -64,7 +64,6 @@ func (r *tusUploadRepository) UpdateOffset(id string, offset int64, progress flo
 		Updates(map[string]interface{}{
 			"current_offset": offset,
 			"progress":       progress,
-			"updated_at":     time.Now(),
 		}).Error
 }
 
@@ -72,8 +71,7 @@ func (r *tusUploadRepository) UpdateStatus(id string, status string) error {
 	return r.db.Model(&domain.TusUpload{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"status":     status,
-			"updated_at": time.Now(),
+			"status": status,
 		}).Error
 }
 
@@ -87,7 +85,6 @@ func (r *tusUploadRepository) Complete(id string, projectID uint, filePath strin
 			"status":       domain.UploadStatusCompleted,
 			"progress":     100.0,
 			"completed_at": &now,
-			"updated_at":   now,
 		}).Error
 }
 
@@ -128,28 +125,7 @@ func (r *tusUploadRepository) ListActive() ([]domain.TusUpload, error) {
 func (r *tusUploadRepository) GetActiveUploadIDs() ([]string, error) {
 	var ids []string
 	err := r.db.Model(&domain.TusUpload{}).
-		Where("status IN (?)", []string{domain.UploadStatusPending, domain.UploadStatusUploading}).
+		Where("status IN (?)", []string{domain.UploadStatusQueued, domain.UploadStatusPending, domain.UploadStatusUploading}).
 		Pluck("id", &ids).Error
 	return ids, err
-}
-
-func (r *tusUploadRepository) GetByUserIDAndStatus(userID string, status string) ([]domain.TusUpload, error) {
-	var uploads []domain.TusUpload
-	err := r.db.Where("user_id = ? AND status = ?", userID, status).
-		Order("created_at DESC").
-		Find(&uploads).Error
-	return uploads, err
-}
-
-func (r *tusUploadRepository) UpdateOffsetOnly(id string, offset int64) error {
-	return r.db.Model(&domain.TusUpload{}).
-		Where("id = ?", id).
-		Updates(map[string]interface{}{
-			"current_offset": offset,
-			"updated_at":     time.Now(),
-		}).Error
-}
-
-func (r *tusUploadRepository) UpdateUpload(upload *domain.TusUpload) error {
-	return r.db.Where("id = ?", upload.ID).Updates(upload).Error
 }

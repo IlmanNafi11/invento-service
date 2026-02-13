@@ -70,7 +70,19 @@ func (uc *tusUploadUsecase) CheckUploadSlot(userID string) (*domain.TusUploadSlo
 }
 
 func (uc *tusUploadUsecase) ResetUploadQueue(userID string) error {
-	return uc.tusManager.ResetUploadQueue()
+	activeUploads, err := uc.tusUploadRepo.GetActiveByUserID(userID)
+	if err != nil {
+		return apperrors.NewInternalError(fmt.Errorf("gagal mengambil upload aktif: %w", err))
+	}
+
+	for _, upload := range activeUploads {
+		projectID := upload.ProjectID
+		if err := uc.cancelUpload(upload.ID, userID, projectID); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (uc *tusUploadUsecase) InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error) {
@@ -107,6 +119,17 @@ func (uc *tusUploadUsecase) initiateUpload(userID string, fileSize int64, metada
 
 	if fileSize <= 0 {
 		return nil, apperrors.NewValidationError("ukuran file tidak valid", nil)
+	}
+
+	existingUploads, err := uc.tusUploadRepo.GetActiveByUserID(userID)
+	if err == nil {
+		for _, existing := range existingUploads {
+			if existing.Status == domain.UploadStatusPending ||
+				existing.Status == domain.UploadStatusUploading ||
+				existing.Status == domain.UploadStatusQueued {
+				return nil, apperrors.NewConflictError("anda sudah memiliki upload yang sedang berjalan, selesaikan atau batalkan terlebih dahulu")
+			}
+		}
 	}
 
 	if !uc.tusManager.CanAcceptUpload() {
@@ -244,7 +267,7 @@ func (uc *tusUploadUsecase) completeUpload(upload *domain.TusUpload) error {
 		return apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
 	}
 
-	uc.tusManager.RemoveFromQueue(upload.ID)
+	uc.tusManager.FinishUpload(upload.ID)
 	return nil
 }
 
@@ -275,12 +298,7 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload, fina
 		return 0, apperrors.NewNotFoundError("Project")
 	}
 
-	if project.PathFile != "" {
-		if err := helper.DeleteFile(project.PathFile); err != nil {
-			log.Printf("Warning: gagal menghapus file lama: %v", err)
-		}
-	}
-
+	oldFilePath := project.PathFile
 	project.NamaProject = upload.UploadMetadata.NamaProject
 	project.Kategori = upload.UploadMetadata.Kategori
 	project.Semester = upload.UploadMetadata.Semester
@@ -289,6 +307,12 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload, fina
 
 	if err := uc.projectRepo.Update(project); err != nil {
 		return 0, apperrors.NewInternalError(fmt.Errorf("gagal update project: %w", err))
+	}
+
+	if oldFilePath != "" && oldFilePath != finalFilePath {
+		if err := helper.DeleteFile(oldFilePath); err != nil {
+			log.Printf("WARNING: gagal menghapus file lama %s: %v", oldFilePath, err)
+		}
 	}
 
 	return project.ID, nil
@@ -370,7 +394,7 @@ func (uc *tusUploadUsecase) cancelUpload(uploadID string, userID string, project
 		log.Printf("Warning: gagal menghapus file upload: %v", err)
 	}
 
-	uc.tusManager.RemoveFromQueue(uploadID)
+	uc.tusManager.FinishUpload(uploadID)
 	return nil
 }
 
@@ -382,6 +406,10 @@ func (uc *tusUploadUsecase) getOwnedUpload(uploadID string, userID string, proje
 
 	if upload.UserID != userID {
 		return nil, apperrors.NewForbiddenError("Anda tidak memiliki akses ke upload ini")
+	}
+
+	if upload.Status == domain.UploadStatusExpired || upload.Status == domain.UploadStatusCancelled || upload.Status == domain.UploadStatusFailed {
+		return nil, apperrors.NewConflictError("upload sudah " + upload.Status + ", tidak dapat dilanjutkan")
 	}
 
 	if projectID != nil {

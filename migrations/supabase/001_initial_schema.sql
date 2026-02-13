@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
-CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
+CREATE INDEX IF NOT EXISTS idx_projects_user_updated ON projects(user_id, updated_at DESC);
 
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
@@ -190,8 +190,16 @@ CREATE POLICY "Users can create own tus uploads" ON tus_uploads
 CREATE POLICY "Users can update own tus uploads" ON tus_uploads
     FOR UPDATE USING (auth.uid() = user_id);
 
+CREATE POLICY "Users can delete own tus uploads" ON tus_uploads
+    FOR DELETE USING (auth.uid() = user_id);
+
 CREATE POLICY "Service role full access tus uploads" ON tus_uploads
     FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
+
+-- Composite indexes for common query patterns
+CREATE INDEX IF NOT EXISTS idx_tus_uploads_expires_at ON tus_uploads(expires_at);
+CREATE INDEX IF NOT EXISTS idx_tus_uploads_status_expires ON tus_uploads(status, expires_at);
+CREATE INDEX IF NOT EXISTS idx_tus_uploads_status_user ON tus_uploads(status, user_id);
 
 -- ============================================================================
 -- TUS MODUL UPLOADS TABLE (for modul file uploads)

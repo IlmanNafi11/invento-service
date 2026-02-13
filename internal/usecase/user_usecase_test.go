@@ -647,7 +647,7 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 	}
 
 	mockUserRepo.On("GetByID", ownerUserID).Return(user, nil)
-	mockProjectRepo.On("GetByIDsForUser", projectIDsUint, ownerUserID).Return([]domain.Project{}, nil)
+	mockProjectRepo.On("GetByIDs", projectIDsUint, ownerUserID).Return([]domain.Project{}, nil)
 	mockModulRepo.On("GetByIDs", modulIDs, ownerUserID).Return([]domain.Modul{}, nil)
 
 	result, err := userUC.DownloadUserFiles(ownerUserID, projectIDs, modulIDs)

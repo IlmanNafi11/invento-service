@@ -49,7 +49,6 @@ type ProjectRepository interface {
 	Create(project *domain.Project) error
 	GetByID(id uint) (*domain.Project, error)
 	GetByIDs(ids []uint, userID string) ([]domain.Project, error)
-	GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Project, error)
 	GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error)
 	CountByUserID(userID string) (int, error)
 	Update(project *domain.Project) error

@@ -1,14 +1,19 @@
 package usecase
 
 import (
+	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -64,7 +69,9 @@ func TestProjectUsecase_GetProjectByID_NotFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "project tidak ditemukan")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
 
 	mockProjectRepo.AssertExpectations(t)
 }
@@ -95,7 +102,9 @@ func TestProjectUsecase_GetProjectByID_AccessDenied(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "tidak memiliki akses")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrForbidden, appErr.Code)
 
 	mockProjectRepo.AssertExpectations(t)
 }
@@ -218,6 +227,54 @@ func TestProjectUsecase_ListProjects_Pagination(t *testing.T) {
 	mockProjectRepo.AssertExpectations(t)
 }
 
+func TestProjectUsecase_ListProjects_RepoError(t *testing.T) {
+	mockProjectRepo := new(MockProjectRepository)
+	projectUC := NewProjectUsecase(mockProjectRepo, nil)
+
+	userID := "user-1"
+	search := "test"
+	filterSemester := 1
+	filterKategori := "website"
+	page := 1
+	limit := 10
+
+	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, page, limit).Return(nil, 0, assert.AnError)
+
+	result, err := projectUC.GetList(userID, search, filterSemester, filterKategori, page, limit)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrInternal, appErr.Code)
+
+	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestProjectUsecase_ListProjects_EmptyWithDefaultPagination(t *testing.T) {
+	mockProjectRepo := new(MockProjectRepository)
+	projectUC := NewProjectUsecase(mockProjectRepo, nil)
+
+	userID := "user-1"
+	search := ""
+	filterSemester := 0
+	filterKategori := ""
+
+	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, 1, 10).Return([]domain.ProjectListItem{}, 0, nil)
+
+	result, err := projectUC.GetList(userID, search, filterSemester, filterKategori, 0, 0)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Len(t, result.Items, 0)
+	assert.Equal(t, 1, result.Pagination.Page)
+	assert.Equal(t, 10, result.Pagination.Limit)
+	assert.Equal(t, 0, result.Pagination.TotalItems)
+	assert.Equal(t, 0, result.Pagination.TotalPages)
+
+	mockProjectRepo.AssertExpectations(t)
+}
+
 // TestUpdateProject_Success tests successful project update
 func TestProjectUsecase_UpdateProject_Success(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
@@ -271,7 +328,9 @@ func TestProjectUsecase_UpdateProject_NotFound(t *testing.T) {
 	err := projectUC.UpdateMetadata(projectID, userID, req)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "project tidak ditemukan")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
 
 	mockProjectRepo.AssertExpectations(t)
 }
@@ -305,7 +364,9 @@ func TestProjectUsecase_UpdateProject_AccessDenied(t *testing.T) {
 	err := projectUC.UpdateMetadata(projectID, userID, req)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "tidak memiliki akses")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrForbidden, appErr.Code)
 
 	mockProjectRepo.AssertExpectations(t)
 }
@@ -353,7 +414,9 @@ func TestProjectUsecase_DeleteProject_NotFound(t *testing.T) {
 	err := projectUC.Delete(projectID, userID)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "project tidak ditemukan")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
 
 	mockProjectRepo.AssertExpectations(t)
 }
@@ -383,7 +446,9 @@ func TestProjectUsecase_DeleteProject_AccessDenied(t *testing.T) {
 	err := projectUC.Delete(projectID, userID)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "tidak memiliki akses")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrForbidden, appErr.Code)
 
 	mockProjectRepo.AssertExpectations(t)
 }
@@ -399,15 +464,13 @@ func TestProjectUsecase_Download_SingleFile(t *testing.T) {
 	userID := "user-1"
 	projectIDs := []uint{1}
 
-	projects := []domain.Project{
-		{
-			ID:       1,
-			UserID:   userID,
-			PathFile: "/uploads/project1.pdf",
-		},
+	project := &domain.Project{
+		ID:       1,
+		UserID:   userID,
+		PathFile: "/uploads/project1.pdf",
 	}
 
-	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(projects, nil)
+	mockProjectRepo.On("GetByID", uint(1)).Return(project, nil)
 
 	result, err := projectUC.Download(userID, projectIDs)
 
@@ -432,7 +495,9 @@ func TestProjectUsecase_Download_EmptyIDs(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
-	assert.Contains(t, err.Error(), "id project tidak boleh kosong")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrValidation, appErr.Code)
 }
 
 // TestProjectUsecase_Download_NotFound tests project not found
@@ -452,7 +517,9 @@ func TestProjectUsecase_Download_NotFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
-	assert.Contains(t, err.Error(), "project tidak ditemukan")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
 
 	mockProjectRepo.AssertExpectations(t)
 }
@@ -474,7 +541,178 @@ func TestProjectUsecase_Download_Error(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
-	assert.Contains(t, err.Error(), "gagal mengambil data project")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrInternal, appErr.Code)
+
+	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestProjectUsecase_Download_SingleFile_GetOwnedProjectError(t *testing.T) {
+	mockProjectRepo := new(MockProjectRepository)
+
+	cfg := &config.Config{}
+	fileManager := helper.NewFileManager(cfg)
+	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
+
+	userID := "user-1"
+	projectIDs := []uint{1}
+
+	mockProjectRepo.On("GetByID", uint(1)).Return(nil, assert.AnError)
+
+	result, err := projectUC.Download(userID, projectIDs)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrInternal, appErr.Code)
+
+	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestProjectUsecase_Download_SingleFile_Forbidden(t *testing.T) {
+	mockProjectRepo := new(MockProjectRepository)
+
+	cfg := &config.Config{}
+	fileManager := helper.NewFileManager(cfg)
+	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
+
+	userID := "user-1"
+	projectIDs := []uint{1}
+
+	project := &domain.Project{
+		ID:       1,
+		UserID:   "user-2",
+		PathFile: "/uploads/project1.pdf",
+	}
+
+	mockProjectRepo.On("GetByID", uint(1)).Return(project, nil)
+
+	result, err := projectUC.Download(userID, projectIDs)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrForbidden, appErr.Code)
+
+	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestProjectUsecase_Download_SingleFile_PathTraversal(t *testing.T) {
+	mockProjectRepo := new(MockProjectRepository)
+
+	cfg := &config.Config{}
+	fileManager := helper.NewFileManager(cfg)
+	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
+
+	userID := "user-1"
+	projectIDs := []uint{1}
+
+	project := &domain.Project{
+		ID:       1,
+		UserID:   userID,
+		PathFile: "../uploads/project1.pdf",
+	}
+
+	mockProjectRepo.On("GetByID", uint(1)).Return(project, nil)
+
+	result, err := projectUC.Download(userID, projectIDs)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrValidation, appErr.Code)
+
+	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestProjectUsecase_Download_MultipleFiles_Success(t *testing.T) {
+	mockProjectRepo := new(MockProjectRepository)
+
+	cfg := &config.Config{}
+	fileManager := helper.NewFileManager(cfg)
+	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
+
+	tempDir := t.TempDir()
+	file1 := filepath.Join(tempDir, "project1.txt")
+	file2 := filepath.Join(tempDir, "project2.txt")
+	require.NoError(t, os.WriteFile(file1, []byte("file-1"), 0644))
+	require.NoError(t, os.WriteFile(file2, []byte("file-2"), 0644))
+
+	userID := "user-1"
+	projectIDs := []uint{1, 2}
+	projects := []domain.Project{
+		{ID: 1, UserID: userID, PathFile: file1},
+		{ID: 2, UserID: userID, PathFile: file2},
+	}
+
+	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(projects, nil)
+
+	result, err := projectUC.Download(userID, projectIDs)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
+	assert.FileExists(t, result)
+
+	require.NoError(t, os.Remove(result))
+	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestProjectUsecase_Download_MultipleFiles_PartialFound(t *testing.T) {
+	mockProjectRepo := new(MockProjectRepository)
+
+	cfg := &config.Config{}
+	fileManager := helper.NewFileManager(cfg)
+	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
+
+	tempDir := t.TempDir()
+	file1 := filepath.Join(tempDir, "project1.txt")
+	require.NoError(t, os.WriteFile(file1, []byte("file-1"), 0644))
+
+	userID := "user-1"
+	projectIDs := []uint{1, 2, 3}
+	projects := []domain.Project{
+		{ID: 1, UserID: userID, PathFile: file1},
+	}
+
+	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(projects, nil)
+
+	result, err := projectUC.Download(userID, projectIDs)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
+	assert.FileExists(t, result)
+
+	require.NoError(t, os.Remove(result))
+	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestProjectUsecase_Download_MultipleFiles_NonexistentFile(t *testing.T) {
+	mockProjectRepo := new(MockProjectRepository)
+
+	cfg := &config.Config{}
+	fileManager := helper.NewFileManager(cfg)
+	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
+
+	userID := "user-1"
+	projectIDs := []uint{1, 2}
+	projects := []domain.Project{
+		{ID: 1, UserID: userID, PathFile: "/tmp/this-file-should-not-exist-project1.txt"},
+		{ID: 2, UserID: userID, PathFile: "/tmp/this-file-should-not-exist-project2.txt"},
+	}
+
+	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(projects, nil)
+
+	result, err := projectUC.Download(userID, projectIDs)
+
+	assert.Error(t, err)
+	assert.Empty(t, result)
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrInternal, appErr.Code)
 
 	mockProjectRepo.AssertExpectations(t)
 }

@@ -1,7 +1,6 @@
 package helper
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -59,42 +58,6 @@ func (tm *TusManager) ResetUploadQueue() error {
 	}
 
 	tm.queue.Clear()
-
-	return nil
-}
-
-func (tm *TusManager) ValidateProjectMetadata(metadata map[string]string) error {
-	if namaProject, ok := metadata["nama_project"]; !ok || namaProject == "" {
-		return apperrors.NewValidationError("nama_project wajib diisi", nil)
-	}
-
-	if len(metadata["nama_project"]) < 3 || len(metadata["nama_project"]) > 255 {
-		return apperrors.NewValidationError("nama_project harus antara 3-255 karakter", nil)
-	}
-
-	if kategori, ok := metadata["kategori"]; ok && kategori != "" {
-		validKategori := []string{"website", "mobile", "iot", "machine_learning", "deep_learning"}
-		isValid := false
-		for _, valid := range validKategori {
-			if kategori == valid {
-				isValid = true
-				break
-			}
-		}
-		if !isValid {
-			return apperrors.NewValidationError("kategori tidak valid", nil)
-		}
-	} else {
-		metadata["kategori"] = "website"
-	}
-
-	if semesterStr, ok := metadata["semester"]; ok && semesterStr != "" {
-		semester, err := strconv.Atoi(semesterStr)
-		if err != nil || semester < 1 || semester > 8 {
-			return apperrors.NewValidationError("semester harus antara 1-8", nil)
-		}
-		metadata["semester"] = semesterStr
-	}
 
 	return nil
 }
@@ -195,6 +158,10 @@ func (tm *TusManager) RemoveFromQueue(uploadID string) error {
 	return tm.queue.Remove(uploadID)
 }
 
+func (tm *TusManager) FinishUpload(uploadID string) string {
+	return tm.queue.FinishUpload(uploadID)
+}
+
 func (tm *TusManager) CanAcceptUpload() bool {
 	return tm.queue.CanAcceptUpload()
 }
@@ -203,62 +170,8 @@ func (tm *TusManager) IsActiveUpload(uploadID string) bool {
 	return tm.queue.IsActiveUpload(uploadID)
 }
 
-func (tm *TusManager) ReadChunkFromBody(body []byte, expectedSize int64) (io.Reader, error) {
-	if int64(len(body)) != expectedSize {
-		return nil, apperrors.NewValidationError(fmt.Sprintf("ukuran body tidak cocok dengan Content-Length: expected %d, actual %d", expectedSize, len(body)), nil)
-	}
-
-	if len(body) == 0 {
-		return nil, apperrors.NewValidationError("body kosong", nil)
-	}
-
-	return bytes.NewReader(body), nil
-}
-
 func (tm *TusManager) GetDefaultTusHeaders() map[string]string {
 	return map[string]string{
 		"Tus-Resumable": tm.config.Upload.TusVersion,
 	}
-}
-
-func (tm *TusManager) ValidateFileSize(fileSize int64, maxSize int64) error {
-	if fileSize <= 0 {
-		return apperrors.NewValidationError("ukuran file tidak valid", nil)
-	}
-
-	if fileSize > maxSize {
-		maxSizeMB := maxSize / (1024 * 1024)
-		return apperrors.NewPayloadTooLargeError(fmt.Sprintf("ukuran file melebihi batas maksimal %d MB", maxSizeMB))
-	}
-
-	return nil
-}
-
-func (tm *TusManager) ValidateTusVersion(version string) error {
-	if version != tm.config.Upload.TusVersion {
-		return apperrors.NewTusVersionError(tm.config.Upload.TusVersion)
-	}
-
-	return nil
-}
-
-func (tm *TusManager) ValidateOffset(uploadID string, clientOffset int64) (int64, error) {
-	serverOffset, err := tm.store.GetOffset(uploadID)
-	if err != nil {
-		return 0, err
-	}
-
-	if clientOffset != serverOffset {
-		return serverOffset, apperrors.NewTusOffsetError(serverOffset, clientOffset)
-	}
-
-	return serverOffset, nil
-}
-
-func (tm *TusManager) ValidateContentType(contentType string) error {
-	if contentType != "application/offset+octet-stream" {
-		return apperrors.NewValidationError("Content-Type harus application/offset+octet-stream", nil)
-	}
-
-	return nil
 }

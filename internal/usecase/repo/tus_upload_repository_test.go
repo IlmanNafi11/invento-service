@@ -185,31 +185,39 @@ func TestTusUploadRepository_GetExpiredUploads(t *testing.T) {
 	assert.ElementsMatch(t, []string{"test-upload-8", "test-upload-9"}, ids)
 }
 
-func TestTusUploadRepository_GetByUserIDAndStatus(t *testing.T) {
+func TestTusUploadRepository_GetAbandonedUploads(t *testing.T) {
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
 	now := time.Now()
-	upload1 := newTusUpload("test-upload-14", "user-1", domain.UploadStatusUploading, now.Add(time.Hour))
-	upload2 := newTusUpload("test-upload-15", "user-1", domain.UploadStatusUploading, now.Add(time.Hour))
-	upload3 := newTusUpload("test-upload-16", "user-1", domain.UploadStatusPending, now.Add(time.Hour))
-	upload4 := newTusUpload("test-upload-17", "user-2", domain.UploadStatusUploading, now.Add(time.Hour))
-	require.NoError(t, db.Create(&upload1).Error)
-	require.NoError(t, db.Create(&upload2).Error)
-	require.NoError(t, db.Create(&upload3).Error)
-	require.NoError(t, db.Create(&upload4).Error)
-
-	uploads, err := repository.GetByUserIDAndStatus("user-1", domain.UploadStatusUploading)
-	require.NoError(t, err)
-	assert.Len(t, uploads, 2)
-	for _, item := range uploads {
-		assert.Equal(t, "user-1", item.UserID)
-		assert.Equal(t, domain.UploadStatusUploading, item.Status)
+	records := []domain.TusUpload{
+		newTusUpload("abandoned-queued", "user-1", domain.UploadStatusQueued, now.Add(time.Hour)),
+		newTusUpload("abandoned-uploading", "user-1", domain.UploadStatusUploading, now.Add(time.Hour)),
+		newTusUpload("abandoned-pending", "user-1", domain.UploadStatusPending, now.Add(time.Hour)),
+		newTusUpload("not-abandoned-completed", "user-1", domain.UploadStatusCompleted, now.Add(time.Hour)),
+		newTusUpload("not-abandoned-recent", "user-1", domain.UploadStatusQueued, now.Add(time.Hour)),
 	}
 
-	empty, err := repository.GetByUserIDAndStatus("user-1", domain.UploadStatusFailed)
+	for i := range records {
+		require.NoError(t, db.Create(&records[i]).Error)
+	}
+
+	oldTime := now.Add(-20 * time.Minute)
+	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "abandoned-queued").Update("updated_at", oldTime).Error)
+	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "abandoned-uploading").Update("updated_at", oldTime).Error)
+	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "abandoned-pending").Update("updated_at", oldTime).Error)
+	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "not-abandoned-completed").Update("updated_at", oldTime).Error)
+	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "not-abandoned-recent").Update("updated_at", now).Error)
+
+	uploads, err := repository.GetAbandonedUploads(10 * time.Minute)
 	require.NoError(t, err)
-	assert.Len(t, empty, 0)
+
+	ids := make([]string, 0, len(uploads))
+	for _, item := range uploads {
+		ids = append(ids, item.ID)
+	}
+
+	assert.ElementsMatch(t, []string{"abandoned-queued", "abandoned-uploading", "abandoned-pending"}, ids)
 }
 
 func TestTusUploadRepository_GetActiveByUserID(t *testing.T) {
@@ -219,22 +227,25 @@ func TestTusUploadRepository_GetActiveByUserID(t *testing.T) {
 	now := time.Now()
 	activePending := newTusUpload("test-upload-active-1", "user-1", domain.UploadStatusPending, now.Add(time.Hour))
 	activeUploading := newTusUpload("test-upload-active-2", "user-1", domain.UploadStatusUploading, now.Add(time.Hour))
-	notActiveQueued := newTusUpload("test-upload-active-3", "user-1", domain.UploadStatusQueued, now.Add(time.Hour))
+	activeQueued := newTusUpload("test-upload-active-3", "user-1", domain.UploadStatusQueued, now.Add(time.Hour))
 	notActiveCompleted := newTusUpload("test-upload-active-4", "user-1", domain.UploadStatusCompleted, now.Add(time.Hour))
 	otherUser := newTusUpload("test-upload-active-5", "user-2", domain.UploadStatusPending, now.Add(time.Hour))
 
 	require.NoError(t, db.Create(&activePending).Error)
 	require.NoError(t, db.Create(&activeUploading).Error)
-	require.NoError(t, db.Create(&notActiveQueued).Error)
+	require.NoError(t, db.Create(&activeQueued).Error)
 	require.NoError(t, db.Create(&notActiveCompleted).Error)
 	require.NoError(t, db.Create(&otherUser).Error)
 
 	uploads, err := repository.GetActiveByUserID("user-1")
 	require.NoError(t, err)
-	require.Len(t, uploads, 2)
+	require.Len(t, uploads, 3)
 
-	ids := []string{uploads[0].ID, uploads[1].ID}
-	assert.ElementsMatch(t, []string{"test-upload-active-1", "test-upload-active-2"}, ids)
+	ids := make([]string, 0, len(uploads))
+	for _, upload := range uploads {
+		ids = append(ids, upload.ID)
+	}
+	assert.ElementsMatch(t, []string{"test-upload-active-1", "test-upload-active-2", "test-upload-active-3"}, ids)
 
 	empty, err := repository.GetActiveByUserID("missing-user")
 	require.NoError(t, err)
@@ -279,49 +290,6 @@ func TestTusUploadRepository_ListActive(t *testing.T) {
 	assert.ElementsMatch(t, []string{"test-upload-20", "test-upload-21"}, ids)
 }
 
-func TestTusUploadRepository_UpdateOffsetOnly(t *testing.T) {
-	db := setupTestDB(t)
-	repository := NewTusUploadRepository(db)
-
-	upload := newTusUpload("test-upload-23", "user-1", domain.UploadStatusUploading, time.Now().Add(time.Hour))
-	upload.Progress = 32.5
-	require.NoError(t, db.Create(&upload).Error)
-
-	require.NoError(t, repository.UpdateOffsetOnly("test-upload-23", 777))
-
-	updated, err := repository.GetByID("test-upload-23")
-	require.NoError(t, err)
-	require.NotNil(t, updated)
-	assert.Equal(t, int64(777), updated.CurrentOffset)
-	assert.Equal(t, 32.5, updated.Progress)
-}
-
-func TestTusUploadRepository_UpdateUpload(t *testing.T) {
-	db := setupTestDB(t)
-	repository := NewTusUploadRepository(db)
-
-	upload := newTusUpload("test-upload-24", "user-1", domain.UploadStatusUploading, time.Now().Add(time.Hour))
-	require.NoError(t, db.Create(&upload).Error)
-
-	completedAt := time.Now()
-	upload.CurrentOffset = 1024
-	upload.Progress = 100.0
-	upload.Status = domain.UploadStatusCompleted
-	upload.FilePath = "/tmp/result.bin"
-	upload.CompletedAt = &completedAt
-
-	require.NoError(t, repository.UpdateUpload(&upload))
-
-	updated, err := repository.GetByID("test-upload-24")
-	require.NoError(t, err)
-	require.NotNil(t, updated)
-	assert.Equal(t, int64(1024), updated.CurrentOffset)
-	assert.Equal(t, 100.0, updated.Progress)
-	assert.Equal(t, domain.UploadStatusCompleted, updated.Status)
-	assert.Equal(t, "/tmp/result.bin", updated.FilePath)
-	require.NotNil(t, updated.CompletedAt)
-}
-
 func TestTusUploadRepository_CountActiveByUserID(t *testing.T) {
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
@@ -364,7 +332,7 @@ func TestTusUploadRepository_GetActiveUploadIDs(t *testing.T) {
 
 	ids, err := repository.GetActiveUploadIDs()
 	require.NoError(t, err)
-	assert.ElementsMatch(t, []string{"test-upload-30", "test-upload-31"}, ids)
+	assert.ElementsMatch(t, []string{"test-upload-30", "test-upload-31", "test-upload-32"}, ids)
 }
 
 func TestTusUploadRepository_ConcurrentGetByID(t *testing.T) {

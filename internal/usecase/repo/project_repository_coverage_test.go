@@ -99,7 +99,7 @@ func TestProjectRepository_GetByIDsForUser_Success(t *testing.T) {
 
 	projectRepo := repo.NewProjectRepository(db)
 	ids := []uint{projects[0].ID, projects[1].ID}
-	result, err := projectRepo.GetByIDsForUser(ids, userID)
+	result, err := projectRepo.GetByIDs(ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 }

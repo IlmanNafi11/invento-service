@@ -108,21 +108,30 @@ func (tq *TusQueue) FinishUpload(uploadID string) string {
 	tq.mutex.Lock()
 	defer tq.mutex.Unlock()
 
-	if !tq.activeUploads[uploadID] {
+	if tq.activeUploads[uploadID] {
+		delete(tq.activeUploads, uploadID)
+
+		if len(tq.queue) == 0 {
+			return ""
+		}
+
+		nextUploadID := tq.queue[0]
+		tq.queue = tq.queue[1:]
+		tq.activeUploads[nextUploadID] = true
+
+		return nextUploadID
+	}
+
+	for i, id := range tq.queue {
+		if id != uploadID {
+			continue
+		}
+
+		tq.queue = append(tq.queue[:i], tq.queue[i+1:]...)
 		return ""
 	}
 
-	delete(tq.activeUploads, uploadID)
-
-	if len(tq.queue) == 0 {
-		return ""
-	}
-
-	nextUploadID := tq.queue[0]
-	tq.queue = tq.queue[1:]
-	tq.activeUploads[nextUploadID] = true
-
-	return nextUploadID
+	return ""
 }
 
 func (tq *TusQueue) Clear() {

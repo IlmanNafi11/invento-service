@@ -438,14 +438,6 @@ func (m *MockTusUploadRepository) Complete(id string, projectID uint, filePath s
 	return args.Error(0)
 }
 
-func (m *MockTusUploadRepository) GetByUserIDAndStatus(userID string, status string) ([]domain.TusUpload, error) {
-	args := m.Called(userID, status)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]domain.TusUpload), args.Error(1)
-}
-
 func (m *MockTusUploadRepository) Delete(id string) error {
 	args := m.Called(id)
 	return args.Error(0)

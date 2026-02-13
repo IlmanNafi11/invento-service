@@ -89,27 +89,6 @@ func TestTusManager_ParseMetadata_InvalidBase64DefaultsEmptyValue(t *testing.T) 
 	assert.Equal(t, "", data["filename"])
 }
 
-func TestTusManager_ValidateProjectMetadata_ValidatesFields(t *testing.T) {
-	manager, _, _ := newTestTusManager(t)
-
-	err := manager.ValidateProjectMetadata(map[string]string{"nama_project": "ab"})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "nama_project harus antara 3-255 karakter")
-
-	err = manager.ValidateProjectMetadata(map[string]string{"nama_project": "Project", "kategori": "invalid"})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "kategori tidak valid")
-
-	err = manager.ValidateProjectMetadata(map[string]string{"nama_project": "Project", "semester": "9"})
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "semester harus antara 1-8")
-
-	metadata := map[string]string{"nama_project": "Project A"}
-	err = manager.ValidateProjectMetadata(metadata)
-	require.NoError(t, err)
-	assert.Equal(t, "website", metadata["kategori"])
-}
-
 func TestTusManager_ValidateModulMetadata_ValidatesFields(t *testing.T) {
 	manager, _, _ := newTestTusManager(t)
 
@@ -163,54 +142,4 @@ func TestTusManager_HandleChunk_DelegatesToStoreWriteChunk(t *testing.T) {
 
 	_, err = manager.HandleChunk("missing", 0, bytes.NewBufferString("a"))
 	assert.Error(t, err)
-}
-
-func TestTusManager_ValidateFileSize_ValidAndInvalidCases(t *testing.T) {
-	manager, _, _ := newTestTusManager(t)
-
-	assert.NoError(t, manager.ValidateFileSize(1, 10))
-
-	err := manager.ValidateFileSize(0, 10)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "ukuran file tidak valid")
-
-	err = manager.ValidateFileSize(11, 10)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "melebihi batas maksimal")
-}
-
-func TestTusManager_ValidateTusVersion_ValidatesAgainstConfig(t *testing.T) {
-	manager, _, _ := newTestTusManager(t)
-
-	assert.NoError(t, manager.ValidateTusVersion("1.0.0"))
-
-	err := manager.ValidateTusVersion("0.2.0")
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "Versi TUS protocol tidak didukung")
-}
-
-func TestTusManager_ValidateOffset_ReturnsMismatchWhenDifferent(t *testing.T) {
-	manager, store, _ := newTestTusManager(t)
-	require.NoError(t, store.NewUpload(TusFileInfo{ID: "u4", Size: 20, Metadata: map[string]string{}}))
-	_, err := store.WriteChunk("u4", 0, bytes.NewBufferString("12345"))
-	require.NoError(t, err)
-
-	serverOffset, err := manager.ValidateOffset("u4", 5)
-	require.NoError(t, err)
-	assert.Equal(t, int64(5), serverOffset)
-
-	serverOffset, err = manager.ValidateOffset("u4", 0)
-	require.Error(t, err)
-	assert.Equal(t, int64(5), serverOffset)
-	assert.Contains(t, err.Error(), "Upload offset tidak sesuai")
-}
-
-func TestTusManager_ValidateContentType_ValidatesRequiredType(t *testing.T) {
-	manager, _, _ := newTestTusManager(t)
-
-	assert.NoError(t, manager.ValidateContentType("application/offset+octet-stream"))
-
-	err := manager.ValidateContentType("application/json")
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "Content-Type harus application/offset+octet-stream")
 }

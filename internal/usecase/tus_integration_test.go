@@ -365,13 +365,14 @@ func TestTusUploadConcurrentSlotsIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
 
 	meta := domain.TusUploadInitRequest{NamaProject: "Concurrent", Kategori: "website", Semester: 1}
+	secondUserID := "22222222-2222-2222-2222-222222222222"
 
 	first, err := env.uploadUsecase.InitiateUpload(env.userID, "integration@test.local", "mahasiswa", 1024, meta)
 	require.NoError(t, err)
-	second, err := env.uploadUsecase.InitiateUpload(env.userID, "integration@test.local", "mahasiswa", 1024, meta)
+	second, err := env.uploadUsecase.InitiateUpload(secondUserID, "integration-2@test.local", "mahasiswa", 1024, meta)
 	require.NoError(t, err)
 
-	_, err = env.uploadUsecase.InitiateUpload(env.userID, "integration@test.local", "mahasiswa", 1024, meta)
+	_, err = env.uploadUsecase.InitiateUpload("33333333-3333-3333-3333-333333333333", "integration-3@test.local", "mahasiswa", 1024, meta)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "slot upload tidak tersedia")
 
@@ -473,5 +474,5 @@ func TestTusUploadStatusTransitionsIntegration(t *testing.T) {
 
 	_, err = env.uploadUsecase.HandleChunk(cancelResp.UploadID, env.userID, 0, createTestChunk(128))
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "tidak aktif")
+	assert.Contains(t, err.Error(), "tidak dapat dilanjutkan")
 }

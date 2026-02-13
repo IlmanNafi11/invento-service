@@ -68,7 +68,7 @@ func TestTusUploadUsecase(t *testing.T) {
 	})
 
 	t.Run("ResetUploadQueue clears active upload", func(t *testing.T) {
-		uc, _, _, manager := newTusUploadTestDeps(t)
+		uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 		seedTusUploadStore(t, manager, "active-id", 16, map[string]string{"user_id": "u1"})
 		manager.AddToQueue("active-id")
 
@@ -76,12 +76,19 @@ func TestTusUploadUsecase(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, resBefore.Available)
 
+		tusRepo.On("GetActiveByUserID", "u1").Return([]domain.TusUpload{
+			{ID: "active-id", UserID: "u1", Status: domain.UploadStatusUploading},
+		}, nil).Once()
+		tusRepo.On("GetByID", "active-id").Return(&domain.TusUpload{ID: "active-id", UserID: "u1", Status: domain.UploadStatusUploading}, nil).Once()
+		tusRepo.On("UpdateStatus", "active-id", domain.UploadStatusCancelled).Return(nil).Once()
+
 		require.NoError(t, uc.ResetUploadQueue("u1"))
 
 		resAfter, err := uc.CheckUploadSlot("u1")
 		require.NoError(t, err)
 		assert.True(t, resAfter.Available)
 		assert.False(t, resAfter.ActiveUpload)
+		tusRepo.AssertExpectations(t)
 	})
 
 	t.Run("InitiateUpload", func(t *testing.T) {
@@ -89,6 +96,7 @@ func TestTusUploadUsecase(t *testing.T) {
 
 		t.Run("happy path", func(t *testing.T) {
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
+			tusRepo.On("GetActiveByUserID", "u1").Return([]domain.TusUpload{}, nil).Once()
 			tusRepo.On("Create", mock.AnythingOfType("*domain.TusUpload")).Return(nil).Once()
 
 			res, err := uc.InitiateUpload("u1", "u1@mail.com", "mahasiswa", 1024, metadata)
@@ -104,6 +112,7 @@ func TestTusUploadUsecase(t *testing.T) {
 
 		t.Run("file too large", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
+			tusRepo.On("GetActiveByUserID", "u1").Return([]domain.TusUpload{}, nil)
 
 			res, err := uc.InitiateUpload("u1", "u1@mail.com", "mahasiswa", uc.config.Upload.MaxSizeProject+1, metadata)
 			require.Error(t, err)
@@ -114,6 +123,7 @@ func TestTusUploadUsecase(t *testing.T) {
 
 		t.Run("no upload slot", func(t *testing.T) {
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
+			tusRepo.On("GetActiveByUserID", "u1").Return([]domain.TusUpload{}, nil)
 			manager.AddToQueue("active")
 
 			res, err := uc.InitiateUpload("u1", "u1@mail.com", "mahasiswa", 256, metadata)
@@ -229,7 +239,7 @@ func TestTusUploadUsecase(t *testing.T) {
 
 			_, err := uc.HandleChunk("u", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "tidak aktif")
+			assert.Contains(t, err.Error(), "tidak dapat dilanjutkan")
 		})
 	})
 
@@ -337,6 +347,7 @@ func TestTusUploadUsecase(t *testing.T) {
 		t.Run("happy path", func(t *testing.T) {
 			uc, tusRepo, projectRepo, _ := newTusUploadTestDeps(t)
 			projectRepo.On("GetByID", uint(9)).Return(&domain.Project{ID: 9, UserID: "u1", NamaProject: "Old", Kategori: "website", Semester: 1}, nil).Once()
+			tusRepo.On("GetActiveByUserID", "u1").Return([]domain.TusUpload{}, nil).Once()
 			tusRepo.On("Create", mock.AnythingOfType("*domain.TusUpload")).Return(nil).Once()
 
 			res, err := uc.InitiateProjectUpdateUpload(9, "u1", 512, metadata)
@@ -374,6 +385,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				Kategori:    "website",
 				Semester:    6,
 			}, nil).Once()
+			tusRepo.On("GetActiveByUserID", "u1").Return([]domain.TusUpload{}, nil).Once()
 			tusRepo.On("Create", mock.MatchedBy(func(upload *domain.TusUpload) bool {
 				return upload.UploadMetadata.NamaProject == "Existing Name" &&
 					upload.UploadMetadata.Kategori == "website" &&
@@ -474,7 +486,7 @@ func TestTusUploadUsecase(t *testing.T) {
 
 			_, err := uc.HandleProjectUpdateChunk(projectID, "id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "tidak aktif")
+			assert.Contains(t, err.Error(), "tidak dapat dilanjutkan")
 		})
 	})
 
@@ -601,11 +613,6 @@ func TestUsecaseTestMocksHelpers(t *testing.T) {
 		items, err := repo.GetByUserID("user-1")
 		require.NoError(t, err)
 		assert.Len(t, items, 1)
-
-		repo.On("GetByUserIDAndStatus", "user-1", domain.UploadStatusUploading).Return(uploads, nil).Once()
-		itemsByStatus, err := repo.GetByUserIDAndStatus("user-1", domain.UploadStatusUploading)
-		require.NoError(t, err)
-		assert.Len(t, itemsByStatus, 1)
 
 		repo.On("GetActiveByUserID", "user-1").Return(uploads, nil).Once()
 		active, err := repo.GetActiveByUserID("user-1")
