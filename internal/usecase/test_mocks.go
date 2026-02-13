@@ -249,14 +249,6 @@ func (m *MockModulRepository) GetByIDs(ids []string, userID string) ([]domain.Mo
 	return args.Get(0).([]domain.Modul), args.Error(1)
 }
 
-func (m *MockModulRepository) GetByIDsForUser(ids []string, ownerUserID string) ([]domain.Modul, error) {
-	args := m.Called(ids, ownerUserID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]domain.Modul), args.Error(1)
-}
-
 func (m *MockModulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]domain.ModulListItem, int, error) {
 	args := m.Called(userID, search, filterType, filterStatus, page, limit)
 	if args.Get(0) == nil {

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -25,7 +27,7 @@ type TusModulUsecase interface {
 	CancelModulUpload(uploadID string, userID string) error
 	CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error)
 	InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
-	HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
+	HandleModulUpdateChunk(modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
 	GetModulUpdateUploadStatus(modulID string, uploadID string, userID string) (int64, int64, error)
 	GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error)
 	CancelModulUpdateUpload(modulID string, uploadID string, userID string) error
@@ -168,8 +170,8 @@ func (uc *tusModulUsecase) HandleModulChunk(uploadID string, userID string, offs
 	return uc.handleChunk(uploadID, userID, offset, chunk, nil)
 }
 
-func (uc *tusModulUsecase) HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	return uc.handleChunk(uploadID, userID, offset, chunk, nil)
+func (uc *tusModulUsecase) HandleModulUpdateChunk(modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	return uc.handleChunk(uploadID, userID, offset, chunk, &modulID)
 }
 
 func (uc *tusModulUsecase) handleChunk(uploadID string, userID string, offset int64, chunk io.Reader, modulID *string) (int64, error) {
@@ -261,7 +263,7 @@ func (uc *tusModulUsecase) completeModulCreate(tusUpload *domain.TusModulUpload,
 		FileName:  fileName,
 		FilePath:  finalPath,
 		FileSize:  tusUpload.FileSize,
-		MimeType:  "application/octet-stream",
+		MimeType:  detectMimeType(finalPath),
 		Status:    "completed",
 	}
 
@@ -290,6 +292,7 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 	modul.FilePath = finalPath
 	modul.FileName = fileName
 	modul.FileSize = tusUpload.FileSize
+	modul.MimeType = detectMimeType(finalPath)
 
 	if err := uc.modulRepo.Update(modul); err != nil {
 		_ = helper.DeleteFile(finalPath)
@@ -434,4 +437,20 @@ func (uc *tusModulUsecase) validateModulFileSize(fileSize int64) error {
 	}
 
 	return nil
+}
+
+func detectMimeType(filePath string) string {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "application/octet-stream"
+	}
+	defer file.Close()
+
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+	if err != nil {
+		return "application/octet-stream"
+	}
+
+	return http.DetectContentType(buffer[:n])
 }

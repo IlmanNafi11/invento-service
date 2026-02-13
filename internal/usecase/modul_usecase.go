@@ -3,8 +3,8 @@ package usecase
 import (
 	"errors"
 
-	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
 	"fmt"
@@ -78,7 +78,6 @@ func (uc *modulUsecase) GetByID(modulID string, userID string) (*domain.ModulRes
 		FileName:  modul.FileName,
 		MimeType:  modul.MimeType,
 		FileSize:  modul.FileSize,
-		FilePath:  modul.FilePath,
 		Status:    modul.Status,
 		CreatedAt: modul.CreatedAt,
 		UpdatedAt: modul.UpdatedAt,
@@ -98,11 +97,11 @@ func (uc *modulUsecase) Delete(modulID string, userID string) error {
 		return apperrors.NewForbiddenError("Tidak memiliki akses ke modul ini")
 	}
 
-	helper.DeleteFile(modul.FilePath)
-
 	if err := uc.modulRepo.Delete(modulID); err != nil {
 		return apperrors.NewInternalError(err)
 	}
+
+	_ = helper.DeleteFile(modul.FilePath)
 
 	return nil
 }
@@ -122,6 +121,9 @@ func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, erro
 	}
 
 	if len(moduls) == 1 {
+		if _, err := os.Stat(moduls[0].FilePath); os.IsNotExist(err) {
+			return "", apperrors.NewNotFoundError("File modul")
+		}
 		return moduls[0].FilePath, nil
 	}
 
@@ -170,7 +172,7 @@ func (uc *modulUsecase) UpdateMetadata(modulID string, userID string, req domain
 		modul.Deskripsi = req.Deskripsi
 	}
 
-	if err := uc.modulRepo.Update(modul); err != nil {
+	if err := uc.modulRepo.UpdateMetadata(modul); err != nil {
 		return apperrors.NewInternalError(err)
 	}
 

@@ -345,7 +345,7 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 		return "", errors.New("gagal mengambil data project")
 	}
 
-	moduls, err := uc.modulRepo.GetByIDsForUser(modulIDs, ownerUserID)
+	moduls, err := uc.modulRepo.GetByIDs(modulIDs, ownerUserID)
 	if err != nil {
 		return "", errors.New("gagal mengambil data modul")
 	}
