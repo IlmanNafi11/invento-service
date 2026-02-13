@@ -365,7 +365,7 @@ func TestNewTusOffsetError(t *testing.T) {
 			actualOffset:   512,
 			expectedCode:   ErrTusOffsetMismatch,
 			expectedStatus: fiber.StatusConflict,
-			expectedMsg:    "Offset tidak valid",
+			expectedMsg:    "Upload offset tidak sesuai. Diharapkan: 1024, diterima: 512",
 		},
 		{
 			name:           "TUS offset mismatch at zero",
@@ -373,7 +373,7 @@ func TestNewTusOffsetError(t *testing.T) {
 			actualOffset:   100,
 			expectedCode:   ErrTusOffsetMismatch,
 			expectedStatus: fiber.StatusConflict,
-			expectedMsg:    "Offset tidak valid",
+			expectedMsg:    "Upload offset tidak sesuai. Diharapkan: 0, diterima: 100",
 		},
 		{
 			name:           "TUS offset mismatch with large values",
@@ -381,7 +381,7 @@ func TestNewTusOffsetError(t *testing.T) {
 			actualOffset:   500000000,
 			expectedCode:   ErrTusOffsetMismatch,
 			expectedStatus: fiber.StatusConflict,
-			expectedMsg:    "Offset tidak valid",
+			expectedMsg:    "Upload offset tidak sesuai. Diharapkan: 1000000000, diterima: 500000000",
 		},
 	}
 

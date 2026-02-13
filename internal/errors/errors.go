@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -124,10 +125,6 @@ func NewTusVersionError(supportedVersion string) *AppError {
 	}
 }
 
-func NewTusVersionMismatchError(supportedVersion string) *AppError {
-	return NewTusVersionError(supportedVersion)
-}
-
 // NewTusOffsetError creates an error for invalid upload offset (HTTP 409).
 // Used when client sends chunk with incorrect offset (doesn't match server state).
 //
@@ -137,14 +134,10 @@ func NewTusVersionMismatchError(supportedVersion string) *AppError {
 func NewTusOffsetError(expectedOffset, actualOffset int64) *AppError {
 	return &AppError{
 		Code:       ErrTusOffsetMismatch,
-		Message:    "Offset tidak valid",
+		Message:    fmt.Sprintf("Upload offset tidak sesuai. Diharapkan: %d, diterima: %d", expectedOffset, actualOffset),
 		HTTPStatus: fiber.StatusConflict,
 		Timestamp:  time.Now(),
 	}
-}
-
-func NewTusOffsetMismatchError(expectedOffset, actualOffset int64) *AppError {
-	return NewTusOffsetError(expectedOffset, actualOffset)
 }
 
 // NewTusInactiveError creates an error for inactive upload (HTTP 423).
@@ -175,10 +168,6 @@ func NewTusCompletedError() *AppError {
 		HTTPStatus: fiber.StatusConflict,
 		Timestamp:  time.Now(),
 	}
-}
-
-func NewTusAlreadyCompletedError() *AppError {
-	return NewTusCompletedError()
 }
 
 // NewPayloadTooLargeError creates an error for request payload exceeding limits (HTTP 413).

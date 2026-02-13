@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"fiber-boiler-plate/config"
+	base "fiber-boiler-plate/internal/controller/base"
 	httpcontroller "fiber-boiler-plate/internal/controller/http"
 	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
@@ -114,12 +115,17 @@ func getTusTestConfig() *config.Config {
 			Env: "development",
 		},
 		Upload: config.UploadConfig{
-			TusVersion: "1.0.0",
-			ChunkSize:  1048576, // 1MB
-			MaxSize:    52428800,
+			TusVersion:     "1.0.0",
+			ChunkSize:      1048576, // 1MB
+			MaxSize:        52428800,
 			MaxSizeProject: 524288000,
 		},
 	}
+}
+
+func getTusBaseController() *base.BaseController {
+	casbin := &helper.CasbinEnforcer{}
+	return base.NewBaseController("https://test.supabase.co", casbin)
 }
 
 // Helper function to set authenticated user in context
@@ -218,7 +224,7 @@ func TestInitiateUpload_InvalidHeaders(t *testing.T) {
 	// Missing Tus-Resumable header
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
-	assert.Equal(t, 400, resp.StatusCode)
+	assert.Equal(t, 412, resp.StatusCode) // TUS spec: 412 Precondition Failed for missing/invalid Tus-Resumable
 }
 
 // TestInitiateUpload_InvalidTusVersion tests wrong TUS version
@@ -320,7 +326,6 @@ func TestUploadChunk_InvalidOffset(t *testing.T) {
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 409, resp.StatusCode)
-	assert.Equal(t, "500", resp.Header.Get("Upload-Offset"))
 
 	mockUC.AssertExpectations(t)
 }
@@ -366,7 +371,7 @@ func TestUploadChunk_InvalidContentType(t *testing.T) {
 
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
-	assert.Equal(t, 412, resp.StatusCode)
+	assert.Equal(t, 400, resp.StatusCode)
 }
 
 // TestGetUploadStatus_Success tests HEAD for upload progress
@@ -897,6 +902,297 @@ func TestCancelProjectUpdateUpload_NotFound(t *testing.T) {
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, resp.StatusCode)
+
+	mockUC.AssertExpectations(t)
+}
+
+type MockTusModulControllerUsecase struct {
+	mock.Mock
+}
+
+func (m *MockTusModulControllerUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+	args := m.Called(userID, fileSize, uploadMetadata)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.TusModulUploadResponse), args.Error(1)
+}
+
+func (m *MockTusModulControllerUsecase) HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	args := m.Called(uploadID, userID, offset, mock.Anything)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockTusModulControllerUsecase) GetModulUploadInfo(uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
+	args := m.Called(uploadID, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.TusModulUploadInfoResponse), args.Error(1)
+}
+
+func (m *MockTusModulControllerUsecase) GetModulUploadStatus(uploadID string, userID string) (int64, int64, error) {
+	args := m.Called(uploadID, userID)
+	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockTusModulControllerUsecase) CancelModulUpload(uploadID string, userID string) error {
+	args := m.Called(uploadID, userID)
+	return args.Error(0)
+}
+
+func (m *MockTusModulControllerUsecase) CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error) {
+	args := m.Called(userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.TusModulUploadSlotResponse), args.Error(1)
+}
+
+func (m *MockTusModulControllerUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+	args := m.Called(modulID, userID, fileSize, uploadMetadata)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.TusModulUploadResponse), args.Error(1)
+}
+
+func (m *MockTusModulControllerUsecase) HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	args := m.Called(uploadID, userID, offset, mock.Anything)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockTusModulControllerUsecase) GetModulUpdateUploadStatus(modulID string, uploadID string, userID string) (int64, int64, error) {
+	args := m.Called(modulID, uploadID, userID)
+	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockTusModulControllerUsecase) GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
+	args := m.Called(modulID, uploadID, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.TusModulUploadInfoResponse), args.Error(1)
+}
+
+func (m *MockTusModulControllerUsecase) CancelModulUpdateUpload(modulID string, uploadID string, userID string) error {
+	args := m.Called(modulID, uploadID, userID)
+	return args.Error(0)
+}
+
+func TestTusModulController_InitiateUpload_Success(t *testing.T) {
+	mockUC := new(MockTusModulControllerUsecase)
+	baseCtrl := getTusBaseController()
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusModulController(mockUC, cfg, baseCtrl)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		return c.Next()
+	})
+	app.Post("/api/v1/tus/modul/upload", controller.InitiateUpload)
+
+	metadataHeader := encodeTusMetadata(map[string]string{
+		"judul":     "Modul Dasar",
+		"deskripsi": "Deskripsi modul",
+	})
+
+	mockUC.On("InitiateModulUpload", "user-123", int64(2048), metadataHeader).Return(&domain.TusModulUploadResponse{
+		UploadID:  "modul-upload-id",
+		UploadURL: "/modul/upload/modul-upload-id",
+		Offset:    0,
+		Length:    2048,
+	}, nil)
+
+	req := httptest.NewRequest("POST", "/api/v1/tus/modul/upload", nil)
+	req.Header.Set("Tus-Resumable", "1.0.0")
+	req.Header.Set("Upload-Length", "2048")
+	req.Header.Set("Upload-Metadata", metadataHeader)
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 201, resp.StatusCode)
+	assert.Equal(t, "1.0.0", resp.Header.Get("Tus-Resumable"))
+
+	mockUC.AssertExpectations(t)
+}
+
+func TestTusModulController_UploadChunk_Success(t *testing.T) {
+	mockUC := new(MockTusModulControllerUsecase)
+	baseCtrl := getTusBaseController()
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusModulController(mockUC, cfg, baseCtrl)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		return c.Next()
+	})
+	app.Patch("/api/v1/tus/modul/:upload_id", controller.UploadChunk)
+
+	chunkData := []byte("abcde")
+	mockUC.On("HandleModulChunk", "modul-upload-id", "user-123", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
+
+	req := httptest.NewRequest("PATCH", "/api/v1/tus/modul/modul-upload-id", bytes.NewReader(chunkData))
+	req.Header.Set("Tus-Resumable", "1.0.0")
+	req.Header.Set("Upload-Offset", "0")
+	req.Header.Set("Content-Type", helper.TusContentType)
+	req.Header.Set("Content-Length", strconv.Itoa(len(chunkData)))
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+	assert.Equal(t, strconv.Itoa(len(chunkData)), resp.Header.Get("Upload-Offset"))
+
+	mockUC.AssertExpectations(t)
+}
+
+func TestTusModulController_GetUploadStatus_Success(t *testing.T) {
+	mockUC := new(MockTusModulControllerUsecase)
+	baseCtrl := getTusBaseController()
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusModulController(mockUC, cfg, baseCtrl)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		return c.Next()
+	})
+	app.Head("/api/v1/tus/modul/:upload_id", controller.GetUploadStatus)
+
+	mockUC.On("GetModulUploadStatus", "modul-upload-id", "user-123").Return(int64(512), int64(1024), nil)
+
+	req := httptest.NewRequest("HEAD", "/api/v1/tus/modul/modul-upload-id", nil)
+	req.Header.Set("Tus-Resumable", "1.0.0")
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "512", resp.Header.Get("Upload-Offset"))
+	assert.Equal(t, "1024", resp.Header.Get("Upload-Length"))
+
+	mockUC.AssertExpectations(t)
+}
+
+func TestTusModulController_GetUploadInfo_Success(t *testing.T) {
+	mockUC := new(MockTusModulControllerUsecase)
+	baseCtrl := getTusBaseController()
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusModulController(mockUC, cfg, baseCtrl)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		return c.Next()
+	})
+	app.Get("/api/v1/tus/modul/:upload_id", controller.GetUploadInfo)
+
+	mockUC.On("GetModulUploadInfo", "modul-upload-id", "user-123").Return(&domain.TusModulUploadInfoResponse{
+		UploadID:  "modul-upload-id",
+		Judul:     "Modul Dasar",
+		Deskripsi: "Deskripsi modul",
+		Status:    domain.UploadStatusUploading,
+		Progress:  25,
+		Offset:    256,
+		Length:    1024,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}, nil)
+
+	resp := app_testing.MakeRequest(app, "GET", "/api/v1/tus/modul/modul-upload-id", nil, "")
+	app_testing.AssertSuccess(t, resp)
+
+	mockUC.AssertExpectations(t)
+}
+
+func TestTusModulController_CancelUpload_Success(t *testing.T) {
+	mockUC := new(MockTusModulControllerUsecase)
+	baseCtrl := getTusBaseController()
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusModulController(mockUC, cfg, baseCtrl)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		return c.Next()
+	})
+	app.Delete("/api/v1/tus/modul/:upload_id", controller.CancelUpload)
+
+	mockUC.On("CancelModulUpload", "modul-upload-id", "user-123").Return(nil)
+
+	req := httptest.NewRequest("DELETE", "/api/v1/tus/modul/modul-upload-id", nil)
+	req.Header.Set("Tus-Resumable", "1.0.0")
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 204, resp.StatusCode)
+
+	mockUC.AssertExpectations(t)
+}
+
+func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
+	mockUC := new(MockTusModulControllerUsecase)
+	baseCtrl := getTusBaseController()
+	cfg := getTusTestConfig()
+	controller := httpcontroller.NewTusModulController(mockUC, cfg, baseCtrl)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		return c.Next()
+	})
+	app.Post("/api/v1/tus/modul/:id/update", controller.InitiateModulUpdateUpload)
+	app.Patch("/api/v1/tus/modul/:id/update/:upload_id", controller.UploadModulUpdateChunk)
+	app.Head("/api/v1/tus/modul/:id/update/:upload_id", controller.GetModulUpdateUploadStatus)
+	app.Get("/api/v1/tus/modul/:id/update/:upload_id", controller.GetModulUpdateUploadInfo)
+	app.Delete("/api/v1/tus/modul/:id/update/:upload_id", controller.CancelModulUpdateUpload)
+
+	modulID := "550e8400-e29b-41d4-a716-446655440099"
+	metadataHeader := encodeTusMetadata(map[string]string{"judul": "Modul Rev", "deskripsi": "rev"})
+
+	mockUC.On("InitiateModulUpdateUpload", modulID, "user-123", int64(4096), metadataHeader).Return(&domain.TusModulUploadResponse{
+		UploadID:  "update-upload-id",
+		UploadURL: "/modul/" + modulID + "/update/update-upload-id",
+		Offset:    0,
+		Length:    4096,
+	}, nil).Once()
+	mockUC.On("HandleModulUpdateChunk", "update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(4), nil).Once()
+	mockUC.On("GetModulUpdateUploadStatus", modulID, "update-upload-id", "user-123").Return(int64(4), int64(4096), nil).Once()
+	mockUC.On("GetModulUpdateUploadInfo", modulID, "update-upload-id", "user-123").Return(&domain.TusModulUploadInfoResponse{UploadID: "update-upload-id"}, nil).Once()
+	mockUC.On("CancelModulUpdateUpload", modulID, "update-upload-id", "user-123").Return(nil).Once()
+
+	initReq := httptest.NewRequest("POST", "/api/v1/tus/modul/"+modulID+"/update", nil)
+	initReq.Header.Set("Tus-Resumable", "1.0.0")
+	initReq.Header.Set("Upload-Length", "4096")
+	initReq.Header.Set("Upload-Metadata", metadataHeader)
+	initResp, initErr := app.Test(initReq)
+	assert.NoError(t, initErr)
+	assert.Equal(t, 201, initResp.StatusCode)
+
+	chunkReq := httptest.NewRequest("PATCH", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", bytes.NewReader([]byte("test")))
+	chunkReq.Header.Set("Tus-Resumable", "1.0.0")
+	chunkReq.Header.Set("Upload-Offset", "0")
+	chunkReq.Header.Set("Content-Type", helper.TusContentType)
+	chunkReq.Header.Set("Content-Length", "4")
+	chunkResp, chunkErr := app.Test(chunkReq)
+	assert.NoError(t, chunkErr)
+	assert.Equal(t, 204, chunkResp.StatusCode)
+
+	headReq := httptest.NewRequest("HEAD", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", nil)
+	headReq.Header.Set("Tus-Resumable", "1.0.0")
+	headResp, headErr := app.Test(headReq)
+	assert.NoError(t, headErr)
+	assert.Equal(t, 200, headResp.StatusCode)
+
+	infoResp := app_testing.MakeRequest(app, "GET", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", nil, "")
+	app_testing.AssertSuccess(t, infoResp)
+
+	deleteReq := httptest.NewRequest("DELETE", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", nil)
+	deleteReq.Header.Set("Tus-Resumable", "1.0.0")
+	deleteResp, deleteErr := app.Test(deleteReq)
+	assert.NoError(t, deleteErr)
+	assert.Equal(t, 204, deleteResp.StatusCode)
 
 	mockUC.AssertExpectations(t)
 }

@@ -75,7 +75,7 @@ func TestSendTusSlotResponse_Success(t *testing.T) {
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return SendTusSlotResponse(c, true, "Slot tersedia", 0, false, 3)
+		return SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 3)
 	})
 
 	req, _ := http.NewRequest("GET", "/test", nil)
@@ -89,7 +89,7 @@ func TestSendTusSlotResponse_Unavailable(t *testing.T) {
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return SendTusSlotResponse(c, false, "Slot penuh", 5, true, 3)
+		return SendTusSlotResponse(c, false, "Slot penuh", 5, 1, 3)
 	})
 
 	req, _ := http.NewRequest("GET", "/test", nil)
@@ -98,12 +98,11 @@ func TestSendTusSlotResponse_Unavailable(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 }
 
-// TestSendTusModulSlotResponse_Success tests TUS modul slot response
-func TestSendTusModulSlotResponse_Success(t *testing.T) {
+func TestSendTusSlotResponse_ModulShape(t *testing.T) {
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return SendTusModulSlotResponse(c, true, "Slot tersedia", 0, 10)
+		return SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 10)
 	})
 
 	req, _ := http.NewRequest("GET", "/test", nil)

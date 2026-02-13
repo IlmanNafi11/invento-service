@@ -14,11 +14,11 @@ func TestTusModulUploadStruct(t *testing.T) {
 			ID:         "modul-upload-123",
 			UserID:     "user-1",
 			ModulID:    &modulID,
-			UploadType: ModulUploadTypeCreate,
+			UploadType: UploadTypeModulCreate,
 			UploadURL:  "https://example.com/upload/modul-upload-123",
 			FileSize:   512000,
 			FilePath:   "/uploads/module.pdf",
-			Status:     ModulUploadStatusPending,
+			Status:     UploadStatusPending,
 			Progress:   0,
 			CreatedAt:  now,
 			UpdatedAt:  now,
@@ -34,11 +34,11 @@ func TestTusModulUploadStruct(t *testing.T) {
 		if upload.ModulID == nil || *upload.ModulID != "550e8400-e29b-41d4-a716-446655440050" {
 			t.Errorf("Expected ModulID '550e8400-e29b-41d4-a716-446655440050', got %v", upload.ModulID)
 		}
-		if upload.UploadType != ModulUploadTypeCreate {
-			t.Errorf("Expected UploadType '%s', got %s", ModulUploadTypeCreate, upload.UploadType)
+		if upload.UploadType != UploadTypeModulCreate {
+			t.Errorf("Expected UploadType '%s', got %s", UploadTypeModulCreate, upload.UploadType)
 		}
-		if upload.Status != ModulUploadStatusPending {
-			t.Errorf("Expected Status '%s', got %s", ModulUploadStatusPending, upload.Status)
+		if upload.Status != UploadStatusPending {
+			t.Errorf("Expected Status '%s', got %s", UploadStatusPending, upload.Status)
 		}
 	})
 
@@ -47,16 +47,16 @@ func TestTusModulUploadStruct(t *testing.T) {
 			ID:         "modul-upload-456",
 			UserID:     "user-2",
 			ModulID:    nil,
-			UploadType: ModulUploadTypeUpdate,
+			UploadType: UploadTypeModulUpdate,
 			FileSize:   256000,
-			Status:     ModulUploadStatusQueued,
+			Status:     UploadStatusQueued,
 		}
 
 		if upload.ModulID != nil {
 			t.Errorf("Expected nil ModulID, got %v", upload.ModulID)
 		}
-		if upload.UploadType != ModulUploadTypeUpdate {
-			t.Errorf("Expected UploadType '%s', got %s", ModulUploadTypeUpdate, upload.UploadType)
+		if upload.UploadType != UploadTypeModulUpdate {
+			t.Errorf("Expected UploadType '%s', got %s", UploadTypeModulUpdate, upload.UploadType)
 		}
 	})
 
@@ -67,15 +67,15 @@ func TestTusModulUploadStruct(t *testing.T) {
 		upload := TusModulUpload{
 			ID:          "modul-upload-789",
 			UserID:      "user-3",
-			UploadType:  ModulUploadTypeCreate,
+			UploadType:  UploadTypeModulCreate,
 			FileSize:    1024000,
-			Status:      ModulUploadStatusCompleted,
+			Status:      UploadStatusCompleted,
 			Progress:    100.0,
 			CompletedAt: &completedAt,
 		}
 
-		if upload.Status != ModulUploadStatusCompleted {
-			t.Errorf("Expected Status '%s', got %s", ModulUploadStatusCompleted, upload.Status)
+		if upload.Status != UploadStatusCompleted {
+			t.Errorf("Expected Status '%s', got %s", UploadStatusCompleted, upload.Status)
 		}
 		if upload.Progress != 100.0 {
 			t.Errorf("Expected Progress 100.0, got %f", upload.Progress)
@@ -89,13 +89,13 @@ func TestTusModulUploadStruct(t *testing.T) {
 func TestModulUploadStatusConstants(t *testing.T) {
 	t.Run("All modul upload status constants are defined", func(t *testing.T) {
 		statuses := []string{
-			ModulUploadStatusQueued,
-			ModulUploadStatusPending,
-			ModulUploadStatusUploading,
-			ModulUploadStatusCompleted,
-			ModulUploadStatusCancelled,
-			ModulUploadStatusFailed,
-			ModulUploadStatusExpired,
+			UploadStatusQueued,
+			UploadStatusPending,
+			UploadStatusUploading,
+			UploadStatusCompleted,
+			UploadStatusCancelled,
+			UploadStatusFailed,
+			UploadStatusExpired,
 		}
 
 		expectedStatuses := []string{
@@ -119,8 +119,8 @@ func TestModulUploadStatusConstants(t *testing.T) {
 func TestModulUploadTypeConstants(t *testing.T) {
 	t.Run("All modul upload type constants are defined", func(t *testing.T) {
 		types := []string{
-			ModulUploadTypeCreate,
-			ModulUploadTypeUpdate,
+			UploadTypeModulCreate,
+			UploadTypeModulUpdate,
 		}
 
 		expectedTypes := []string{
@@ -213,7 +213,7 @@ func TestTusModulUploadInfoResponse(t *testing.T) {
 			ModulID:   "550e8400-e29b-41d4-a716-446655440100",
 			Judul:     "Data Structures",
 			Deskripsi: "Learn about data structures",
-			Status:    ModulUploadStatusUploading,
+			Status:    UploadStatusUploading,
 			Progress:  75.0,
 			Offset:    750000,
 			Length:    1000000,
@@ -233,8 +233,8 @@ func TestTusModulUploadInfoResponse(t *testing.T) {
 		if resp.Deskripsi != "Learn about data structures" {
 			t.Errorf("Expected Deskripsi 'Learn about data structures', got %s", resp.Deskripsi)
 		}
-		if resp.Status != ModulUploadStatusUploading {
-			t.Errorf("Expected Status '%s', got %s", ModulUploadStatusUploading, resp.Status)
+		if resp.Status != UploadStatusUploading {
+			t.Errorf("Expected Status '%s', got %s", UploadStatusUploading, resp.Status)
 		}
 		if resp.Progress != 75.0 {
 			t.Errorf("Expected Progress 75.0, got %f", resp.Progress)
@@ -247,7 +247,7 @@ func TestTusModulUploadInfoResponse(t *testing.T) {
 			ModulID:   "",
 			Judul:     "New Module",
 			Deskripsi: "A new module description",
-			Status:    ModulUploadStatusPending,
+			Status:    UploadStatusPending,
 			Progress:  0,
 		}
 
@@ -355,9 +355,9 @@ func TestTusModulUploadProgressCalculation(t *testing.T) {
 func TestTusModulUploadStatusTransitions(t *testing.T) {
 	t.Run("Valid status transitions", func(t *testing.T) {
 		transitions := map[string][]string{
-			ModulUploadStatusQueued:    {ModulUploadStatusPending},
-			ModulUploadStatusPending:   {ModulUploadStatusUploading, ModulUploadStatusCancelled, ModulUploadStatusExpired},
-			ModulUploadStatusUploading: {ModulUploadStatusCompleted, ModulUploadStatusFailed, ModulUploadStatusCancelled},
+			UploadStatusQueued:    {UploadStatusPending},
+			UploadStatusPending:   {UploadStatusUploading, UploadStatusCancelled, UploadStatusExpired},
+			UploadStatusUploading: {UploadStatusCompleted, UploadStatusFailed, UploadStatusCancelled},
 		}
 
 		for from, validTo := range transitions {
@@ -388,10 +388,10 @@ func TestTusModulUploadMetadata(t *testing.T) {
 		upload := TusModulUpload{
 			ID:             "modul-upload-metadata-1",
 			UserID:         "user-1",
-			UploadType:     ModulUploadTypeCreate,
+			UploadType:     UploadTypeModulCreate,
 			UploadMetadata: metadata,
 			FileSize:       2500000,
-			Status:         ModulUploadStatusPending,
+			Status:         UploadStatusPending,
 			CreatedAt:      now,
 			UpdatedAt:      now,
 			ExpiresAt:      now.Add(24 * time.Hour),
@@ -412,15 +412,15 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 			ID:         "modul-upload-nil",
 			UserID:     "user-1",
 			ModulID:    nil,
-			UploadType: ModulUploadTypeCreate,
-			Status:     ModulUploadStatusPending,
+			UploadType: UploadTypeModulCreate,
+			Status:     UploadStatusPending,
 		}
 
 		if upload.ModulID != nil {
 			t.Errorf("Expected nil ModulID for new modul creation, got %v", upload.ModulID)
 		}
-		if upload.UploadType != ModulUploadTypeCreate {
-			t.Errorf("Expected UploadType '%s', got %s", ModulUploadTypeCreate, upload.UploadType)
+		if upload.UploadType != UploadTypeModulCreate {
+			t.Errorf("Expected UploadType '%s', got %s", UploadTypeModulCreate, upload.UploadType)
 		}
 	})
 
@@ -430,8 +430,8 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 			ID:         "modul-upload-update",
 			UserID:     "user-1",
 			ModulID:    &modulID,
-			UploadType: ModulUploadTypeUpdate,
-			Status:     ModulUploadStatusPending,
+			UploadType: UploadTypeModulUpdate,
+			Status:     UploadStatusPending,
 		}
 
 		if upload.ModulID == nil {
@@ -439,8 +439,8 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 		} else if *upload.ModulID != "550e8400-e29b-41d4-a716-446655440200" {
 			t.Errorf("Expected ModulID '550e8400-e29b-41d4-a716-446655440200', got %s", *upload.ModulID)
 		}
-		if upload.UploadType != ModulUploadTypeUpdate {
-			t.Errorf("Expected UploadType '%s', got %s", ModulUploadTypeUpdate, upload.UploadType)
+		if upload.UploadType != UploadTypeModulUpdate {
+			t.Errorf("Expected UploadType '%s', got %s", UploadTypeModulUpdate, upload.UploadType)
 		}
 	})
 
@@ -448,7 +448,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "modul-upload-zero-progress",
 			UserID:   "user-1",
-			Status:   ModulUploadStatusPending,
+			Status:   UploadStatusPending,
 			Progress: 0,
 			FileSize: 1000000,
 		}
@@ -462,7 +462,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "modul-upload-full-progress",
 			UserID:   "user-1",
-			Status:   ModulUploadStatusCompleted,
+			Status:   UploadStatusCompleted,
 			Progress: 100.0,
 			FileSize: 1000000,
 		}
@@ -476,7 +476,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 		upload := TusModulUpload{
 			ID:            "modul-upload-partial",
 			UserID:        "user-1",
-			Status:        ModulUploadStatusUploading,
+			Status:        UploadStatusUploading,
 			Progress:      45.5,
 			FileSize:      1000000,
 			CurrentOffset: 455000,
@@ -495,7 +495,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 			ID:        "modul-upload-no-url",
 			UserID:    "user-1",
 			UploadURL: "",
-			Status:    ModulUploadStatusQueued,
+			Status:    UploadStatusQueued,
 		}
 
 		if upload.UploadURL != "" {
@@ -508,7 +508,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 			ID:        "modul-upload-with-url",
 			UserID:    "user-1",
 			UploadURL: "https://example.com/tus/modul-upload-with-url",
-			Status:    ModulUploadStatusPending,
+			Status:    UploadStatusPending,
 		}
 
 		if upload.UploadURL == "" {
@@ -520,7 +520,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 		upload := TusModulUpload{
 			ID:          "modul-upload-in-progress",
 			UserID:      "user-1",
-			Status:      ModulUploadStatusUploading,
+			Status:      UploadStatusUploading,
 			Progress:    50.0,
 			CompletedAt: nil,
 		}
@@ -535,7 +535,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 		upload := TusModulUpload{
 			ID:          "modul-upload-done",
 			UserID:      "user-1",
-			Status:      ModulUploadStatusCompleted,
+			Status:      UploadStatusCompleted,
 			Progress:    100.0,
 			CompletedAt: &now,
 		}
@@ -550,7 +550,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 			ID:       "modul-upload-zero-size",
 			UserID:   "user-1",
 			FileSize: 0,
-			Status:   ModulUploadStatusPending,
+			Status:   UploadStatusPending,
 		}
 
 		if upload.FileSize != 0 {
@@ -563,7 +563,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 			ID:       "modul-upload-large",
 			UserID:   "user-1",
 			FileSize: 500000000, // 500MB
-			Status:   ModulUploadStatusPending,
+			Status:   UploadStatusPending,
 		}
 
 		if upload.FileSize != 500000000 {
@@ -694,7 +694,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 			ModulID:   "",
 			Judul:     "New Module",
 			Deskripsi: "New module description",
-			Status:    ModulUploadStatusPending,
+			Status:    UploadStatusPending,
 			Progress:  0,
 		}
 
@@ -709,7 +709,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 			ModulID:   "550e8400-e29b-41d4-a716-446655440300",
 			Judul:     "Updated Module",
 			Deskripsi: "Updated description",
-			Status:    ModulUploadStatusUploading,
+			Status:    UploadStatusUploading,
 			Progress:  50.0,
 		}
 
@@ -721,7 +721,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	t.Run("Zero progress for pending status", func(t *testing.T) {
 		resp := TusModulUploadInfoResponse{
 			UploadID: "pending-upload",
-			Status:   ModulUploadStatusPending,
+			Status:   UploadStatusPending,
 			Progress: 0,
 		}
 
@@ -733,7 +733,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	t.Run("Full progress for completed status", func(t *testing.T) {
 		resp := TusModulUploadInfoResponse{
 			UploadID: "completed-upload",
-			Status:   ModulUploadStatusCompleted,
+			Status:   UploadStatusCompleted,
 			Progress: 100.0,
 		}
 
@@ -824,7 +824,7 @@ func TestTusModulUploadInvalidProgress(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "negative-progress",
 			UserID:   "user-1",
-			Status:   ModulUploadStatusUploading,
+			Status:   UploadStatusUploading,
 			Progress: -10.0,
 		}
 
@@ -837,7 +837,7 @@ func TestTusModulUploadInvalidProgress(t *testing.T) {
 		upload := TusModulUpload{
 			ID:       "over-100-progress",
 			UserID:   "user-1",
-			Status:   ModulUploadStatusUploading,
+			Status:   UploadStatusUploading,
 			Progress: 150.0,
 		}
 

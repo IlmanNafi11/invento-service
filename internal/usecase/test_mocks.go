@@ -344,8 +344,8 @@ func (m *MockTusModulUploadRepository) Delete(id string) error {
 	return args.Error(0)
 }
 
-func (m *MockTusModulUploadRepository) GetExpiredUploads() ([]domain.TusModulUpload, error) {
-	args := m.Called()
+func (m *MockTusModulUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusModulUpload, error) {
+	args := m.Called(before)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -360,9 +360,9 @@ func (m *MockTusModulUploadRepository) GetAbandonedUploads(timeout time.Duration
 	return args.Get(0).([]domain.TusModulUpload), args.Error(1)
 }
 
-func (m *MockTusModulUploadRepository) CountActiveByUserID(userID string) (int, error) {
+func (m *MockTusModulUploadRepository) CountActiveByUserID(userID string) (int64, error) {
 	args := m.Called(userID)
-	return args.Int(0), args.Error(1)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func (m *MockTusModulUploadRepository) GetActiveByUserID(userID string) ([]domain.TusModulUpload, error) {
@@ -417,12 +417,33 @@ func (m *MockTusUploadRepository) UpdateStatus(id string, status string) error {
 	return args.Error(0)
 }
 
-func (m *MockTusUploadRepository) GetExpired(before time.Time) ([]domain.TusUpload, error) {
+func (m *MockTusUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusUpload, error) {
 	args := m.Called(before)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]domain.TusUpload), args.Error(1)
+}
+
+func (m *MockTusUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error) {
+	args := m.Called(timeout)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.TusUpload), args.Error(1)
+}
+
+func (m *MockTusUploadRepository) GetActiveByUserID(userID string) ([]domain.TusUpload, error) {
+	args := m.Called(userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.TusUpload), args.Error(1)
+}
+
+func (m *MockTusUploadRepository) Complete(id string, projectID uint, filePath string) error {
+	args := m.Called(id, projectID, filePath)
+	return args.Error(0)
 }
 
 func (m *MockTusUploadRepository) GetByUserIDAndStatus(userID string, status string) ([]domain.TusUpload, error) {
@@ -444,16 +465,6 @@ func (m *MockTusUploadRepository) ListActive() ([]domain.TusUpload, error) {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]domain.TusUpload), args.Error(1)
-}
-
-func (m *MockTusUploadRepository) UpdateOffsetOnly(id string, offset int64) error {
-	args := m.Called(id, offset)
-	return args.Error(0)
-}
-
-func (m *MockTusUploadRepository) UpdateUpload(upload *domain.TusUpload) error {
-	args := m.Called(upload)
-	return args.Error(0)
 }
 
 func (m *MockTusUploadRepository) CountActiveByUserID(userID string) (int64, error) {

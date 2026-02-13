@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -33,29 +34,38 @@ type TusHeaders struct {
 	Location       string
 }
 
-func GetTusHeaders(c *fiber.Ctx) *TusHeaders {
-	headers := &TusHeaders{
+func GetTusHeaders(c *fiber.Ctx) (TusHeaders, error) {
+	headers := TusHeaders{
 		TusResumable:   c.Get(HeaderTusResumable),
 		UploadMetadata: c.Get(HeaderUploadMetadata),
 		ContentType:    c.Get(HeaderContentType),
 	}
 
 	if offsetStr := c.Get(HeaderUploadOffset); offsetStr != "" {
-		offset, _ := strconv.ParseInt(offsetStr, 10, 64)
+		offset, err := strconv.ParseInt(offsetStr, 10, 64)
+		if err != nil {
+			return TusHeaders{}, fmt.Errorf("header %s tidak valid: %w", HeaderUploadOffset, err)
+		}
 		headers.UploadOffset = offset
 	}
 
 	if lengthStr := c.Get(HeaderUploadLength); lengthStr != "" {
-		length, _ := strconv.ParseInt(lengthStr, 10, 64)
+		length, err := strconv.ParseInt(lengthStr, 10, 64)
+		if err != nil {
+			return TusHeaders{}, fmt.Errorf("header %s tidak valid: %w", HeaderUploadLength, err)
+		}
 		headers.UploadLength = length
 	}
 
 	if contentLengthStr := c.Get(HeaderContentLength); contentLengthStr != "" {
-		contentLength, _ := strconv.ParseInt(contentLengthStr, 10, 64)
+		contentLength, err := strconv.ParseInt(contentLengthStr, 10, 64)
+		if err != nil {
+			return TusHeaders{}, fmt.Errorf("header %s tidak valid: %w", HeaderContentLength, err)
+		}
 		headers.ContentLength = contentLength
 	}
 
-	return headers
+	return headers, nil
 }
 
 func SetTusResponseHeaders(c *fiber.Ctx, offset int64, length int64) {

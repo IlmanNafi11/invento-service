@@ -27,11 +27,25 @@ type MockTusUploadRepository struct {
 	getError    bool
 }
 
-func (m *MockTusUploadRepository) GetExpired(before time.Time) ([]domain.TusUpload, error) {
+func (m *MockTusUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusUpload, error) {
 	if m.getError {
 		return nil, assert.AnError
 	}
 	return m.expired, nil
+}
+
+func (m *MockTusUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error) {
+	if m.getError {
+		return nil, assert.AnError
+	}
+	threshold := time.Now().Add(-timeout)
+	result := make([]domain.TusUpload, 0)
+	for _, upload := range m.active {
+		if upload.UpdatedAt.Before(threshold) {
+			result = append(result, upload)
+		}
+	}
+	return result, nil
 }
 
 func (m *MockTusUploadRepository) UpdateStatus(id string, status string) error {
@@ -53,26 +67,19 @@ func (m *MockTusUploadRepository) Delete(id string) error {
 	return nil
 }
 
-func (m *MockTusUploadRepository) ListActive() ([]domain.TusUpload, error) {
-	if m.getError {
-		return nil, assert.AnError
-	}
-	return m.active, nil
-}
-
 func setupTestConfig() *config.Config {
 	return &config.Config{
 		App: config.AppConfig{
 			Env: "test",
 		},
 		Upload: config.UploadConfig{
-			PathProduction:      "/tmp/uploads",
-			PathDevelopment:     "/tmp/uploads",
-			TempPathProduction:  "/tmp/uploads/temp",
-			TempPathDevelopment: "/tmp/uploads/temp",
-			MaxSize:             100 * 1024 * 1024, // 100MB
+			PathProduction:       "/tmp/uploads",
+			PathDevelopment:      "/tmp/uploads",
+			TempPathProduction:   "/tmp/uploads/temp",
+			TempPathDevelopment:  "/tmp/uploads/temp",
+			MaxSize:              100 * 1024 * 1024, // 100MB
 			MaxConcurrentProject: 3,
-			TusVersion:          "1.0.0",
+			TusVersion:           "1.0.0",
 		},
 	}
 }
@@ -153,50 +160,24 @@ func TestTusManager_ResetUploadQueue_Success(t *testing.T) {
 }
 
 func TestTusManager_ParseMetadata_Success(t *testing.T) {
-	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg)
-
 	// Valid base64 encoded metadata
 	metadata := "filename dGVzdC56aXA=,content-type YXBwbGljYXRpb24vemlw"
 
-	parsed, err := manager.ParseMetadata(metadata)
-
-	assert.NoError(t, err)
+	parsed := helper.ParseTusMetadata(metadata)
 	assert.Equal(t, "test.zip", parsed["filename"])
 	assert.Equal(t, "application/zip", parsed["content-type"])
 }
 
 func TestTusManager_ParseMetadata_Empty(t *testing.T) {
-	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg)
-
-	parsed, err := manager.ParseMetadata("")
-
-	assert.NoError(t, err)
+	parsed := helper.ParseTusMetadata("")
 	assert.Empty(t, parsed)
 }
 
 func TestTusManager_ParseMetadata_InvalidBase64(t *testing.T) {
-	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg)
-
 	metadata := "filename invalid_base64!!!"
 
-	_, err := manager.ParseMetadata(metadata)
-
-	assert.Error(t, err)
+	parsed := helper.ParseTusMetadata(metadata)
+	assert.Equal(t, "", parsed["filename"])
 }
 
 func TestTusManager_ValidateProjectMetadata_Success(t *testing.T) {
@@ -434,53 +415,6 @@ func TestTusManager_ValidateContentType_Invalid(t *testing.T) {
 	manager := helper.NewTusManager(store, queue, fileManager, cfg)
 
 	err := manager.ValidateContentType("application/json")
-	assert.Error(t, err)
-}
-
-func TestTusManager_ExtractUserIDFromMetadata_Success(t *testing.T) {
-	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg)
-
-	metadata := map[string]string{
-		"user_id": "123",
-	}
-
-	userID, err := manager.ExtractUserIDFromMetadata(metadata)
-	assert.NoError(t, err)
-	assert.Equal(t, uint(123), userID)
-}
-
-func TestTusManager_ExtractUserIDFromMetadata_Missing(t *testing.T) {
-	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg)
-
-	metadata := map[string]string{}
-
-	_, err := manager.ExtractUserIDFromMetadata(metadata)
-	assert.Error(t, err)
-}
-
-func TestTusManager_ExtractUserIDFromMetadata_Invalid(t *testing.T) {
-	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg)
-
-	metadata := map[string]string{
-		"user_id": "invalid",
-	}
-
-	_, err := manager.ExtractUserIDFromMetadata(metadata)
 	assert.Error(t, err)
 }
 
@@ -1031,7 +965,7 @@ func TestSendTusDeleteResponse_Success(t *testing.T) {
 func TestSendTusSlotResponse_Available(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusSlotResponse(c, true, "Slot tersedia", 0, false, 3)
+		return helper.SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 3)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -1048,7 +982,7 @@ func TestSendTusSlotResponse_Available(t *testing.T) {
 func TestSendTusModulSlotResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusModulSlotResponse(c, true, "Slot tersedia", 0, 10)
+		return helper.SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 10)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -1259,7 +1193,10 @@ func TestGetTusHeaders_Success(t *testing.T) {
 		c.Set("Content-Type", "application/offset+octet-stream")
 		c.Set("Content-Length", "50")
 
-		headers := helper.GetTusHeaders(c)
+		headers, err := helper.GetTusHeaders(c)
+		if err != nil {
+			return err
+		}
 
 		return c.JSON(headers)
 	})
@@ -1274,7 +1211,10 @@ func TestGetTusHeaders_Success(t *testing.T) {
 func TestGetTusHeaders_EmptyHeaders(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		headers := helper.GetTusHeaders(c)
+		headers, err := helper.GetTusHeaders(c)
+		if err != nil {
+			return err
+		}
 
 		return c.JSON(headers)
 	})
@@ -1409,7 +1349,7 @@ func TestNewTusCleanup_Success(t *testing.T) {
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	assert.NotNil(t, cleanup)
 }
@@ -1421,7 +1361,7 @@ func TestTusCleanup_Start_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	cleanup.Start()
 
@@ -1439,7 +1379,7 @@ func TestTusCleanup_Start_AlreadyRunning(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	cleanup.Start()
 	cleanup.Start() // Should not cause issues
@@ -1454,7 +1394,7 @@ func TestTusCleanup_Stop_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	cleanup.Start()
 	cleanup.Stop()
@@ -1470,7 +1410,7 @@ func TestTusCleanup_Stop_NotRunning(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	cleanup.Stop() // Should not cause issues
 
@@ -1490,7 +1430,7 @@ func TestTusCleanup_CleanupExpired_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	// Create a temp upload
 	err := store.NewUpload(helper.TusFileInfo{ID: "expired-1", Size: 1024})
@@ -1508,7 +1448,7 @@ func TestTusCleanup_CleanupExpired_NoExpired(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	err := cleanup.CleanupExpiredProjects()
 	assert.NoError(t, err)
@@ -1523,7 +1463,7 @@ func TestTusCleanup_CleanupExpired_RepositoryError(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	err := cleanup.CleanupExpiredProjects()
 	assert.Error(t, err)
@@ -1544,7 +1484,7 @@ func TestTusCleanup_CleanupAbandoned_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	// Create a temp upload
 	err := store.NewUpload(helper.TusFileInfo{ID: "abandoned-1", Size: 1024})
@@ -1562,7 +1502,7 @@ func TestTusCleanup_CleanupAbandoned_NoActive(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	err := cleanup.CleanupAbandonedProjects()
 	assert.NoError(t, err)
@@ -1577,7 +1517,7 @@ func TestTusCleanup_CleanupAbandoned_RepositoryError(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	err := cleanup.CleanupAbandonedProjects()
 	assert.Error(t, err)
@@ -1595,7 +1535,7 @@ func TestTusCleanup_CleanupUpload_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	// Create a temp upload
 	err := store.NewUpload(helper.TusFileInfo{ID: "test-upload", Size: 1024})
@@ -1612,12 +1552,12 @@ func TestTusCleanup_CleanupUpload_Success(t *testing.T) {
 func TestTusCleanup_CleanupUpload_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
-		uploads:    map[string]domain.TusUpload{},
+		uploads:     map[string]domain.TusUpload{},
 		deleteError: true, // Simulate error for non-existent
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, 60, 300)
+	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300)
 
 	err := cleanup.CleanupUpload("nonexistent")
 	assert.Error(t, err)
@@ -2153,7 +2093,7 @@ func TestTusManager_ValidateOffset_Mismatch(t *testing.T) {
 	_, err = manager.ValidateOffset(uploadID, 100)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Offset tidak valid")
+	assert.Contains(t, err.Error(), "Upload offset tidak sesuai")
 }
 
 func TestTusManager_ValidateOffset_NotFound(t *testing.T) {
@@ -2200,37 +2140,19 @@ func TestTusManager_ResetUploadQueue_WithActiveUpload(t *testing.T) {
 }
 
 func TestTusManager_ParseMetadata_WithSpaces(t *testing.T) {
-	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg)
-
 	// Metadata with extra spaces between key and value (spaces around the comma are trimmed)
 	metadata := "filename dGVzdC56aXA=, content-type YXBwbGljYXRpb24vemlw"
 
-	parsed, err := manager.ParseMetadata(metadata)
-
-	assert.NoError(t, err)
+	parsed := helper.ParseTusMetadata(metadata)
 	assert.Equal(t, "test.zip", parsed["filename"])
 	assert.Equal(t, "application/zip", parsed["content-type"])
 }
 
 func TestTusManager_ParseMetadata_InvalidPair(t *testing.T) {
-	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg)
-
 	// Invalid pair format (missing value)
 	metadata := "filename dGVzdC56aXA=,invalid-key"
 
-	parsed, err := manager.ParseMetadata(metadata)
-
-	assert.NoError(t, err)
+	parsed := helper.ParseTusMetadata(metadata)
 	assert.Equal(t, "test.zip", parsed["filename"])
 }
 

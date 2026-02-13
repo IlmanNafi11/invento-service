@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/valyala/fasthttp"
 	"github.com/stretchr/testify/assert"
+	"github.com/valyala/fasthttp"
 )
 
 func TestGetTusHeaders_Basic(t *testing.T) {
@@ -22,7 +22,8 @@ func TestGetTusHeaders_Basic(t *testing.T) {
 	c.Request().Header.Set("Content-Type", "application/offset+octet-stream")
 	c.Request().Header.Set("Content-Length", "4096")
 
-	headers := helper.GetTusHeaders(c)
+	headers, err := helper.GetTusHeaders(c)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "1.0.0", headers.TusResumable)
 	assert.Equal(t, int64(1024), headers.UploadOffset)
@@ -37,7 +38,8 @@ func TestGetTusHeaders_EmptyHeaders(t *testing.T) {
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 	defer app.ReleaseCtx(c)
 
-	headers := helper.GetTusHeaders(c)
+	headers, err := helper.GetTusHeaders(c)
+	assert.NoError(t, err)
 
 	assert.Empty(t, headers.TusResumable)
 	assert.Equal(t, int64(0), headers.UploadOffset)
@@ -57,12 +59,8 @@ func TestGetTusHeaders_InvalidNumbers(t *testing.T) {
 	c.Request().Header.Set("Upload-Length", "not-a-number")
 	c.Request().Header.Set("Content-Length", "abc")
 
-	headers := helper.GetTusHeaders(c)
-
-	// Should default to 0 for invalid values
-	assert.Equal(t, int64(0), headers.UploadOffset)
-	assert.Equal(t, int64(0), headers.UploadLength)
-	assert.Equal(t, int64(0), headers.ContentLength)
+	_, err := helper.GetTusHeaders(c)
+	assert.Error(t, err)
 }
 
 func TestTusHeaders_Constants(t *testing.T) {
@@ -265,7 +263,8 @@ func TestGetTusHeaders_PartialHeaders(t *testing.T) {
 	c.Request().Header.Set("Upload-Offset", "512")
 	c.Request().Header.Set("Content-Type", "application/octet-stream")
 
-	headers := helper.GetTusHeaders(c)
+	headers, err := helper.GetTusHeaders(c)
+	assert.NoError(t, err)
 
 	assert.Empty(t, headers.TusResumable)
 	assert.Equal(t, int64(512), headers.UploadOffset)

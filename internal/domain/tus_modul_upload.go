@@ -21,19 +21,6 @@ type TusModulUpload struct {
 	User           User                      `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }
 
-const (
-	ModulUploadStatusQueued    = "queued"
-	ModulUploadStatusPending   = "pending"
-	ModulUploadStatusUploading = "uploading"
-	ModulUploadStatusCompleted = "completed"
-	ModulUploadStatusCancelled = "cancelled"
-	ModulUploadStatusFailed    = "failed"
-	ModulUploadStatusExpired   = "expired"
-
-	ModulUploadTypeCreate = "modul_create"
-	ModulUploadTypeUpdate = "modul_update"
-)
-
 type TusModulUploadInitRequest struct {
 	Judul     string `json:"judul" validate:"required,min=3,max=255"`
 	Deskripsi string `json:"deskripsi"`

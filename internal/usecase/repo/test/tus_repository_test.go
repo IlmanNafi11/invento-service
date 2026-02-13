@@ -54,8 +54,16 @@ func (m *MockTusUploadRepository) UpdateStatus(id string, status string) error {
 	return args.Error(0)
 }
 
-func (m *MockTusUploadRepository) GetExpired(before time.Time) ([]domain.TusUpload, error) {
+func (m *MockTusUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusUpload, error) {
 	args := m.Called(before)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.TusUpload), args.Error(1)
+}
+
+func (m *MockTusUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error) {
+	args := m.Called(timeout)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -322,7 +330,7 @@ func TestTusUploadRepository_ListActiveUploads_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestTusUploadRepository_GetExpired_Success(t *testing.T) {
+func TestTusUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 	mockRepo := new(MockTusUploadRepository)
 
 	before := time.Now()
@@ -341,9 +349,9 @@ func TestTusUploadRepository_GetExpired_Success(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("GetExpired", mock.AnythingOfType("time.Time")).Return(expectedUploads, nil)
+	mockRepo.On("GetExpiredUploads", mock.AnythingOfType("time.Time")).Return(expectedUploads, nil)
 
-	uploads, err := mockRepo.GetExpired(before)
+	uploads, err := mockRepo.GetExpiredUploads(before)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, uploads)
@@ -397,8 +405,8 @@ func (m *MockTusModulUploadRepository) Delete(id string) error {
 	return args.Error(0)
 }
 
-func (m *MockTusModulUploadRepository) GetExpiredUploads() ([]domain.TusModulUpload, error) {
-	args := m.Called()
+func (m *MockTusModulUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusModulUpload, error) {
+	args := m.Called(before)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -442,14 +450,14 @@ func TestTusModulUploadRepository_Create_Success(t *testing.T) {
 	upload := &domain.TusModulUpload{
 		ID:         "test-modul-upload-id",
 		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
+		UploadType: domain.UploadTypeModulCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			Judul:     "Test Modul",
 			Deskripsi: "Test Deskripsi",
 		},
 		FileSize:      1024 * 1024,
 		CurrentOffset: 0,
-		Status:        domain.ModulUploadStatusPending,
+		Status:        domain.UploadStatusPending,
 		Progress:      0,
 		ExpiresAt:     time.Now().Add(1 * time.Hour),
 	}
@@ -462,7 +470,7 @@ func TestTusModulUploadRepository_Create_Success(t *testing.T) {
 	assert.NotNil(t, upload)
 	assert.Equal(t, "test-modul-upload-id", upload.ID)
 	assert.Equal(t, "user-1", upload.UserID)
-	assert.Equal(t, domain.ModulUploadTypeCreate, upload.UploadType)
+	assert.Equal(t, domain.UploadTypeModulCreate, upload.UploadType)
 	assert.Equal(t, "Test Modul", upload.UploadMetadata.Judul)
 	mockRepo.AssertExpectations(t)
 }
@@ -474,14 +482,14 @@ func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
 	expectedUpload := &domain.TusModulUpload{
 		ID:         uploadID,
 		UserID:     "user-1",
-		UploadType: domain.ModulUploadTypeCreate,
+		UploadType: domain.UploadTypeModulCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
 			Judul:     "Test Modul",
 			Deskripsi: "Test Deskripsi",
 		},
 		FileSize:      1024 * 1024,
 		CurrentOffset: 512 * 1024,
-		Status:        domain.ModulUploadStatusUploading,
+		Status:        domain.UploadStatusUploading,
 		Progress:      50.0,
 		ExpiresAt:     time.Now().Add(1 * time.Hour),
 		CreatedAt:     time.Now(),
@@ -510,14 +518,14 @@ func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
 		{
 			ID:         "modul-upload-1",
 			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
+			UploadType: domain.UploadTypeModulCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				Judul:     "Modul 1",
 				Deskripsi: "Deskripsi 1",
 			},
 			FileSize:      1024 * 1024,
 			CurrentOffset: 1024 * 1024,
-			Status:        domain.ModulUploadStatusCompleted,
+			Status:        domain.UploadStatusCompleted,
 			Progress:      100.0,
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
@@ -525,14 +533,14 @@ func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
 		{
 			ID:         "modul-upload-2",
 			UserID:     userID,
-			UploadType: domain.ModulUploadTypeUpdate,
+			UploadType: domain.UploadTypeModulUpdate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				Judul:     "Modul 2",
 				Deskripsi: "Deskripsi 2",
 			},
 			FileSize:      2048 * 1024,
 			CurrentOffset: 1024 * 1024,
-			Status:        domain.ModulUploadStatusUploading,
+			Status:        domain.UploadStatusUploading,
 			Progress:      50.0,
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
@@ -572,7 +580,7 @@ func TestTusModulUploadRepository_UpdateStatus_Success(t *testing.T) {
 	mockRepo := new(MockTusModulUploadRepository)
 
 	uploadID := "test-modul-upload-id"
-	newStatus := domain.ModulUploadStatusCompleted
+	newStatus := domain.UploadStatusCompleted
 
 	mockRepo.On("UpdateStatus", uploadID, newStatus).Return(nil)
 
@@ -603,14 +611,14 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 		{
 			ID:         "active-upload-1",
 			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
+			UploadType: domain.UploadTypeModulCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				Judul:     "Active Modul 1",
 				Deskripsi: "Deskripsi 1",
 			},
 			FileSize:      1024 * 1024,
 			CurrentOffset: 512 * 1024,
-			Status:        domain.ModulUploadStatusUploading,
+			Status:        domain.UploadStatusUploading,
 			Progress:      50.0,
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
@@ -618,14 +626,14 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 		{
 			ID:         "active-upload-2",
 			UserID:     userID,
-			UploadType: domain.ModulUploadTypeCreate,
+			UploadType: domain.UploadTypeModulCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				Judul:     "Active Modul 2",
 				Deskripsi: "Deskripsi 2",
 			},
 			FileSize:      2048 * 1024,
 			CurrentOffset: 0,
-			Status:        domain.ModulUploadStatusQueued,
+			Status:        domain.UploadStatusQueued,
 			Progress:      0.0,
 			CreatedAt:     time.Now(),
 			UpdatedAt:     time.Now(),
@@ -639,8 +647,8 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, uploads)
 	assert.Equal(t, 2, len(uploads))
-	assert.Equal(t, domain.ModulUploadStatusUploading, uploads[0].Status)
-	assert.Equal(t, domain.ModulUploadStatusQueued, uploads[1].Status)
+	assert.Equal(t, domain.UploadStatusUploading, uploads[0].Status)
+	assert.Equal(t, domain.UploadStatusQueued, uploads[1].Status)
 	assert.Equal(t, "Active Modul 1", uploads[0].UploadMetadata.Judul)
 	assert.Equal(t, "Active Modul 2", uploads[1].UploadMetadata.Judul)
 	mockRepo.AssertExpectations(t)
@@ -648,19 +656,20 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 
 func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 	mockRepo := new(MockTusModulUploadRepository)
+	before := time.Now()
 
 	expectedUploads := []domain.TusModulUpload{
 		{
 			ID:         "expired-modul-upload-1",
 			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
+			UploadType: domain.UploadTypeModulCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				Judul:     "Expired Modul",
 				Deskripsi: "Expired Deskripsi",
 			},
 			FileSize:      1024 * 1024,
 			CurrentOffset: 256 * 1024,
-			Status:        domain.ModulUploadStatusPending,
+			Status:        domain.UploadStatusPending,
 			Progress:      25.0,
 			ExpiresAt:     time.Now().Add(-1 * time.Hour),
 			CreatedAt:     time.Now().Add(-2 * time.Hour),
@@ -668,9 +677,9 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("GetExpiredUploads").Return(expectedUploads, nil)
+	mockRepo.On("GetExpiredUploads", mock.AnythingOfType("time.Time")).Return(expectedUploads, nil)
 
-	uploads, err := mockRepo.GetExpiredUploads()
+	uploads, err := mockRepo.GetExpiredUploads(before)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, uploads)
@@ -718,14 +727,14 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 		{
 			ID:         "abandoned-upload-1",
 			UserID:     "user-1",
-			UploadType: domain.ModulUploadTypeCreate,
+			UploadType: domain.UploadTypeModulCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
 				Judul:     "Abandoned Modul",
 				Deskripsi: "Abandoned Deskripsi",
 			},
 			FileSize:      1024 * 1024,
 			CurrentOffset: 128 * 1024,
-			Status:        domain.ModulUploadStatusUploading,
+			Status:        domain.UploadStatusUploading,
 			Progress:      12.5,
 			UpdatedAt:     time.Now().Add(-1 * time.Hour),
 			CreatedAt:     time.Now().Add(-2 * time.Hour),

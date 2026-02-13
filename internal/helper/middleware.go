@@ -4,6 +4,7 @@ import (
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/usecase/repo"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -91,7 +92,7 @@ func RBACMiddleware(casbinEnforcer CasbinPermissionChecker, resource string, act
 	}
 }
 
-func TusProtocolMiddleware(tusVersion string) fiber.Handler {
+func TusProtocolMiddleware(tusVersion string, maxSize int64) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		method := c.Method()
 
@@ -99,7 +100,7 @@ func TusProtocolMiddleware(tusVersion string) fiber.Handler {
 			c.Set("Tus-Resumable", tusVersion)
 			c.Set("Tus-Version", tusVersion)
 			c.Set("Tus-Extension", "creation,termination")
-			c.Set("Tus-Max-Size", "524288000")
+			c.Set("Tus-Max-Size", strconv.FormatInt(maxSize, 10))
 			return c.SendStatus(fiber.StatusNoContent)
 		}
 

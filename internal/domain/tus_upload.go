@@ -32,6 +32,8 @@ const (
 
 	UploadTypeProjectCreate = "project_create"
 	UploadTypeProjectUpdate = "project_update"
+	UploadTypeModulCreate   = "modul_create"
+	UploadTypeModulUpdate   = "modul_update"
 )
 
 type TusUploadInitRequest struct {

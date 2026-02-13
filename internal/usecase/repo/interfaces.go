@@ -72,16 +72,16 @@ type TusUploadRepository interface {
 	Create(upload *domain.TusUpload) error
 	GetByID(id string) (*domain.TusUpload, error)
 	GetByUserID(userID string) ([]domain.TusUpload, error)
+	GetActiveByUserID(userID string) ([]domain.TusUpload, error)
 	CountActiveByUserID(userID string) (int64, error)
 	UpdateOffset(id string, offset int64, progress float64) error
 	UpdateStatus(id string, status string) error
-	GetExpired(before time.Time) ([]domain.TusUpload, error)
-	GetByUserIDAndStatus(userID string, status string) ([]domain.TusUpload, error)
+	Complete(id string, projectID uint, filePath string) error
+	GetExpiredUploads(before time.Time) ([]domain.TusUpload, error)
+	GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error)
 	Delete(id string) error
 	ListActive() ([]domain.TusUpload, error)
 	GetActiveUploadIDs() ([]string, error)
-	UpdateOffsetOnly(id string, offset int64) error
-	UpdateUpload(upload *domain.TusUpload) error
 }
 
 type TusModulUploadRepository interface {
@@ -92,9 +92,9 @@ type TusModulUploadRepository interface {
 	UpdateStatus(id string, status string) error
 	Complete(id string, modulID string, filePath string) error
 	Delete(id string) error
-	GetExpiredUploads() ([]domain.TusModulUpload, error)
+	GetExpiredUploads(before time.Time) ([]domain.TusModulUpload, error)
 	GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error)
-	CountActiveByUserID(userID string) (int, error)
+	CountActiveByUserID(userID string) (int64, error)
 	GetActiveByUserID(userID string) ([]domain.TusModulUpload, error)
 	GetActiveUploadIDs() ([]string, error)
 }

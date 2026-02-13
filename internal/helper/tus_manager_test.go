@@ -75,23 +75,18 @@ func TestTusManager_ResetUploadQueue_TerminatesActiveAndClearsQueue(t *testing.T
 }
 
 func TestTusManager_ParseMetadata_DecodesBase64Pairs(t *testing.T) {
-	manager, _, _ := newTestTusManager(t)
-
 	name := base64.StdEncoding.EncodeToString([]byte("doc.zip"))
 	typev := base64.StdEncoding.EncodeToString([]byte("application/zip"))
 
-	data, err := manager.ParseMetadata("filename " + name + ",content_type " + typev)
-	require.NoError(t, err)
+	data := ParseTusMetadata("filename " + name + ",content_type " + typev)
 	assert.Equal(t, "doc.zip", data["filename"])
 	assert.Equal(t, "application/zip", data["content_type"])
 }
 
-func TestTusManager_ParseMetadata_InvalidBase64ReturnsError(t *testing.T) {
-	manager, _, _ := newTestTusManager(t)
-
-	_, err := manager.ParseMetadata("filename !!!")
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "metadata key filename tidak valid")
+func TestTusManager_ParseMetadata_InvalidBase64DefaultsEmptyValue(t *testing.T) {
+	data := ParseTusMetadata("filename !!!")
+	assert.Contains(t, data, "filename")
+	assert.Equal(t, "", data["filename"])
 }
 
 func TestTusManager_ValidateProjectMetadata_ValidatesFields(t *testing.T) {
@@ -207,7 +202,7 @@ func TestTusManager_ValidateOffset_ReturnsMismatchWhenDifferent(t *testing.T) {
 	serverOffset, err = manager.ValidateOffset("u4", 0)
 	require.Error(t, err)
 	assert.Equal(t, int64(5), serverOffset)
-	assert.Contains(t, err.Error(), "Offset tidak valid")
+	assert.Contains(t, err.Error(), "Upload offset tidak sesuai")
 }
 
 func TestTusManager_ValidateContentType_ValidatesRequiredType(t *testing.T) {

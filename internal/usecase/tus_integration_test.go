@@ -273,7 +273,7 @@ func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 
 	info, err := env.modulUsecase.GetModulUploadInfo(resp.UploadID, env.userID)
 	require.NoError(t, err)
-	assert.Equal(t, domain.ModulUploadStatusPending, info.Status)
+	assert.Equal(t, domain.UploadStatusPending, info.Status)
 
 	offset, err := env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
@@ -281,7 +281,7 @@ func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 
 	info, err = env.modulUsecase.GetModulUploadInfo(resp.UploadID, env.userID)
 	require.NoError(t, err)
-	assert.Equal(t, domain.ModulUploadStatusUploading, info.Status)
+	assert.Equal(t, domain.UploadStatusUploading, info.Status)
 	assert.Equal(t, int64(1024), info.Offset)
 
 	offset, err = env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, offset, createTestChunk(1024))
@@ -290,7 +290,7 @@ func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 
 	var upload domain.TusModulUpload
 	require.NoError(t, env.db.Where("id = ?", resp.UploadID).First(&upload).Error)
-	assert.Equal(t, domain.ModulUploadStatusCompleted, upload.Status)
+	assert.Equal(t, domain.UploadStatusCompleted, upload.Status)
 	require.NotNil(t, upload.ModulID)
 
 	var modul domain.Modul
@@ -331,7 +331,7 @@ func TestTusModulUploadResumeAfterPauseIntegration(t *testing.T) {
 
 	var upload domain.TusModulUpload
 	require.NoError(t, env.db.Where("id = ?", resp.UploadID).First(&upload).Error)
-	assert.Equal(t, domain.ModulUploadStatusCompleted, upload.Status)
+	assert.Equal(t, domain.UploadStatusCompleted, upload.Status)
 }
 
 func TestTusModulUploadCancelIntegration(t *testing.T) {
@@ -355,7 +355,7 @@ func TestTusModulUploadCancelIntegration(t *testing.T) {
 
 	var upload domain.TusModulUpload
 	require.NoError(t, env.db.Where("id = ?", resp.UploadID).First(&upload).Error)
-	assert.Equal(t, domain.ModulUploadStatusCancelled, upload.Status)
+	assert.Equal(t, domain.UploadStatusCancelled, upload.Status)
 
 	_, statErr := os.Stat(tempUploadPath)
 	assert.True(t, os.IsNotExist(statErr))
@@ -416,7 +416,7 @@ func TestTusUploadOffsetMismatchIntegration(t *testing.T) {
 	returnedOffset, err := env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, 0, createTestChunk(512))
 	require.Error(t, err)
 	assert.Equal(t, int64(1024), returnedOffset)
-	assert.Contains(t, err.Error(), "Offset")
+	assert.Contains(t, err.Error(), "offset")
 }
 
 func TestTusUploadStatusTransitionsIntegration(t *testing.T) {

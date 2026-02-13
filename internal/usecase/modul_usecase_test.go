@@ -280,12 +280,12 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 
 	userID := "user-1"
 
-	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(1, nil)
+	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(int64(1), nil)
 
 	response, err := mockTusModulUploadRepo.CountActiveByUserID(userID)
 
 	assert.NoError(t, err)
-	assert.Equal(t, 1, response)
+	assert.Equal(t, int64(1), response)
 	mockTusModulUploadRepo.AssertExpectations(t)
 }
 
@@ -315,7 +315,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 	// TUS metadata format: "key base64value,key2 base64value2"
 	metadata := "judul VGVzdCBKdWR1bA==,deskripsi VGVzdCBEZXNrcmlwc2k="
 
-	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(0, nil)
+	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(int64(0), nil)
 	mockTusModulUploadRepo.On("Create", mock.AnythingOfType("*domain.TusModulUpload")).Return(nil)
 
 	response, err := tusModulUc.InitiateModulUpload(userID, fileSize, metadata)
@@ -358,12 +358,12 @@ func TestUploadChunk_Success(t *testing.T) {
 	existingUpload := &domain.TusModulUpload{
 		ID:             uploadID,
 		UserID:         userID,
-		UploadType:     domain.ModulUploadTypeCreate,
+		UploadType:     domain.UploadTypeModulCreate,
 		UploadURL:      "/modul/upload/" + uploadID,
 		UploadMetadata: domain.TusModulUploadInitRequest{Judul: "Test Modul", Deskripsi: "Test Deskripsi"},
 		FileSize:       1024 * 1024,
 		CurrentOffset:  0,
-		Status:         domain.ModulUploadStatusPending,
+		Status:         domain.UploadStatusPending,
 		Progress:       0,
 		ExpiresAt:      time.Now().Add(30 * time.Minute),
 		CreatedAt:      time.Now(),

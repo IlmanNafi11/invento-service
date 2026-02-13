@@ -46,7 +46,7 @@ func SendTusDeleteResponse(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-func SendTusSlotResponse(c *fiber.Ctx, available bool, message string, queueLength int, activeUpload bool, maxConcurrent int) error {
+func SendTusSlotResponse(c *fiber.Ctx, available bool, message string, queueLength int, activeCount int, maxConcurrent int) error {
 	response := map[string]interface{}{
 		"success": true,
 		"message": "Pengecekan slot upload berhasil",
@@ -55,25 +55,9 @@ func SendTusSlotResponse(c *fiber.Ctx, available bool, message string, queueLeng
 			"available":      available,
 			"message":        message,
 			"queue_length":   queueLength,
-			"active_upload":  activeUpload,
+			"active_count":   activeCount,
+			"active_upload":  activeCount > 0,
 			"max_concurrent": maxConcurrent,
-		},
-		"timestamp": time.Now(),
-	}
-
-	return c.Status(fiber.StatusOK).JSON(response)
-}
-
-func SendTusModulSlotResponse(c *fiber.Ctx, available bool, message string, queueLength int, maxQueue int) error {
-	response := map[string]interface{}{
-		"success": true,
-		"message": "Status slot upload berhasil didapat",
-		"code":    fiber.StatusOK,
-		"data": map[string]interface{}{
-			"available":    available,
-			"message":      message,
-			"queue_length": queueLength,
-			"max_queue":    maxQueue,
 		},
 		"timestamp": time.Now(),
 	}

@@ -2,14 +2,13 @@ package helper
 
 import (
 	"bytes"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
 	"strconv"
-	"strings"
 
 	"fiber-boiler-plate/config"
+	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
 )
 
@@ -29,20 +28,12 @@ func NewTusManager(store *TusStore, queue *TusQueue, fileManager *FileManager, c
 	}
 }
 
-type UploadSlotResponse struct {
-	Available     bool   `json:"available"`
-	Message       string `json:"message"`
-	QueueLength   int    `json:"queue_length"`
-	ActiveUpload  bool   `json:"active_upload"`
-	MaxConcurrent int    `json:"max_concurrent"`
-}
-
-func (tm *TusManager) CheckUploadSlot() *UploadSlotResponse {
+func (tm *TusManager) CheckUploadSlot() *domain.TusUploadSlotResponse {
 	hasActiveUpload := tm.queue.HasActiveUpload()
 	queueLength := tm.queue.GetQueueLength()
 	canAccept := tm.queue.CanAcceptUpload()
 
-	response := &UploadSlotResponse{
+	response := &domain.TusUploadSlotResponse{
 		Available:     canAccept,
 		QueueLength:   queueLength,
 		ActiveUpload:  hasActiveUpload,
@@ -70,34 +61,6 @@ func (tm *TusManager) ResetUploadQueue() error {
 	tm.queue.Clear()
 
 	return nil
-}
-
-func (tm *TusManager) ParseMetadata(metadataHeader string) (map[string]string, error) {
-	if metadataHeader == "" {
-		return make(map[string]string), nil
-	}
-
-	metadataMap := make(map[string]string)
-	pairs := strings.Split(metadataHeader, ",")
-
-	for _, pair := range pairs {
-		parts := strings.SplitN(strings.TrimSpace(pair), " ", 2)
-		if len(parts) != 2 {
-			continue
-		}
-
-		key := parts[0]
-		valueB64 := parts[1]
-
-		value, err := base64.StdEncoding.DecodeString(valueB64)
-		if err != nil {
-			return nil, apperrors.NewValidationError(fmt.Sprintf("metadata key %s tidak valid", key), err)
-		}
-
-		metadataMap[key] = string(value)
-	}
-
-	return metadataMap, nil
 }
 
 func (tm *TusManager) ValidateProjectMetadata(metadata map[string]string) error {
@@ -252,20 +215,6 @@ func (tm *TusManager) ReadChunkFromBody(body []byte, expectedSize int64) (io.Rea
 	return bytes.NewReader(body), nil
 }
 
-func (tm *TusManager) ExtractUserIDFromMetadata(metadata map[string]string) (uint, error) {
-	userIDStr, ok := metadata["user_id"]
-	if !ok {
-		return 0, apperrors.NewValidationError("user_id tidak ditemukan dalam metadata", nil)
-	}
-
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		return 0, apperrors.NewValidationError("user_id tidak valid", err)
-	}
-
-	return uint(userID), nil
-}
-
 func (tm *TusManager) GetDefaultTusHeaders() map[string]string {
 	return map[string]string{
 		"Tus-Resumable": tm.config.Upload.TusVersion,
@@ -287,7 +236,7 @@ func (tm *TusManager) ValidateFileSize(fileSize int64, maxSize int64) error {
 
 func (tm *TusManager) ValidateTusVersion(version string) error {
 	if version != tm.config.Upload.TusVersion {
-		return apperrors.NewTusVersionMismatchError(tm.config.Upload.TusVersion)
+		return apperrors.NewTusVersionError(tm.config.Upload.TusVersion)
 	}
 
 	return nil
@@ -300,7 +249,7 @@ func (tm *TusManager) ValidateOffset(uploadID string, clientOffset int64) (int64
 	}
 
 	if clientOffset != serverOffset {
-		return serverOffset, apperrors.NewTusOffsetMismatchError(serverOffset, clientOffset)
+		return serverOffset, apperrors.NewTusOffsetError(serverOffset, clientOffset)
 	}
 
 	return serverOffset, nil

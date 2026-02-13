@@ -56,7 +56,7 @@ func TestTusModulUsecase(t *testing.T) {
 	t.Run("CheckModulUploadSlot available and exceeded", func(t *testing.T) {
 		t.Run("available", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("CountActiveByUserID", "u1").Return(2, nil).Once()
+			tusRepo.On("CountActiveByUserID", "u1").Return(int64(2), nil).Once()
 
 			res, err := uc.CheckModulUploadSlot("u1")
 			require.NoError(t, err)
@@ -66,7 +66,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("exceeded", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("CountActiveByUserID", "u1").Return(5, nil).Once()
+			tusRepo.On("CountActiveByUserID", "u1").Return(int64(5), nil).Once()
 
 			res, err := uc.CheckModulUploadSlot("u1")
 			require.NoError(t, err)
@@ -80,7 +80,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("happy path", func(t *testing.T) {
 			uc, tusRepo, _, manager := newTusModulTestDeps(t)
-			tusRepo.On("CountActiveByUserID", "u1").Return(0, nil).Once()
+			tusRepo.On("CountActiveByUserID", "u1").Return(int64(0), nil).Once()
 			tusRepo.On("Create", mock.AnythingOfType("*domain.TusModulUpload")).Return(nil).Once()
 
 			res, err := uc.InitiateModulUpload("u1", 1024, validMeta)
@@ -94,7 +94,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("no slot available", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("CountActiveByUserID", "u1").Return(5, nil).Once()
+			tusRepo.On("CountActiveByUserID", "u1").Return(int64(5), nil).Once()
 
 			res, err := uc.InitiateModulUpload("u1", 1024, validMeta)
 			require.Error(t, err)
@@ -104,7 +104,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("invalid file size", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("CountActiveByUserID", "u1").Return(0, nil).Once()
+			tusRepo.On("CountActiveByUserID", "u1").Return(int64(0), nil).Once()
 
 			res, err := uc.InitiateModulUpload("u1", uc.config.Upload.MaxSizeModul+1, validMeta)
 			require.Error(t, err)
@@ -114,7 +114,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("invalid metadata bad base64", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("CountActiveByUserID", "u1").Return(0, nil).Once()
+			tusRepo.On("CountActiveByUserID", "u1").Return(int64(0), nil).Once()
 
 			res, err := uc.InitiateModulUpload("u1", 100, "judul !!!,deskripsi dGVzdA==")
 			require.Error(t, err)
@@ -124,7 +124,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("invalid metadata missing fields", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("CountActiveByUserID", "u1").Return(0, nil).Once()
+			tusRepo.On("CountActiveByUserID", "u1").Return(int64(0), nil).Once()
 
 			res, err := uc.InitiateModulUpload("u1", 100, fmt.Sprintf("deskripsi %s", b64("abc")))
 			require.Error(t, err)
@@ -142,13 +142,13 @@ func TestTusModulUsecase(t *testing.T) {
 			tusRepo.On("GetByID", uploadID).Return(&domain.TusModulUpload{
 				ID:             uploadID,
 				UserID:         "u1",
-				UploadType:     domain.ModulUploadTypeCreate,
+				UploadType:     domain.UploadTypeModulCreate,
 				UploadMetadata: domain.TusModulUploadInitRequest{Judul: "f", Deskripsi: "desc"},
 				FileSize:       10,
 				CurrentOffset:  0,
-				Status:         domain.ModulUploadStatusPending,
+				Status:         domain.UploadStatusPending,
 			}, nil).Once()
-			tusRepo.On("UpdateStatus", uploadID, domain.ModulUploadStatusUploading).Return(nil).Once()
+			tusRepo.On("UpdateStatus", uploadID, domain.UploadStatusUploading).Return(nil).Once()
 			tusRepo.On("UpdateOffset", uploadID, int64(4), mock.AnythingOfType("float64")).Return(nil).Once()
 
 			seedTusModulStore(t, manager, uploadID, 10, map[string]string{"user_id": "u1"})
@@ -165,11 +165,11 @@ func TestTusModulUsecase(t *testing.T) {
 			uploadObj := &domain.TusModulUpload{
 				ID:             uploadID,
 				UserID:         "u1",
-				UploadType:     domain.ModulUploadTypeCreate,
+				UploadType:     domain.UploadTypeModulCreate,
 				UploadMetadata: domain.TusModulUploadInitRequest{Judul: "filex", Deskripsi: "desc"},
 				FileSize:       fileSize,
 				CurrentOffset:  0,
-				Status:         domain.ModulUploadStatusUploading,
+				Status:         domain.UploadStatusUploading,
 			}
 
 			tusRepo.On("GetByID", uploadID).Return(uploadObj, nil).Twice()
@@ -197,7 +197,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("wrong user", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.ModulUploadStatusUploading}, nil).Once()
+			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
 			_, err := uc.HandleModulChunk("id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
@@ -206,11 +206,11 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("already completed becomes inactive error", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.ModulUploadStatusCompleted}, nil).Once()
+			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.UploadStatusCompleted}, nil).Once()
 
 			_, err := uc.HandleModulChunk("id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "tidak aktif")
+			assert.Contains(t, err.Error(), "sudah selesai")
 		})
 	})
 
@@ -224,7 +224,7 @@ func TestTusModulUsecase(t *testing.T) {
 				UserID:         "u1",
 				ModulID:        &modulID,
 				UploadMetadata: domain.TusModulUploadInitRequest{Judul: "f", Deskripsi: "desc"},
-				Status:         domain.ModulUploadStatusUploading,
+				Status:         domain.UploadStatusUploading,
 				Progress:       33,
 				CurrentOffset:  3,
 				FileSize:       9,
@@ -275,8 +275,8 @@ func TestTusModulUsecase(t *testing.T) {
 			uc, tusRepo, _, manager := newTusModulTestDeps(t)
 			seedTusModulStore(t, manager, "cancel-id", 8, map[string]string{"user_id": "u1"})
 
-			tusRepo.On("GetByID", "cancel-id").Return(&domain.TusModulUpload{ID: "cancel-id", UserID: "u1", Status: domain.ModulUploadStatusUploading}, nil).Once()
-			tusRepo.On("UpdateStatus", "cancel-id", domain.ModulUploadStatusCancelled).Return(nil).Once()
+			tusRepo.On("GetByID", "cancel-id").Return(&domain.TusModulUpload{ID: "cancel-id", UserID: "u1", Status: domain.UploadStatusUploading}, nil).Once()
+			tusRepo.On("UpdateStatus", "cancel-id", domain.UploadStatusCancelled).Return(nil).Once()
 
 			err := uc.CancelModulUpload("cancel-id", "u1")
 			require.NoError(t, err)
@@ -293,7 +293,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("wrong user", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.ModulUploadStatusUploading}, nil).Once()
+			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
 			err := uc.CancelModulUpload("id", "u1")
 			require.Error(t, err)
@@ -302,7 +302,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("already completed", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.ModulUploadStatusCompleted}, nil).Once()
+			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.UploadStatusCompleted}, nil).Once()
 
 			err := uc.CancelModulUpload("id", "u1")
 			require.Error(t, err)
@@ -317,7 +317,7 @@ func TestTusModulUsecase(t *testing.T) {
 		t.Run("happy path", func(t *testing.T) {
 			uc, tusRepo, modulRepo, _ := newTusModulTestDeps(t)
 			modulRepo.On("GetByID", modulID).Return(&domain.Modul{ID: modulID, UserID: "u1"}, nil).Once()
-			tusRepo.On("CountActiveByUserID", "u1").Return(0, nil).Once()
+			tusRepo.On("CountActiveByUserID", "u1").Return(int64(0), nil).Once()
 			tusRepo.On("Create", mock.AnythingOfType("*domain.TusModulUpload")).Return(nil).Once()
 
 			res, err := uc.InitiateModulUpdateUpload(modulID, "u1", 2048, meta)
@@ -357,13 +357,13 @@ func TestTusModulUsecase(t *testing.T) {
 				ID:             uploadID,
 				UserID:         "u1",
 				ModulID:        &modulID,
-				UploadType:     domain.ModulUploadTypeUpdate,
+				UploadType:     domain.UploadTypeModulUpdate,
 				UploadMetadata: domain.TusModulUploadInitRequest{Judul: "n", Deskripsi: "desc"},
 				FileSize:       8,
 				CurrentOffset:  0,
-				Status:         domain.ModulUploadStatusPending,
+				Status:         domain.UploadStatusPending,
 			}, nil).Once()
-			tusRepo.On("UpdateStatus", uploadID, domain.ModulUploadStatusUploading).Return(nil).Once()
+			tusRepo.On("UpdateStatus", uploadID, domain.UploadStatusUploading).Return(nil).Once()
 			tusRepo.On("UpdateOffset", uploadID, int64(3), mock.AnythingOfType("float64")).Return(nil).Once()
 
 			seedTusModulStore(t, manager, uploadID, 8, map[string]string{"user_id": "u1", "modul_id": modulID})
@@ -381,11 +381,11 @@ func TestTusModulUsecase(t *testing.T) {
 				ID:             uploadID,
 				UserID:         "u1",
 				ModulID:        &modulID,
-				UploadType:     domain.ModulUploadTypeUpdate,
+				UploadType:     domain.UploadTypeModulUpdate,
 				UploadMetadata: domain.TusModulUploadInitRequest{Judul: "rev", Deskripsi: "new desc"},
 				FileSize:       4,
 				CurrentOffset:  0,
-				Status:         domain.ModulUploadStatusUploading,
+				Status:         domain.UploadStatusUploading,
 			}
 
 			tusRepo.On("GetByID", uploadID).Return(uploadObj, nil).Twice()
@@ -411,7 +411,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("wrong user", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.ModulUploadStatusUploading}, nil).Once()
+			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
 			_, err := uc.HandleModulUpdateChunk("id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
@@ -420,11 +420,100 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("already completed becomes inactive error", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.ModulUploadStatusCompleted}, nil).Once()
+			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.UploadStatusCompleted}, nil).Once()
 
 			_, err := uc.HandleModulUpdateChunk("id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
-			assert.Contains(t, err.Error(), "tidak aktif")
+			assert.Contains(t, err.Error(), "sudah selesai")
+		})
+	})
+
+	t.Run("Modul update wrapper methods", func(t *testing.T) {
+		t.Run("GetModulUpdateUploadInfo found", func(t *testing.T) {
+			uc, tusRepo, _, _ := newTusModulTestDeps(t)
+			modulID := "550e8400-e29b-41d4-a716-446655440031"
+			now := time.Now()
+			tusRepo.On("GetByID", "update-info-id").Return(&domain.TusModulUpload{
+				ID:             "update-info-id",
+				UserID:         "u1",
+				ModulID:        &modulID,
+				UploadMetadata: domain.TusModulUploadInitRequest{Judul: "judul", Deskripsi: "deskripsi"},
+				Status:         domain.UploadStatusUploading,
+				Progress:       44,
+				CurrentOffset:  4,
+				FileSize:       9,
+				CreatedAt:      now,
+				UpdatedAt:      now,
+			}, nil).Once()
+
+			info, err := uc.GetModulUpdateUploadInfo(modulID, "update-info-id", "u1")
+			require.NoError(t, err)
+			require.NotNil(t, info)
+			assert.Equal(t, modulID, info.ModulID)
+			assert.Equal(t, int64(4), info.Offset)
+		})
+
+		t.Run("GetModulUpdateUploadInfo not found", func(t *testing.T) {
+			uc, tusRepo, _, _ := newTusModulTestDeps(t)
+			tusRepo.On("GetByID", "missing").Return(nil, gorm.ErrRecordNotFound).Once()
+
+			info, err := uc.GetModulUpdateUploadInfo("550e8400-e29b-41d4-a716-446655440031", "missing", "u1")
+			require.Error(t, err)
+			assert.Nil(t, info)
+			assert.Contains(t, err.Error(), "tidak ditemukan")
+		})
+
+		t.Run("GetModulUpdateUploadStatus found", func(t *testing.T) {
+			uc, tusRepo, _, _ := newTusModulTestDeps(t)
+			modulID := "550e8400-e29b-41d4-a716-446655440032"
+			tusRepo.On("GetByID", "update-status-id").Return(&domain.TusModulUpload{
+				ID:            "update-status-id",
+				UserID:        "u1",
+				ModulID:       &modulID,
+				CurrentOffset: 7,
+				FileSize:      14,
+			}, nil).Once()
+
+			offset, length, err := uc.GetModulUpdateUploadStatus(modulID, "update-status-id", "u1")
+			require.NoError(t, err)
+			assert.Equal(t, int64(7), offset)
+			assert.Equal(t, int64(14), length)
+		})
+
+		t.Run("GetModulUpdateUploadStatus not found", func(t *testing.T) {
+			uc, tusRepo, _, _ := newTusModulTestDeps(t)
+			tusRepo.On("GetByID", "missing").Return(nil, gorm.ErrRecordNotFound).Once()
+
+			offset, length, err := uc.GetModulUpdateUploadStatus("550e8400-e29b-41d4-a716-446655440032", "missing", "u1")
+			require.Error(t, err)
+			assert.Equal(t, int64(0), offset)
+			assert.Equal(t, int64(0), length)
+		})
+
+		t.Run("CancelModulUpdateUpload success", func(t *testing.T) {
+			uc, tusRepo, _, manager := newTusModulTestDeps(t)
+			modulID := "550e8400-e29b-41d4-a716-446655440033"
+			seedTusModulStore(t, manager, "cancel-update-id", 8, map[string]string{"user_id": "u1", "modul_id": modulID})
+
+			tusRepo.On("GetByID", "cancel-update-id").Return(&domain.TusModulUpload{
+				ID:      "cancel-update-id",
+				UserID:  "u1",
+				ModulID: &modulID,
+				Status:  domain.UploadStatusUploading,
+			}, nil).Once()
+			tusRepo.On("UpdateStatus", "cancel-update-id", domain.UploadStatusCancelled).Return(nil).Once()
+
+			err := uc.CancelModulUpdateUpload(modulID, "cancel-update-id", "u1")
+			require.NoError(t, err)
+		})
+
+		t.Run("CancelModulUpdateUpload not found", func(t *testing.T) {
+			uc, tusRepo, _, _ := newTusModulTestDeps(t)
+			tusRepo.On("GetByID", "missing").Return(nil, gorm.ErrRecordNotFound).Once()
+
+			err := uc.CancelModulUpdateUpload("550e8400-e29b-41d4-a716-446655440033", "missing", "u1")
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "tidak ditemukan")
 		})
 	})
 }

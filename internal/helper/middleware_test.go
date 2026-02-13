@@ -597,7 +597,7 @@ func TestRBACMiddleware_DifferentResources(t *testing.T) {
 }
 
 func TestTusProtocolMiddleware_Creation(t *testing.T) {
-	middleware := helper.TusProtocolMiddleware("1.0.0")
+	middleware := helper.TusProtocolMiddleware("1.0.0", 524288000)
 
 	assert.NotNil(t, middleware)
 }
@@ -611,7 +611,7 @@ func TestTusProtocolMiddleware_DifferentVersions(t *testing.T) {
 
 	for _, version := range versions {
 		t.Run("", func(t *testing.T) {
-			middleware := helper.TusProtocolMiddleware(version)
+			middleware := helper.TusProtocolMiddleware(version, 524288000)
 			assert.NotNil(t, middleware)
 		})
 	}
@@ -620,7 +620,7 @@ func TestTusProtocolMiddleware_DifferentVersions(t *testing.T) {
 func TestMiddleware_OptionsRequest(t *testing.T) {
 	app := fiber.New()
 
-	app.Use(helper.TusProtocolMiddleware("1.0.0"))
+	app.Use(helper.TusProtocolMiddleware("1.0.0", 524288000))
 
 	req := httptest.NewRequest("OPTIONS", "/api/tus", bytes.NewBuffer(nil))
 	resp, err := app.Test(req)
@@ -635,7 +635,7 @@ func TestMiddleware_OptionsRequest(t *testing.T) {
 
 func TestTusProtocolMiddleware_MissingTusResumableOnPatch_Returns412(t *testing.T) {
 	app := fiber.New()
-	app.Use(helper.TusProtocolMiddleware("1.0.0"))
+	app.Use(helper.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Patch("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -650,7 +650,7 @@ func TestTusProtocolMiddleware_MissingTusResumableOnPatch_Returns412(t *testing.
 
 func TestTusProtocolMiddleware_WrongTusVersion_Returns412(t *testing.T) {
 	app := fiber.New()
-	app.Use(helper.TusProtocolMiddleware("1.0.0"))
+	app.Use(helper.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Patch("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -666,7 +666,7 @@ func TestTusProtocolMiddleware_WrongTusVersion_Returns412(t *testing.T) {
 
 func TestTusProtocolMiddleware_GetRequestWithoutTusHeader_Passes(t *testing.T) {
 	app := fiber.New()
-	app.Use(helper.TusProtocolMiddleware("1.0.0"))
+	app.Use(helper.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -680,7 +680,7 @@ func TestTusProtocolMiddleware_GetRequestWithoutTusHeader_Passes(t *testing.T) {
 
 func TestTusProtocolMiddleware_PostRequestWithoutTusHeader_Passes(t *testing.T) {
 	app := fiber.New()
-	app.Use(helper.TusProtocolMiddleware("1.0.0"))
+	app.Use(helper.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -694,7 +694,7 @@ func TestTusProtocolMiddleware_PostRequestWithoutTusHeader_Passes(t *testing.T) 
 
 func TestTusProtocolMiddleware_ValidTusVersion_Passes(t *testing.T) {
 	app := fiber.New()
-	app.Use(helper.TusProtocolMiddleware("1.0.0"))
+	app.Use(helper.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Patch("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -709,7 +709,7 @@ func TestTusProtocolMiddleware_ValidTusVersion_Passes(t *testing.T) {
 
 func TestTusProtocolMiddleware_HeadRequestWithTusHeader_Passes(t *testing.T) {
 	app := fiber.New()
-	app.Use(helper.TusProtocolMiddleware("1.0.0"))
+	app.Use(helper.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Head("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -724,7 +724,7 @@ func TestTusProtocolMiddleware_HeadRequestWithTusHeader_Passes(t *testing.T) {
 
 func TestTusProtocolMiddleware_DeleteRequestWithTusHeader_Passes(t *testing.T) {
 	app := fiber.New()
-	app.Use(helper.TusProtocolMiddleware("1.0.0"))
+	app.Use(helper.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Delete("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -742,7 +742,7 @@ func TestMiddleware_HandlerCreation(t *testing.T) {
 	mockUser := &mockUserRepository{}
 	jwtMiddleware := helper.SupabaseAuthMiddleware(mockAuth, mockUser, testCookieHelper())
 	rbacMiddleware := helper.RBACMiddleware(nil, "test", "read")
-	tusMiddleware := helper.TusProtocolMiddleware("1.0.0")
+	tusMiddleware := helper.TusProtocolMiddleware("1.0.0", 524288000)
 
 	assert.NotNil(t, jwtMiddleware)
 	assert.NotNil(t, rbacMiddleware)
@@ -750,7 +750,7 @@ func TestMiddleware_HandlerCreation(t *testing.T) {
 }
 
 func TestTusProtocolMiddleware_HandlerType(t *testing.T) {
-	middleware := helper.TusProtocolMiddleware("1.0.0")
+	middleware := helper.TusProtocolMiddleware("1.0.0", 524288000)
 
 	app := fiber.New()
 	app.Use(middleware)

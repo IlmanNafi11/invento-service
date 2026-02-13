@@ -134,7 +134,28 @@ func TestTusUploadRepository_UpdateStatus(t *testing.T) {
 	assert.Equal(t, domain.UploadStatusCompleted, updated.Status)
 }
 
-func TestTusUploadRepository_GetExpired(t *testing.T) {
+func TestTusUploadRepository_Complete(t *testing.T) {
+	db := setupTestDB(t)
+	repository := NewTusUploadRepository(db)
+
+	upload := newTusUpload("test-upload-complete", "user-1", domain.UploadStatusUploading, time.Now().Add(time.Hour))
+	upload.CurrentOffset = 512
+	require.NoError(t, db.Create(&upload).Error)
+
+	require.NoError(t, repository.Complete("test-upload-complete", 99, "/tmp/project-99.zip"))
+
+	updated, err := repository.GetByID("test-upload-complete")
+	require.NoError(t, err)
+	require.NotNil(t, updated)
+	require.NotNil(t, updated.ProjectID)
+	assert.Equal(t, uint(99), *updated.ProjectID)
+	assert.Equal(t, "/tmp/project-99.zip", updated.FilePath)
+	assert.Equal(t, domain.UploadStatusCompleted, updated.Status)
+	assert.Equal(t, 100.0, updated.Progress)
+	require.NotNil(t, updated.CompletedAt)
+}
+
+func TestTusUploadRepository_GetExpiredUploads(t *testing.T) {
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -153,7 +174,7 @@ func TestTusUploadRepository_GetExpired(t *testing.T) {
 	require.NoError(t, db.Create(&expiredCancelled).Error)
 	require.NoError(t, db.Create(&expiredAlreadyExpired).Error)
 
-	uploads, err := repository.GetExpired(now)
+	uploads, err := repository.GetExpiredUploads(now)
 	require.NoError(t, err)
 
 	ids := make([]string, 0, len(uploads))
@@ -187,6 +208,35 @@ func TestTusUploadRepository_GetByUserIDAndStatus(t *testing.T) {
 	}
 
 	empty, err := repository.GetByUserIDAndStatus("user-1", domain.UploadStatusFailed)
+	require.NoError(t, err)
+	assert.Len(t, empty, 0)
+}
+
+func TestTusUploadRepository_GetActiveByUserID(t *testing.T) {
+	db := setupTestDB(t)
+	repository := NewTusUploadRepository(db)
+
+	now := time.Now()
+	activePending := newTusUpload("test-upload-active-1", "user-1", domain.UploadStatusPending, now.Add(time.Hour))
+	activeUploading := newTusUpload("test-upload-active-2", "user-1", domain.UploadStatusUploading, now.Add(time.Hour))
+	notActiveQueued := newTusUpload("test-upload-active-3", "user-1", domain.UploadStatusQueued, now.Add(time.Hour))
+	notActiveCompleted := newTusUpload("test-upload-active-4", "user-1", domain.UploadStatusCompleted, now.Add(time.Hour))
+	otherUser := newTusUpload("test-upload-active-5", "user-2", domain.UploadStatusPending, now.Add(time.Hour))
+
+	require.NoError(t, db.Create(&activePending).Error)
+	require.NoError(t, db.Create(&activeUploading).Error)
+	require.NoError(t, db.Create(&notActiveQueued).Error)
+	require.NoError(t, db.Create(&notActiveCompleted).Error)
+	require.NoError(t, db.Create(&otherUser).Error)
+
+	uploads, err := repository.GetActiveByUserID("user-1")
+	require.NoError(t, err)
+	require.Len(t, uploads, 2)
+
+	ids := []string{uploads[0].ID, uploads[1].ID}
+	assert.ElementsMatch(t, []string{"test-upload-active-1", "test-upload-active-2"}, ids)
+
+	empty, err := repository.GetActiveByUserID("missing-user")
 	require.NoError(t, err)
 	assert.Len(t, empty, 0)
 }
@@ -226,7 +276,7 @@ func TestTusUploadRepository_ListActive(t *testing.T) {
 		ids = append(ids, item.ID)
 	}
 
-	assert.ElementsMatch(t, []string{"test-upload-19", "test-upload-20"}, ids)
+	assert.ElementsMatch(t, []string{"test-upload-20", "test-upload-21"}, ids)
 }
 
 func TestTusUploadRepository_UpdateOffsetOnly(t *testing.T) {

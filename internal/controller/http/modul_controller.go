@@ -15,13 +15,13 @@ import (
 type ModulController struct {
 	*base.BaseController
 	modulUsecase    usecase.ModulUsecase
-	tusModulUsecase usecase.TusModulUsecase
+	tusModulUsecase any
 	config          *config.Config
 }
 
 func NewModulController(
 	modulUsecase usecase.ModulUsecase,
-	tusModulUsecase usecase.TusModulUsecase,
+	tusModulUsecase any,
 	config *config.Config,
 	baseCtrl *base.BaseController,
 ) *ModulController {

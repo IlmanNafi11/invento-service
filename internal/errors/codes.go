@@ -30,7 +30,7 @@ const (
 	ErrTusVersionMismatch = "TUS_VERSION_MISMATCH"
 
 	// ErrTusOffsetMismatch indicates TUS upload offset mismatch (HTTP 409)
-	// Message: "Offset tidak valid"
+	// Message: "Upload offset tidak sesuai. Diharapkan: X, diterima: Y"
 	ErrTusOffsetMismatch = "TUS_OFFSET_MISMATCH"
 
 	// ErrTusInactive indicates TUS upload is inactive (HTTP 423)
