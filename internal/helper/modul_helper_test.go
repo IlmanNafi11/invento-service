@@ -56,25 +56,25 @@ func TestModulHelper_GenerateModulIdentifier_Uniqueness(t *testing.T) {
 
 func TestModulHelper_BuildModulPath(t *testing.T) {
 	tests := []struct {
-		name      string
-		env       string
-		userID    uint
+		name       string
+		env        string
+		userID     string
 		identifier string
-		filename  string
+		filename   string
 	}{
 		{
-			name:      "Development environment",
-			env:       "development",
-			userID:    123,
+			name:       "Development environment",
+			env:        "development",
+			userID:     "123",
 			identifier: "abc123",
-			filename:  "file.pdf",
+			filename:   "file.pdf",
 		},
 		{
-			name:      "Production environment",
-			env:       "production",
-			userID:    456,
+			name:       "Production environment",
+			env:        "production",
+			userID:     "456",
 			identifier: "xyz789",
-			filename:  "doc.docx",
+			filename:   "doc.docx",
 		},
 	}
 
@@ -107,7 +107,7 @@ func TestModulHelper_BuildModulDirectory(t *testing.T) {
 	}
 	modulHelper := helper.NewModulHelper(cfg)
 
-	userID := uint(123)
+	userID := "123"
 	identifier := "test-id"
 
 	dir := modulHelper.BuildModulDirectory(userID, identifier)
@@ -312,7 +312,7 @@ func TestModulHelper_GetBasePath(t *testing.T) {
 
 			// We can't directly test getBasePath as it's private,
 			// but we can verify the behavior through BuildModulPath
-			path := modulHelper.BuildModulPath(1, "id", "file.pdf")
+			path := modulHelper.BuildModulPath("1", "id", "file.pdf")
 			assert.Contains(t, path, tt.expected)
 		})
 	}
@@ -328,17 +328,17 @@ func TestModulHelper_EdgeCases(t *testing.T) {
 	modulHelper := helper.NewModulHelper(cfg)
 
 	t.Run("BuildModulPath with empty filename", func(t *testing.T) {
-		path := modulHelper.BuildModulPath(123, "id", "")
+		path := modulHelper.BuildModulPath("123", "id", "")
 		assert.NotEmpty(t, path)
 	})
 
 	t.Run("BuildModulDirectory with zero userID", func(t *testing.T) {
-		dir := modulHelper.BuildModulDirectory(0, "test-id")
+		dir := modulHelper.BuildModulDirectory("0", "test-id")
 		assert.Contains(t, dir, "0")
 	})
 
 	t.Run("BuildModulDirectory with empty identifier", func(t *testing.T) {
-		dir := modulHelper.BuildModulDirectory(123, "")
+		dir := modulHelper.BuildModulDirectory("123", "")
 		assert.Contains(t, dir, "123")
 	})
 }

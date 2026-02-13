@@ -2,7 +2,6 @@ package helper
 
 import (
 	"errors"
-	"fmt"
 	"mime/multipart"
 	"path/filepath"
 
@@ -23,14 +22,14 @@ func (mh *ModulHelper) GenerateModulIdentifier() (string, error) {
 	return GenerateRandomString(10)
 }
 
-func (mh *ModulHelper) BuildModulPath(userID uint, identifier string, filename string) string {
+func (mh *ModulHelper) BuildModulPath(userID string, identifier string, filename string) string {
 	basePath := mh.getBasePath()
-	return filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), identifier, filename)
+	return filepath.Join(basePath, "moduls", userID, identifier, filename)
 }
 
-func (mh *ModulHelper) BuildModulDirectory(userID uint, identifier string) string {
+func (mh *ModulHelper) BuildModulDirectory(userID string, identifier string) string {
 	basePath := mh.getBasePath()
-	return filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), identifier)
+	return filepath.Join(basePath, "moduls", userID, identifier)
 }
 
 func (mh *ModulHelper) getBasePath() string {
