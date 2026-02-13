@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,7 +23,7 @@ type TusModulUsecase interface {
 	GetModulUploadStatus(uploadID string, userID string) (int64, int64, error)
 	CancelModulUpload(uploadID string, userID string) error
 	CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error)
-	InitiateModulUpdateUpload(modulID uint, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
+	InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
 	HandleModulUpdateChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
 }
 
@@ -83,46 +82,20 @@ func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*domain.Tu
 
 	metadataMap := helper.ParseTusMetadata(metadataHeader)
 
-	namaFile, ok := metadataMap["nama_file"]
-	if !ok || namaFile == "" {
-		return nil, apperrors.NewValidationError("nama_file wajib diisi", nil)
+	judul, ok := metadataMap["judul"]
+	if !ok || judul == "" {
+		return nil, apperrors.NewValidationError("judul wajib diisi", nil)
 	}
 
-	if len(namaFile) < 3 || len(namaFile) > 255 {
-		return nil, apperrors.NewValidationError("nama_file harus antara 3-255 karakter", nil)
+	if len(judul) < 3 || len(judul) > 255 {
+		return nil, apperrors.NewValidationError("judul harus antara 3-255 karakter", nil)
 	}
 
-	tipe, ok := metadataMap["tipe"]
-	if !ok || tipe == "" {
-		return nil, apperrors.NewValidationError("tipe file wajib diisi", nil)
-	}
-
-	validTipe := []string{"docx", "xlsx", "pdf", "pptx"}
-	isValid := false
-	for _, valid := range validTipe {
-		if tipe == valid {
-			isValid = true
-			break
-		}
-	}
-	if !isValid {
-		return nil, apperrors.NewValidationError("tipe file harus salah satu dari: docx, xlsx, pdf, pptx", nil)
-	}
-
-	semesterStr, ok := metadataMap["semester"]
-	if !ok || semesterStr == "" {
-		return nil, apperrors.NewValidationError("semester wajib diisi", nil)
-	}
-
-	semester, err := strconv.Atoi(semesterStr)
-	if err != nil || semester < 1 || semester > 8 {
-		return nil, apperrors.NewValidationError("semester harus berupa angka antara 1-8", nil)
-	}
+	deskripsi := metadataMap["deskripsi"]
 
 	return &domain.TusModulUploadInitRequest{
-		NamaFile: namaFile,
-		Tipe:     tipe,
-		Semester: semester,
+		Judul:     judul,
+		Deskripsi: deskripsi,
 	}, nil
 }
 
@@ -180,9 +153,8 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, up
 	}
 
 	metadataMap := make(map[string]string)
-	metadataMap["nama_file"] = metadata.NamaFile
-	metadataMap["tipe"] = metadata.Tipe
-	metadataMap["semester"] = strconv.Itoa(metadata.Semester)
+	metadataMap["judul"] = metadata.Judul
+	metadataMap["deskripsi"] = metadata.Deskripsi
 	metadataMap["user_id"] = userID
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
@@ -256,7 +228,8 @@ func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID string) e
 		return apperrors.NewInternalError(fmt.Errorf("gagal membuat direktori modul: %w", err))
 	}
 
-	fileName := fmt.Sprintf("%s.%s", tusUpload.UploadMetadata.NamaFile, tusUpload.UploadMetadata.Tipe)
+	// Generate a unique filename using the upload ID
+	fileName := fmt.Sprintf("%s.dat", uploadID)
 	finalPath := filepath.Join(dirPath, fileName)
 
 	if err := uc.tusManager.FinalizeUpload(uploadID, finalPath); err != nil {
@@ -264,15 +237,15 @@ func (uc *tusModulUsecase) completeModulUpload(uploadID string, userID string) e
 		return apperrors.NewInternalError(fmt.Errorf("gagal finalisasi upload: %w", err))
 	}
 
-	fileSize := helper.FormatFileSize(tusUpload.FileSize)
-
 	modul := &domain.Modul{
-		UserID:   userID,
-		NamaFile: tusUpload.UploadMetadata.NamaFile,
-		Tipe:     tusUpload.UploadMetadata.Tipe,
-		Ukuran:   fileSize,
-		Semester: tusUpload.UploadMetadata.Semester,
-		PathFile: finalPath,
+		UserID:    userID,
+		Judul:     tusUpload.UploadMetadata.Judul,
+		Deskripsi: tusUpload.UploadMetadata.Deskripsi,
+		FileName:  fileName,
+		FilePath:  finalPath,
+		FileSize:  tusUpload.FileSize,
+		MimeType:  "application/octet-stream", // Default MIME type, can be updated later
+		Status:    "completed",
 	}
 
 	if err := uc.modulRepo.Create(modul); err != nil {
@@ -303,9 +276,8 @@ func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID string) (*
 
 	response := &domain.TusModulUploadInfoResponse{
 		UploadID:  tusUpload.ID,
-		NamaFile:  tusUpload.UploadMetadata.NamaFile,
-		Tipe:      tusUpload.UploadMetadata.Tipe,
-		Semester:  tusUpload.UploadMetadata.Semester,
+		Judul:     tusUpload.UploadMetadata.Judul,
+		Deskripsi: tusUpload.UploadMetadata.Deskripsi,
 		Status:    tusUpload.Status,
 		Progress:  tusUpload.Progress,
 		Offset:    tusUpload.CurrentOffset,
@@ -365,7 +337,7 @@ func (uc *tusModulUsecase) CancelModulUpload(uploadID string, userID string) err
 	return nil
 }
 
-func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -397,7 +369,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string
 	}
 
 	uploadID := uuid.New().String()
-	uploadURL := fmt.Sprintf("/modul/%d/update/%s", modulID, uploadID)
+	uploadURL := fmt.Sprintf("/modul/%s/update/%s", modulID, uploadID)
 	expiresAt := time.Now().Add(time.Duration(uc.config.Upload.IdleTimeout) * time.Second)
 
 	tusUpload := &domain.TusModulUpload{
@@ -419,11 +391,10 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID uint, userID string
 	}
 
 	metadataMap := make(map[string]string)
-	metadataMap["nama_file"] = metadata.NamaFile
-	metadataMap["tipe"] = metadata.Tipe
-	metadataMap["semester"] = strconv.Itoa(metadata.Semester)
+	metadataMap["judul"] = metadata.Judul
+	metadataMap["deskripsi"] = metadata.Deskripsi
 	metadataMap["user_id"] = userID
-	metadataMap["modul_id"] = strconv.FormatUint(uint64(modulID), 10)
+	metadataMap["modul_id"] = modulID
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
 		uc.tusModulUploadRepo.Delete(uploadID)
@@ -500,14 +471,14 @@ func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID string) e
 		return apperrors.NewInternalError(fmt.Errorf("gagal mengambil data modul: %w", err))
 	}
 
-	oldFilePath := modul.PathFile
+	oldFilePath := modul.FilePath
 
 	dirPath, randomDir, err := uc.fileManager.CreateModulUploadDirectory(userID)
 	if err != nil {
 		return apperrors.NewInternalError(fmt.Errorf("gagal membuat direktori modul: %w", err))
 	}
 
-	fileName := fmt.Sprintf("%s.%s", tusUpload.UploadMetadata.NamaFile, tusUpload.UploadMetadata.Tipe)
+	fileName := fmt.Sprintf("%s.dat", uploadID)
 	finalPath := filepath.Join(dirPath, fileName)
 
 	if err := uc.tusManager.FinalizeUpload(uploadID, finalPath); err != nil {
@@ -515,11 +486,11 @@ func (uc *tusModulUsecase) completeModulUpdate(uploadID string, userID string) e
 		return apperrors.NewInternalError(fmt.Errorf("gagal finalisasi upload: %w", err))
 	}
 
-	modul.NamaFile = tusUpload.UploadMetadata.NamaFile
-	modul.Tipe = tusUpload.UploadMetadata.Tipe
-	modul.Ukuran = helper.FormatFileSize(tusUpload.FileSize)
-	modul.Semester = tusUpload.UploadMetadata.Semester
-	modul.PathFile = finalPath
+	modul.Judul = tusUpload.UploadMetadata.Judul
+	modul.Deskripsi = tusUpload.UploadMetadata.Deskripsi
+	modul.FilePath = finalPath
+	modul.FileName = fileName
+	modul.FileSize = tusUpload.FileSize
 
 	if err := uc.modulRepo.Update(modul); err != nil {
 		helper.DeleteFile(finalPath)

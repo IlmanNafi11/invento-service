@@ -170,7 +170,7 @@ func (uc *userUsecase) GetUserFiles(userID string, params domain.UserFilesQueryP
 			p.path_file as download_url
 		FROM projects p
 		WHERE p.user_id = ?
-			AND (? = '' OR p.nama_project LIKE CONCAT('%', ?, '%'))
+			AND (? = '' OR LOWER(p.nama_project) LIKE '%' || LOWER(?) || '%')
 		ORDER BY p.updated_at DESC
 	`, userID, search, search).Scan(&projectFiles).Error; err != nil {
 		return nil, errors.New("gagal mengambil data project")
@@ -199,12 +199,12 @@ func (uc *userUsecase) GetUserFiles(userID string, params domain.UserFilesQueryP
 	if err := uc.db.Raw(`
 		SELECT 
 			m.id,
-			m.nama_file,
+			m.file_name as nama_file,
 			'Modul' as kategori,
-			m.path_file as download_url
+			m.file_path as download_url
 		FROM moduls m
 		WHERE m.user_id = ?
-			AND (? = '' OR m.nama_file LIKE CONCAT('%', ?, '%'))
+			AND (? = '' OR LOWER(m.file_name) LIKE '%' || LOWER(?) || '%')
 		ORDER BY m.updated_at DESC
 	`, userID, search, search).Scan(&modulFiles).Error; err != nil {
 		return nil, errors.New("gagal mengambil data modul")
@@ -340,21 +340,12 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 		projectIDsUint = append(projectIDsUint, uint(id))
 	}
 
-	modulIDsUint := make([]uint, 0, len(modulIDs))
-	for _, idStr := range modulIDs {
-		id, err := strconv.ParseUint(idStr, 10, 32)
-		if err != nil {
-			return "", errors.New("invalid modul ID format")
-		}
-		modulIDsUint = append(modulIDsUint, uint(id))
-	}
-
 	projects, err := uc.projectRepo.GetByIDsForUser(projectIDsUint, ownerUserID)
 	if err != nil {
 		return "", errors.New("gagal mengambil data project")
 	}
 
-	moduls, err := uc.modulRepo.GetByIDsForUser(modulIDsUint, ownerUserID)
+	moduls, err := uc.modulRepo.GetByIDsForUser(modulIDs, ownerUserID)
 	if err != nil {
 		return "", errors.New("gagal mengambil data modul")
 	}

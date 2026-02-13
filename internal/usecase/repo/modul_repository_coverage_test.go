@@ -16,18 +16,20 @@ func TestModulRepository_Create_Success(t *testing.T) {
 	defer testhelper.TeardownTestDatabase(db)
 
 	modul := &domain.Modul{
-		NamaFile: "Test Modul",
-		UserID:   "user-1",
-		Tipe:     "pdf",
-		Ukuran:   "small",
-		Semester: 1,
-		PathFile: "/test/modul",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
+		UserID:    "user-1",
+		FileName:  "test.pdf",
+		FilePath:  "/test/modul",
+		FileSize:  1024,
+		MimeType:  "application/pdf",
+		Status:    "completed",
 	}
 
 	repo := NewModulRepository(db)
 	err = repo.Create(modul)
 	assert.NoError(t, err)
-	assert.NotZero(t, modul.ID)
+	assert.NotEmpty(t, modul.ID)
 }
 
 // TestModulRepository_GetByID_Success tests successful modul retrieval by ID
@@ -37,12 +39,14 @@ func TestModulRepository_GetByID_Success(t *testing.T) {
 	defer testhelper.TeardownTestDatabase(db)
 
 	modul := &domain.Modul{
-		NamaFile: "Test Modul",
-		UserID:   "user-1",
-		Tipe:     "pdf",
-		Ukuran:   "small",
-		Semester: 1,
-		PathFile: "/test/modul",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
+		UserID:    "user-1",
+		FileName:  "test.pdf",
+		FilePath:  "/test/modul",
+		FileSize:  1024,
+		MimeType:  "application/pdf",
+		Status:    "completed",
 	}
 	err = db.Create(modul).Error
 	require.NoError(t, err)
@@ -52,7 +56,7 @@ func TestModulRepository_GetByID_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, modul.ID, result.ID)
-	assert.Equal(t, "Test Modul", result.NamaFile)
+	assert.Equal(t, "Test Modul", result.Judul)
 }
 
 // TestModulRepository_GetByIDs_Success tests successful modul retrieval by IDs
@@ -64,8 +68,8 @@ func TestModulRepository_GetByIDs_Success(t *testing.T) {
 	userID := "user-1"
 
 	moduls := []domain.Modul{
-		{NamaFile: "Modul 1", UserID: userID, Tipe: "pdf", Ukuran: "small", Semester: 1, PathFile: "/test1"},
-		{NamaFile: "Modul 2", UserID: userID, Tipe: "video", Ukuran: "medium", Semester: 2, PathFile: "/test2"},
+		{Judul: "Modul 1", Deskripsi: "Deskripsi 1", UserID: userID, FileName: "test1.pdf", FilePath: "/test1", FileSize: 1024, MimeType: "application/pdf", Status: "completed"},
+		{Judul: "Modul 2", Deskripsi: "Deskripsi 2", UserID: userID, FileName: "test2.pdf", FilePath: "/test2", FileSize: 2048, MimeType: "application/pdf", Status: "completed"},
 	}
 
 	for i := range moduls {
@@ -74,7 +78,7 @@ func TestModulRepository_GetByIDs_Success(t *testing.T) {
 	}
 
 	repo := NewModulRepository(db)
-	ids := []uint{moduls[0].ID, moduls[1].ID}
+	ids := []string{moduls[0].ID, moduls[1].ID}
 	result, err := repo.GetByIDs(ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
@@ -89,8 +93,8 @@ func TestModulRepository_GetByIDsForUser_Success(t *testing.T) {
 	userID := "user-1"
 
 	moduls := []domain.Modul{
-		{NamaFile: "Modul 1", UserID: userID, Tipe: "pdf", Ukuran: "small", Semester: 1, PathFile: "/test1"},
-		{NamaFile: "Modul 2", UserID: "user-2", Tipe: "video", Ukuran: "medium", Semester: 2, PathFile: "/test2"},
+		{Judul: "Modul 1", Deskripsi: "Deskripsi 1", UserID: userID, FileName: "test1.pdf", FilePath: "/test1", FileSize: 1024, MimeType: "application/pdf", Status: "completed"},
+		{Judul: "Modul 2", Deskripsi: "Deskripsi 2", UserID: "user-2", FileName: "test2.pdf", FilePath: "/test2", FileSize: 2048, MimeType: "application/pdf", Status: "completed"},
 	}
 
 	for i := range moduls {
@@ -99,7 +103,7 @@ func TestModulRepository_GetByIDsForUser_Success(t *testing.T) {
 	}
 
 	repo := NewModulRepository(db)
-	ids := []uint{moduls[0].ID, moduls[1].ID}
+	ids := []string{moduls[0].ID, moduls[1].ID}
 	result, err := repo.GetByIDsForUser(ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1) // Only user's modul
@@ -114,9 +118,9 @@ func TestModulRepository_GetByUserID_Success(t *testing.T) {
 	userID := "user-1"
 
 	moduls := []domain.Modul{
-		{NamaFile: "Modul 1", UserID: userID, Tipe: "pdf", Ukuran: "small", Semester: 1, PathFile: "/test1"},
-		{NamaFile: "Modul 2", UserID: userID, Tipe: "video", Ukuran: "medium", Semester: 2, PathFile: "/test2"},
-		{NamaFile: "Modul 3", UserID: "user-2", Tipe: "pdf", Ukuran: "large", Semester: 1, PathFile: "/test3"},
+		{Judul: "Modul 1", Deskripsi: "Deskripsi 1", UserID: userID, FileName: "test1.pdf", FilePath: "/test1", FileSize: 1024, MimeType: "application/pdf", Status: "completed"},
+		{Judul: "Modul 2", Deskripsi: "Deskripsi 2", UserID: userID, FileName: "test2.pdf", FilePath: "/test2", FileSize: 2048, MimeType: "video/mp4", Status: "pending"},
+		{Judul: "Modul 3", Deskripsi: "Deskripsi 3", UserID: "user-2", FileName: "test3.pdf", FilePath: "/test3", FileSize: 3072, MimeType: "application/pdf", Status: "completed"},
 	}
 
 	for _, modul := range moduls {
@@ -127,25 +131,25 @@ func TestModulRepository_GetByUserID_Success(t *testing.T) {
 	repo := NewModulRepository(db)
 
 	// Test without filters
-	result, total, err := repo.GetByUserID(userID, "", "", 0, 1, 10)
+	result, total, err := repo.GetByUserID(userID, "", "", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 	assert.Equal(t, 2, total)
 
 	// Test with search
-	result, total, err = repo.GetByUserID(userID, "Modul 1", "", 0, 1, 10)
+	result, total, err = repo.GetByUserID(userID, "Modul 1", "", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with type filter
-	result, total, err = repo.GetByUserID(userID, "", "pdf", 0, 1, 10)
+	result, total, err = repo.GetByUserID(userID, "", "application/pdf", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
-	// Test with semester filter
-	result, total, err = repo.GetByUserID(userID, "", "", 2, 1, 10)
+	// Test with status filter
+	result, total, err = repo.GetByUserID(userID, "", "", "pending", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
@@ -160,8 +164,8 @@ func TestModulRepository_CountByUserID_Success(t *testing.T) {
 	userID := "user-1"
 
 	moduls := []domain.Modul{
-		{NamaFile: "Modul 1", UserID: userID, Tipe: "pdf", Ukuran: "small", Semester: 1, PathFile: "/test1"},
-		{NamaFile: "Modul 2", UserID: userID, Tipe: "video", Ukuran: "medium", Semester: 2, PathFile: "/test2"},
+		{Judul: "Modul 1", Deskripsi: "Deskripsi 1", UserID: userID, FileName: "test1.pdf", FilePath: "/test1", FileSize: 1024, MimeType: "application/pdf", Status: "completed"},
+		{Judul: "Modul 2", Deskripsi: "Deskripsi 2", UserID: userID, FileName: "test2.pdf", FilePath: "/test2", FileSize: 2048, MimeType: "application/pdf", Status: "completed"},
 	}
 
 	for _, modul := range moduls {
@@ -182,28 +186,30 @@ func TestModulRepository_Update_Success(t *testing.T) {
 	defer testhelper.TeardownTestDatabase(db)
 
 	modul := &domain.Modul{
-		NamaFile: "Old Name",
-		UserID:   "user-1",
-		Tipe:     "pdf",
-		Ukuran:   "small",
-		Semester: 1,
-		PathFile: "/test/modul",
+		Judul:     "Old Name",
+		Deskripsi: "Old Deskripsi",
+		UserID:    "user-1",
+		FileName:  "test.pdf",
+		FilePath:  "/test/modul",
+		FileSize:  1024,
+		MimeType:  "application/pdf",
+		Status:    "completed",
 	}
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
 	repo := NewModulRepository(db)
-	modul.NamaFile = "New Name"
-	modul.Tipe = "video"
+	modul.Judul = "New Name"
+	modul.Status = "pending"
 	err = repo.Update(modul)
 	assert.NoError(t, err)
 
 	// Verify update
 	var updatedModul domain.Modul
-	err = db.First(&updatedModul, modul.ID).Error
+	err = db.First(&updatedModul, "id = ?", modul.ID).Error
 	assert.NoError(t, err)
-	assert.Equal(t, "New Name", updatedModul.NamaFile)
-	assert.Equal(t, "video", updatedModul.Tipe)
+	assert.Equal(t, "New Name", updatedModul.Judul)
+	assert.Equal(t, "pending", updatedModul.Status)
 }
 
 // TestModulRepository_Delete_Success tests successful modul deletion
@@ -213,12 +219,14 @@ func TestModulRepository_Delete_Success(t *testing.T) {
 	defer testhelper.TeardownTestDatabase(db)
 
 	modul := &domain.Modul{
-		NamaFile: "To Delete",
-		UserID:   "user-1",
-		Tipe:     "pdf",
-		Ukuran:   "small",
-		Semester: 1,
-		PathFile: "/test/modul",
+		Judul:     "To Delete",
+		Deskripsi: "To Delete Deskripsi",
+		UserID:    "user-1",
+		FileName:  "test.pdf",
+		FilePath:  "/test/modul",
+		FileSize:  1024,
+		MimeType:  "application/pdf",
+		Status:    "completed",
 	}
 	err = db.Create(modul).Error
 	require.NoError(t, err)
@@ -229,7 +237,7 @@ func TestModulRepository_Delete_Success(t *testing.T) {
 
 	// Verify deletion
 	var deletedModul domain.Modul
-	err = db.First(&deletedModul, modul.ID).Error
+	err = db.First(&deletedModul, "id = ?", modul.ID).Error
 	assert.Error(t, err)
 }
 
@@ -240,28 +248,30 @@ func TestModulRepository_UpdateMetadata_Success(t *testing.T) {
 	defer testhelper.TeardownTestDatabase(db)
 
 	modul := &domain.Modul{
-		NamaFile: "Original Name",
-		UserID:   "user-1",
-		Tipe:     "pdf",
-		Ukuran:   "small",
-		Semester: 1,
-		PathFile: "/test/modul",
+		Judul:     "Original Name",
+		Deskripsi: "Original Deskripsi",
+		UserID:    "user-1",
+		FileName:  "test.pdf",
+		FilePath:  "/test/modul",
+		FileSize:  1024,
+		MimeType:  "application/pdf",
+		Status:    "completed",
 	}
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
 	repo := NewModulRepository(db)
-	modul.NamaFile = "Updated Name"
-	modul.Semester = 2
+	modul.Judul = "Updated Name"
+	modul.Deskripsi = "Updated Deskripsi"
 	err = repo.UpdateMetadata(modul)
 	assert.NoError(t, err)
 
 	// Verify metadata update
 	var updatedModul domain.Modul
-	err = db.First(&updatedModul, modul.ID).Error
+	err = db.First(&updatedModul, "id = ?", modul.ID).Error
 	assert.NoError(t, err)
-	assert.Equal(t, "Updated Name", updatedModul.NamaFile)
-	assert.Equal(t, 2, updatedModul.Semester)
-	// PathFile should remain unchanged
-	assert.Equal(t, "/test/modul", updatedModul.PathFile)
+	assert.Equal(t, "Updated Name", updatedModul.Judul)
+	assert.Equal(t, "Updated Deskripsi", updatedModul.Deskripsi)
+	// FilePath should remain unchanged
+	assert.Equal(t, "/test/modul", updatedModul.FilePath)
 }

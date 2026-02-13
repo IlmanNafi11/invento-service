@@ -387,7 +387,7 @@ func (m *MockTusModulUploadRepository) UpdateStatus(id string, status string) er
 	return args.Error(0)
 }
 
-func (m *MockTusModulUploadRepository) Complete(id string, modulID uint, filePath string) error {
+func (m *MockTusModulUploadRepository) Complete(id string, modulID string, filePath string) error {
 	args := m.Called(id, modulID, filePath)
 	return args.Error(0)
 }
@@ -426,6 +426,14 @@ func (m *MockTusModulUploadRepository) GetActiveByUserID(userID string) ([]domai
 	return args.Get(0).([]domain.TusModulUpload), args.Error(1)
 }
 
+func (m *MockTusModulUploadRepository) GetActiveUploadIDs() ([]string, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
 // TusModulUploadRepository Tests
 
 func TestTusModulUploadRepository_Create_Success(t *testing.T) {
@@ -436,9 +444,8 @@ func TestTusModulUploadRepository_Create_Success(t *testing.T) {
 		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul",
-			Tipe:     "pdf",
-			Semester: 3,
+			Judul:     "Test Modul",
+			Deskripsi: "Test Deskripsi",
 		},
 		FileSize:      1024 * 1024,
 		CurrentOffset: 0,
@@ -456,7 +463,7 @@ func TestTusModulUploadRepository_Create_Success(t *testing.T) {
 	assert.Equal(t, "test-modul-upload-id", upload.ID)
 	assert.Equal(t, "user-1", upload.UserID)
 	assert.Equal(t, domain.ModulUploadTypeCreate, upload.UploadType)
-	assert.Equal(t, "Test Modul", upload.UploadMetadata.NamaFile)
+	assert.Equal(t, "Test Modul", upload.UploadMetadata.Judul)
 	mockRepo.AssertExpectations(t)
 }
 
@@ -469,9 +476,8 @@ func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
 		UserID:     "user-1",
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Test Modul",
-			Tipe:     "pdf",
-			Semester: 3,
+			Judul:     "Test Modul",
+			Deskripsi: "Test Deskripsi",
 		},
 		FileSize:      1024 * 1024,
 		CurrentOffset: 512 * 1024,
@@ -492,7 +498,7 @@ func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
 	assert.Equal(t, "user-1", upload.UserID)
 	assert.Equal(t, int64(512*1024), upload.CurrentOffset)
 	assert.Equal(t, 50.0, upload.Progress)
-	assert.Equal(t, "Test Modul", upload.UploadMetadata.NamaFile)
+	assert.Equal(t, "Test Modul", upload.UploadMetadata.Judul)
 	mockRepo.AssertExpectations(t)
 }
 
@@ -506,9 +512,8 @@ func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
 			UserID:     userID,
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Modul 1",
-				Tipe:     "pdf",
-				Semester: 3,
+				Judul:     "Modul 1",
+				Deskripsi: "Deskripsi 1",
 			},
 			FileSize:      1024 * 1024,
 			CurrentOffset: 1024 * 1024,
@@ -522,9 +527,8 @@ func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
 			UserID:     userID,
 			UploadType: domain.ModulUploadTypeUpdate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Modul 2",
-				Tipe:     "docx",
-				Semester: 4,
+				Judul:     "Modul 2",
+				Deskripsi: "Deskripsi 2",
 			},
 			FileSize:      2048 * 1024,
 			CurrentOffset: 1024 * 1024,
@@ -544,8 +548,8 @@ func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
 	assert.Equal(t, 2, len(uploads))
 	assert.Equal(t, "modul-upload-1", uploads[0].ID)
 	assert.Equal(t, "modul-upload-2", uploads[1].ID)
-	assert.Equal(t, "Modul 1", uploads[0].UploadMetadata.NamaFile)
-	assert.Equal(t, "Modul 2", uploads[1].UploadMetadata.NamaFile)
+	assert.Equal(t, "Modul 1", uploads[0].UploadMetadata.Judul)
+	assert.Equal(t, "Modul 2", uploads[1].UploadMetadata.Judul)
 	mockRepo.AssertExpectations(t)
 }
 
@@ -601,9 +605,8 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 			UserID:     userID,
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Active Modul 1",
-				Tipe:     "pdf",
-				Semester: 3,
+				Judul:     "Active Modul 1",
+				Deskripsi: "Deskripsi 1",
 			},
 			FileSize:      1024 * 1024,
 			CurrentOffset: 512 * 1024,
@@ -617,9 +620,8 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 			UserID:     userID,
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Active Modul 2",
-				Tipe:     "docx",
-				Semester: 4,
+				Judul:     "Active Modul 2",
+				Deskripsi: "Deskripsi 2",
 			},
 			FileSize:      2048 * 1024,
 			CurrentOffset: 0,
@@ -639,8 +641,8 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 	assert.Equal(t, 2, len(uploads))
 	assert.Equal(t, domain.ModulUploadStatusUploading, uploads[0].Status)
 	assert.Equal(t, domain.ModulUploadStatusQueued, uploads[1].Status)
-	assert.Equal(t, "Active Modul 1", uploads[0].UploadMetadata.NamaFile)
-	assert.Equal(t, "Active Modul 2", uploads[1].UploadMetadata.NamaFile)
+	assert.Equal(t, "Active Modul 1", uploads[0].UploadMetadata.Judul)
+	assert.Equal(t, "Active Modul 2", uploads[1].UploadMetadata.Judul)
 	mockRepo.AssertExpectations(t)
 }
 
@@ -653,9 +655,8 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Expired Modul",
-				Tipe:     "pdf",
-				Semester: 3,
+				Judul:     "Expired Modul",
+				Deskripsi: "Expired Deskripsi",
 			},
 			FileSize:      1024 * 1024,
 			CurrentOffset: 256 * 1024,
@@ -675,7 +676,7 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 	assert.NotNil(t, uploads)
 	assert.Equal(t, 1, len(uploads))
 	assert.Equal(t, "expired-modul-upload-1", uploads[0].ID)
-	assert.Equal(t, "Expired Modul", uploads[0].UploadMetadata.NamaFile)
+	assert.Equal(t, "Expired Modul", uploads[0].UploadMetadata.Judul)
 	mockRepo.AssertExpectations(t)
 }
 
@@ -698,7 +699,7 @@ func TestTusModulUploadRepository_Complete_Success(t *testing.T) {
 	mockRepo := new(MockTusModulUploadRepository)
 
 	uploadID := "test-upload-id"
-	modulID := uint(123)
+	modulID := "550e8400-e29b-41d4-a716-446655440001"
 	filePath := "/uploads/moduls/test_modul.pdf"
 
 	mockRepo.On("Complete", uploadID, modulID, filePath).Return(nil)
@@ -719,9 +720,8 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 			UserID:     "user-1",
 			UploadType: domain.ModulUploadTypeCreate,
 			UploadMetadata: domain.TusModulUploadInitRequest{
-				NamaFile: "Abandoned Modul",
-				Tipe:     "pdf",
-				Semester: 3,
+				Judul:     "Abandoned Modul",
+				Deskripsi: "Abandoned Deskripsi",
 			},
 			FileSize:      1024 * 1024,
 			CurrentOffset: 128 * 1024,
@@ -740,6 +740,6 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 	assert.NotNil(t, uploads)
 	assert.Equal(t, 1, len(uploads))
 	assert.Equal(t, "abandoned-upload-1", uploads[0].ID)
-	assert.Equal(t, "Abandoned Modul", uploads[0].UploadMetadata.NamaFile)
+	assert.Equal(t, "Abandoned Modul", uploads[0].UploadMetadata.Judul)
 	mockRepo.AssertExpectations(t)
 }

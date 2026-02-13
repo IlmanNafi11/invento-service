@@ -17,17 +17,19 @@ import (
 // validation helpers, and standardized response methods.
 type AuthController struct {
 	*base.BaseController
-	authUsecase usecase.AuthUsecase
-	logger      *helper.Logger
+	authUsecase  usecase.AuthUsecase
+	cookieHelper *helper.CookieHelper
+	logger       *helper.Logger
 }
 
 // NewAuthController creates a new AuthController instance.
 // Initializes base controller without JWT/Casbin since auth endpoints
 // handle credentials directly (no authentication required).
-func NewAuthController(authUsecase usecase.AuthUsecase, cfg *config.Config) *AuthController {
+func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *helper.CookieHelper, cfg *config.Config) *AuthController {
 	return &AuthController{
 		BaseController: base.NewBaseController(cfg.Supabase.URL, nil),
 		authUsecase:    authUsecase,
+		cookieHelper:   cookieHelper,
 		logger:         helper.NewLogger(),
 	}
 }
@@ -56,7 +58,7 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 		return nil
 	}
 
-	_, result, err := ctrl.authUsecase.Login(req)
+	refreshToken, result, err := ctrl.authUsecase.Login(req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -64,6 +66,9 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 		}
 		return ctrl.SendInternalError(c)
 	}
+
+	ctrl.cookieHelper.SetAccessTokenCookie(c, result.AccessToken, result.ExpiresIn)
+	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
 
 	return ctrl.SendSuccess(c, result, "Login berhasil")
 }
@@ -91,7 +96,7 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 		return nil
 	}
 
-	_, result, err := ctrl.authUsecase.Register(req)
+	refreshToken, result, err := ctrl.authUsecase.Register(req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -99,6 +104,9 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 		}
 		return ctrl.SendInternalError(c)
 	}
+
+	ctrl.cookieHelper.SetAccessTokenCookie(c, result.AccessToken, result.ExpiresIn)
+	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
 
 	return ctrl.SendCreated(c, result, "Registrasi berhasil")
 }
@@ -116,8 +124,24 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /api/v1/auth/refresh [post]
 func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
-	// Refresh tokens are handled by Supabase Auth
-	return ctrl.SendSuccess(c, nil, "Token refresh handled by Supabase Auth")
+	refreshToken := ctrl.cookieHelper.GetRefreshTokenFromCookie(c)
+	if refreshToken == "" {
+		return helper.SendErrorResponse(c, fiber.StatusUnauthorized, "Refresh token tidak ditemukan", nil)
+	}
+
+	newRefreshToken, result, err := ctrl.authUsecase.RefreshToken(refreshToken)
+	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
+		}
+		return ctrl.SendInternalError(c)
+	}
+
+	ctrl.cookieHelper.SetAccessTokenCookie(c, result.AccessToken, result.ExpiresIn)
+	ctrl.cookieHelper.SetRefreshTokenCookie(c, newRefreshToken)
+
+	return ctrl.SendSuccess(c, result, "Token berhasil diperbarui")
 }
 
 // Logout invalidates the user's refresh token.
@@ -131,10 +155,18 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 // @Failure 400 {object} domain.ErrorResponse "Refresh token diperlukan"
 // @Failure 404 {object} domain.ErrorResponse "Token tidak valid"
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
+// @Security BearerAuth
 // @Router /api/v1/auth/logout [post]
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
-	// Logout is handled by Supabase Auth
-	return ctrl.SendSuccess(c, nil, "Logout handled by Supabase Auth")
+	accessToken, _ := c.Locals("access_token").(string)
+	if accessToken != "" {
+		if err := ctrl.authUsecase.Logout(accessToken); err != nil {
+			ctrl.logger.Warn("Supabase logout failed, clearing cookies anyway", "error", err)
+		}
+	}
+
+	ctrl.cookieHelper.ClearAllAuthCookies(c)
+	return ctrl.SendSuccess(c, nil, "Logout berhasil")
 }
 
 // RequestPasswordReset initiates password reset by sending magic link to email.
@@ -160,13 +192,8 @@ func (ctrl *AuthController) RequestPasswordReset(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err := ctrl.authUsecase.RequestPasswordReset(req)
-	if err != nil {
-		var appErr *apperrors.AppError
-		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
-		}
-		return ctrl.SendInternalError(c)
+	if err := ctrl.authUsecase.RequestPasswordReset(req); err != nil {
+		ctrl.logger.Warn("Request password reset failed", "error", err, "email", req.Email)
 	}
 
 	return ctrl.SendSuccess(c, nil, "Link reset password telah dikirim ke email Anda")

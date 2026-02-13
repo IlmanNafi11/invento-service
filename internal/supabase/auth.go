@@ -9,17 +9,15 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/supabase-community/supabase-go"
 )
 
 var _ domain.AuthService = (*AuthService)(nil)
 
 type AuthService struct {
-	client     *supabase.Client
-	authURL    string
-	ServiceKey string
-	httpClient *http.Client
+	authURL     string
+	serviceKey  string
+	httpClient  *http.Client
+	jwtVerifier *JWTVerifier
 }
 
 type supabaseUser struct {
@@ -36,13 +34,17 @@ type supabaseAuthResponse struct {
 	User         supabaseUser `json:"user"`
 }
 
-func NewAuthService(client *supabase.Client, authURL string) *AuthService {
+func NewAuthService(authURL, serviceKey, jwtSecret string) *AuthService {
 	return &AuthService{
-		client:     client,
-		authURL:    authURL,
-		ServiceKey: "",
-		httpClient: &http.Client{Timeout: 30 * time.Second},
+		authURL:     authURL,
+		serviceKey:  serviceKey,
+		httpClient:  &http.Client{Timeout: 30 * time.Second},
+		jwtVerifier: NewJWTVerifier(jwtSecret),
 	}
+}
+
+func (s *AuthService) VerifyJWT(token string) (domain.AuthClaims, error) {
+	return s.jwtVerifier.Verify(token)
 }
 
 func (s *AuthService) Register(ctx context.Context, req domain.AuthServiceRegisterRequest) (*domain.AuthServiceResponse, error) {
@@ -66,7 +68,7 @@ func (s *AuthService) Register(ctx context.Context, req domain.AuthServiceRegist
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("apikey", s.ServiceKey)
+	httpReq.Header.Set("apikey", s.serviceKey)
 
 	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
@@ -96,10 +98,10 @@ func (s *AuthService) Register(ctx context.Context, req domain.AuthServiceRegist
 	}, nil
 }
 
-func (s *AuthService) Login(ctx context.Context, req domain.AuthServiceLoginRequest) (*domain.AuthServiceResponse, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (*domain.AuthServiceResponse, error) {
 	body := map[string]interface{}{
-		"email":    req.Email,
-		"password": req.Password,
+		"email":    email,
+		"password": password,
 	}
 
 	jsonBody, err := json.Marshal(body)
@@ -113,7 +115,7 @@ func (s *AuthService) Login(ctx context.Context, req domain.AuthServiceLoginRequ
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("apikey", s.ServiceKey)
+	httpReq.Header.Set("apikey", s.serviceKey)
 
 	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
@@ -166,7 +168,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*d
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("apikey", s.ServiceKey)
+	httpReq.Header.Set("apikey", s.serviceKey)
 
 	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
@@ -209,7 +211,7 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email string, re
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("apikey", s.ServiceKey)
+	httpReq.Header.Set("apikey", s.serviceKey)
 
 	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
@@ -225,54 +227,36 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email string, re
 	return nil
 }
 
-func (s *AuthService) GetUser(ctx context.Context, accessToken string) (*domain.AuthServiceUserInfo, error) {
-	httpReq, err := http.NewRequestWithContext(ctx, "GET", s.authURL+"/user", nil)
+func (s *AuthService) Logout(ctx context.Context, accessToken string) error {
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, s.authURL+"/logout", nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 
 	httpReq.Header.Set("Authorization", "Bearer "+accessToken)
-	httpReq.Header.Set("apikey", s.ServiceKey)
+	httpReq.Header.Set("apikey", s.serviceKey)
 
 	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {
-		return nil, fmt.Errorf("get user failed: %w", err)
+		return fmt.Errorf("logout failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("get user failed (status %d): %s", resp.StatusCode, string(body))
+		return ParseAuthError(resp)
 	}
 
-	var user supabaseUser
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
-	}
-
-	name := ""
-	if user.UserMetadata != nil {
-		if n, ok := user.UserMetadata["name"].(string); ok {
-			name = n
-		}
-	}
-
-	return &domain.AuthServiceUserInfo{
-		ID:    user.ID,
-		Email: user.Email,
-		Name:  name,
-	}, nil
+	return nil
 }
 
-// DeleteUser deletes a user from Supabase Auth by their UID using the admin API.
 func (s *AuthService) DeleteUser(ctx context.Context, uid string) error {
 	httpReq, err := http.NewRequestWithContext(ctx, "DELETE", s.authURL+"/admin/users/"+uid, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	httpReq.Header.Set("Authorization", "Bearer "+s.ServiceKey)
-	httpReq.Header.Set("apikey", s.ServiceKey)
+	httpReq.Header.Set("Authorization", "Bearer "+s.serviceKey)
+	httpReq.Header.Set("apikey", s.serviceKey)
 
 	resp, err := s.httpClient.Do(httpReq)
 	if err != nil {

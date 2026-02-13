@@ -8,12 +8,17 @@ import (
 // AuthService defines the authentication operations interface.
 // This interface allows for dependency injection and mocking in tests.
 type AuthService interface {
+	VerifyJWT(token string) (AuthClaims, error)
+	Login(ctx context.Context, email, password string) (*AuthServiceResponse, error)
 	Register(ctx context.Context, req AuthServiceRegisterRequest) (*AuthServiceResponse, error)
-	Login(ctx context.Context, req AuthServiceLoginRequest) (*AuthServiceResponse, error)
 	RefreshToken(ctx context.Context, refreshToken string) (*AuthServiceResponse, error)
+	Logout(ctx context.Context, accessToken string) error
 	RequestPasswordReset(ctx context.Context, email string, redirectTo string) error
-	GetUser(ctx context.Context, accessToken string) (*AuthServiceUserInfo, error)
 	DeleteUser(ctx context.Context, uid string) error
+}
+
+type AuthClaims interface {
+	GetUserID() string
 }
 
 // AuthServiceRegisterRequest represents the registration request for auth service.
@@ -89,14 +94,16 @@ type NewPasswordRequest struct {
 }
 
 type AuthResponse struct {
-	User        User   `json:"user"`
+	User        *User  `json:"user"`
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int    `json:"expires_in"`
+	ExpiresAt   int64  `json:"expires_at"`
 }
 
 type RefreshTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int    `json:"expires_in"`
+	ExpiresAt   int64  `json:"expires_at"`
 }

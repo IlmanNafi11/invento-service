@@ -46,7 +46,7 @@ func TestExample_WithFixtures(t *testing.T) {
 	assert.NotEmpty(t, user.ID)
 	assert.Equal(t, "test@example.com", user.Email)
 	assert.Equal(t, "Test Project", project.NamaProject)
-	assert.Equal(t, "Test Modul", modul.NamaFile)
+	assert.Equal(t, "Test Modul", modul.Judul)
 }
 
 // TestExample_ResponseAssertions demonstrates response assertion helpers
@@ -89,7 +89,7 @@ func TestExample_FixtureResponses(t *testing.T) {
 	assert.Equal(t, "test_access_token", authResp.AccessToken)
 	assert.Equal(t, "Bearer", authResp.TokenType)
 	assert.Equal(t, "Test Project", projectResp.NamaProject)
-	assert.Equal(t, "Test Modul", modulResp.NamaFile)
+	assert.Equal(t, "Test Modul", modulResp.Judul)
 }
 
 // TestExample_HealthCheckFixtures demonstrates health check fixtures

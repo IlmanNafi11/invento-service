@@ -120,13 +120,15 @@ func GetTestProjects() []domain.Project {
 // GetTestModul returns a test modul entity
 func GetTestModul() domain.Modul {
 	return domain.Modul{
-		ID:        1,
-		NamaFile:  "Test Modul",
+		ID:        "550e8400-e29b-41d4-a716-446655440001",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
 		UserID:    "00000000-0000-0000-0000-000000000001",
-		Tipe:      "pdf",
-		Ukuran:    "small",
-		Semester:  1,
-		PathFile:  "/test/modul",
+		FileName:  "test.pdf",
+		FilePath:  "/test/modul",
+		FileSize:  1024,
+		MimeType:  "application/pdf",
+		Status:    "completed",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -137,13 +139,15 @@ func GetTestModuls() []domain.Modul {
 	return []domain.Modul{
 		GetTestModul(),
 		{
-			ID:        2,
-			NamaFile:  "Another Modul",
+			ID:        "550e8400-e29b-41d4-a716-446655440002",
+			Judul:     "Another Modul",
+			Deskripsi: "Another Deskripsi",
 			UserID:    "00000000-0000-0000-0000-000000000001",
-			Tipe:      "video",
-			Ukuran:    "medium",
-			Semester:  1,
-			PathFile:  "/test/modul2",
+			FileName:  "another.mp4",
+			FilePath:  "/test/modul2",
+			FileSize:  2048,
+			MimeType:  "video/mp4",
+			Status:    "completed",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
@@ -189,15 +193,16 @@ func GetTestUpdateProjectRequest() domain.ProjectUpdateRequest {
 // GetTestCreateModulRequest returns a test create modul request
 func GetTestCreateModulRequest() domain.ModulCreateRequest {
 	return domain.ModulCreateRequest{
-		NamaFile: "New Modul",
+		Judul:     "New Modul",
+		Deskripsi: "Test Deskripsi",
 	}
 }
 
 // GetTestUpdateModulRequest returns a test update modul request
 func GetTestUpdateModulRequest() domain.ModulUpdateRequest {
 	return domain.ModulUpdateRequest{
-		NamaFile: "Updated Modul",
-		Semester: 1,
+		Judul:     "Updated Modul",
+		Deskripsi: "Updated Deskripsi",
 	}
 }
 
@@ -206,7 +211,7 @@ func GetTestUpdateModulRequest() domain.ModulUpdateRequest {
 // GetTestAuthResponse returns a test auth response
 func GetTestAuthResponse() domain.AuthResponse {
 	return domain.AuthResponse{
-		User: domain.User{
+		User: &domain.User{
 			ID:    "00000000-0000-0000-0000-000000000001",
 			Name:  "Test User",
 			Email: "test@example.com",
@@ -214,6 +219,7 @@ func GetTestAuthResponse() domain.AuthResponse {
 		AccessToken: "test_access_token",
 		TokenType:   "Bearer",
 		ExpiresIn:   3600,
+		ExpiresAt:   time.Now().Add(time.Hour).Unix(),
 	}
 }
 
@@ -234,12 +240,14 @@ func GetTestProjectResponse() domain.ProjectResponse {
 // GetTestModulResponse returns a test modul response
 func GetTestModulResponse() domain.ModulResponse {
 	return domain.ModulResponse{
-		ID:        1,
-		NamaFile:  "Test Modul",
-		Tipe:      "pdf",
-		Ukuran:    "small",
-		Semester:  1,
-		PathFile:  "/test/modul",
+		ID:        "550e8400-e29b-41d4-a716-446655440001",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
+		FileName:  "test.pdf",
+		MimeType:  "application/pdf",
+		FileSize:  1024,
+		FilePath:  "/test/modul",
+		Status:    "completed",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

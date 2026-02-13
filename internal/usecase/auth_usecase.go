@@ -9,6 +9,7 @@ import (
 	supabaseAuth "fiber-boiler-plate/internal/supabase"
 	"fiber-boiler-plate/internal/usecase/repo"
 	"strings"
+	"time"
 
 	"github.com/supabase-community/supabase-go"
 	"gorm.io/gorm"
@@ -40,8 +41,7 @@ func NewAuthUsecase(
 	config *config.Config,
 ) AuthUsecase {
 	authURL := config.Supabase.URL + "/auth/v1"
-	authService := supabaseAuth.NewAuthService(supabaseClient, authURL)
-	authService.ServiceKey = supabaseServiceKey
+	authService := supabaseAuth.NewAuthService(authURL, supabaseServiceKey, config.Supabase.JWTSecret)
 
 	return &authUsecase{
 		userRepo:           userRepo,
@@ -130,10 +130,11 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 	user.Role = role
 
 	domainAuthResp := &domain.AuthResponse{
-		User:        *user,
+		User:        user,
 		AccessToken: authResp.AccessToken,
 		TokenType:   authResp.TokenType,
 		ExpiresIn:   authResp.ExpiresIn,
+		ExpiresAt:   time.Now().Add(time.Duration(authResp.ExpiresIn) * time.Second).Unix(),
 	}
 
 	return authResp.RefreshToken, domainAuthResp, nil
@@ -142,12 +143,7 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthResponse, error) {
 	ctx := context.Background()
 
-	supabaseReq := domain.AuthServiceLoginRequest{
-		Email:    req.Email,
-		Password: req.Password,
-	}
-
-	authResp, err := uc.authService.Login(ctx, supabaseReq)
+	authResp, err := uc.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		return "", nil, apperrors.NewUnauthorizedError("Email atau password salah")
 	}
@@ -194,19 +190,12 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 		return "", nil, apperrors.NewForbiddenError("Akun belum diaktifkan")
 	}
 
-	if user.RoleID != nil {
-		roleIDUint := uint(*user.RoleID)
-		user.Role, err = uc.roleRepo.GetByID(roleIDUint)
-		if err != nil {
-			return "", nil, apperrors.NewInternalError(err)
-		}
-	}
-
 	domainAuthResp := &domain.AuthResponse{
-		User:        *user,
+		User:        user,
 		AccessToken: authResp.AccessToken,
 		TokenType:   authResp.TokenType,
 		ExpiresIn:   authResp.ExpiresIn,
+		ExpiresAt:   time.Now().Add(time.Duration(authResp.ExpiresIn) * time.Second).Unix(),
 	}
 
 	return authResp.RefreshToken, domainAuthResp, nil
@@ -224,6 +213,7 @@ func (uc *authUsecase) RefreshToken(refreshToken string) (string, *domain.Refres
 		AccessToken: authResp.AccessToken,
 		TokenType:   authResp.TokenType,
 		ExpiresIn:   authResp.ExpiresIn,
+		ExpiresAt:   time.Now().Add(time.Duration(authResp.ExpiresIn) * time.Second).Unix(),
 	}
 
 	return authResp.RefreshToken, domainResp, nil
@@ -231,14 +221,6 @@ func (uc *authUsecase) RefreshToken(refreshToken string) (string, *domain.Refres
 
 func (uc *authUsecase) RequestPasswordReset(req domain.ResetPasswordRequest) error {
 	ctx := context.Background()
-
-	_, err := uc.userRepo.GetByEmail(req.Email)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return apperrors.NewNotFoundError("Email")
-		}
-		return apperrors.NewInternalError(err)
-	}
 
 	redirectURL := uc.config.App.CorsOriginDev + "/reset-password"
 	if uc.config.App.Env == "production" {
@@ -253,5 +235,10 @@ func (uc *authUsecase) RequestPasswordReset(req domain.ResetPasswordRequest) err
 }
 
 func (uc *authUsecase) Logout(token string) error {
+	ctx := context.Background()
+	if err := uc.authService.Logout(ctx, token); err != nil {
+		return apperrors.NewInternalError(err)
+	}
+
 	return nil
 }

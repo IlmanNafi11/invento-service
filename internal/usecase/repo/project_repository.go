@@ -58,7 +58,7 @@ func (r *projectRepository) GetByUserID(userID string, search string, filterSeme
 		SELECT COUNT(*) as total
 		FROM projects
 		WHERE user_id = ?
-			AND (? = '' OR nama_project LIKE CONCAT('%', ?, '%'))
+			AND (? = '' OR LOWER(nama_project) LIKE '%' || LOWER(?) || '%')
 			AND (? = 0 OR semester = ?)
 			AND (? = '' OR kategori = ?)
 	`
@@ -78,7 +78,7 @@ func (r *projectRepository) GetByUserID(userID string, search string, filterSeme
 			updated_at as terakhir_diperbarui
 		FROM projects
 		WHERE user_id = ?
-			AND (? = '' OR nama_project LIKE CONCAT('%', ?, '%'))
+			AND (? = '' OR LOWER(nama_project) LIKE '%' || LOWER(?) || '%')
 			AND (? = 0 OR semester = ?)
 			AND (? = '' OR kategori = ?)
 		ORDER BY updated_at DESC

@@ -87,6 +87,11 @@ const docTemplate = `{
         },
         "/api/v1/auth/logout": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Menghapus refresh token dari cookie dan database.",
                 "consumes": [
                     "application/json"
@@ -316,20 +321,20 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Search by module name",
+                        "description": "Search by judul or deskripsi",
                         "name": "search",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filter by file type",
+                        "description": "Filter by mime type",
                         "name": "filter_type",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "description": "Filter by semester (1-8)",
-                        "name": "filter_semester",
+                        "type": "string",
+                        "description": "Filter by status (pending, completed)",
+                        "name": "filter_status",
                         "in": "query"
                     },
                     {
@@ -870,8 +875,8 @@ const docTemplate = `{
                 "summary": "Delete a module",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Module ID",
+                        "type": "string",
+                        "description": "Module ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -922,7 +927,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update nama_file or semester of an existing module",
+                "description": "Update judul or deskripsi of an existing module",
                 "consumes": [
                     "application/json"
                 ],
@@ -935,8 +940,8 @@ const docTemplate = `{
                 "summary": "Update module metadata",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Module ID",
+                        "type": "string",
+                        "description": "Module ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -3700,6 +3705,9 @@ const docTemplate = `{
                 "access_token": {
                     "type": "string"
                 },
+                "expires_at": {
+                    "type": "integer"
+                },
                 "expires_in": {
                     "type": "integer"
                 },
@@ -3939,7 +3947,7 @@ const docTemplate = `{
                     "type": "array",
                     "minItems": 1,
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 }
             }
@@ -3961,25 +3969,31 @@ const docTemplate = `{
         "domain.ModulListItem": {
             "type": "object",
             "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_path": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
                 "id": {
-                    "type": "integer"
-                },
-                "nama_file": {
                     "type": "string"
                 },
-                "path_file": {
+                "judul": {
                     "type": "string"
                 },
-                "semester": {
-                    "type": "integer"
+                "mime_type": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 },
                 "terakhir_diperbarui": {
-                    "type": "string"
-                },
-                "tipe": {
-                    "type": "string"
-                },
-                "ukuran": {
                     "type": "string"
                 }
             }
@@ -3987,15 +4001,13 @@ const docTemplate = `{
         "domain.ModulUpdateRequest": {
             "type": "object",
             "properties": {
-                "nama_file": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "judul": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 3
-                },
-                "semester": {
-                    "type": "integer",
-                    "maximum": 8,
-                    "minimum": 1
                 }
             }
         },
@@ -4090,6 +4102,9 @@ const docTemplate = `{
             "properties": {
                 "access_token": {
                     "type": "string"
+                },
+                "expires_at": {
+                    "type": "integer"
                 },
                 "expires_in": {
                     "type": "integer"
@@ -4473,6 +4488,12 @@ const docTemplate = `{
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
+        },
+        "CookieAuth": {
+            "description": "Access token stored in HttpOnly cookie (set automatically on login/register/refresh)",
+            "type": "apiKey",
+            "name": "access_token",
+            "in": "cookie"
         }
     }
 }`

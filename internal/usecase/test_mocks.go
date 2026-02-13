@@ -1,12 +1,64 @@
 package usecase
 
 import (
+	"context"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
 	"time"
 
 	"github.com/stretchr/testify/mock"
 )
+
+type MockAuthService struct {
+	mock.Mock
+}
+
+func (m *MockAuthService) VerifyJWT(token string) (domain.AuthClaims, error) {
+	args := m.Called(token)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(domain.AuthClaims), args.Error(1)
+}
+
+func (m *MockAuthService) Register(ctx context.Context, req domain.AuthServiceRegisterRequest) (*domain.AuthServiceResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
+}
+
+func (m *MockAuthService) Login(ctx context.Context, email, password string) (*domain.AuthServiceResponse, error) {
+	args := m.Called(ctx, email, password)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
+}
+
+func (m *MockAuthService) RefreshToken(ctx context.Context, refreshToken string) (*domain.AuthServiceResponse, error) {
+	args := m.Called(ctx, refreshToken)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
+}
+
+func (m *MockAuthService) Logout(ctx context.Context, accessToken string) error {
+	args := m.Called(ctx, accessToken)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
+	args := m.Called(ctx, email, redirectTo)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) DeleteUser(ctx context.Context, uid string) error {
+	args := m.Called(ctx, uid)
+	return args.Error(0)
+}
 
 // MockUserRepository is a mock for UserRepository
 type MockUserRepository struct {
@@ -181,7 +233,7 @@ func (m *MockModulRepository) Create(modul *domain.Modul) error {
 	return args.Error(0)
 }
 
-func (m *MockModulRepository) GetByID(id uint) (*domain.Modul, error) {
+func (m *MockModulRepository) GetByID(id string) (*domain.Modul, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -189,7 +241,7 @@ func (m *MockModulRepository) GetByID(id uint) (*domain.Modul, error) {
 	return args.Get(0).(*domain.Modul), args.Error(1)
 }
 
-func (m *MockModulRepository) GetByIDs(ids []uint, userID string) ([]domain.Modul, error) {
+func (m *MockModulRepository) GetByIDs(ids []string, userID string) ([]domain.Modul, error) {
 	args := m.Called(ids, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -197,7 +249,7 @@ func (m *MockModulRepository) GetByIDs(ids []uint, userID string) ([]domain.Modu
 	return args.Get(0).([]domain.Modul), args.Error(1)
 }
 
-func (m *MockModulRepository) GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Modul, error) {
+func (m *MockModulRepository) GetByIDsForUser(ids []string, ownerUserID string) ([]domain.Modul, error) {
 	args := m.Called(ids, ownerUserID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -205,8 +257,8 @@ func (m *MockModulRepository) GetByIDsForUser(ids []uint, ownerUserID string) ([
 	return args.Get(0).([]domain.Modul), args.Error(1)
 }
 
-func (m *MockModulRepository) GetByUserID(userID string, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error) {
-	args := m.Called(userID, search, filterType, filterSemester, page, limit)
+func (m *MockModulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]domain.ModulListItem, int, error) {
+	args := m.Called(userID, search, filterType, filterStatus, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
@@ -223,7 +275,7 @@ func (m *MockModulRepository) Update(modul *domain.Modul) error {
 	return args.Error(0)
 }
 
-func (m *MockModulRepository) Delete(id uint) error {
+func (m *MockModulRepository) Delete(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
@@ -282,7 +334,7 @@ func (m *MockTusModulUploadRepository) UpdateStatus(id string, status string) er
 	return args.Error(0)
 }
 
-func (m *MockTusModulUploadRepository) Complete(id string, modulID uint, filePath string) error {
+func (m *MockTusModulUploadRepository) Complete(id string, modulID string, filePath string) error {
 	args := m.Called(id, modulID, filePath)
 	return args.Error(0)
 }

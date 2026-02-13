@@ -41,6 +41,8 @@ definitions:
     properties:
       access_token:
         type: string
+      expires_at:
+        type: integer
       expires_in:
         type: integer
       token_type:
@@ -195,7 +197,7 @@ definitions:
     properties:
       ids:
         items:
-          type: integer
+          type: string
         minItems: 1
         type: array
     required:
@@ -212,31 +214,33 @@ definitions:
     type: object
   domain.ModulListItem:
     properties:
+      deskripsi:
+        type: string
+      file_name:
+        type: string
+      file_path:
+        type: string
+      file_size:
+        type: integer
       id:
-        type: integer
-      nama_file:
         type: string
-      path_file:
+      judul:
         type: string
-      semester:
-        type: integer
+      mime_type:
+        type: string
+      status:
+        type: string
       terakhir_diperbarui:
-        type: string
-      tipe:
-        type: string
-      ukuran:
         type: string
     type: object
   domain.ModulUpdateRequest:
     properties:
-      nama_file:
+      deskripsi:
+        type: string
+      judul:
         maxLength: 255
         minLength: 3
         type: string
-      semester:
-        maximum: 8
-        minimum: 1
-        type: integer
     type: object
   domain.PaginationData:
     properties:
@@ -301,6 +305,8 @@ definitions:
     properties:
       access_token:
         type: string
+      expires_at:
+        type: integer
       expires_in:
         type: integer
       token_type:
@@ -629,6 +635,8 @@ paths:
           description: Terjadi kesalahan pada server
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Logout pengguna
       tags:
       - Auth
@@ -745,18 +753,18 @@ paths:
       - application/json
       description: Retrieve paginated list of modules with optional filters
       parameters:
-      - description: Search by module name
+      - description: Search by judul or deskripsi
         in: query
         name: search
         type: string
-      - description: Filter by file type
+      - description: Filter by mime type
         in: query
         name: filter_type
         type: string
-      - description: Filter by semester (1-8)
+      - description: Filter by status (pending, completed)
         in: query
-        name: filter_semester
-        type: integer
+        name: filter_status
+        type: string
       - default: 1
         description: Page number
         in: query
@@ -802,11 +810,11 @@ paths:
       - application/json
       description: Permanently delete a module by ID
       parameters:
-      - description: Module ID
+      - description: Module ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -842,13 +850,13 @@ paths:
     patch:
       consumes:
       - application/json
-      description: Update nama_file or semester of an existing module
+      description: Update judul or deskripsi of an existing module
       parameters:
-      - description: Module ID
+      - description: Module ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Update request
         in: body
         name: request
@@ -2902,5 +2910,10 @@ securityDefinitions:
       {token}"'
     in: header
     name: Authorization
+    type: apiKey
+  CookieAuth:
+    description: Access token stored in HttpOnly cookie (set automatically on login/register/refresh)
+    in: cookie
+    name: access_token
     type: apiKey
 swagger: "2.0"

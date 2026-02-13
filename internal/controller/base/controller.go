@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // BaseController provides common functionality for all HTTP controllers.
@@ -139,6 +140,31 @@ func (bc *BaseController) ParsePathID(c *fiber.Ctx) (uint, error) {
 	}
 
 	return uint(id), nil
+}
+
+// ParsePathUUID parses a UUID string from the URL path parameter.
+// Returns an error and sends a BadRequest response if the parameter is missing, empty, or not a valid UUID.
+//
+// Usage:
+//
+//	id, err := ctrl.ParsePathUUID(c)
+//	if err != nil {
+//	    return err // error response already sent
+//	}
+func (bc *BaseController) ParsePathUUID(c *fiber.Ctx) (string, error) {
+	idParam := c.Params("id")
+	if idParam == "" {
+		helper.SendBadRequestResponse(c, "ID tidak valid")
+		return "", errors.New("id parameter is empty")
+	}
+
+	// Validate UUID format
+	if _, err := uuid.Parse(idParam); err != nil {
+		helper.SendBadRequestResponse(c, "ID tidak valid")
+		return "", errors.New("id is not a valid UUID")
+	}
+
+	return idParam, nil
 }
 
 // ParsePagination parses page and limit parameters from query string.

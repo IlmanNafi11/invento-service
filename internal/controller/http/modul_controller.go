@@ -41,9 +41,9 @@ func NewModulController(
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param search query string false "Search by module name"
-// @Param filter_type query string false "Filter by file type"
-// @Param filter_semester query int false "Filter by semester (1-8)"
+// @Param search query string false "Search by judul or deskripsi"
+// @Param filter_type query string false "Filter by mime type"
+// @Param filter_status query string false "Filter by status (pending, completed)"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Success 200 {object} domain.SuccessResponse{data=domain.ModulListData} "List retrieved successfully"
@@ -69,7 +69,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 		params.Limit = 10
 	}
 
-	result, err := ctrl.modulUsecase.GetList(userID, params.Search, params.FilterType, params.FilterSemester, params.Page, params.Limit)
+	result, err := ctrl.modulUsecase.GetList(userID, params.Search, params.FilterType, params.FilterStatus, params.Page, params.Limit)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -89,7 +89,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param id path int true "Module ID"
+// @Param id path string true "Module ID (UUID)"
 // @Success 200 {object} domain.SuccessResponse "Module deleted successfully"
 // @Failure 400 {object} domain.ErrorResponse "Invalid module ID"
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
@@ -103,7 +103,7 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 		return nil
 	}
 
-	modulID, err := ctrl.ParsePathID(c)
+	modulID, err := ctrl.ParsePathUUID(c)
 	if err != nil {
 		return nil
 	}
@@ -123,12 +123,12 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 // UpdateMetadata handles PATCH /api/v1/modul/:id
 //
 // @Summary Update module metadata
-// @Description Update nama_file or semester of an existing module
+// @Description Update judul or deskripsi of an existing module
 // @Tags Modul
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param id path int true "Module ID"
+// @Param id path string true "Module ID (UUID)"
 // @Param request body domain.ModulUpdateRequest true "Update request"
 // @Success 200 {object} domain.SuccessResponse "Metadata updated successfully"
 // @Failure 400 {object} domain.ErrorResponse "Invalid request format"
@@ -143,7 +143,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 		return nil
 	}
 
-	modulID, err := ctrl.ParsePathID(c)
+	modulID, err := ctrl.ParsePathUUID(c)
 	if err != nil {
 		return nil
 	}

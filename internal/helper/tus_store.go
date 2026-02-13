@@ -62,6 +62,9 @@ func (ts *TusStore) removeLock(uploadID string) {
 }
 
 func (ts *TusStore) NewUpload(info TusFileInfo) error {
+	if info.Size <= 0 {
+		return fmt.Errorf("ukuran file tidak valid: harus lebih dari 0 bytes")
+	}
 	if info.Size > ts.maxFileSize {
 		return fmt.Errorf("ukuran file melebihi batas maksimal %d bytes", ts.maxFileSize)
 	}
@@ -249,6 +252,11 @@ func (ts *TusStore) UpdateMetadata(uploadID string, metadata map[string]string) 
 	info, err := ts.GetInfo(uploadID)
 	if err != nil {
 		return err
+	}
+
+	// Initialize metadata map if nil
+	if info.Metadata == nil {
+		info.Metadata = make(map[string]string)
 	}
 
 	for key, value := range metadata {

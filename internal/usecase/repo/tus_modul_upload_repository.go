@@ -58,7 +58,7 @@ func (r *tusModulUploadRepository) UpdateStatus(id string, status string) error 
 		Update("status", status).Error
 }
 
-func (r *tusModulUploadRepository) Complete(id string, modulID uint, filePath string) error {
+func (r *tusModulUploadRepository) Complete(id string, modulID string, filePath string) error {
 	now := time.Now()
 	return r.db.Model(&domain.TusModulUpload{}).
 		Where("id = ?", id).

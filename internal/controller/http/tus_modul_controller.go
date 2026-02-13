@@ -326,7 +326,7 @@ func (ctrl *TusModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
-	modulID, err := ctrl.base.ParsePathID(c)
+	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
 		return helper.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
 	}

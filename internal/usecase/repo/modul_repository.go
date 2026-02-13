@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fiber-boiler-plate/internal/domain"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -18,16 +19,16 @@ func (r *modulRepository) Create(modul *domain.Modul) error {
 	return r.db.Create(modul).Error
 }
 
-func (r *modulRepository) GetByID(id uint) (*domain.Modul, error) {
+func (r *modulRepository) GetByID(id string) (*domain.Modul, error) {
 	var modul domain.Modul
-	err := r.db.First(&modul, id).Error
+	err := r.db.Where("id = ?", id).First(&modul).Error
 	if err != nil {
 		return nil, err
 	}
 	return &modul, nil
 }
 
-func (r *modulRepository) GetByIDs(ids []uint, userID string) ([]domain.Modul, error) {
+func (r *modulRepository) GetByIDs(ids []string, userID string) ([]domain.Modul, error) {
 	var moduls []domain.Modul
 	err := r.db.Where("id IN ? AND user_id = ?", ids, userID).Find(&moduls).Error
 	if err != nil {
@@ -36,7 +37,7 @@ func (r *modulRepository) GetByIDs(ids []uint, userID string) ([]domain.Modul, e
 	return moduls, nil
 }
 
-func (r *modulRepository) GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Modul, error) {
+func (r *modulRepository) GetByIDsForUser(ids []string, ownerUserID string) ([]domain.Modul, error) {
 	var moduls []domain.Modul
 	if len(ids) == 0 {
 		return moduls, nil
@@ -48,7 +49,7 @@ func (r *modulRepository) GetByIDsForUser(ids []uint, ownerUserID string) ([]dom
 	return moduls, nil
 }
 
-func (r *modulRepository) GetByUserID(userID string, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error) {
+func (r *modulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]domain.ModulListItem, int, error) {
 	var modulListItems []domain.ModulListItem
 	var total int64
 
@@ -58,34 +59,40 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 		SELECT COUNT(*) as total
 		FROM moduls
 		WHERE user_id = ?
-			AND (? = '' OR nama_file LIKE CONCAT('%', ?, '%'))
-			AND (? = '' OR tipe = ?)
-			AND (? = 0 OR semester = ?)
+			AND (? = '' OR LOWER(judul) LIKE '%' || LOWER(?) || '%' OR LOWER(deskripsi) LIKE '%' || LOWER(?) || '%')
+			AND (? = '' OR mime_type = ?)
+			AND (? = '' OR status = ?)
 	`
 
-	if err := r.db.Raw(countQuery, userID, search, search, filterType, filterType, filterSemester, filterSemester).Scan(&total).Error; err != nil {
+	if err := r.db.Raw(countQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus).Scan(&total).Error; err != nil {
+		log.Printf("[ERROR] ModulRepository.GetByUserID count query failed - query: %s, params: userID=%s, search=%s, filterType=%s, filterStatus=%s, error: %v",
+			countQuery, userID, search, filterType, filterStatus, err)
 		return nil, 0, err
 	}
 
 	dataQuery := `
 		SELECT
 			id,
-			nama_file,
-			tipe,
-			ukuran,
-			semester,
-			path_file,
+			judul,
+			deskripsi,
+			file_name,
+			mime_type,
+			file_size,
+			file_path,
+			status,
 			updated_at as terakhir_diperbarui
 		FROM moduls
 		WHERE user_id = ?
-			AND (? = '' OR nama_file LIKE CONCAT('%', ?, '%'))
-			AND (? = '' OR tipe = ?)
-			AND (? = 0 OR semester = ?)
+			AND (? = '' OR LOWER(judul) LIKE '%' || LOWER(?) || '%' OR LOWER(deskripsi) LIKE '%' || LOWER(?) || '%')
+			AND (? = '' OR mime_type = ?)
+			AND (? = '' OR status = ?)
 		ORDER BY updated_at DESC
 		LIMIT ? OFFSET ?
 	`
 
-	if err := r.db.Raw(dataQuery, userID, search, search, filterType, filterType, filterSemester, filterSemester, limit, offset).Scan(&modulListItems).Error; err != nil {
+	if err := r.db.Raw(dataQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus, limit, offset).Scan(&modulListItems).Error; err != nil {
+		log.Printf("[ERROR] ModulRepository.GetByUserID data query failed - query: %s, params: userID=%s, search=%s, filterType=%s, filterStatus=%s, limit=%d, offset=%d, error: %v",
+			dataQuery, userID, search, filterType, filterStatus, limit, offset, err)
 		return nil, 0, err
 	}
 
@@ -102,15 +109,15 @@ func (r *modulRepository) Update(modul *domain.Modul) error {
 	return r.db.Save(modul).Error
 }
 
-func (r *modulRepository) Delete(id uint) error {
-	return r.db.Delete(&domain.Modul{}, id).Error
+func (r *modulRepository) Delete(id string) error {
+	return r.db.Where("id = ?", id).Delete(&domain.Modul{}).Error
 }
 
 func (r *modulRepository) UpdateMetadata(modul *domain.Modul) error {
 	return r.db.Model(&domain.Modul{}).
 		Where("id = ?", modul.ID).
 		Updates(map[string]interface{}{
-			"nama_file": modul.NamaFile,
-			"semester":  modul.Semester,
+			"judul":     modul.Judul,
+			"deskripsi": modul.Deskripsi,
 		}).Error
 }

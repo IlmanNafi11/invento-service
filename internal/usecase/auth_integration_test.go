@@ -28,12 +28,20 @@ func (m *IntegrationMockAuthService) Register(ctx context.Context, req domain.Au
 	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
 }
 
-func (m *IntegrationMockAuthService) Login(ctx context.Context, req domain.AuthServiceLoginRequest) (*domain.AuthServiceResponse, error) {
-	args := m.Called(ctx, req)
+func (m *IntegrationMockAuthService) Login(ctx context.Context, email, password string) (*domain.AuthServiceResponse, error) {
+	args := m.Called(ctx, email, password)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
+}
+
+func (m *IntegrationMockAuthService) VerifyJWT(token string) (domain.AuthClaims, error) {
+	args := m.Called(token)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(domain.AuthClaims), args.Error(1)
 }
 
 func (m *IntegrationMockAuthService) RefreshToken(ctx context.Context, refreshToken string) (*domain.AuthServiceResponse, error) {
@@ -49,12 +57,9 @@ func (m *IntegrationMockAuthService) RequestPasswordReset(ctx context.Context, e
 	return args.Error(0)
 }
 
-func (m *IntegrationMockAuthService) GetUser(ctx context.Context, accessToken string) (*domain.AuthServiceUserInfo, error) {
+func (m *IntegrationMockAuthService) Logout(ctx context.Context, accessToken string) error {
 	args := m.Called(ctx, accessToken)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.AuthServiceUserInfo), args.Error(1)
+	return args.Error(0)
 }
 
 func (m *IntegrationMockAuthService) DeleteUser(ctx context.Context, uid string) error {
@@ -348,9 +353,7 @@ func TestAuthIntegration_LoginFlow(t *testing.T) {
 		suite.seedUser("existing-login-user", "login@student.polije.ac.id", "Login User", &roleID)
 
 		// Setup: Mock Supabase auth service response
-		suite.mockAuth.On("Login", mock.Anything, mock.MatchedBy(func(r domain.AuthServiceLoginRequest) bool {
-			return r.Email == "login@student.polije.ac.id" && r.Password == "correctpassword"
-		})).Return(&domain.AuthServiceResponse{
+		suite.mockAuth.On("Login", mock.Anything, "login@student.polije.ac.id", "correctpassword").Return(&domain.AuthServiceResponse{
 			AccessToken:  "mock_access_token",
 			RefreshToken: "mock_refresh_token",
 			TokenType:    "bearer",
@@ -383,9 +386,7 @@ func TestAuthIntegration_LoginFlow(t *testing.T) {
 
 	t.Run("LoginFlow_InvalidCredentials", func(t *testing.T) {
 		// Setup: Mock Supabase returning error for invalid credentials
-		suite.mockAuth.On("Login", mock.Anything, mock.MatchedBy(func(r domain.AuthServiceLoginRequest) bool {
-			return r.Email == "user@student.polije.ac.id" && r.Password == "wrongpassword"
-		})).Return(nil, apperrors.NewUnauthorizedError("Invalid credentials")).Once()
+		suite.mockAuth.On("Login", mock.Anything, "user@student.polije.ac.id", "wrongpassword").Return(nil, apperrors.NewUnauthorizedError("Invalid credentials")).Once()
 
 		// Execute
 		req := domain.AuthRequest{
@@ -432,17 +433,39 @@ func TestAuthIntegration_RequestPasswordReset(t *testing.T) {
 		suite.mockAuth.AssertExpectations(t)
 	})
 
-	t.Run("RequestPasswordReset_UserNotFound", func(t *testing.T) {
-		// Execute
-		req := domain.ResetPasswordRequest{
-			Email: "nonexistent@student.polije.ac.id",
-		}
+	t.Run("RequestPasswordReset_UnknownEmailStillDelegates", func(t *testing.T) {
+		suite.mockAuth.On("RequestPasswordReset", mock.Anything, "nonexistent@student.polije.ac.id", mock.Anything).Return(nil).Once()
+
+		req := domain.ResetPasswordRequest{Email: "nonexistent@student.polije.ac.id"}
 		err := suite.authUsecase.RequestPasswordReset(req)
 
-		// Verify
-		require.Error(t, err)
-		var appErr *apperrors.AppError
-		assert.ErrorAs(t, err, &appErr)
-		assert.Equal(t, fiber.StatusNotFound, appErr.HTTPStatus)
+		require.NoError(t, err)
+		suite.mockAuth.AssertExpectations(t)
+	})
+}
+
+func TestAuthIntegration_RefreshAndLogout(t *testing.T) {
+	suite := setupIntegrationTest(t)
+	defer suite.cleanup()
+
+	t.Run("RefreshToken_Success", func(t *testing.T) {
+		suite.mockAuth.On("RefreshToken", mock.Anything, "old_refresh").Return(&domain.AuthServiceResponse{
+			AccessToken:  "new_access",
+			RefreshToken: "new_refresh",
+			TokenType:    "bearer",
+			ExpiresIn:    3600,
+		}, nil).Once()
+
+		newRefresh, resp, err := suite.authUsecase.RefreshToken("old_refresh")
+		require.NoError(t, err)
+		assert.Equal(t, "new_refresh", newRefresh)
+		assert.Equal(t, "new_access", resp.AccessToken)
+		assert.NotZero(t, resp.ExpiresAt)
+	})
+
+	t.Run("Logout_Success", func(t *testing.T) {
+		suite.mockAuth.On("Logout", mock.Anything, "access_token").Return(nil).Once()
+		err := suite.authUsecase.Logout("access_token")
+		require.NoError(t, err)
 	})
 }

@@ -75,12 +75,12 @@ func (dh *DownloadHelper) PrepareFilesForDownload(projects []domain.Project, mod
 	}
 
 	for _, modul := range moduls {
-		resolvedPath := dh.resolvePath(modul.PathFile)
+		resolvedPath := dh.resolvePath(modul.FilePath)
 
 		if _, err := os.Stat(resolvedPath); err == nil {
 			filePaths = append(filePaths, resolvedPath)
 		} else {
-			notFoundFiles = append(notFoundFiles, fmt.Sprintf("Modul ID %d: %s", modul.ID, modul.PathFile))
+			notFoundFiles = append(notFoundFiles, fmt.Sprintf("Modul ID %s: %s", modul.ID, modul.FilePath))
 		}
 	}
 
@@ -122,7 +122,7 @@ func (dh *DownloadHelper) CreateDownloadZip(filePaths []string, userID string) (
 	return zipFilePath, nil
 }
 
-func (dh *DownloadHelper) GetFilesByIDs(projectIDs, modulIDs []uint, projects []domain.Project, moduls []domain.Modul) ([]domain.Project, []domain.Modul) {
+func (dh *DownloadHelper) GetFilesByIDs(projectIDs []uint, modulIDs []string, projects []domain.Project, moduls []domain.Modul) ([]domain.Project, []domain.Modul) {
 	var selectedProjects []domain.Project
 	var selectedModuls []domain.Modul
 
@@ -131,7 +131,7 @@ func (dh *DownloadHelper) GetFilesByIDs(projectIDs, modulIDs []uint, projects []
 		projectMap[p.ID] = p
 	}
 
-	modulMap := make(map[uint]domain.Modul)
+	modulMap := make(map[string]domain.Modul)
 	for _, m := range moduls {
 		modulMap[m.ID] = m
 	}

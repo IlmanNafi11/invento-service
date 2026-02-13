@@ -12,11 +12,11 @@ import (
 	"gorm.io/gorm"
 )
 
-type MockAuthService struct {
+type AuthUsecaseMockAuthService struct {
 	mock.Mock
 }
 
-func (m *MockAuthService) Register(ctx context.Context, req domain.AuthServiceRegisterRequest) (*domain.AuthServiceResponse, error) {
+func (m *AuthUsecaseMockAuthService) Register(ctx context.Context, req domain.AuthServiceRegisterRequest) (*domain.AuthServiceResponse, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -24,15 +24,23 @@ func (m *MockAuthService) Register(ctx context.Context, req domain.AuthServiceRe
 	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
 }
 
-func (m *MockAuthService) Login(ctx context.Context, req domain.AuthServiceLoginRequest) (*domain.AuthServiceResponse, error) {
-	args := m.Called(ctx, req)
+func (m *AuthUsecaseMockAuthService) Login(ctx context.Context, email, password string) (*domain.AuthServiceResponse, error) {
+	args := m.Called(ctx, email, password)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
 }
 
-func (m *MockAuthService) RefreshToken(ctx context.Context, refreshToken string) (*domain.AuthServiceResponse, error) {
+func (m *AuthUsecaseMockAuthService) VerifyJWT(token string) (domain.AuthClaims, error) {
+	args := m.Called(token)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(domain.AuthClaims), args.Error(1)
+}
+
+func (m *AuthUsecaseMockAuthService) RefreshToken(ctx context.Context, refreshToken string) (*domain.AuthServiceResponse, error) {
 	args := m.Called(ctx, refreshToken)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -40,20 +48,17 @@ func (m *MockAuthService) RefreshToken(ctx context.Context, refreshToken string)
 	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
 }
 
-func (m *MockAuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
+func (m *AuthUsecaseMockAuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
 	args := m.Called(ctx, email, redirectTo)
 	return args.Error(0)
 }
 
-func (m *MockAuthService) GetUser(ctx context.Context, accessToken string) (*domain.AuthServiceUserInfo, error) {
+func (m *AuthUsecaseMockAuthService) Logout(ctx context.Context, accessToken string) error {
 	args := m.Called(ctx, accessToken)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*domain.AuthServiceUserInfo), args.Error(1)
+	return args.Error(0)
 }
 
-func (m *MockAuthService) DeleteUser(ctx context.Context, uid string) error {
+func (m *AuthUsecaseMockAuthService) DeleteUser(ctx context.Context, uid string) error {
 	args := m.Called(ctx, uid)
 	return args.Error(0)
 }
@@ -365,9 +370,7 @@ func TestLogin_Success_ExistingUser(t *testing.T) {
 	}
 	role := &domain.Role{ID: 1, NamaRole: "mahasiswa"}
 
-	mockAuth.On("Login", mock.Anything, mock.MatchedBy(func(r domain.AuthServiceLoginRequest) bool {
-		return r.Email == req.Email && r.Password == req.Password
-	})).Return(&domain.AuthServiceResponse{
+	mockAuth.On("Login", mock.Anything, req.Email, req.Password).Return(&domain.AuthServiceResponse{
 		AccessToken:  "access_token",
 		RefreshToken: "refresh_token",
 		TokenType:    "bearer",
@@ -385,7 +388,7 @@ func TestLogin_Success_ExistingUser(t *testing.T) {
 	assert.Equal(t, "access_token", authResp.AccessToken)
 	assert.Equal(t, req.Email, authResp.User.Email)
 
-	mockAuth.AssertCalled(t, "Login", mock.Anything, mock.Anything)
+	mockAuth.AssertCalled(t, "Login", mock.Anything, req.Email, req.Password)
 	mockUser.AssertCalled(t, "GetByEmail", req.Email)
 }
 
@@ -404,7 +407,7 @@ func TestLogin_Success_NewUserSync(t *testing.T) {
 
 	role := &domain.Role{ID: 1, NamaRole: "mahasiswa"}
 
-	mockAuth.On("Login", mock.Anything, mock.Anything).Return(&domain.AuthServiceResponse{
+	mockAuth.On("Login", mock.Anything, req.Email, req.Password).Return(&domain.AuthServiceResponse{
 		AccessToken:  "access_token",
 		RefreshToken: "refresh_token",
 		TokenType:    "bearer",
@@ -425,7 +428,7 @@ func TestLogin_Success_NewUserSync(t *testing.T) {
 	assert.Equal(t, "refresh_token", refreshToken)
 	assert.Equal(t, "access_token", authResp.AccessToken)
 
-	mockAuth.AssertCalled(t, "Login", mock.Anything, mock.Anything)
+	mockAuth.AssertCalled(t, "Login", mock.Anything, req.Email, req.Password)
 	mockUser.AssertCalled(t, "GetByEmail", req.Email)
 	mockUser.AssertCalled(t, "Create", mock.Anything)
 }
@@ -443,7 +446,7 @@ func TestLogin_SupabaseFails(t *testing.T) {
 		Password: "wrongpassword",
 	}
 
-	mockAuth.On("Login", mock.Anything, mock.Anything).Return(nil, errors.New("invalid credentials"))
+	mockAuth.On("Login", mock.Anything, req.Email, req.Password).Return(nil, errors.New("invalid credentials"))
 
 	refreshToken, authResp, err := uc.Login(req)
 
@@ -452,7 +455,7 @@ func TestLogin_SupabaseFails(t *testing.T) {
 	assert.Empty(t, refreshToken)
 	assert.Contains(t, err.Error(), "salah")
 
-	mockAuth.AssertCalled(t, "Login", mock.Anything, mock.Anything)
+	mockAuth.AssertCalled(t, "Login", mock.Anything, req.Email, req.Password)
 	mockUser.AssertNotCalled(t, "GetByEmail", mock.Anything)
 }
 
@@ -476,7 +479,7 @@ func TestLogin_UserInactive(t *testing.T) {
 		IsActive: false,
 	}
 
-	mockAuth.On("Login", mock.Anything, mock.Anything).Return(&domain.AuthServiceResponse{
+	mockAuth.On("Login", mock.Anything, req.Email, req.Password).Return(&domain.AuthServiceResponse{
 		AccessToken:  "access_token",
 		RefreshToken: "refresh_token",
 		TokenType:    "bearer",
@@ -505,20 +508,15 @@ func TestRequestPasswordReset_Success(t *testing.T) {
 		Email: "test@student.polije.ac.id",
 	}
 
-	existingUser := &domain.User{ID: "user-uuid-123", Email: req.Email}
-
-	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
 	mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, mock.Anything).Return(nil)
 
 	err := uc.RequestPasswordReset(req)
 
 	assert.NoError(t, err)
-
-	mockUser.AssertCalled(t, "GetByEmail", req.Email)
 	mockAuth.AssertCalled(t, "RequestPasswordReset", mock.Anything, req.Email, mock.Anything)
 }
 
-func TestRequestPasswordReset_UserNotFound(t *testing.T) {
+func TestRefreshToken_Success(t *testing.T) {
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -526,22 +524,23 @@ func TestRequestPasswordReset_UserNotFound(t *testing.T) {
 
 	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
 
-	req := domain.ResetPasswordRequest{
-		Email: "nonexistent@student.polije.ac.id",
-	}
+	mockAuth.On("RefreshToken", mock.Anything, "refresh_token_old").Return(&domain.AuthServiceResponse{
+		AccessToken:  "new_access_token",
+		RefreshToken: "new_refresh_token",
+		TokenType:    "bearer",
+		ExpiresIn:    3600,
+	}, nil)
 
-	mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
+	newRefreshToken, resp, err := uc.RefreshToken("refresh_token_old")
 
-	err := uc.RequestPasswordReset(req)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Email")
-
-	mockUser.AssertCalled(t, "GetByEmail", req.Email)
-	mockAuth.AssertNotCalled(t, "RequestPasswordReset", mock.Anything, mock.Anything, mock.Anything)
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "new_refresh_token", newRefreshToken)
+	assert.Equal(t, "new_access_token", resp.AccessToken)
+	assert.NotZero(t, resp.ExpiresAt)
 }
 
-func TestRequestPasswordReset_ServiceFails(t *testing.T) {
+func TestRefreshToken_ServiceFails(t *testing.T) {
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -549,19 +548,24 @@ func TestRequestPasswordReset_ServiceFails(t *testing.T) {
 
 	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
 
-	req := domain.ResetPasswordRequest{
-		Email: "test@student.polije.ac.id",
-	}
-
-	existingUser := &domain.User{ID: "user-uuid-123", Email: req.Email}
-
-	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
-	mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, mock.Anything).Return(errors.New("service error"))
-
-	err := uc.RequestPasswordReset(req)
+	mockAuth.On("RefreshToken", mock.Anything, "refresh_token_old").Return(nil, errors.New("service error"))
+	newRefreshToken, resp, err := uc.RefreshToken("refresh_token_old")
 
 	assert.Error(t, err)
+	assert.Empty(t, newRefreshToken)
+	assert.Nil(t, resp)
+}
 
-	mockUser.AssertCalled(t, "GetByEmail", req.Email)
-	mockAuth.AssertCalled(t, "RequestPasswordReset", mock.Anything, req.Email, mock.Anything)
+func TestLogout_Success(t *testing.T) {
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
+
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	mockAuth.On("Logout", mock.Anything, "access_token").Return(nil)
+
+	err := uc.Logout("access_token")
+	assert.NoError(t, err)
+	mockAuth.AssertCalled(t, "Logout", mock.Anything, "access_token")
 }

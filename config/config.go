@@ -69,6 +69,7 @@ type SupabaseConfig struct {
 	ServiceKey string
 	AnonKey    string
 	DBURL      string
+	JWTSecret  string
 }
 
 func LoadConfig() *Config {
@@ -125,6 +126,7 @@ func LoadConfig() *Config {
 			ServiceKey: getEnv("SUPABASE_SERVICE_ROLE_KEY", ""),
 			AnonKey:    getEnv("SUPABASE_ANON_KEY", ""),
 			DBURL:      getEnv("SUPABASE_DB_URL", ""),
+			JWTSecret:  getEnv("SUPABASE_JWT_SECRET", ""),
 		},
 	}
 

@@ -132,12 +132,14 @@ func CreateTestProject(db *gorm.DB, name string, userID string) (*domain.Project
 // CreateTestModul creates a test modul in the database
 func CreateTestModul(db *gorm.DB, name string, userID string) (*domain.Modul, error) {
 	modul := &domain.Modul{
-		NamaFile: name,
-		UserID:   userID,
-		Tipe:     "pdf",
-		Ukuran:   "small",
-		Semester: 1,
-		PathFile: "/test/modul",
+		Judul:     name,
+		Deskripsi: "Test deskripsi",
+		UserID:    userID,
+		FileName:  "test.pdf",
+		FilePath:  "/test/modul",
+		FileSize:  1024,
+		MimeType:  "application/pdf",
+		Status:    "completed",
 	}
 	if err := db.Create(modul).Error; err != nil {
 		return nil, err

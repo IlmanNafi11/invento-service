@@ -1,6 +1,9 @@
 package helper
 
 import (
+	"fiber-boiler-plate/internal/domain"
+	"fiber-boiler-plate/internal/usecase/repo"
+	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,22 +16,51 @@ type CasbinPermissionChecker interface {
 }
 
 // SupabaseAuthMiddleware validates Supabase JWT tokens and extracts user info
-func SupabaseAuthMiddleware(supabaseURL string) fiber.Handler {
+func SupabaseAuthMiddleware(authService domain.AuthService, userRepo repo.UserRepository, cookieHelper *CookieHelper) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		accessToken := ""
 		authHeader := c.Get("Authorization")
-		if authHeader == "" {
+		if authHeader != "" {
+			tokenParts := strings.Split(authHeader, " ")
+			if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+				return SendErrorResponse(c, fiber.StatusUnauthorized, "Format token tidak valid", nil)
+			}
+			accessToken = tokenParts[1]
+		}
+
+		if accessToken == "" && cookieHelper != nil {
+			accessToken = cookieHelper.GetAccessTokenFromCookie(c)
+		}
+
+		if accessToken == "" {
 			return SendUnauthorizedResponse(c)
 		}
 
-		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			return SendErrorResponse(c, fiber.StatusUnauthorized, "Format token tidak valid", nil)
+		claims, err := authService.VerifyJWT(accessToken)
+		if err != nil {
+			return SendUnauthorizedResponse(c)
 		}
 
-		// Extract user info from Supabase JWT
-		// Supabase JWTs contain user_id, email, and other claims in the token
-		// For now, we'll store the raw token and let the usecase validate it
-		c.Locals("access_token", tokenParts[1])
+		user, err := userRepo.GetByID(claims.GetUserID())
+		if err != nil {
+			return SendUnauthorizedResponse(c)
+		}
+
+		if !user.IsActive {
+			return SendUnauthorizedResponse(c)
+		}
+
+		c.Locals("user_id", user.ID)
+		c.Locals("user_email", user.Email)
+
+		roleName := ""
+		if user.Role != nil {
+			roleName = user.Role.NamaRole
+		}
+		c.Locals("user_role", roleName)
+		c.Locals("access_token", accessToken)
+		c.Locals("claims", claims)
+
 		return c.Next()
 	}
 }
@@ -47,6 +79,7 @@ func RBACMiddleware(casbinEnforcer CasbinPermissionChecker, resource string, act
 
 		allowed, err := casbinEnforcer.CheckPermission(role, resource, action)
 		if err != nil {
+			log.Printf("[ERROR] RBACMiddleware: Casbin CheckPermission failed - role=%s, resource=%s, action=%s, error=%v", role, resource, action, err)
 			return SendInternalServerErrorResponse(c)
 		}
 

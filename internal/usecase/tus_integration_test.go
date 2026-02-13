@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -141,11 +140,11 @@ func createTestChunk(size int) io.Reader {
 	return bytes.NewReader(data)
 }
 
-func integrationModulMetadataHeader(namaFile, tipe string, semester int) string {
+func integrationModulMetadataHeader(judul, deskripsi string) string {
 	enc := func(v string) string {
 		return base64.StdEncoding.EncodeToString([]byte(v))
 	}
-	return fmt.Sprintf("nama_file %s,tipe %s,semester %s", enc(namaFile), enc(tipe), enc(strconv.Itoa(semester)))
+	return fmt.Sprintf("judul %s,deskripsi %s", enc(judul), enc(deskripsi))
 }
 
 func TestTusProjectUploadFullFlowIntegration(t *testing.T) {
@@ -267,7 +266,7 @@ func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 	resp, err := env.modulUsecase.InitiateModulUpload(
 		env.userID,
 		2*1024,
-		integrationModulMetadataHeader("modul-integration", "pdf", 3),
+		integrationModulMetadataHeader("modul-integration", "deskripsi integration"),
 	)
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -296,9 +295,9 @@ func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 
 	var modul domain.Modul
 	require.NoError(t, env.db.Where("id = ?", *upload.ModulID).First(&modul).Error)
-	assert.FileExists(t, modul.PathFile)
+	assert.FileExists(t, modul.FilePath)
 
-	fileInfo, err := os.Stat(modul.PathFile)
+	fileInfo, err := os.Stat(modul.FilePath)
 	require.NoError(t, err)
 	assert.Equal(t, int64(2048), fileInfo.Size())
 }
@@ -309,7 +308,7 @@ func TestTusModulUploadResumeAfterPauseIntegration(t *testing.T) {
 	resp, err := env.modulUsecase.InitiateModulUpload(
 		env.userID,
 		3*1024,
-		integrationModulMetadataHeader("modul-resume", "docx", 2),
+		integrationModulMetadataHeader("modul-resume", "deskripsi resume"),
 	)
 	require.NoError(t, err)
 
@@ -341,7 +340,7 @@ func TestTusModulUploadCancelIntegration(t *testing.T) {
 	resp, err := env.modulUsecase.InitiateModulUpload(
 		env.userID,
 		2*1024,
-		integrationModulMetadataHeader("modul-cancel", "xlsx", 6),
+		integrationModulMetadataHeader("modul-cancel", "deskripsi cancel"),
 	)
 	require.NoError(t, err)
 
@@ -406,7 +405,7 @@ func TestTusUploadOffsetMismatchIntegration(t *testing.T) {
 	resp, err := env.modulUsecase.InitiateModulUpload(
 		env.userID,
 		2*1024,
-		integrationModulMetadataHeader("offset-check", "pdf", 1),
+		integrationModulMetadataHeader("offset-check", "deskripsi offset check"),
 	)
 	require.NoError(t, err)
 

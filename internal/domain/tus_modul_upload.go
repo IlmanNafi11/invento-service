@@ -5,7 +5,7 @@ import "time"
 type TusModulUpload struct {
 	ID             string                    `json:"id" gorm:"primaryKey;size:36"`
 	UserID         string                    `json:"user_id" gorm:"not null;index;type:uuid"`
-	ModulID        *uint                     `json:"modul_id,omitempty" gorm:"index"`
+	ModulID        *string                   `json:"modul_id,omitempty" gorm:"index;type:uuid"`
 	UploadType     string                    `json:"upload_type" gorm:"not null;size:20;default:'modul_create'"`
 	UploadURL      string                    `json:"upload_url" gorm:"size:500"`
 	UploadMetadata TusModulUploadInitRequest `json:"upload_metadata" gorm:"serializer:json"`
@@ -35,9 +35,8 @@ const (
 )
 
 type TusModulUploadInitRequest struct {
-	NamaFile string `json:"nama_file" validate:"required,min=3,max=255"`
-	Tipe     string `json:"tipe" validate:"required,oneof=docx xlsx pdf pptx"`
-	Semester int    `json:"semester" validate:"required,min=1,max=8"`
+	Judul     string `json:"judul" validate:"required,min=3,max=255"`
+	Deskripsi string `json:"deskripsi"`
 }
 
 type TusModulUploadResponse struct {
@@ -49,10 +48,9 @@ type TusModulUploadResponse struct {
 
 type TusModulUploadInfoResponse struct {
 	UploadID  string    `json:"upload_id"`
-	ModulID   uint      `json:"modul_id,omitempty"`
-	NamaFile  string    `json:"nama_file"`
-	Tipe      string    `json:"tipe"`
-	Semester  int       `json:"semester"`
+	ModulID   string    `json:"modul_id,omitempty"`
+	Judul     string    `json:"judul"`
+	Deskripsi string    `json:"deskripsi"`
 	Status    string    `json:"status"`
 	Progress  float64   `json:"progress"`
 	Offset    int64     `json:"offset"`
@@ -69,6 +67,6 @@ type TusModulUploadSlotResponse struct {
 }
 
 type ModulUpdateMetadataRequest struct {
-	NamaFile string `json:"nama_file" validate:"required,min=3,max=255"`
-	Semester int    `json:"semester" validate:"required,min=1,max=8"`
+	Judul     string `json:"judul" validate:"required,min=3,max=255"`
+	Deskripsi string `json:"deskripsi"`
 }

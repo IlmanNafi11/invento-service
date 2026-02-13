@@ -17,9 +17,8 @@ func newTusModulUpload(id, userID, status string, expiresAt time.Time) domain.Tu
 		UploadType: domain.ModulUploadTypeCreate,
 		UploadURL:  "https://example.com/upload/" + id,
 		UploadMetadata: domain.TusModulUploadInitRequest{
-			NamaFile: "Modul " + id,
-			Tipe:     "pdf",
-			Semester: 1,
+			Judul:     "Modul " + id,
+			Deskripsi: "Deskripsi modul",
 		},
 		FileSize:      2048,
 		CurrentOffset: 0,
@@ -125,13 +124,14 @@ func TestTusModulUploadRepository_Complete(t *testing.T) {
 	upload := newTusModulUpload("test-modul-upload-8", "user-1", domain.ModulUploadStatusUploading, time.Now().Add(time.Hour))
 	require.NoError(t, db.Create(&upload).Error)
 
-	require.NoError(t, repository.Complete("test-modul-upload-8", 88, "/tmp/modul-88.pdf"))
+	modulID := "550e8400-e29b-41d4-a716-446655440088"
+	require.NoError(t, repository.Complete("test-modul-upload-8", modulID, "/tmp/modul-88.pdf"))
 
 	updated, err := repository.GetByID("test-modul-upload-8")
 	require.NoError(t, err)
 	require.NotNil(t, updated)
 	require.NotNil(t, updated.ModulID)
-	assert.Equal(t, uint(88), *updated.ModulID)
+	assert.Equal(t, modulID, *updated.ModulID)
 	assert.Equal(t, "/tmp/modul-88.pdf", updated.FilePath)
 	assert.Equal(t, domain.ModulUploadStatusCompleted, updated.Status)
 	assert.Equal(t, 100.0, updated.Progress)

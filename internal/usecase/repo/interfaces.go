@@ -56,13 +56,13 @@ type ProjectRepository interface {
 
 type ModulRepository interface {
 	Create(modul *domain.Modul) error
-	GetByID(id uint) (*domain.Modul, error)
-	GetByIDs(ids []uint, userID string) ([]domain.Modul, error)
-	GetByIDsForUser(ids []uint, ownerUserID string) ([]domain.Modul, error)
-	GetByUserID(userID string, search string, filterType string, filterSemester int, page, limit int) ([]domain.ModulListItem, int, error)
+	GetByID(id string) (*domain.Modul, error)
+	GetByIDs(ids []string, userID string) ([]domain.Modul, error)
+	GetByIDsForUser(ids []string, ownerUserID string) ([]domain.Modul, error)
+	GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]domain.ModulListItem, int, error)
 	CountByUserID(userID string) (int, error)
 	Update(modul *domain.Modul) error
-	Delete(id uint) error
+	Delete(id string) error
 	UpdateMetadata(modul *domain.Modul) error
 }
 
@@ -88,7 +88,7 @@ type TusModulUploadRepository interface {
 	GetByUserID(userID string) ([]domain.TusModulUpload, error)
 	UpdateOffset(id string, offset int64, progress float64) error
 	UpdateStatus(id string, status string) error
-	Complete(id string, modulID uint, filePath string) error
+	Complete(id string, modulID string, filePath string) error
 	Delete(id string) error
 	GetExpiredUploads() ([]domain.TusModulUpload, error)
 	GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error)

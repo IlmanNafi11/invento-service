@@ -1,9 +1,12 @@
 package usecase
 
 import (
+	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,13 +21,15 @@ func TestCreateModul_Success(t *testing.T) {
 	_ = NewModulUsecase(mockModulRepo)
 
 	modul := &domain.Modul{
-		ID:       1,
-		UserID:   "user-1",
-		NamaFile: "Test Modul",
-		Tipe:     "pdf",
-		Ukuran:   "1.5 MB",
-		Semester: 3,
-		PathFile: "/uploads/test_modul.pdf",
+		ID:        "550e8400-e29b-41d4-a716-446655440000",
+		UserID:    "user-1",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
+		FileName:  "test_modul.pdf",
+		MimeType:  "application/pdf",
+		FileSize:  1572864,
+		FilePath:  "/uploads/test_modul.pdf",
+		Status:    "pending",
 	}
 
 	mockModulRepo.On("Create", mock.AnythingOfType("*domain.Modul")).Return(nil)
@@ -33,8 +38,8 @@ func TestCreateModul_Success(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, modul)
-	assert.Equal(t, uint(1), modul.ID)
-	assert.Equal(t, "Test Modul", modul.NamaFile)
+	assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", modul.ID)
+	assert.Equal(t, "Test Modul", modul.Judul)
 	mockModulRepo.AssertExpectations(t)
 }
 
@@ -43,17 +48,19 @@ func TestGetModulByID_Success(t *testing.T) {
 
 	_ = NewModulUsecase(mockModulRepo)
 
-	modulID := uint(1)
+	modulID := "550e8400-e29b-41d4-a716-446655440000"
 	userID := "user-1"
 
 	expectedModul := &domain.Modul{
 		ID:        modulID,
 		UserID:    userID,
-		NamaFile:  "Test Modul",
-		Tipe:      "pdf",
-		Ukuran:    "1.5 MB",
-		Semester:  3,
-		PathFile:  "/uploads/test_modul.pdf",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
+		FileName:  "test_modul.pdf",
+		MimeType:  "application/pdf",
+		FileSize:  1572864,
+		FilePath:  "/uploads/test_modul.pdf",
+		Status:    "completed",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -66,7 +73,7 @@ func TestGetModulByID_Success(t *testing.T) {
 	assert.NotNil(t, modul)
 	assert.Equal(t, modulID, modul.ID)
 	assert.Equal(t, userID, modul.UserID)
-	assert.Equal(t, "Test Modul", modul.NamaFile)
+	assert.Equal(t, "Test Modul", modul.Judul)
 	mockModulRepo.AssertExpectations(t)
 }
 
@@ -75,7 +82,7 @@ func TestGetModulByID_NotFound(t *testing.T) {
 
 	_ = NewModulUsecase(mockModulRepo)
 
-	modulID := uint(999)
+	modulID := "550e8400-e29b-41d4-a716-446655440999"
 
 	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound)
 
@@ -95,44 +102,48 @@ func TestListModuls_Success(t *testing.T) {
 	userID := "user-1"
 	search := ""
 	filterType := ""
-	filterSemester := 0
+	filterStatus := ""
 	page := 1
 	limit := 10
 
 	expectedModuls := []domain.ModulListItem{
 		{
-			ID:                 1,
-			NamaFile:           "Test Modul 1",
-			Tipe:               "pdf",
-			Ukuran:             "1.5 MB",
-			Semester:           3,
-			PathFile:           "/uploads/test1.pdf",
+			ID:                 "550e8400-e29b-41d4-a716-446655440001",
+			Judul:              "Test Modul 1",
+			Deskripsi:          "Deskripsi 1",
+			FileName:           "test1.pdf",
+			MimeType:           "application/pdf",
+			FileSize:           1572864,
+			FilePath:           "/uploads/test1.pdf",
+			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
 		{
-			ID:                 2,
-			NamaFile:           "Test Modul 2",
-			Tipe:               "docx",
-			Ukuran:             "2.0 MB",
-			Semester:           4,
-			PathFile:           "/uploads/test2.docx",
+			ID:                 "550e8400-e29b-41d4-a716-446655440002",
+			Judul:              "Test Modul 2",
+			Deskripsi:          "Deskripsi 2",
+			FileName:           "test2.docx",
+			MimeType:           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			FileSize:           2097152,
+			FilePath:           "/uploads/test2.docx",
+			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
 	}
 
 	total := int64(2)
 
-	mockModulRepo.On("GetByUserID", userID, search, filterType, filterSemester, page, limit).
+	mockModulRepo.On("GetByUserID", userID, search, filterType, filterStatus, page, limit).
 		Return(expectedModuls, int(total), nil)
 
-	moduls, count, err := mockModulRepo.GetByUserID(userID, search, filterType, filterSemester, page, limit)
+	moduls, count, err := mockModulRepo.GetByUserID(userID, search, filterType, filterStatus, page, limit)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, moduls)
 	assert.Equal(t, 2, len(moduls))
 	assert.Equal(t, int(total), count)
-	assert.Equal(t, "Test Modul 1", moduls[0].NamaFile)
-	assert.Equal(t, "Test Modul 2", moduls[1].NamaFile)
+	assert.Equal(t, "Test Modul 1", moduls[0].Judul)
+	assert.Equal(t, "Test Modul 2", moduls[1].Judul)
 	mockModulRepo.AssertExpectations(t)
 }
 
@@ -142,28 +153,32 @@ func TestListModulsByProject_Success(t *testing.T) {
 	_ = NewModulUsecase(mockModulRepo)
 
 	userID := "user-1"
-	ids := []uint{1, 2, 3}
+	ids := []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440002", "550e8400-e29b-41d4-a716-446655440003"}
 
 	expectedModuls := []domain.Modul{
 		{
-			ID:        1,
+			ID:        "550e8400-e29b-41d4-a716-446655440001",
 			UserID:    userID,
-			NamaFile:  "Project Modul 1",
-			Tipe:      "pdf",
-			Ukuran:    "1.5 MB",
-			Semester:  3,
-			PathFile:  "/uploads/project1.pdf",
+			Judul:     "Project Modul 1",
+			Deskripsi: "Deskripsi 1",
+			FileName:  "project1.pdf",
+			MimeType:  "application/pdf",
+			FileSize:  1572864,
+			FilePath:  "/uploads/project1.pdf",
+			Status:    "completed",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
 		{
-			ID:        2,
+			ID:        "550e8400-e29b-41d4-a716-446655440002",
 			UserID:    userID,
-			NamaFile:  "Project Modul 2",
-			Tipe:      "docx",
-			Ukuran:    "2.0 MB",
-			Semester:  4,
-			PathFile:  "/uploads/project2.docx",
+			Judul:     "Project Modul 2",
+			Deskripsi: "Deskripsi 2",
+			FileName:  "project2.docx",
+			MimeType:  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			FileSize:  2097152,
+			FilePath:  "/uploads/project2.docx",
+			Status:    "completed",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
@@ -176,8 +191,8 @@ func TestListModulsByProject_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, moduls)
 	assert.Equal(t, 2, len(moduls))
-	assert.Equal(t, "Project Modul 1", moduls[0].NamaFile)
-	assert.Equal(t, "Project Modul 2", moduls[1].NamaFile)
+	assert.Equal(t, "Project Modul 1", moduls[0].Judul)
+	assert.Equal(t, "Project Modul 2", moduls[1].Judul)
 	mockModulRepo.AssertExpectations(t)
 }
 
@@ -187,26 +202,28 @@ func TestUpdateModul_Success(t *testing.T) {
 	modulUc := NewModulUsecase(mockModulRepo)
 
 	existingModul := &domain.Modul{
-		ID:        1,
+		ID:        "550e8400-e29b-41d4-a716-446655440000",
 		UserID:    "user-1",
-		NamaFile:  "Old Name",
-		Tipe:      "pdf",
-		Ukuran:    "1.5 MB",
-		Semester:  3,
-		PathFile:  "/uploads/test.pdf",
+		Judul:     "Old Judul",
+		Deskripsi: "Old Deskripsi",
+		FileName:  "test.pdf",
+		MimeType:  "application/pdf",
+		FileSize:  1572864,
+		FilePath:  "/uploads/test.pdf",
+		Status:    "completed",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
 	req := domain.ModulUpdateRequest{
-		NamaFile: "Updated Name",
-		Semester: 5,
+		Judul:     "Updated Judul",
+		Deskripsi: "Updated Deskripsi",
 	}
 
-	mockModulRepo.On("GetByID", uint(1)).Return(existingModul, nil)
+	mockModulRepo.On("GetByID", "550e8400-e29b-41d4-a716-446655440000").Return(existingModul, nil)
 	mockModulRepo.On("Update", mock.AnythingOfType("*domain.Modul")).Return(nil)
 
-	err := modulUc.UpdateMetadata(1, "user-1", req)
+	err := modulUc.UpdateMetadata("550e8400-e29b-41d4-a716-446655440000", "user-1", req)
 
 	assert.NoError(t, err)
 	mockModulRepo.AssertExpectations(t)
@@ -217,17 +234,19 @@ func TestDeleteModul_Success(t *testing.T) {
 
 	modulUc := NewModulUsecase(mockModulRepo)
 
-	modulID := uint(1)
+	modulID := "550e8400-e29b-41d4-a716-446655440000"
 	userID := "user-1"
 
 	existingModul := &domain.Modul{
 		ID:        modulID,
 		UserID:    userID,
-		NamaFile:  "Test Modul",
-		Tipe:      "pdf",
-		Ukuran:    "1.5 MB",
-		Semester:  3,
-		PathFile:  "/uploads/test.pdf",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
+		FileName:  "test.pdf",
+		MimeType:  "application/pdf",
+		FileSize:  1572864,
+		FilePath:  "/uploads/test.pdf",
+		Status:    "completed",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -294,8 +313,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 	userID := "user-1"
 	fileSize := int64(1024 * 1024) // 1 MB
 	// TUS metadata format: "key base64value,key2 base64value2"
-	// nama_file testfile,tipe pdf,semester 1
-	metadata := "nama_file dGVzdGZpbGU=,tipe cGRm,semester MQ=="
+	metadata := "judul VGVzdCBKdWR1bA==,deskripsi VGVzdCBEZXNrcmlwc2k="
 
 	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(0, nil)
 	mockTusModulUploadRepo.On("Create", mock.AnythingOfType("*domain.TusModulUpload")).Return(nil)
@@ -342,7 +360,7 @@ func TestUploadChunk_Success(t *testing.T) {
 		UserID:         userID,
 		UploadType:     domain.ModulUploadTypeCreate,
 		UploadURL:      "/modul/upload/" + uploadID,
-		UploadMetadata: domain.TusModulUploadInitRequest{NamaFile: "Test Modul", Tipe: "pdf", Semester: 3},
+		UploadMetadata: domain.TusModulUploadInitRequest{Judul: "Test Modul", Deskripsi: "Test Deskripsi"},
 		FileSize:       1024 * 1024,
 		CurrentOffset:  0,
 		Status:         domain.ModulUploadStatusPending,
@@ -376,35 +394,39 @@ func TestModulUsecase_GetList_Success(t *testing.T) {
 	userID := "user-1"
 	search := ""
 	filterType := ""
-	filterSemester := 0
+	filterStatus := ""
 	page := 1
 	limit := 10
 
 	expectedModuls := []domain.ModulListItem{
 		{
-			ID:                 1,
-			NamaFile:           "Test Modul 1",
-			Tipe:               "pdf",
-			Ukuran:             "1.5 MB",
-			Semester:           3,
-			PathFile:           "/uploads/test1.pdf",
+			ID:                 "550e8400-e29b-41d4-a716-446655440001",
+			Judul:              "Test Modul 1",
+			Deskripsi:          "Deskripsi 1",
+			FileName:           "test1.pdf",
+			MimeType:           "application/pdf",
+			FileSize:           1572864,
+			FilePath:           "/uploads/test1.pdf",
+			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
 		{
-			ID:                 2,
-			NamaFile:           "Test Modul 2",
-			Tipe:               "docx",
-			Ukuran:             "2.0 MB",
-			Semester:           4,
-			PathFile:           "/uploads/test2.docx",
+			ID:                 "550e8400-e29b-41d4-a716-446655440002",
+			Judul:              "Test Modul 2",
+			Deskripsi:          "Deskripsi 2",
+			FileName:           "test2.docx",
+			MimeType:           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			FileSize:           2097152,
+			FilePath:           "/uploads/test2.docx",
+			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
 	}
 
-	mockModulRepo.On("GetByUserID", userID, search, filterType, filterSemester, page, limit).
+	mockModulRepo.On("GetByUserID", userID, search, filterType, filterStatus, page, limit).
 		Return(expectedModuls, 2, nil)
 
-	result, err := modulUC.GetList(userID, search, filterType, filterSemester, page, limit)
+	result, err := modulUC.GetList(userID, search, filterType, filterStatus, page, limit)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -421,14 +443,17 @@ func TestModulUsecase_GetList_Error(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	mockModulRepo.On("GetByUserID", "user-1", "", "", 0, 1, 10).
+	mockModulRepo.On("GetByUserID", "user-1", "", "", "", 1, 10).
 		Return(nil, 0, assert.AnError)
 
-	result, err := modulUC.GetList("user-1", "", "", 0, 1, 10)
+	result, err := modulUC.GetList("user-1", "", "", "", 1, 10)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "gagal mengambil data modul")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrInternal, appErr.Code)
+	assert.Contains(t, strings.ToLower(appErr.Message), "kesalahan")
 
 	mockModulRepo.AssertExpectations(t)
 }
@@ -440,20 +465,22 @@ func TestModulUsecase_GetList_WithFilters(t *testing.T) {
 
 	expectedModuls := []domain.ModulListItem{
 		{
-			ID:                 1,
-			NamaFile:           "Test Modul",
-			Tipe:               "pdf",
-			Ukuran:             "1.5 MB",
-			Semester:           3,
-			PathFile:           "/uploads/test.pdf",
+			ID:                 "550e8400-e29b-41d4-a716-446655440001",
+			Judul:              "Test Modul",
+			Deskripsi:          "Test Deskripsi",
+			FileName:           "test.pdf",
+			MimeType:           "application/pdf",
+			FileSize:           1572864,
+			FilePath:           "/uploads/test.pdf",
+			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
 	}
 
-	mockModulRepo.On("GetByUserID", "user-1", "test", "pdf", 3, 1, 10).
+	mockModulRepo.On("GetByUserID", "user-1", "test", "application/pdf", "completed", 1, 10).
 		Return(expectedModuls, 1, nil)
 
-	result, err := modulUC.GetList("user-1", "test", "pdf", 3, 1, 10)
+	result, err := modulUC.GetList("user-1", "test", "application/pdf", "completed", 1, 10)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -467,17 +494,19 @@ func TestModulUsecase_GetByID_Success(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	modulID := uint(1)
+	modulID := "550e8400-e29b-41d4-a716-446655440000"
 	userID := "user-1"
 
 	expectedModul := &domain.Modul{
 		ID:        modulID,
 		UserID:    userID,
-		NamaFile:  "Test Modul",
-		Tipe:      "pdf",
-		Ukuran:    "1.5 MB",
-		Semester:  3,
-		PathFile:  "/uploads/test.pdf",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
+		FileName:  "test.pdf",
+		MimeType:  "application/pdf",
+		FileSize:  1572864,
+		FilePath:  "/uploads/test.pdf",
+		Status:    "completed",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -489,7 +518,7 @@ func TestModulUsecase_GetByID_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, modulID, result.ID)
-	assert.Equal(t, "Test Modul", result.NamaFile)
+	assert.Equal(t, "Test Modul", result.Judul)
 
 	mockModulRepo.AssertExpectations(t)
 }
@@ -499,7 +528,7 @@ func TestModulUsecase_GetByID_NotFound(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	modulID := uint(999)
+	modulID := "550e8400-e29b-41d4-a716-446655440999"
 	userID := "user-1"
 
 	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound)
@@ -508,7 +537,9 @@ func TestModulUsecase_GetByID_NotFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "modul tidak ditemukan")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
 
 	mockModulRepo.AssertExpectations(t)
 }
@@ -518,17 +549,19 @@ func TestModulUsecase_GetByID_Unauthorized(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	modulID := uint(1)
+	modulID := "550e8400-e29b-41d4-a716-446655440000"
 	userID := "user-2"
 
 	expectedModul := &domain.Modul{
 		ID:        modulID,
 		UserID:    "user-1",
-		NamaFile:  "Test Modul",
-		Tipe:      "pdf",
-		Ukuran:    "1.5 MB",
-		Semester:  3,
-		PathFile:  "/uploads/test.pdf",
+		Judul:     "Test Modul",
+		Deskripsi: "Test Deskripsi",
+		FileName:  "test.pdf",
+		MimeType:  "application/pdf",
+		FileSize:  1572864,
+		FilePath:  "/uploads/test.pdf",
+		Status:    "completed",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -539,7 +572,9 @@ func TestModulUsecase_GetByID_Unauthorized(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "tidak memiliki akses")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrForbidden, appErr.Code)
 
 	mockModulRepo.AssertExpectations(t)
 }
@@ -550,14 +585,16 @@ func TestModulUsecase_Download_SingleFile(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	userID := "user-1"
-	modulIDs := []uint{1}
+	modulIDs := []string{"550e8400-e29b-41d4-a716-446655440000"}
 
 	expectedModuls := []domain.Modul{
 		{
-			ID:       1,
-			UserID:   userID,
-			NamaFile: "Test Modul.pdf",
-			PathFile: "/uploads/test.pdf",
+			ID:        "550e8400-e29b-41d4-a716-446655440000",
+			UserID:    userID,
+			Judul:     "Test Modul.pdf",
+			Deskripsi: "Test Deskripsi",
+			FileName:  "test.pdf",
+			FilePath:  "/uploads/test.pdf",
 		},
 	}
 
@@ -577,13 +614,15 @@ func TestModulUsecase_Download_EmptyIDs(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	userID := "user-1"
-	modulIDs := []uint{}
+	modulIDs := []string{}
 
 	result, err := modulUC.Download(userID, modulIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
-	assert.Contains(t, err.Error(), "id modul tidak boleh kosong")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrValidation, appErr.Code)
 }
 
 // TestModulUsecase_Download_NotFound tests download when moduls not found
@@ -592,7 +631,7 @@ func TestModulUsecase_Download_NotFound(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	userID := "user-1"
-	modulIDs := []uint{1, 2}
+	modulIDs := []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440002"}
 
 	mockModulRepo.On("GetByIDs", modulIDs, userID).Return([]domain.Modul{}, nil)
 
@@ -600,7 +639,9 @@ func TestModulUsecase_Download_NotFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
-	assert.Contains(t, err.Error(), "modul tidak ditemukan")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
 
 	mockModulRepo.AssertExpectations(t)
 }

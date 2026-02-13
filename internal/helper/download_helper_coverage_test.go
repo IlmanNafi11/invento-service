@@ -67,17 +67,17 @@ func TestGetFilesByIDs_SelectsCorrectProjects(t *testing.T) {
 		{ID: 3, NamaProject: "Project 3"},
 	}
 	moduls := []domain.Modul{
-		{ID: 10, NamaFile: "Modul 1"},
-		{ID: 20, NamaFile: "Modul 2"},
+		{ID: "550e8400-e29b-41d4-a716-446655440010", Judul: "Modul 1"},
+		{ID: "550e8400-e29b-41d4-a716-446655440020", Judul: "Modul 2"},
 	}
 
-	selectedProjects, selectedModuls := dh.GetFilesByIDs([]uint{1, 3}, []uint{20}, projects, moduls)
+	selectedProjects, selectedModuls := dh.GetFilesByIDs([]uint{1, 3}, []string{"550e8400-e29b-41d4-a716-446655440020"}, projects, moduls)
 
 	assert.Len(t, selectedProjects, 2)
 	assert.Equal(t, uint(1), selectedProjects[0].ID)
 	assert.Equal(t, uint(3), selectedProjects[1].ID)
 	assert.Len(t, selectedModuls, 1)
-	assert.Equal(t, uint(20), selectedModuls[0].ID)
+	assert.Equal(t, "550e8400-e29b-41d4-a716-446655440020", selectedModuls[0].ID)
 }
 
 // TestGetFilesByIDs_EmptySelections tests with empty ID arrays
@@ -89,10 +89,10 @@ func TestGetFilesByIDs_EmptySelections(t *testing.T) {
 		{ID: 1, NamaProject: "Project 1"},
 	}
 	moduls := []domain.Modul{
-		{ID: 10, NamaFile: "Modul 1"},
+		{ID: "550e8400-e29b-41d4-a716-446655440010", Judul: "Modul 1"},
 	}
 
-	selectedProjects, selectedModuls := dh.GetFilesByIDs([]uint{}, []uint{}, projects, moduls)
+	selectedProjects, selectedModuls := dh.GetFilesByIDs([]uint{}, []string{}, projects, moduls)
 
 	assert.Empty(t, selectedProjects)
 	assert.Empty(t, selectedModuls)
@@ -107,11 +107,11 @@ func TestGetFilesByIDs_NonExistentIDs(t *testing.T) {
 		{ID: 1, NamaProject: "Project 1"},
 	}
 	moduls := []domain.Modul{
-		{ID: 10, NamaFile: "Modul 1"},
+		{ID: "550e8400-e29b-41d4-a716-446655440010", Judul: "Modul 1"},
 	}
 
 	// Request non-existent IDs
-	selectedProjects, selectedModuls := dh.GetFilesByIDs([]uint{999}, []uint{888}, projects, moduls)
+	selectedProjects, selectedModuls := dh.GetFilesByIDs([]uint{999}, []string{"550e8400-e29b-41d4-a716-446655440888"}, projects, moduls)
 
 	assert.Empty(t, selectedProjects)
 	assert.Empty(t, selectedModuls)
@@ -127,13 +127,13 @@ func TestGetFilesByIDs_DoesNotModifyOriginals(t *testing.T) {
 		{ID: 2, NamaProject: "Project 2"},
 	}
 	moduls := []domain.Modul{
-		{ID: 10, NamaFile: "Modul 1"},
+		{ID: "550e8400-e29b-41d4-a716-446655440010", Judul: "Modul 1"},
 	}
 
 	originalProjectsLen := len(projects)
 	originalModulsLen := len(moduls)
 
-	dh.GetFilesByIDs([]uint{1}, []uint{10}, projects, moduls)
+	dh.GetFilesByIDs([]uint{1}, []string{"550e8400-e29b-41d4-a716-446655440010"}, projects, moduls)
 
 	// Original slices should not be modified
 	assert.Len(t, projects, originalProjectsLen)
@@ -209,7 +209,7 @@ func TestPrepareFilesForDownload_AllFilesFound(t *testing.T) {
 		{ID: 1, PathFile: file1},
 	}
 	moduls := []domain.Modul{
-		{ID: 1, PathFile: file2},
+		{ID: "550e8400-e29b-41d4-a716-446655440001", FilePath: file2},
 	}
 
 	filePaths, notFoundFiles, err := dh.PrepareFilesForDownload(projects, moduls)
@@ -227,7 +227,7 @@ func TestPrepareFilesForDownload_SomeFilesNotFound(t *testing.T) {
 		{ID: 1, PathFile: "/nonexistent/file1.pdf"},
 	}
 	moduls := []domain.Modul{
-		{ID: 1, PathFile: "/nonexistent/file2.pdf"},
+		{ID: "550e8400-e29b-41d4-a716-446655440001", FilePath: "/nonexistent/file2.pdf"},
 	}
 
 	filePaths, notFoundFiles, err := dh.PrepareFilesForDownload(projects, moduls)

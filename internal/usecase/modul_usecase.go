@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"errors"
+
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
@@ -13,11 +15,11 @@ import (
 )
 
 type ModulUsecase interface {
-	GetList(userID string, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error)
-	GetByID(modulID uint, userID string) (*domain.ModulResponse, error)
-	UpdateMetadata(modulID uint, userID string, req domain.ModulUpdateRequest) error
-	Delete(modulID uint, userID string) error
-	Download(userID string, modulIDs []uint) (string, error)
+	GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*domain.ModulListData, error)
+	GetByID(modulID string, userID string) (*domain.ModulResponse, error)
+	UpdateMetadata(modulID string, userID string, req domain.ModulUpdateRequest) error
+	Delete(modulID string, userID string) error
+	Download(userID string, modulIDs []string) (string, error)
 }
 
 type modulUsecase struct {
@@ -30,7 +32,7 @@ func NewModulUsecase(modulRepo repo.ModulRepository) ModulUsecase {
 	}
 }
 
-func (uc *modulUsecase) GetList(userID string, search string, filterType string, filterSemester int, page, limit int) (*domain.ModulListData, error) {
+func (uc *modulUsecase) GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*domain.ModulListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -38,9 +40,9 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 		limit = 10
 	}
 
-	moduls, total, err := uc.modulRepo.GetByUserID(userID, search, filterType, filterSemester, page, limit)
+	moduls, total, err := uc.modulRepo.GetByUserID(userID, search, filterType, filterStatus, page, limit)
 	if err != nil {
-		return nil, errors.New("gagal mengambil data modul")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	totalPages := (total + limit - 1) / limit
@@ -56,118 +58,120 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 	}, nil
 }
 
-func (uc *modulUsecase) GetByID(modulID uint, userID string) (*domain.ModulResponse, error) {
+func (uc *modulUsecase) GetByID(modulID string, userID string) (*domain.ModulResponse, error) {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("modul tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("Modul")
 		}
-		return nil, errors.New("gagal mengambil data modul")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	if modul.UserID != userID {
-		return nil, errors.New("tidak memiliki akses ke modul ini")
+		return nil, apperrors.NewForbiddenError("Tidak memiliki akses ke modul ini")
 	}
 
 	return &domain.ModulResponse{
 		ID:        modul.ID,
-		NamaFile:  modul.NamaFile,
-		Tipe:      modul.Tipe,
-		Ukuran:    modul.Ukuran,
-		Semester:  modul.Semester,
-		PathFile:  modul.PathFile,
+		Judul:     modul.Judul,
+		Deskripsi: modul.Deskripsi,
+		FileName:  modul.FileName,
+		MimeType:  modul.MimeType,
+		FileSize:  modul.FileSize,
+		FilePath:  modul.FilePath,
+		Status:    modul.Status,
 		CreatedAt: modul.CreatedAt,
 		UpdatedAt: modul.UpdatedAt,
 	}, nil
 }
 
-func (uc *modulUsecase) Delete(modulID uint, userID string) error {
+func (uc *modulUsecase) Delete(modulID string, userID string) error {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("modul tidak ditemukan")
+			return apperrors.NewNotFoundError("Modul")
 		}
-		return errors.New("gagal mengambil data modul")
+		return apperrors.NewInternalError(err)
 	}
 
 	if modul.UserID != userID {
-		return errors.New("tidak memiliki akses ke modul ini")
+		return apperrors.NewForbiddenError("Tidak memiliki akses ke modul ini")
 	}
 
-	helper.DeleteFile(modul.PathFile)
+	helper.DeleteFile(modul.FilePath)
 
 	if err := uc.modulRepo.Delete(modulID); err != nil {
-		return errors.New("gagal menghapus modul")
+		return apperrors.NewInternalError(err)
 	}
 
 	return nil
 }
 
-func (uc *modulUsecase) Download(userID string, modulIDs []uint) (string, error) {
+func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, error) {
 	if len(modulIDs) == 0 {
-		return "", errors.New("id modul tidak boleh kosong")
+		return "", apperrors.NewValidationError("ID modul tidak boleh kosong", nil)
 	}
 
 	moduls, err := uc.modulRepo.GetByIDs(modulIDs, userID)
 	if err != nil {
-		return "", errors.New("gagal mengambil data modul")
+		return "", apperrors.NewInternalError(err)
 	}
 
 	if len(moduls) == 0 {
-		return "", errors.New("modul tidak ditemukan")
+		return "", apperrors.NewNotFoundError("Modul")
 	}
 
 	if len(moduls) == 1 {
-		return moduls[0].PathFile, nil
+		return moduls[0].FilePath, nil
 	}
 
 	var filePaths []string
 	for _, modul := range moduls {
-		filePaths = append(filePaths, modul.PathFile)
+		filePaths = append(filePaths, modul.FilePath)
 	}
 
 	tempDir := "./uploads/temp"
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
-		return "", errors.New("gagal membuat direktori temp")
+		return "", apperrors.NewInternalError(err)
 	}
 
 	identifier, err := helper.GenerateUniqueIdentifier(8)
 	if err != nil {
-		return "", errors.New("gagal generate identifier")
+		return "", apperrors.NewInternalError(err)
 	}
 
 	zipFileName := fmt.Sprintf("moduls_%s.zip", identifier)
 	zipFilePath := filepath.Join(tempDir, zipFileName)
 
 	if err := helper.CreateZipArchive(filePaths, zipFilePath); err != nil {
-		return "", errors.New("gagal membuat file zip")
+		return "", apperrors.NewInternalError(err)
 	}
 
 	return zipFilePath, nil
 }
 
-func (uc *modulUsecase) UpdateMetadata(modulID uint, userID string, req domain.ModulUpdateRequest) error {
+func (uc *modulUsecase) UpdateMetadata(modulID string, userID string, req domain.ModulUpdateRequest) error {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("modul tidak ditemukan")
+			return apperrors.NewNotFoundError("Modul")
 		}
-		return errors.New("gagal mengambil data modul")
+		return apperrors.NewInternalError(err)
 	}
 
 	if modul.UserID != userID {
-		return errors.New("tidak memiliki akses ke modul ini")
+		return apperrors.NewForbiddenError("Tidak memiliki akses ke modul ini")
 	}
 
-	if req.NamaFile != "" {
-		modul.NamaFile = req.NamaFile
+	if req.Judul != "" {
+		modul.Judul = req.Judul
 	}
-	if req.Semester > 0 {
-		modul.Semester = req.Semester
+	if req.Deskripsi != "" {
+		modul.Deskripsi = req.Deskripsi
 	}
 
 	if err := uc.modulRepo.Update(modul); err != nil {
-		return errors.New("gagal update metadata modul")
+		return apperrors.NewInternalError(err)
 	}
 
 	return nil

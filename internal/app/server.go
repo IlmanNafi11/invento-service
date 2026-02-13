@@ -8,6 +8,7 @@ import (
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/logger"
 	"fiber-boiler-plate/internal/middleware"
+	supabaseAuth "fiber-boiler-plate/internal/supabase"
 	"fiber-boiler-plate/internal/usecase"
 	"fiber-boiler-plate/internal/usecase/repo"
 	"time"
@@ -96,6 +97,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	}))
 
 	pathResolver := helper.NewPathResolver(cfg)
+	cookieHelper := helper.NewCookieHelper(cfg)
 	app.Static("/uploads", pathResolver.GetBasePath())
 
 	userRepo := repo.NewUserRepository(db)
@@ -112,8 +114,9 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 		panic("Gagal inisialisasi Supabase client: " + err.Error())
 	}
 
-	// Store Supabase service key for auth service
 	supabaseServiceKey := cfg.Supabase.ServiceKey
+	authURL := cfg.Supabase.URL + "/auth/v1"
+	supabaseAuthService := supabaseAuth.NewAuthService(authURL, supabaseServiceKey, cfg.Supabase.JWTSecret)
 
 	casbinEnforcer, err := helper.NewCasbinEnforcer(db)
 	if err != nil {
@@ -132,7 +135,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	}
 
 	authUsecase := usecase.NewAuthUsecase(userRepo, roleRepo, supabaseClient, supabaseServiceKey, cfg)
-	authController := http.NewAuthController(authUsecase, cfg)
+	authController := http.NewAuthController(authUsecase, cookieHelper, cfg)
 
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
 	baseCtrl := base.NewBaseController(cfg.Supabase.URL, casbinEnforcer)
@@ -166,13 +169,14 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	auth := api.Group("/auth")
 	auth.Post("/login", authController.Login)
+	auth.Post("/register", authController.Register)
 	auth.Post("/refresh", authController.RefreshToken)
 	auth.Post("/reset-password", authController.RequestPasswordReset)
 
-	protected := auth.Group("/", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	protected := auth.Group("/", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	protected.Post("logout", authController.Logout)
 
-	role := api.Group("/role", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	role := api.Group("/role", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	role.Get("/permissions", helper.RBACMiddleware(casbinEnforcer, "Permission", "read"), roleController.GetAvailablePermissions)
 	role.Get("/", helper.RBACMiddleware(casbinEnforcer, "Role", "read"), roleController.GetRoleList)
 	role.Post("/", helper.RBACMiddleware(casbinEnforcer, "Role", "create"), roleController.CreateRole)
@@ -182,7 +186,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	role.Get("/:id/users", helper.RBACMiddleware(casbinEnforcer, "Role", "read"), userController.GetUsersForRole)
 	role.Post("/:id/users/bulk", helper.RBACMiddleware(casbinEnforcer, "Role", "update"), userController.BulkAssignRole)
 
-	user := api.Group("/user", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	user := api.Group("/user", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	user.Get("/", helper.RBACMiddleware(casbinEnforcer, "User", "read"), userController.GetUserList)
 	user.Put("/:id/role", helper.RBACMiddleware(casbinEnforcer, "User", "update"), userController.UpdateUserRole)
 	user.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "User", "delete"), userController.DeleteUser)
@@ -190,59 +194,59 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	user.Post("/:id/download", helper.RBACMiddleware(casbinEnforcer, "User", "download"), userController.DownloadUserFiles)
 	user.Get("/permissions", userController.GetUserPermissions)
 
-	profile := api.Group("/profile", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	profile := api.Group("/profile", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	profile.Get("/", userController.GetProfile)
 	profile.Put("/", userController.UpdateProfile)
 
-	project := api.Group("/project", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	project := api.Group("/project", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	project.Get("/", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.GetList)
 	project.Get("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.GetByID)
 	project.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "update"), projectController.UpdateMetadata)
 	project.Post("/download", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), projectController.Download)
 	project.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "delete"), projectController.Delete)
 
-	tusUploadCheck := api.Group("/project/upload", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	tusUploadCheck := api.Group("/project/upload", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	tusUploadCheck.Get("/check-slot", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.CheckUploadSlot)
 	tusUploadCheck.Post("/reset-queue", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.ResetUploadQueue)
 
-	tusUpload := api.Group("/project/upload", helper.SupabaseAuthMiddleware(cfg.Supabase.URL), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
+	tusUpload := api.Group("/project/upload", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
 	tusUpload.Post("/", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.InitiateUpload)
 	tusUpload.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "create"), tusController.UploadChunk)
 	tusUpload.Head("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetUploadStatus)
 	tusUpload.Get("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetUploadInfo)
 	tusUpload.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Project", "delete"), tusController.CancelUpload)
 
-	projectUpdate := api.Group("/project/:id", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	projectUpdate := api.Group("/project/:id", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	projectUpdate.Post("/upload", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.InitiateProjectUpdateUpload)
 	projectUpdate.Patch("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.UploadProjectUpdateChunk)
 	projectUpdate.Head("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetProjectUpdateUploadStatus)
 	projectUpdate.Get("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Project", "read"), tusController.GetProjectUpdateUploadInfo)
 	projectUpdate.Delete("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Project", "update"), tusController.CancelProjectUpdateUpload)
 
-	modul := api.Group("/modul", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	modul := api.Group("/modul", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	modul.Get("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.GetList)
 	modul.Patch("/:id", helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), modulController.UpdateMetadata)
 	modul.Post("/download", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), modulController.Download)
 	modul.Delete("/:id", helper.RBACMiddleware(casbinEnforcer, "Modul", "delete"), modulController.Delete)
 
-	tusModulCheck := api.Group("/modul/upload", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	tusModulCheck := api.Group("/modul/upload", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	tusModulCheck.Get("/check-slot", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), tusModulController.CheckUploadSlot)
 
-	tusModul := api.Group("/modul/upload", helper.SupabaseAuthMiddleware(cfg.Supabase.URL), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
+	tusModul := api.Group("/modul/upload", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper), helper.TusProtocolMiddleware(cfg.Upload.TusVersion))
 	tusModul.Post("/", helper.RBACMiddleware(casbinEnforcer, "Modul", "create"), tusModulController.InitiateUpload)
 	tusModul.Patch("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "create"), tusModulController.UploadChunk)
 	tusModul.Head("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), tusModulController.GetUploadStatus)
 	tusModul.Get("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), tusModulController.GetUploadInfo)
 	tusModul.Delete("/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "delete"), tusModulController.CancelUpload)
 
-	modulUpdate := api.Group("/modul/:id", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	modulUpdate := api.Group("/modul/:id", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	modulUpdate.Post("/upload", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), tusModulController.InitiateModulUpdateUpload)
 	modulUpdate.Patch("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), tusModulController.UploadModulUpdateChunk)
 	modulUpdate.Head("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), tusModulController.GetModulUpdateUploadStatus)
 	modulUpdate.Get("/update/:upload_id", helper.RBACMiddleware(casbinEnforcer, "Modul", "read"), tusModulController.GetModulUpdateUploadInfo)
 	modulUpdate.Delete("/update/:upload_id", helper.TusProtocolMiddleware(cfg.Upload.TusVersion), helper.RBACMiddleware(casbinEnforcer, "Modul", "update"), tusModulController.CancelModulUpdateUpload)
 
-	statistic := api.Group("/statistic", helper.SupabaseAuthMiddleware(cfg.Supabase.URL))
+	statistic := api.Group("/statistic", helper.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
 	statistic.Get("/", statisticController.GetStatistics)
 
 	monitoring := api.Group("/monitoring")

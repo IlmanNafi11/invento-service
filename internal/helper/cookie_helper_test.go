@@ -122,7 +122,7 @@ func TestCookieHelper_SetRefreshTokenCookie_Properties(t *testing.T) {
 	assert.Equal(t, testToken, refreshToken.Value)
 	assert.Equal(t, false, refreshToken.Secure) // development
 	assert.Equal(t, true, refreshToken.HttpOnly)
-	assert.Equal(t, "/", refreshToken.Path)
+	assert.Equal(t, helper.RefreshTokenPath, refreshToken.Path)
 }
 
 func TestCookieHelper_ClearRefreshTokenCookie(t *testing.T) {
@@ -199,13 +199,19 @@ func TestCookieHelper_ClearRefreshTokenCookie(t *testing.T) {
 			// Cleared cookie should have MaxAge = -1 and empty value
 			assert.NotNil(t, clearedCookie)
 			assert.Equal(t, "", clearedCookie.Value)
-			assert.Equal(t, -1, clearedCookie.MaxAge)
+			assert.Equal(t, 0, clearedCookie.MaxAge)
 		})
 	}
 }
 
 func TestGetRefreshTokenFromCookie(t *testing.T) {
+	cfg := &config.Config{App: config.AppConfig{Env: "development"}}
+	cookieHelper := helper.NewCookieHelper(cfg)
 	app := fiber.New()
+	app.Get("/test", func(c *fiber.Ctx) error {
+		result := cookieHelper.GetRefreshTokenFromCookie(c)
+		return c.SendString(result)
+	})
 
 	tests := []struct {
 		name     string
@@ -231,14 +237,9 @@ func TestGetRefreshTokenFromCookie(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			app.Get("/test", func(c *fiber.Ctx) error {
-				result := helper.GetRefreshTokenFromCookie(c)
-				return c.SendString(result)
-			})
-
 			req, _ := http.NewRequest("GET", "/test", nil)
 			if tt.token != "" {
-				req.AddCookie(&http.Cookie{Name: "refresh_token", Value: tt.token})
+				req.AddCookie(&http.Cookie{Name: helper.RefreshTokenCookieName, Value: tt.token})
 			}
 
 			resp, err := app.Test(req)
@@ -249,6 +250,84 @@ func TestGetRefreshTokenFromCookie(t *testing.T) {
 			assert.Equal(t, tt.expected, string(body))
 		})
 	}
+}
+
+func TestCookieHelper_SetAccessTokenCookie(t *testing.T) {
+	cfg := &config.Config{App: config.AppConfig{Env: "development"}}
+	cookieHelper := helper.NewCookieHelper(cfg)
+	app := fiber.New()
+
+	app.Post("/test", func(c *fiber.Ctx) error {
+		cookieHelper.SetAccessTokenCookie(c, "access-token-value", 3600)
+		return c.SendString("ok")
+	})
+
+	req, _ := http.NewRequest("POST", "/test", nil)
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+
+	var accessTokenCookie *http.Cookie
+	for _, c := range resp.Cookies() {
+		if c.Name == helper.AccessTokenCookieName {
+			accessTokenCookie = c
+			break
+		}
+	}
+
+	assert.NotNil(t, accessTokenCookie)
+	assert.Equal(t, "access-token-value", accessTokenCookie.Value)
+	assert.Equal(t, helper.AccessTokenPath, accessTokenCookie.Path)
+	assert.True(t, accessTokenCookie.HttpOnly)
+}
+
+func TestCookieHelper_GetAccessTokenFromCookie(t *testing.T) {
+	cfg := &config.Config{App: config.AppConfig{Env: "development"}}
+	cookieHelper := helper.NewCookieHelper(cfg)
+	app := fiber.New()
+
+	app.Get("/test", func(c *fiber.Ctx) error {
+		return c.SendString(cookieHelper.GetAccessTokenFromCookie(c))
+	})
+
+	req, _ := http.NewRequest("GET", "/test", nil)
+	req.AddCookie(&http.Cookie{Name: helper.AccessTokenCookieName, Value: "cookie-access-token"})
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+
+	body := make([]byte, len("cookie-access-token"))
+	_, _ = resp.Body.Read(body)
+	assert.Equal(t, "cookie-access-token", string(body))
+}
+
+func TestCookieHelper_ClearAllAuthCookies(t *testing.T) {
+	cfg := &config.Config{App: config.AppConfig{Env: "development"}}
+	cookieHelper := helper.NewCookieHelper(cfg)
+	app := fiber.New()
+
+	app.Post("/clear", func(c *fiber.Ctx) error {
+		cookieHelper.ClearAllAuthCookies(c)
+		return c.SendString("ok")
+	})
+
+	req, _ := http.NewRequest("POST", "/clear", nil)
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+
+	seen := map[string]*http.Cookie{}
+	for _, c := range resp.Cookies() {
+		if c.Name == helper.AccessTokenCookieName || c.Name == helper.RefreshTokenCookieName {
+			seen[c.Name] = c
+		}
+	}
+
+	assert.NotNil(t, seen[helper.AccessTokenCookieName])
+	assert.Equal(t, "", seen[helper.AccessTokenCookieName].Value)
+	assert.Equal(t, 0, seen[helper.AccessTokenCookieName].MaxAge)
+
+	assert.NotNil(t, seen[helper.RefreshTokenCookieName])
+	assert.Equal(t, "", seen[helper.RefreshTokenCookieName].Value)
+	assert.Equal(t, 0, seen[helper.RefreshTokenCookieName].MaxAge)
 }
 
 func TestCookieHelper_SecurityProperties(t *testing.T) {
@@ -479,7 +558,7 @@ func TestCookieHelper_Integration(t *testing.T) {
 		// Cleared cookie should have empty value and MaxAge = -1
 		assert.NotNil(t, cookie2)
 		assert.Equal(t, "", cookie2.Value)
-		assert.Equal(t, -1, cookie2.MaxAge)
+		assert.Equal(t, 0, cookie2.MaxAge)
 	})
 
 	t.Run("Multiple requests independence", func(t *testing.T) {
@@ -521,9 +600,7 @@ func TestCookieHelper_Integration(t *testing.T) {
 }
 
 func TestCookieHelper_MaxAgeCalculation(t *testing.T) {
-	// CookieHelper uses a fixed 7-day maxAge (604800 seconds) for refresh token
-	// This matches Supabase's default refresh token validity period
-	expectedMaxAge := 604800
+	expectedMaxAge := 0
 
 	cfg := &config.Config{
 		App: config.AppConfig{

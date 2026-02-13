@@ -9,31 +9,30 @@ func TestModulStruct(t *testing.T) {
 	t.Run("Modul struct initialization", func(t *testing.T) {
 		now := time.Now()
 		modul := Modul{
-			ID:       1,
-			UserID:   "user-100",
-			NamaFile: "test_module.pdf",
-			Tipe:     "pdf",
-			Ukuran:   "2.5 MB",
-			Semester: 3,
-			PathFile: "/uploads/modules/test_module.pdf",
+			ID:        "550e8400-e29b-41d4-a716-446655440000",
+			UserID:    "user-100",
+			Judul:     "Test Module",
+			Deskripsi: "Test Description",
+			FilePath:  "/uploads/modules/test_module.pdf",
+			FileName:  "test_module.pdf",
+			FileSize:  2621440,
+			MimeType:  "application/pdf",
+			Status:    "completed",
 			CreatedAt: now,
 			UpdatedAt: now,
 		}
 
-		if modul.ID != 1 {
-			t.Errorf("Expected ID 1, got %d", modul.ID)
+		if modul.ID != "550e8400-e29b-41d4-a716-446655440000" {
+			t.Errorf("Expected ID '550e8400-e29b-41d4-a716-446655440000', got %s", modul.ID)
 		}
 		if modul.UserID != "user-100" {
 			t.Errorf("Expected UserID 'user-100', got %s", modul.UserID)
 		}
-		if modul.NamaFile != "test_module.pdf" {
-			t.Errorf("Expected NamaFile 'test_module.pdf', got %s", modul.NamaFile)
+		if modul.Judul != "Test Module" {
+			t.Errorf("Expected Judul 'Test Module', got %s", modul.Judul)
 		}
-		if modul.Tipe != "pdf" {
-			t.Errorf("Expected Tipe 'pdf', got %s", modul.Tipe)
-		}
-		if modul.Semester != 3 {
-			t.Errorf("Expected Semester 3, got %d", modul.Semester)
+		if modul.MimeType != "application/pdf" {
+			t.Errorf("Expected MimeType 'application/pdf', got %s", modul.MimeType)
 		}
 	})
 
@@ -44,14 +43,16 @@ func TestModulStruct(t *testing.T) {
 			Name:  "Test User",
 		}
 		modul := Modul{
-			ID:       1,
-			UserID:   "user-100",
-			NamaFile: "test.pdf",
-			Tipe:     "pdf",
-			Ukuran:   "1 MB",
-			Semester: 1,
-			PathFile: "/uploads/test.pdf",
-			User:     user,
+			ID:        "550e8400-e29b-41d4-a716-446655440001",
+			UserID:    "user-100",
+			Judul:     "Test PDF",
+			Deskripsi: "Description",
+			FilePath:  "/uploads/test.pdf",
+			FileName:  "test.pdf",
+			FileSize:  1048576,
+			MimeType:  "application/pdf",
+			Status:    "completed",
+			User:      user,
 		}
 
 		if modul.User.ID != modul.UserID {
@@ -63,38 +64,39 @@ func TestModulStruct(t *testing.T) {
 func TestModulRequestStructs(t *testing.T) {
 	t.Run("ModulCreateRequest", func(t *testing.T) {
 		req := ModulCreateRequest{
-			NamaFile: "test_module.docx",
+			Judul:     "test_module.docx",
+			Deskripsi: "Test description",
 		}
 
-		if req.NamaFile != "test_module.docx" {
-			t.Errorf("Expected NamaFile 'test_module.docx', got %s", req.NamaFile)
+		if req.Judul != "test_module.docx" {
+			t.Errorf("Expected Judul 'test_module.docx', got %s", req.Judul)
 		}
 	})
 
 	t.Run("ModulUpdateRequest", func(t *testing.T) {
 		req := ModulUpdateRequest{
-			NamaFile: "updated_module.pdf",
-			Semester: 5,
+			Judul:     "updated_module.pdf",
+			Deskripsi: "Updated description",
 		}
 
-		if req.NamaFile != "updated_module.pdf" {
-			t.Errorf("Expected NamaFile 'updated_module.pdf', got %s", req.NamaFile)
+		if req.Judul != "updated_module.pdf" {
+			t.Errorf("Expected Judul 'updated_module.pdf', got %s", req.Judul)
 		}
-		if req.Semester != 5 {
-			t.Errorf("Expected Semester 5, got %d", req.Semester)
+		if req.Deskripsi != "Updated description" {
+			t.Errorf("Expected Deskripsi 'Updated description', got %s", req.Deskripsi)
 		}
 	})
 
 	t.Run("ModulUpdateRequest with partial data", func(t *testing.T) {
 		req := ModulUpdateRequest{
-			Semester: 4,
+			Deskripsi: "Only description updated",
 		}
 
-		if req.NamaFile != "" {
-			t.Errorf("Expected empty NamaFile, got %s", req.NamaFile)
+		if req.Judul != "" {
+			t.Errorf("Expected empty Judul, got %s", req.Judul)
 		}
-		if req.Semester != 4 {
-			t.Errorf("Expected Semester 4, got %d", req.Semester)
+		if req.Deskripsi != "Only description updated" {
+			t.Errorf("Expected Deskripsi 'Only description updated', got %s", req.Deskripsi)
 		}
 	})
 }
@@ -102,21 +104,21 @@ func TestModulRequestStructs(t *testing.T) {
 func TestModulListQueryParams(t *testing.T) {
 	t.Run("ModulListQueryParams with all fields", func(t *testing.T) {
 		params := ModulListQueryParams{
-			Search:         "test",
-			FilterType:     "pdf",
-			FilterSemester: 3,
-			Page:           1,
-			Limit:          20,
+			Search:       "test",
+			FilterType:   "application/pdf",
+			FilterStatus: "completed",
+			Page:         1,
+			Limit:        20,
 		}
 
 		if params.Search != "test" {
 			t.Errorf("Expected Search 'test', got %s", params.Search)
 		}
-		if params.FilterType != "pdf" {
-			t.Errorf("Expected FilterType 'pdf', got %s", params.FilterType)
+		if params.FilterType != "application/pdf" {
+			t.Errorf("Expected FilterType 'application/pdf', got %s", params.FilterType)
 		}
-		if params.FilterSemester != 3 {
-			t.Errorf("Expected FilterSemester 3, got %d", params.FilterSemester)
+		if params.FilterStatus != "completed" {
+			t.Errorf("Expected FilterStatus 'completed', got %s", params.FilterStatus)
 		}
 		if params.Page != 1 {
 			t.Errorf("Expected Page 1, got %d", params.Page)
@@ -142,27 +144,29 @@ func TestModulResponseStructs(t *testing.T) {
 	t.Run("ModulListItem", func(t *testing.T) {
 		now := time.Now()
 		item := ModulListItem{
-			ID:                 1,
-			NamaFile:           "test.pdf",
-			Tipe:               "pdf",
-			Ukuran:             "1.5 MB",
-			Semester:           2,
-			PathFile:           "/uploads/test.pdf",
+			ID:                 "550e8400-e29b-41d4-a716-446655440002",
+			Judul:              "Test Module",
+			Deskripsi:          "Test Description",
+			FileName:           "test.pdf",
+			MimeType:           "application/pdf",
+			FileSize:           1572864,
+			FilePath:           "/uploads/test.pdf",
+			Status:             "completed",
 			TerakhirDiperbarui: now,
 		}
 
-		if item.ID != 1 {
-			t.Errorf("Expected ID 1, got %d", item.ID)
+		if item.ID != "550e8400-e29b-41d4-a716-446655440002" {
+			t.Errorf("Expected ID '550e8400-e29b-41d4-a716-446655440002', got %s", item.ID)
 		}
-		if item.NamaFile != "test.pdf" {
-			t.Errorf("Expected NamaFile 'test.pdf', got %s", item.NamaFile)
+		if item.Judul != "Test Module" {
+			t.Errorf("Expected Judul 'Test Module', got %s", item.Judul)
 		}
 	})
 
 	t.Run("ModulListData with pagination", func(t *testing.T) {
 		items := []ModulListItem{
-			{ID: 1, NamaFile: "test1.pdf", Tipe: "pdf", Semester: 1},
-			{ID: 2, NamaFile: "test2.pdf", Tipe: "pdf", Semester: 2},
+			{ID: "550e8400-e29b-41d4-a716-446655440003", Judul: "test1.pdf", MimeType: "application/pdf", Status: "completed"},
+			{ID: "550e8400-e29b-41d4-a716-446655440004", Judul: "test2.pdf", MimeType: "application/pdf", Status: "completed"},
 		}
 		data := ModulListData{
 			Items: items,
@@ -185,25 +189,27 @@ func TestModulResponseStructs(t *testing.T) {
 	t.Run("ModulResponse", func(t *testing.T) {
 		now := time.Now()
 		resp := ModulResponse{
-			ID:        1,
-			NamaFile:  "test.pdf",
-			Tipe:      "pdf",
-			Ukuran:    "1 MB",
-			Semester:  1,
-			PathFile:  "/uploads/test.pdf",
+			ID:        "550e8400-e29b-41d4-a716-446655440005",
+			Judul:     "test.pdf",
+			Deskripsi: "Test description",
+			FileName:  "test.pdf",
+			MimeType:  "application/pdf",
+			FileSize:  1048576,
+			FilePath:  "/uploads/test.pdf",
+			Status:    "completed",
 			CreatedAt: now,
 			UpdatedAt: now,
 		}
 
-		if resp.NamaFile != "test.pdf" {
-			t.Errorf("Expected NamaFile 'test.pdf', got %s", resp.NamaFile)
+		if resp.Judul != "test.pdf" {
+			t.Errorf("Expected Judul 'test.pdf', got %s", resp.Judul)
 		}
 	})
 
 	t.Run("ModulCreateResponse with items", func(t *testing.T) {
 		items := []ModulResponse{
-			{ID: 1, NamaFile: "test1.pdf", Tipe: "pdf"},
-			{ID: 2, NamaFile: "test2.pdf", Tipe: "docx"},
+			{ID: "550e8400-e29b-41d4-a716-446655440006", Judul: "test1.pdf", MimeType: "application/pdf"},
+			{ID: "550e8400-e29b-41d4-a716-446655440007", Judul: "test2.pdf", MimeType: "application/docx"},
 		}
 		resp := ModulCreateResponse{
 			Items: items,
@@ -218,20 +224,20 @@ func TestModulResponseStructs(t *testing.T) {
 func TestModulDownloadRequest(t *testing.T) {
 	t.Run("ModulDownloadRequest with multiple IDs", func(t *testing.T) {
 		req := ModulDownloadRequest{
-			IDs: []uint{1, 2, 3, 4, 5},
+			IDs: []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440002", "550e8400-e29b-41d4-a716-446655440003"},
 		}
 
-		if len(req.IDs) != 5 {
-			t.Errorf("Expected 5 IDs, got %d", len(req.IDs))
+		if len(req.IDs) != 3 {
+			t.Errorf("Expected 3 IDs, got %d", len(req.IDs))
 		}
-		if req.IDs[0] != 1 {
-			t.Errorf("Expected first ID 1, got %d", req.IDs[0])
+		if req.IDs[0] != "550e8400-e29b-41d4-a716-446655440001" {
+			t.Errorf("Expected first ID '550e8400-e29b-41d4-a716-446655440001', got %s", req.IDs[0])
 		}
 	})
 
 	t.Run("ModulDownloadRequest with single ID", func(t *testing.T) {
 		req := ModulDownloadRequest{
-			IDs: []uint{100},
+			IDs: []string{"550e8400-e29b-41d4-a716-446655440100"},
 		}
 
 		if len(req.IDs) != 1 {
@@ -240,21 +246,13 @@ func TestModulDownloadRequest(t *testing.T) {
 	})
 }
 
-func TestModulSemesterRange(t *testing.T) {
-	validSemesters := []int{1, 2, 3, 4, 5, 6, 7, 8}
+func TestModulStatus(t *testing.T) {
+	validStatuses := []string{"pending", "completed", "failed"}
 
-	for _, sem := range validSemesters {
-		modul := Modul{Semester: sem}
-		if modul.Semester < 1 || modul.Semester > 8 {
-			t.Errorf("Semester %d should be valid (1-8)", sem)
-		}
-	}
-
-	invalidSemesters := []int{0, -1, 9, 10}
-	for _, sem := range invalidSemesters {
-		modul := Modul{Semester: sem}
-		if modul.Semester >= 1 && modul.Semester <= 8 {
-			t.Errorf("Semester %d should be invalid (outside 1-8)", sem)
+	for _, status := range validStatuses {
+		modul := Modul{Status: status}
+		if modul.Status == "" {
+			t.Errorf("Status %s should be valid", status)
 		}
 	}
 }
