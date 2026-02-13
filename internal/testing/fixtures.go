@@ -191,8 +191,8 @@ func GetTestUpdateProjectRequest() domain.ProjectUpdateRequest {
 }
 
 // GetTestCreateModulRequest returns a test create modul request
-func GetTestCreateModulRequest() domain.ModulCreateRequest {
-	return domain.ModulCreateRequest{
+func GetTestCreateModulRequest() domain.TusModulUploadInitRequest {
+	return domain.TusModulUploadInitRequest{
 		Judul:     "New Modul",
 		Deskripsi: "Test Deskripsi",
 	}
@@ -246,7 +246,6 @@ func GetTestModulResponse() domain.ModulResponse {
 		FileName:  "test.pdf",
 		MimeType:  "application/pdf",
 		FileSize:  1024,
-		FilePath:  "/test/modul",
 		Status:    "completed",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

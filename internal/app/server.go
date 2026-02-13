@@ -156,7 +156,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	modulUsecase := usecase.NewModulUsecase(modulRepo)
 	tusModulUsecase := usecase.NewTusModulUsecase(tusModulUploadRepo, modulRepo, tusModulManager, fileManager, cfg)
-	modulController := http.NewModulController(modulUsecase, tusModulUsecase, cfg, baseCtrl)
+	modulController := http.NewModulController(modulUsecase, cfg, baseCtrl)
 	tusModulController := http.NewTusModulController(tusModulUsecase, cfg, baseCtrl)
 
 	tusCleanup := helper.NewTusCleanup(tusUploadRepo, tusModulUploadRepo, tusProjectStore, tusModulStore, cfg.Upload.CleanupInterval, cfg.Upload.IdleTimeout)

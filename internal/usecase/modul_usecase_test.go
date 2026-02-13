@@ -6,12 +6,14 @@ import (
 	"fiber-boiler-plate/internal/domain"
 	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -114,7 +116,6 @@ func TestListModuls_Success(t *testing.T) {
 			FileName:           "test1.pdf",
 			MimeType:           "application/pdf",
 			FileSize:           1572864,
-			FilePath:           "/uploads/test1.pdf",
 			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
@@ -125,7 +126,6 @@ func TestListModuls_Success(t *testing.T) {
 			FileName:           "test2.docx",
 			MimeType:           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 			FileSize:           2097152,
-			FilePath:           "/uploads/test2.docx",
 			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
@@ -221,7 +221,7 @@ func TestUpdateModul_Success(t *testing.T) {
 	}
 
 	mockModulRepo.On("GetByID", "550e8400-e29b-41d4-a716-446655440000").Return(existingModul, nil)
-	mockModulRepo.On("Update", mock.AnythingOfType("*domain.Modul")).Return(nil)
+	mockModulRepo.On("UpdateMetadata", mock.AnythingOfType("*domain.Modul")).Return(nil)
 
 	err := modulUc.UpdateMetadata("550e8400-e29b-41d4-a716-446655440000", "user-1", req)
 
@@ -406,7 +406,6 @@ func TestModulUsecase_GetList_Success(t *testing.T) {
 			FileName:           "test1.pdf",
 			MimeType:           "application/pdf",
 			FileSize:           1572864,
-			FilePath:           "/uploads/test1.pdf",
 			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
@@ -417,7 +416,6 @@ func TestModulUsecase_GetList_Success(t *testing.T) {
 			FileName:           "test2.docx",
 			MimeType:           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 			FileSize:           2097152,
-			FilePath:           "/uploads/test2.docx",
 			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
@@ -471,7 +469,6 @@ func TestModulUsecase_GetList_WithFilters(t *testing.T) {
 			FileName:           "test.pdf",
 			MimeType:           "application/pdf",
 			FileSize:           1572864,
-			FilePath:           "/uploads/test.pdf",
 			Status:             "completed",
 			TerakhirDiperbarui: time.Now(),
 		},
@@ -587,6 +584,10 @@ func TestModulUsecase_Download_SingleFile(t *testing.T) {
 	userID := "user-1"
 	modulIDs := []string{"550e8400-e29b-41d4-a716-446655440000"}
 
+	tempFile, err := os.CreateTemp(t.TempDir(), "modul-*.pdf")
+	require.NoError(t, err)
+	require.NoError(t, tempFile.Close())
+
 	expectedModuls := []domain.Modul{
 		{
 			ID:        "550e8400-e29b-41d4-a716-446655440000",
@@ -594,7 +595,7 @@ func TestModulUsecase_Download_SingleFile(t *testing.T) {
 			Judul:     "Test Modul.pdf",
 			Deskripsi: "Test Deskripsi",
 			FileName:  "test.pdf",
-			FilePath:  "/uploads/test.pdf",
+			FilePath:  tempFile.Name(),
 		},
 	}
 
@@ -603,7 +604,7 @@ func TestModulUsecase_Download_SingleFile(t *testing.T) {
 	result, err := modulUC.Download(userID, modulIDs)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "/uploads/test.pdf", result)
+	assert.Equal(t, tempFile.Name(), result)
 
 	mockModulRepo.AssertExpectations(t)
 }
@@ -642,6 +643,127 @@ func TestModulUsecase_Download_NotFound(t *testing.T) {
 	var appErr *apperrors.AppError
 	assert.True(t, errors.As(err, &appErr))
 	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
+
+	mockModulRepo.AssertExpectations(t)
+}
+
+func TestModulUsecase_UpdateMetadata_NotFound(t *testing.T) {
+	mockModulRepo := new(MockModulRepository)
+	modulUC := NewModulUsecase(mockModulRepo)
+
+	modulID := "550e8400-e29b-41d4-a716-446655440999"
+	userID := "user-1"
+	req := domain.ModulUpdateRequest{Judul: "Baru"}
+
+	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound).Once()
+
+	err := modulUC.UpdateMetadata(modulID, userID, req)
+	require.Error(t, err)
+	var appErr *apperrors.AppError
+	require.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
+
+	mockModulRepo.AssertExpectations(t)
+}
+
+func TestModulUsecase_UpdateMetadata_Unauthorized(t *testing.T) {
+	mockModulRepo := new(MockModulRepository)
+	modulUC := NewModulUsecase(mockModulRepo)
+
+	modulID := "550e8400-e29b-41d4-a716-446655440001"
+	req := domain.ModulUpdateRequest{Judul: "Baru"}
+
+	mockModulRepo.On("GetByID", modulID).Return(&domain.Modul{ID: modulID, UserID: "owner"}, nil).Once()
+
+	err := modulUC.UpdateMetadata(modulID, "user-1", req)
+	require.Error(t, err)
+	var appErr *apperrors.AppError
+	require.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrForbidden, appErr.Code)
+
+	mockModulRepo.AssertNotCalled(t, "UpdateMetadata", mock.Anything)
+	mockModulRepo.AssertExpectations(t)
+}
+
+func TestModulUsecase_Delete_NotFound(t *testing.T) {
+	mockModulRepo := new(MockModulRepository)
+	modulUC := NewModulUsecase(mockModulRepo)
+
+	modulID := "550e8400-e29b-41d4-a716-446655440999"
+	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound).Once()
+
+	err := modulUC.Delete(modulID, "user-1")
+	require.Error(t, err)
+	var appErr *apperrors.AppError
+	require.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
+
+	mockModulRepo.AssertExpectations(t)
+}
+
+func TestModulUsecase_Delete_Unauthorized(t *testing.T) {
+	mockModulRepo := new(MockModulRepository)
+	modulUC := NewModulUsecase(mockModulRepo)
+
+	modulID := "550e8400-e29b-41d4-a716-446655440001"
+	mockModulRepo.On("GetByID", modulID).Return(&domain.Modul{ID: modulID, UserID: "owner"}, nil).Once()
+
+	err := modulUC.Delete(modulID, "user-1")
+	require.Error(t, err)
+	var appErr *apperrors.AppError
+	require.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrForbidden, appErr.Code)
+
+	mockModulRepo.AssertNotCalled(t, "Delete", modulID)
+	mockModulRepo.AssertExpectations(t)
+}
+
+func TestModulUsecase_Download_RepositoryError(t *testing.T) {
+	mockModulRepo := new(MockModulRepository)
+	modulUC := NewModulUsecase(mockModulRepo)
+
+	modulIDs := []string{"550e8400-e29b-41d4-a716-446655440001"}
+	mockModulRepo.On("GetByIDs", modulIDs, "user-1").Return(nil, assert.AnError).Once()
+
+	result, err := modulUC.Download("user-1", modulIDs)
+	require.Error(t, err)
+	assert.Empty(t, result)
+	var appErr *apperrors.AppError
+	require.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrInternal, appErr.Code)
+
+	mockModulRepo.AssertExpectations(t)
+}
+
+func TestModulUsecase_GetList_InvalidPagination(t *testing.T) {
+	mockModulRepo := new(MockModulRepository)
+	modulUC := NewModulUsecase(mockModulRepo)
+
+	mockModulRepo.On("GetByUserID", "user-1", "", "", "", 1, 10).
+		Return([]domain.ModulListItem{}, 0, nil).Once()
+
+	result, err := modulUC.GetList("user-1", "", "", "", 0, 0)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.Equal(t, 1, result.Pagination.Page)
+	assert.Equal(t, 10, result.Pagination.Limit)
+
+	mockModulRepo.AssertExpectations(t)
+}
+
+func TestModulUsecase_GetByID_RepositoryError(t *testing.T) {
+	mockModulRepo := new(MockModulRepository)
+	modulUC := NewModulUsecase(mockModulRepo)
+
+	modulID := "550e8400-e29b-41d4-a716-446655440001"
+	mockModulRepo.On("GetByID", modulID).Return(nil, assert.AnError).Once()
+
+	result, err := modulUC.GetByID(modulID, "user-1")
+	require.Error(t, err)
+	assert.Nil(t, result)
+	var appErr *apperrors.AppError
+	require.True(t, errors.As(err, &appErr))
+	assert.Equal(t, apperrors.ErrInternal, appErr.Code)
 
 	mockModulRepo.AssertExpectations(t)
 }

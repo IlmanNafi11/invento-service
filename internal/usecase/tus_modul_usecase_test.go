@@ -367,7 +367,7 @@ func TestTusModulUsecase(t *testing.T) {
 			tusRepo.On("UpdateOffset", uploadID, int64(3), mock.AnythingOfType("float64")).Return(nil).Once()
 
 			seedTusModulStore(t, manager, uploadID, 8, map[string]string{"user_id": "u1", "modul_id": modulID})
-			offset, err := uc.HandleModulUpdateChunk(uploadID, "u1", 0, bytes.NewReader([]byte("abc")))
+			offset, err := uc.HandleModulUpdateChunk(modulID, uploadID, "u1", 0, bytes.NewReader([]byte("abc")))
 			require.NoError(t, err)
 			assert.Equal(t, int64(3), offset)
 		})
@@ -395,7 +395,7 @@ func TestTusModulUsecase(t *testing.T) {
 			tusRepo.On("Complete", uploadID, modulID, mock.MatchedBy(func(path string) bool { return path != "" })).Return(nil).Once()
 
 			seedTusModulStore(t, manager, uploadID, 4, map[string]string{"user_id": "u1", "modul_id": modulID})
-			offset, err := uc.HandleModulUpdateChunk(uploadID, "u1", 0, bytes.NewReader([]byte("done")))
+			offset, err := uc.HandleModulUpdateChunk(modulID, uploadID, "u1", 0, bytes.NewReader([]byte("done")))
 			require.NoError(t, err)
 			assert.Equal(t, int64(4), offset)
 		})
@@ -404,7 +404,7 @@ func TestTusModulUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			_, err := uc.HandleModulUpdateChunk("missing", "u1", 0, bytes.NewReader([]byte("x")))
+			_, err := uc.HandleModulUpdateChunk("some-modul-id", "missing", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak ditemukan")
 		})
@@ -413,16 +413,17 @@ func TestTusModulUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
-			_, err := uc.HandleModulUpdateChunk("id", "u1", 0, bytes.NewReader([]byte("x")))
+			_, err := uc.HandleModulUpdateChunk("some-modul-id", "id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak memiliki akses")
 		})
 
 		t.Run("already completed becomes inactive error", func(t *testing.T) {
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
-			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.UploadStatusCompleted}, nil).Once()
+			modulID := "550e8400-e29b-41d4-a716-446655440099"
+			tusRepo.On("GetByID", "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", ModulID: &modulID, Status: domain.UploadStatusCompleted}, nil).Once()
 
-			_, err := uc.HandleModulUpdateChunk("id", "u1", 0, bytes.NewReader([]byte("x")))
+			_, err := uc.HandleModulUpdateChunk(modulID, "id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "sudah selesai")
 		})
@@ -516,4 +517,54 @@ func TestTusModulUsecase(t *testing.T) {
 			assert.Contains(t, err.Error(), "tidak ditemukan")
 		})
 	})
+}
+
+func TestTusModulUsecase_InitiateModulUpload_RepoCreateError(t *testing.T) {
+	uc, tusRepo, _, _ := newTusModulTestDeps(t)
+	meta := modulMetadataHeader("modul-a", "deskripsi")
+
+	tusRepo.On("CountActiveByUserID", "u1").Return(int64(0), nil).Once()
+	tusRepo.On("Create", mock.AnythingOfType("*domain.TusModulUpload")).Return(assert.AnError).Once()
+
+	res, err := uc.InitiateModulUpload("u1", 1024, meta)
+	require.Error(t, err)
+	assert.Nil(t, res)
+	assert.Contains(t, err.Error(), "gagal membuat upload record")
+
+	tusRepo.AssertExpectations(t)
+}
+
+func TestTusModulUsecase_HandleModulChunk_OffsetMismatch(t *testing.T) {
+	uc, tusRepo, _, manager := newTusModulTestDeps(t)
+	uploadID := "offset-mismatch"
+
+	tusRepo.On("GetByID", uploadID).Return(&domain.TusModulUpload{
+		ID:            uploadID,
+		UserID:        "u1",
+		FileSize:      10,
+		CurrentOffset: 4,
+		Status:        domain.UploadStatusUploading,
+	}, nil).Once()
+
+	seedTusModulStore(t, manager, uploadID, 10, map[string]string{"user_id": "u1"})
+
+	offset, err := uc.HandleModulChunk(uploadID, "u1", 0, bytes.NewReader([]byte("abc")))
+	require.Error(t, err)
+	assert.Equal(t, int64(4), offset)
+	assert.Contains(t, err.Error(), "offset")
+
+	tusRepo.AssertExpectations(t)
+}
+
+func TestTusModulUsecase_CheckModulUploadSlot_RepoError(t *testing.T) {
+	uc, tusRepo, _, _ := newTusModulTestDeps(t)
+
+	tusRepo.On("CountActiveByUserID", "u1").Return(int64(0), assert.AnError).Once()
+
+	res, err := uc.CheckModulUploadSlot("u1")
+	require.Error(t, err)
+	assert.Nil(t, res)
+	assert.Contains(t, err.Error(), "gagal mengecek slot upload")
+
+	tusRepo.AssertExpectations(t)
 }
