@@ -2366,9 +2366,6 @@ const docTemplate = `{
                 "file_name": {
                     "type": "string"
                 },
-                "file_path": {
-                    "type": "string"
-                },
                 "file_size": {
                     "type": "integer"
                 },
