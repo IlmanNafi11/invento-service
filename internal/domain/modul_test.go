@@ -62,17 +62,6 @@ func TestModulStruct(t *testing.T) {
 }
 
 func TestModulRequestStructs(t *testing.T) {
-	t.Run("ModulCreateRequest", func(t *testing.T) {
-		req := ModulCreateRequest{
-			Judul:     "test_module.docx",
-			Deskripsi: "Test description",
-		}
-
-		if req.Judul != "test_module.docx" {
-			t.Errorf("Expected Judul 'test_module.docx', got %s", req.Judul)
-		}
-	})
-
 	t.Run("ModulUpdateRequest", func(t *testing.T) {
 		req := ModulUpdateRequest{
 			Judul:     "updated_module.pdf",
@@ -150,7 +139,6 @@ func TestModulResponseStructs(t *testing.T) {
 			FileName:           "test.pdf",
 			MimeType:           "application/pdf",
 			FileSize:           1572864,
-			FilePath:           "/uploads/test.pdf",
 			Status:             "completed",
 			TerakhirDiperbarui: now,
 		}
@@ -195,7 +183,6 @@ func TestModulResponseStructs(t *testing.T) {
 			FileName:  "test.pdf",
 			MimeType:  "application/pdf",
 			FileSize:  1048576,
-			FilePath:  "/uploads/test.pdf",
 			Status:    "completed",
 			CreatedAt: now,
 			UpdatedAt: now,
@@ -206,19 +193,6 @@ func TestModulResponseStructs(t *testing.T) {
 		}
 	})
 
-	t.Run("ModulCreateResponse with items", func(t *testing.T) {
-		items := []ModulResponse{
-			{ID: "550e8400-e29b-41d4-a716-446655440006", Judul: "test1.pdf", MimeType: "application/pdf"},
-			{ID: "550e8400-e29b-41d4-a716-446655440007", Judul: "test2.pdf", MimeType: "application/docx"},
-		}
-		resp := ModulCreateResponse{
-			Items: items,
-		}
-
-		if len(resp.Items) != 2 {
-			t.Errorf("Expected 2 items, got %d", len(resp.Items))
-		}
-	})
 }
 
 func TestModulDownloadRequest(t *testing.T) {

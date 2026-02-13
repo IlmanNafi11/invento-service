@@ -34,11 +34,6 @@ func (Modul) TableName() string {
 	return "moduls"
 }
 
-type ModulCreateRequest struct {
-	Judul     string `form:"judul" validate:"required"`
-	Deskripsi string `form:"deskripsi"`
-}
-
 type ModulUpdateRequest struct {
 	Judul     string `json:"judul" validate:"omitempty,min=3,max=255"`
 	Deskripsi string `json:"deskripsi"`
@@ -59,7 +54,6 @@ type ModulListItem struct {
 	FileName           string    `json:"file_name"`
 	MimeType           string    `json:"mime_type"`
 	FileSize           int64     `json:"file_size"`
-	FilePath           string    `json:"file_path"`
 	Status             string    `json:"status"`
 	TerakhirDiperbarui time.Time `json:"terakhir_diperbarui"`
 }
@@ -76,14 +70,9 @@ type ModulResponse struct {
 	FileName  string    `json:"file_name"`
 	MimeType  string    `json:"mime_type"`
 	FileSize  int64     `json:"file_size"`
-	FilePath  string    `json:"file_path"`
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type ModulCreateResponse struct {
-	Items []ModulResponse `json:"items"`
 }
 
 type ModulDownloadRequest struct {

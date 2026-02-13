@@ -52,8 +52,3 @@ type TusModulUploadSlotResponse struct {
 	QueueLength int    `json:"queue_length"`
 	MaxQueue    int    `json:"max_queue"`
 }
-
-type ModulUpdateMetadataRequest struct {
-	Judul     string `json:"judul" validate:"required,min=3,max=255"`
-	Deskripsi string `json:"deskripsi"`
-}

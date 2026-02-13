@@ -300,36 +300,6 @@ func TestTusModulUploadSlotResponse(t *testing.T) {
 	})
 }
 
-func TestModulUpdateMetadataRequest(t *testing.T) {
-	t.Run("ModulUpdateMetadataRequest with valid data", func(t *testing.T) {
-		req := ModulUpdateMetadataRequest{
-			Judul:     "Updated Module Name",
-			Deskripsi: "Updated description",
-		}
-
-		if req.Judul != "Updated Module Name" {
-			t.Errorf("Expected Judul 'Updated Module Name', got %s", req.Judul)
-		}
-		if req.Deskripsi != "Updated description" {
-			t.Errorf("Expected Deskripsi 'Updated description', got %s", req.Deskripsi)
-		}
-	})
-
-	t.Run("ModulUpdateMetadataRequest with minimum values", func(t *testing.T) {
-		req := ModulUpdateMetadataRequest{
-			Judul:     "ABC",
-			Deskripsi: "",
-		}
-
-		if len(req.Judul) != 3 {
-			t.Errorf("Expected Judul length 3, got %d", len(req.Judul))
-		}
-		if req.Deskripsi != "" {
-			t.Errorf("Expected empty Deskripsi, got %s", req.Deskripsi)
-		}
-	})
-}
-
 func TestTusModulUploadProgressCalculation(t *testing.T) {
 	t.Run("Calculate progress percentage", func(t *testing.T) {
 		testCases := []struct {
@@ -604,44 +574,6 @@ func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
 
 		if req.Deskripsi != "" {
 			t.Errorf("Expected empty Deskripsi, got %s", req.Deskripsi)
-		}
-	})
-}
-
-func TestModulUpdateMetadataRequestEdgeCases(t *testing.T) {
-	t.Run("Minimum Judul length", func(t *testing.T) {
-		req := ModulUpdateMetadataRequest{
-			Judul:     "XYZ",
-			Deskripsi: "Short description",
-		}
-
-		if len(req.Judul) != 3 {
-			t.Errorf("Expected Judul length 3, got %d", len(req.Judul))
-		}
-	})
-
-	t.Run("Update only Judul", func(t *testing.T) {
-		req := ModulUpdateMetadataRequest{
-			Judul:     "Updated Name Only",
-			Deskripsi: "",
-		}
-
-		if req.Judul != "Updated Name Only" {
-			t.Errorf("Expected Judul 'Updated Name Only', got %s", req.Judul)
-		}
-	})
-
-	t.Run("Update with both fields", func(t *testing.T) {
-		req := ModulUpdateMetadataRequest{
-			Judul:     "Complete Update",
-			Deskripsi: "Complete description update",
-		}
-
-		if req.Judul != "Complete Update" {
-			t.Errorf("Expected Judul 'Complete Update', got %s", req.Judul)
-		}
-		if req.Deskripsi != "Complete description update" {
-			t.Errorf("Expected Deskripsi 'Complete description update', got %s", req.Deskripsi)
 		}
 	})
 }
