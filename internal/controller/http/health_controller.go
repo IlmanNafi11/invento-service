@@ -51,7 +51,7 @@ func (ctrl *HealthController) BasicHealthCheck(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	domain.SuccessResponse{data=domain.ComprehensiveHealthCheck}	"Sistem sehat"
 //	@Failure		503	{object}	domain.ErrorResponse	"Beberapa komponen sistem mengalami masalah"
-//	@Router			/api/v1/monitoring/status [get]
+//	@Router			/monitoring/status [get]
 func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 	healthData := ctrl.healthUsecase.GetComprehensiveHealth()
 
@@ -70,7 +70,7 @@ func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	domain.SuccessResponse{data=domain.SystemMetrics}	"Metrics sistem berhasil diambil"
-//	@Router			/api/v1/monitoring/metrics [get]
+//	@Router			/monitoring/metrics [get]
 func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
 	metricsData := ctrl.healthUsecase.GetSystemMetrics()
 
@@ -85,7 +85,7 @@ func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	domain.SuccessResponse{data=domain.ApplicationStatus}	"Status aplikasi berhasil diambil"
-//	@Router			/api/v1/monitoring/app-status [get]
+//	@Router			/monitoring/app-status [get]
 func (ctrl *HealthController) GetApplicationStatus(c *fiber.Ctx) error {
 	statusData := ctrl.healthUsecase.GetApplicationStatus()
 

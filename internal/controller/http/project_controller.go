@@ -42,7 +42,7 @@ func NewProjectController(projectUsecase usecase.ProjectUsecase, supabaseURL str
 // @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
 // @Failure 404 {object} domain.ErrorResponse "Project not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/project/{id} [patch]
+// @Router /project/{id} [patch]
 func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -95,7 +95,7 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 // @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
 // @Failure 404 {object} domain.ErrorResponse "Project not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/project/{id} [get]
+// @Router /project/{id} [get]
 func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -139,7 +139,7 @@ func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 // @Failure 400 {object} domain.ErrorResponse "Invalid query parameters"
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/project [get]
+// @Router /project [get]
 func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -186,7 +186,7 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 // @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
 // @Failure 404 {object} domain.ErrorResponse "Project not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/project/{id} [delete]
+// @Router /project/{id} [delete]
 func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -227,7 +227,7 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
 // @Failure 404 {object} domain.ErrorResponse "One or more projects not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/project/download [post]
+// @Router /project/download [post]
 func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)

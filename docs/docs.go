@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/auth/login": {
+        "/auth/login": {
             "post": {
                 "description": "Autentikasi pengguna melalui Supabase Auth dengan email dan password. Data profil lokal disinkronkan jika diperlukan.",
                 "consumes": [
@@ -85,7 +85,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/logout": {
+        "/auth/logout": {
             "post": {
                 "security": [
                     {
@@ -131,7 +131,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/refresh": {
+        "/auth/refresh": {
             "post": {
                 "description": "Memperbarui access token menggunakan refresh token dari cookie.",
                 "consumes": [
@@ -184,7 +184,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/register": {
+        "/auth/register": {
             "post": {
                 "description": "Membuat akun pengguna baru melalui Supabase Auth dan menyimpan data profil ke database lokal.",
                 "consumes": [
@@ -248,7 +248,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/reset-password": {
+        "/auth/reset-password": {
             "post": {
                 "description": "Mengirim link reset password ke email yang terdaftar melalui Supabase Auth.",
                 "consumes": [
@@ -300,7 +300,42 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/modul": {
+        "/health": {
+            "get": {
+                "description": "Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status dasar tanpa pengecekan koneksi database.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Monitoring"
+                ],
+                "summary": "Basic Health Check",
+                "responses": {
+                    "200": {
+                        "description": "Server berjalan dengan baik",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/domain.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.BasicHealthCheck"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/modul": {
             "get": {
                 "security": [
                     {
@@ -392,7 +427,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/modul/download": {
+        "/modul/download": {
             "post": {
                 "security": [
                     {
@@ -455,7 +490,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/modul/{id}": {
+        "/modul/{id}": {
             "delete": {
                 "security": [
                     {
@@ -596,7 +631,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/monitoring/app-status": {
+        "/monitoring/app-status": {
             "get": {
                 "description": "Mengambil status aplikasi lengkap termasuk uptime, layanan yang aktif, dan dependency eksternal.",
                 "consumes": [
@@ -631,7 +666,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/monitoring/metrics": {
+        "/monitoring/metrics": {
             "get": {
                 "description": "Mengambil metrik sistem detail termasuk penggunaan memori, CPU, statistik database, dan metrik HTTP.",
                 "consumes": [
@@ -666,7 +701,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/monitoring/status": {
+        "/monitoring/status": {
             "get": {
                 "description": "Melakukan pemeriksaan kesehatan menyeluruh termasuk koneksi database, penggunaan memori, CPU, dan lainnya.\n-\nMengembalikan status HTTP 503 jika sistem tidak sehat (database terputus atau error).",
                 "consumes": [
@@ -707,7 +742,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/profile": {
+        "/profile": {
             "get": {
                 "security": [
                     {
@@ -832,7 +867,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/project": {
+        "/project": {
             "get": {
                 "security": [
                     {
@@ -912,7 +947,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/project/download": {
+        "/project/download": {
             "post": {
                 "security": [
                     {
@@ -975,7 +1010,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/project/{id}": {
+        "/project/{id}": {
             "get": {
                 "security": [
                     {
@@ -1181,7 +1216,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/role": {
+        "/role": {
             "get": {
                 "security": [
                     {
@@ -1298,7 +1333,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/role/permissions": {
+        "/role/permissions": {
             "get": {
                 "security": [
                     {
@@ -1332,7 +1367,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/role/{id}": {
+        "/role/{id}": {
             "get": {
                 "security": [
                     {
@@ -1508,7 +1543,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/statistic": {
+        "/statistic": {
             "get": {
                 "security": [
                     {
@@ -1560,7 +1595,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/user": {
+        "/user": {
             "get": {
                 "security": [
                     {
@@ -1634,7 +1669,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/user/permissions": {
+        "/user/permissions": {
             "get": {
                 "security": [
                     {
@@ -1689,7 +1724,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/user/{id}": {
+        "/user/{id}": {
             "delete": {
                 "security": [
                     {
@@ -1750,7 +1785,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/user/{id}/download": {
+        "/user/{id}/download": {
             "post": {
                 "security": [
                     {
@@ -1820,7 +1855,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/user/{id}/files": {
+        "/user/{id}/files": {
             "get": {
                 "security": [
                     {
@@ -1907,7 +1942,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/user/{id}/role": {
+        "/user/{id}/role": {
             "put": {
                 "security": [
                     {
@@ -1972,41 +2007,6 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/health": {
-            "get": {
-                "description": "Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status dasar tanpa pengecekan koneksi database.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Monitoring"
-                ],
-                "summary": "Basic Health Check",
-                "responses": {
-                    "200": {
-                        "description": "Server berjalan dengan baik",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/domain.SuccessResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.BasicHealthCheck"
-                                        }
-                                    }
-                                }
-                            ]
                         }
                     }
                 }

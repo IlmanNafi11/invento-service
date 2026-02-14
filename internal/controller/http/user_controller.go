@@ -44,7 +44,7 @@ func NewUserController(userUsecase usecase.UserUsecase) *UserController {
 // @Success 200 {object} domain.SuccessResponse{data=domain.UserListData}
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /api/v1/user [get]
+// @Router /user [get]
 func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 	var params domain.UserListQueryParams
 	if err := c.QueryParser(&params); err != nil {
@@ -77,7 +77,7 @@ func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /api/v1/user/{id}/role [put]
+// @Router /user/{id}/role [put]
 func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 	id, err := ctrl.ParsePathID(c)
 	if err != nil {
@@ -118,7 +118,7 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /api/v1/user/{id} [delete]
+// @Router /user/{id} [delete]
 func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 	id, err := ctrl.ParsePathID(c)
 	if err != nil {
@@ -152,7 +152,7 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /api/v1/user/{id}/files [get]
+// @Router /user/{id}/files [get]
 func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 	id, err := ctrl.ParsePathID(c)
 	if err != nil {
@@ -186,7 +186,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 // @Success 200 {object} domain.SuccessResponse{data=domain.ProfileData}
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /api/v1/profile [get]
+// @Router /profile [get]
 func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -218,7 +218,7 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /api/v1/profile [put]
+// @Router /profile [put]
 func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -258,7 +258,7 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 // @Success 200 {object} domain.SuccessResponse{data=[]domain.UserPermissionItem}
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /api/v1/user/permissions [get]
+// @Router /user/permissions [get]
 func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -291,7 +291,7 @@ func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /api/v1/user/{id}/download [post]
+// @Router /user/{id}/download [post]
 func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 	ownerUserID, err := ctrl.ParsePathID(c)
 	if err != nil {

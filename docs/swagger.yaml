@@ -544,7 +544,7 @@ info:
   title: Invento Service API
   version: "1.0"
 paths:
-  /api/v1/auth/login:
+  /auth/login:
     post:
       consumes:
       - application/json
@@ -588,7 +588,7 @@ paths:
       summary: Login pengguna
       tags:
       - Auth
-  /api/v1/auth/logout:
+  /auth/logout:
     post:
       consumes:
       - application/json
@@ -617,7 +617,7 @@ paths:
       summary: Logout pengguna
       tags:
       - Auth
-  /api/v1/auth/refresh:
+  /auth/refresh:
     post:
       consumes:
       - application/json
@@ -649,7 +649,7 @@ paths:
       summary: Refresh access token
       tags:
       - Auth
-  /api/v1/auth/register:
+  /auth/register:
     post:
       consumes:
       - application/json
@@ -689,7 +689,7 @@ paths:
       summary: Registrasi pengguna baru
       tags:
       - Auth
-  /api/v1/auth/reset-password:
+  /auth/reset-password:
     post:
       consumes:
       - application/json
@@ -724,7 +724,28 @@ paths:
       summary: Minta reset password
       tags:
       - Auth
-  /api/v1/modul:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status
+        dasar tanpa pengecekan koneksi database.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Server berjalan dengan baik
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.BasicHealthCheck'
+              type: object
+      summary: Basic Health Check
+      tags:
+      - Monitoring
+  /modul:
     get:
       consumes:
       - application/json
@@ -781,7 +802,7 @@ paths:
       summary: Get list of modules
       tags:
       - Modul
-  /api/v1/modul/{id}:
+  /modul/{id}:
     delete:
       consumes:
       - application/json
@@ -872,7 +893,7 @@ paths:
       summary: Update module metadata
       tags:
       - Modul
-  /api/v1/modul/download:
+  /modul/download:
     post:
       consumes:
       - application/json
@@ -912,7 +933,7 @@ paths:
       summary: Download modules as ZIP
       tags:
       - Modul
-  /api/v1/monitoring/app-status:
+  /monitoring/app-status:
     get:
       consumes:
       - application/json
@@ -933,7 +954,7 @@ paths:
       summary: Application Status
       tags:
       - Monitoring
-  /api/v1/monitoring/metrics:
+  /monitoring/metrics:
     get:
       consumes:
       - application/json
@@ -954,7 +975,7 @@ paths:
       summary: System Metrics
       tags:
       - Monitoring
-  /api/v1/monitoring/status:
+  /monitoring/status:
     get:
       consumes:
       - application/json
@@ -981,7 +1002,7 @@ paths:
       summary: Comprehensive Health Check
       tags:
       - Monitoring
-  /api/v1/profile:
+  /profile:
     get:
       consumes:
       - application/json
@@ -1055,7 +1076,7 @@ paths:
       summary: Update user profile
       tags:
       - User Profile
-  /api/v1/project:
+  /project:
     get:
       consumes:
       - application/json
@@ -1107,7 +1128,7 @@ paths:
       summary: Get list of projects
       tags:
       - Project
-  /api/v1/project/{id}:
+  /project/{id}:
     delete:
       consumes:
       - application/json
@@ -1240,7 +1261,7 @@ paths:
       summary: Update project metadata
       tags:
       - Project
-  /api/v1/project/download:
+  /project/download:
     post:
       consumes:
       - application/json
@@ -1280,7 +1301,7 @@ paths:
       summary: Download projects as ZIP
       tags:
       - Project
-  /api/v1/role:
+  /role:
     get:
       consumes:
       - application/json
@@ -1355,7 +1376,7 @@ paths:
       summary: Create role
       tags:
       - Roles
-  /api/v1/role/{id}:
+  /role/{id}:
     delete:
       consumes:
       - application/json
@@ -1469,7 +1490,7 @@ paths:
       summary: Update role
       tags:
       - Roles
-  /api/v1/role/permissions:
+  /role/permissions:
     get:
       consumes:
       - application/json
@@ -1490,7 +1511,7 @@ paths:
       summary: Get available permissions
       tags:
       - Roles
-  /api/v1/statistic:
+  /statistic:
     get:
       consumes:
       - application/json
@@ -1532,7 +1553,7 @@ paths:
       summary: Get User Statistics
       tags:
       - Statistics
-  /api/v1/user:
+  /user:
     get:
       consumes:
       - application/json
@@ -1577,7 +1598,7 @@ paths:
       summary: Get list of users
       tags:
       - User Management
-  /api/v1/user/{id}:
+  /user/{id}:
     delete:
       consumes:
       - application/json
@@ -1616,7 +1637,7 @@ paths:
       summary: Delete user
       tags:
       - User Management
-  /api/v1/user/{id}/download:
+  /user/{id}/download:
     post:
       consumes:
       - application/json
@@ -1661,7 +1682,7 @@ paths:
       summary: Download user files
       tags:
       - User Management
-  /api/v1/user/{id}/files:
+  /user/{id}/files:
     get:
       consumes:
       - application/json
@@ -1715,7 +1736,7 @@ paths:
       summary: Get user files
       tags:
       - User Management
-  /api/v1/user/{id}/role:
+  /user/{id}/role:
     put:
       consumes:
       - application/json
@@ -1760,7 +1781,7 @@ paths:
       summary: Update user role
       tags:
       - User Management
-  /api/v1/user/permissions:
+  /user/permissions:
     get:
       consumes:
       - application/json
@@ -1792,27 +1813,6 @@ paths:
       summary: Get user permissions
       tags:
       - User Profile
-  /health:
-    get:
-      consumes:
-      - application/json
-      description: Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status
-        dasar tanpa pengecekan koneksi database.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Server berjalan dengan baik
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.BasicHealthCheck'
-              type: object
-      summary: Basic Health Check
-      tags:
-      - Monitoring
 securityDefinitions:
   BearerAuth:
     description: 'JWT Authorization header using the Bearer scheme. Example: "Bearer

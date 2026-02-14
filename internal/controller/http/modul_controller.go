@@ -50,7 +50,7 @@ func NewModulController(
 // @Failure 400 {object} domain.ErrorResponse "Invalid query parameters"
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/modul [get]
+// @Router /modul [get]
 func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -89,7 +89,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 // @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this module"
 // @Failure 404 {object} domain.ErrorResponse "Module not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/modul/{id} [delete]
+// @Router /modul/{id} [delete]
 func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -129,7 +129,7 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 // @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this module"
 // @Failure 404 {object} domain.ErrorResponse "Module not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/modul/{id} [patch]
+// @Router /modul/{id} [patch]
 func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -176,7 +176,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
 // @Failure 404 {object} domain.ErrorResponse "One or more modules not found"
 // @Failure 500 {object} domain.ErrorResponse "Internal server error"
-// @Router /api/v1/modul/download [post]
+// @Router /modul/download [post]
 func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {

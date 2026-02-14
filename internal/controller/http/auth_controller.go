@@ -47,7 +47,7 @@ func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *helper.Coo
 // @Failure 401 {object} domain.ErrorResponse "Email atau password salah"
 // @Failure 403 {object} domain.ErrorResponse "Akun belum diaktifkan"
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
-// @Router /api/v1/auth/login [post]
+// @Router /auth/login [post]
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	var req domain.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -85,7 +85,7 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 // @Failure 400 {object} domain.ErrorResponse "Data validasi tidak valid"
 // @Failure 409 {object} domain.ErrorResponse "Email sudah terdaftar"
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
-// @Router /api/v1/auth/register [post]
+// @Router /auth/register [post]
 func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 	var req domain.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -122,7 +122,7 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 // @Failure 400 {object} domain.ErrorResponse "Refresh token diperlukan"
 // @Failure 401 {object} domain.ErrorResponse "Token tidak valid atau expired"
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
-// @Router /api/v1/auth/refresh [post]
+// @Router /auth/refresh [post]
 func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 	refreshToken := ctrl.cookieHelper.GetRefreshTokenFromCookie(c)
 	if refreshToken == "" {
@@ -156,7 +156,7 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 // @Failure 404 {object} domain.ErrorResponse "Token tidak valid"
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
 // @Security BearerAuth
-// @Router /api/v1/auth/logout [post]
+// @Router /auth/logout [post]
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 	accessToken, _ := c.Locals("access_token").(string)
 	if accessToken != "" {
@@ -181,7 +181,7 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 // @Failure 400 {object} domain.ErrorResponse "Format request tidak valid"
 // @Failure 404 {object} domain.ErrorResponse "Email tidak ditemukan"
 // @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
-// @Router /api/v1/auth/reset-password [post]
+// @Router /auth/reset-password [post]
 func (ctrl *AuthController) RequestPasswordReset(c *fiber.Ctx) error {
 	var req domain.ResetPasswordRequest
 	if err := c.BodyParser(&req); err != nil {
