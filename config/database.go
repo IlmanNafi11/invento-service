@@ -1,10 +1,15 @@
 package config
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"log"
+	"net"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -33,18 +38,43 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 		log.Println("Using Supabase database connection")
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-
+	pgxConfig, err := pgx.ParseConfig(dsn)
 	if err != nil {
-		log.Fatal("Gagal menghubungkan ke database:", err)
+		log.Fatal("Gagal parsing konfigurasi database:", err)
+	}
+	pgxConfig.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		host, port, splitErr := net.SplitHostPort(addr)
+		if splitErr != nil {
+			return nil, splitErr
+		}
+		resolver := &net.Resolver{}
+		ips, resolveErr := resolver.LookupHost(ctx, host)
+		if resolveErr != nil {
+			return nil, resolveErr
+		}
+		for _, ip := range ips {
+			if net.ParseIP(ip).To4() != nil {
+				return (&net.Dialer{}).DialContext(ctx, "tcp4", net.JoinHostPort(ip, port))
+			}
+		}
+		return (&net.Dialer{}).DialContext(ctx, "tcp", addr)
 	}
 
-	// Configure connection pool for optimal performance
-	sqlDB, err := db.DB()
+	// Use RegisterConnConfig so the custom DialFunc is actually honored.
+	// stdlib.OpenDB(config) passes config by value and may ignore DialFunc.
+	connStr := stdlib.RegisterConnConfig(pgxConfig)
+	sqlDB, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Fatal("Gagal mendapatkan database instance:", err)
+		log.Fatal("Gagal membuka koneksi database:", err)
+	}
+
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: sqlDB,
+	}), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+	if err != nil {
+		log.Fatal("Gagal menghubungkan ke database:", err)
 	}
 	sqlDB.SetMaxIdleConns(5)
 	sqlDB.SetMaxOpenConns(20)
