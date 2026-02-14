@@ -24,9 +24,6 @@ func main() {
 	cfg := config.LoadConfig()
 	db := config.ConnectDatabase(cfg)
 
-	// Seeder tidak otomatis dijalankan saat startup.
-	// Untuk seeding roles dan permissions, jalankan: go run cmd/seed/main.go
-
 	server := app.NewServer(cfg, db)
 
 	log.Printf("Server berjalan di port %s", cfg.App.Port)

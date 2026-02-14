@@ -31,7 +31,6 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Name     string
-	SeedData bool
 }
 
 type UploadConfig struct {
@@ -90,7 +89,6 @@ func LoadConfig() *Config {
 			User:     getEnv("DB_USER", "postgres"),
 			Password: getEnvAllowEmpty("DB_PASSWORD", ""),
 			Name:     getEnv("DB_NAME", "postgres"),
-			SeedData: getEnvAsBool("DB_SEED_DATA", false),
 		},
 		Upload: UploadConfig{
 			MaxSize:              getEnvAsInt64("UPLOAD_MAX_SIZE", 524288000),
