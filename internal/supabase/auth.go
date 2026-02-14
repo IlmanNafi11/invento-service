@@ -34,13 +34,19 @@ type supabaseAuthResponse struct {
 	User         supabaseUser `json:"user"`
 }
 
-func NewAuthService(authURL, serviceKey, jwtSecret string) *AuthService {
+func NewAuthService(authURL, serviceKey string) (*AuthService, error) {
+	jwksURL := authURL + "/.well-known/jwks.json"
+	verifier, err := NewJWTVerifier(jwksURL)
+	if err != nil {
+		return nil, fmt.Errorf("gagal inisialisasi JWT verifier: %w", err)
+	}
+
 	return &AuthService{
 		authURL:     authURL,
 		serviceKey:  serviceKey,
 		httpClient:  &http.Client{Timeout: 30 * time.Second},
-		jwtVerifier: NewJWTVerifier(jwtSecret),
-	}
+		jwtVerifier: verifier,
+	}, nil
 }
 
 func (s *AuthService) VerifyJWT(token string) (domain.AuthClaims, error) {

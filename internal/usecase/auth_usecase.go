@@ -41,7 +41,10 @@ func NewAuthUsecase(
 	config *config.Config,
 ) AuthUsecase {
 	authURL := config.Supabase.URL + "/auth/v1"
-	authService := supabaseAuth.NewAuthService(authURL, supabaseServiceKey, config.Supabase.JWTSecret)
+	authService, err := supabaseAuth.NewAuthService(authURL, supabaseServiceKey)
+	if err != nil {
+		panic("Gagal inisialisasi auth service: " + err.Error())
+	}
 
 	return &authUsecase{
 		userRepo:           userRepo,

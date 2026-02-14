@@ -3,7 +3,9 @@ package supabase
 import (
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -43,24 +45,34 @@ var (
 	ErrTokenWrongAlgorithm   = errors.New("unexpected signing algorithm")
 )
 
+// JWTVerifier memverifikasi JWT Supabase menggunakan JWKS (ES256).
 type JWTVerifier struct {
-	secret []byte
+	jwks *keyfunc.JWKS
 }
 
-func NewJWTVerifier(secret string) *JWTVerifier {
-	return &JWTVerifier{secret: []byte(secret)}
+// NewJWTVerifier membuat verifier yang mengambil public key dari JWKS endpoint Supabase.
+// jwksURL: {SUPABASE_URL}/auth/v1/.well-known/jwks.json
+func NewJWTVerifier(jwksURL string) (*JWTVerifier, error) {
+	options := keyfunc.Options{
+		RefreshInterval:   time.Hour,
+		RefreshRateLimit:  5 * time.Minute,
+		RefreshTimeout:    30 * time.Second,
+		RefreshUnknownKID: true,
+	}
+
+	jwks, err := keyfunc.Get(jwksURL, options)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil JWKS dari %s: %w", jwksURL, err)
+	}
+
+	return &JWTVerifier{jwks: jwks}, nil
 }
 
 func (v *JWTVerifier) Verify(tokenString string) (*SupabaseClaims, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		&SupabaseClaims{},
-		func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("%w: %v", ErrTokenWrongAlgorithm, token.Header["alg"])
-			}
-			return v.secret, nil
-		},
+		v.jwks.Keyfunc,
 	)
 
 	if err != nil {
@@ -73,6 +85,13 @@ func (v *JWTVerifier) Verify(tokenString string) (*SupabaseClaims, error) {
 	}
 
 	return claims, nil
+}
+
+// Shutdown menghentikan goroutine background refresh JWKS.
+func (v *JWTVerifier) Shutdown() {
+	if v.jwks != nil {
+		v.jwks.EndBackground()
+	}
 }
 
 func (v *JWTVerifier) categorizeError(err error) error {

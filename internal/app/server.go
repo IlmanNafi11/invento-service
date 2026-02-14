@@ -117,7 +117,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 
 	supabaseServiceKey := cfg.Supabase.ServiceKey
 	authURL := cfg.Supabase.URL + "/auth/v1"
-	supabaseAuthService := supabaseAuth.NewAuthService(authURL, supabaseServiceKey, cfg.Supabase.JWTSecret)
+	supabaseAuthService, err := supabaseAuth.NewAuthService(authURL, supabaseServiceKey)
+	if err != nil {
+		panic("Gagal inisialisasi Supabase Auth service: " + err.Error())
+	}
 
 	casbinEnforcer, err := helper.NewCasbinEnforcer(db)
 	if err != nil {

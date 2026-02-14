@@ -38,6 +38,7 @@ type CasbinEnforcer struct {
 var _ CasbinEnforcerInterface = (*CasbinEnforcer)(nil)
 
 func NewCasbinEnforcer(db *gorm.DB) (*CasbinEnforcer, error) {
+	gormadapter.TurnOffAutoMigrate(db)
 	adapter, err := gormadapter.NewAdapterByDB(db)
 	if err != nil {
 		return nil, fmt.Errorf("gagal membuat casbin adapter: %w", err)

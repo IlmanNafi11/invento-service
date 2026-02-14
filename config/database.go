@@ -42,6 +42,8 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 	if err != nil {
 		log.Fatal("Gagal parsing konfigurasi database:", err)
 	}
+	// Disable prepared statement caching for compatibility with Supabase PgBouncer (transaction mode)
+	pgxConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 	pgxConfig.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		host, port, splitErr := net.SplitHostPort(addr)
 		if splitErr != nil {

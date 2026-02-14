@@ -2,6 +2,10 @@ package supabase
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	apperrors "fiber-boiler-plate/internal/errors"
@@ -17,21 +21,72 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const authTestSecret = "test-secret-jwt-token-with-at-least-32-chars"
+const authTestKeyID = "auth-test-key-id"
+
+type authTestJWKS struct {
+	privateKey *ecdsa.PrivateKey
+	keyID      string
+	jwksURL    string
+	server     *httptest.Server
+}
+
+func newAuthTestJWKS(t *testing.T) *authTestJWKS {
+	t.Helper()
+
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+
+	jwksPayload := map[string]interface{}{
+		"keys": []map[string]string{
+			{
+				"kty": "EC",
+				"crv": "P-256",
+				"x":   base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.X.Bytes()),
+				"y":   base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.Y.Bytes()),
+				"kid": authTestKeyID,
+				"use": "sig",
+				"alg": "ES256",
+			},
+		},
+	}
+
+	jwksBytes, err := json.Marshal(jwksPayload)
+	require.NoError(t, err)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(jwksBytes)
+	}))
+
+	t.Cleanup(server.Close)
+
+	return &authTestJWKS{
+		privateKey: privateKey,
+		keyID:      authTestKeyID,
+		jwksURL:    server.URL,
+		server:     server,
+	}
+}
 
 func newTestAuthService(t *testing.T, serverURL string) *AuthService {
 	t.Helper()
+
+	jwks := newAuthTestJWKS(t)
+	verifier, err := NewJWTVerifier(jwks.jwksURL)
+	require.NoError(t, err)
+	t.Cleanup(verifier.Shutdown)
+
 	return &AuthService{
 		authURL:     serverURL,
 		serviceKey:  "test-service-key",
 		httpClient:  &http.Client{Timeout: 5 * time.Second},
-		jwtVerifier: NewJWTVerifier(authTestSecret),
+		jwtVerifier: verifier,
 	}
 }
 
-func newTestToken(t *testing.T, secret string) string {
+func newTestToken(t *testing.T, privateKey *ecdsa.PrivateKey, keyID string) string {
 	t.Helper()
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &SupabaseClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, &SupabaseClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   "user-123",
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -39,8 +94,9 @@ func newTestToken(t *testing.T, secret string) string {
 		},
 		Email: "tester@example.com",
 	})
+	token.Header["kid"] = keyID
 
-	tokenString, err := token.SignedString([]byte(secret))
+	tokenString, err := token.SignedString(privateKey)
 	require.NoError(t, err)
 	return tokenString
 }
@@ -54,10 +110,15 @@ func parseAppError(t *testing.T, err error) *apperrors.AppError {
 }
 
 func TestNewAuthService(t *testing.T) {
-	svc := NewAuthService("http://localhost/auth/v1", "service-key", authTestSecret)
+	jwks := newAuthTestJWKS(t)
+	authURL := jwks.server.URL + "/auth/v1"
 
+	svc, err := NewAuthService(authURL, "service-key")
+
+	require.NoError(t, err)
 	require.NotNil(t, svc)
-	assert.Equal(t, "http://localhost/auth/v1", svc.authURL)
+	t.Cleanup(svc.jwtVerifier.Shutdown)
+	assert.Equal(t, authURL, svc.authURL)
 	assert.Equal(t, "service-key", svc.serviceKey)
 	require.NotNil(t, svc.httpClient)
 	assert.Equal(t, 30*time.Second, svc.httpClient.Timeout)
@@ -65,10 +126,15 @@ func TestNewAuthService(t *testing.T) {
 }
 
 func TestAuthService_VerifyJWT(t *testing.T) {
-	svc := &AuthService{jwtVerifier: NewJWTVerifier(authTestSecret)}
+	jwks := newAuthTestJWKS(t)
+	verifier, err := NewJWTVerifier(jwks.jwksURL)
+	require.NoError(t, err)
+	t.Cleanup(verifier.Shutdown)
+
+	svc := &AuthService{jwtVerifier: verifier}
 
 	t.Run("success", func(t *testing.T) {
-		token := newTestToken(t, authTestSecret)
+		token := newTestToken(t, jwks.privateKey, jwks.keyID)
 
 		claims, err := svc.VerifyJWT(token)
 		require.NoError(t, err)
