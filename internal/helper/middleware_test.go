@@ -83,6 +83,18 @@ func (m *mockUserRepository) GetByID(id string) (*domain.User, error) {
 	return nil, errors.New("not implemented")
 }
 
+func (m *mockUserRepository) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
+	return nil, 0, 0, nil
+}
+
+func (m *mockUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error) {
+	return nil, 0, nil
+}
+
+func (m *mockUserRepository) GetByIDs(userIDs []string) ([]*domain.User, error) {
+	return nil, nil
+}
+
 func (m *mockUserRepository) Create(user *domain.User) error {
 	return errors.New("not implemented")
 }

@@ -93,6 +93,18 @@ func (r *integrationUserRepository) GetByID(id string) (*domain.User, error) {
 	return &user, nil
 }
 
+func (r *integrationUserRepository) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
+	return nil, 0, 0, nil
+}
+
+func (r *integrationUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error) {
+	return nil, 0, nil
+}
+
+func (r *integrationUserRepository) GetByIDs(userIDs []string) ([]*domain.User, error) {
+	return nil, nil
+}
+
 func (r *integrationUserRepository) Create(user *domain.User) error {
 	return r.db.Create(user).Error
 }

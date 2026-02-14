@@ -9,8 +9,11 @@ import (
 type UserRepository interface {
 	GetByEmail(email string) (*domain.User, error)
 	GetByID(id string) (*domain.User, error)
+	GetByIDs(userIDs []string) ([]*domain.User, error)
 	Create(user *domain.User) error
 	GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error)
+	GetProfileWithCounts(userID string) (*domain.User, int, int, error)
+	GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error)
 	UpdateRole(userID string, roleID *int) error
 	UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error
 	Delete(userID string) error

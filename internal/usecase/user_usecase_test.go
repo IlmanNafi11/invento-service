@@ -1,9 +1,11 @@
 package usecase
 
 import (
+	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
 	"fiber-boiler-plate/internal/helper"
+	"os"
 	"testing"
 	"time"
 
@@ -25,7 +27,7 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-1"
 
@@ -48,9 +50,7 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 
 	user.Role = role
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockProjectRepo.On("CountByUserID", userID).Return(5, nil)
-	mockModulRepo.On("CountByUserID", userID).Return(10, nil)
+	mockUserRepo.On("GetProfileWithCounts", userID).Return(user, 5, 10, nil)
 
 	result, err := userUC.GetProfile(userID)
 
@@ -63,8 +63,6 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 	assert.Equal(t, 10, result.JumlahModul)
 
 	mockUserRepo.AssertExpectations(t)
-	mockProjectRepo.AssertExpectations(t)
-	mockModulRepo.AssertExpectations(t)
 }
 
 // TestGetUserByID_NotFound tests user retrieval when user doesn't exist
@@ -81,17 +79,17 @@ func TestUserUsecase_GetUserByID_NotFound(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-999"
 
-	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetProfileWithCounts", userID).Return(nil, 0, 0, gorm.ErrRecordNotFound)
 
 	result, err := userUC.GetProfile(userID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "user tidak ditemukan")
+	assert.Contains(t, err.Error(), "User tidak ditemukan")
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -110,7 +108,7 @@ func TestUserUsecase_ListUsers_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	users := []domain.UserListItem{
 		{
@@ -162,7 +160,7 @@ func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	users := []domain.UserListItem{
 		{
@@ -208,7 +206,7 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-1"
 
@@ -230,7 +228,7 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 		JenisKelamin: "Perempuan",
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil).Twice()
+	mockUserRepo.On("GetByID", userID).Return(user, nil)
 	mockUserRepo.On("UpdateProfile", userID, req.Name, mock.AnythingOfType("*string"), mock.AnythingOfType("*string")).Return(nil)
 	mockProjectRepo.On("CountByUserID", userID).Return(5, nil)
 	mockModulRepo.On("CountByUserID", userID).Return(10, nil)
@@ -239,7 +237,7 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	assert.Equal(t, "Test User", result.Name) // GetProfile returns user from GetByID mock
+	assert.Equal(t, "Updated User", result.Name)
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -258,7 +256,7 @@ func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-999"
 
@@ -272,7 +270,7 @@ func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "user tidak ditemukan")
+	assert.Contains(t, err.Error(), "User tidak ditemukan")
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -291,7 +289,7 @@ func TestUserUsecase_DeleteUser_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-1"
 
@@ -327,7 +325,7 @@ func TestUserUsecase_DeleteUser_NotFound(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-999"
 
@@ -336,7 +334,7 @@ func TestUserUsecase_DeleteUser_NotFound(t *testing.T) {
 	err := userUC.DeleteUser(userID)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "user tidak ditemukan")
+	assert.Contains(t, err.Error(), "User tidak ditemukan")
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -357,7 +355,7 @@ func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
 	// Note: Casbin enforcer is skipped in tests
 	var casbinEnforcer *helper.CasbinEnforcer
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, casbinEnforcer, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, casbinEnforcer, pathResolver, cfg)
 
 	userID := "user-1"
 
@@ -405,7 +403,7 @@ func TestUserUsecase_UpdateUserRole_Success(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-1"
 	roleName := "admin"
@@ -453,7 +451,7 @@ func TestUserUsecase_UpdateUserRole_UserNotFound(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-999"
 	roleName := "admin"
@@ -463,7 +461,7 @@ func TestUserUsecase_UpdateUserRole_UserNotFound(t *testing.T) {
 	err := userUC.UpdateUserRole(userID, roleName)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "user tidak ditemukan")
+	assert.Contains(t, err.Error(), "User tidak ditemukan")
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -482,7 +480,7 @@ func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-1"
 	roleName := "nonexistent"
@@ -504,7 +502,7 @@ func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
 	err := userUC.UpdateUserRole(userID, roleName)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "role tidak ditemukan")
+	assert.Contains(t, err.Error(), "Role tidak ditemukan")
 
 	mockUserRepo.AssertExpectations(t)
 	mockRoleRepo.AssertExpectations(t)
@@ -524,7 +522,7 @@ func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-1"
 	roleName := "admin"
@@ -571,7 +569,7 @@ func TestUserUsecase_DownloadUserFiles_EmptyIDs(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	ownerUserID := "user-1"
 	projectIDs := []string{}
@@ -598,7 +596,7 @@ func TestUserUsecase_DownloadUserFiles_UserNotFound(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	ownerUserID := "user-999"
 	projectIDs := []string{"1"}
@@ -610,7 +608,7 @@ func TestUserUsecase_DownloadUserFiles_UserNotFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
-	assert.Contains(t, err.Error(), "user tidak ditemukan")
+	assert.Contains(t, err.Error(), "User tidak ditemukan")
 
 	mockUserRepo.AssertExpectations(t)
 }
@@ -629,7 +627,7 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 	}
 	pathResolver := helper.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, nil)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	ownerUserID := "user-1"
 	projectIDs := []string{"1"}
@@ -654,7 +652,610 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
-	assert.Contains(t, err.Error(), "file tidak ditemukan")
+	assert.Contains(t, err.Error(), "File tidak ditemukan")
 
 	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUserFiles_Success(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	userID := "user-1"
+	params := domain.UserFilesQueryParams{
+		Page:  1,
+		Limit: 10,
+	}
+
+	jenisKelamin := "Laki-laki"
+	user := &domain.User{
+		ID:           userID,
+		Email:        "test@example.com",
+		Name:         "Test User",
+		JenisKelamin: &jenisKelamin,
+		IsActive:     true,
+		CreatedAt:    time.Now(),
+	}
+
+	items := []domain.UserFileItem{
+		{
+			ID:          "project-1",
+			NamaFile:    "project-file.pdf",
+			Kategori:    "project",
+			DownloadURL: "/uploads/projects/user-1/project-file.pdf",
+		},
+		{
+			ID:          "modul-1",
+			NamaFile:    "modul-file.pdf",
+			Kategori:    "modul",
+			DownloadURL: "/uploads/moduls/user-1/modul-file.pdf",
+		},
+	}
+
+	mockUserRepo.On("GetByID", userID).Return(user, nil)
+	mockUserRepo.On("GetUserFiles", userID, "", 1, 10).Return(items, 2, nil)
+
+	result, err := userUC.GetUserFiles(userID, params)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Len(t, result.Items, 2)
+	assert.Equal(t, 1, result.Pagination.Page)
+	assert.Equal(t, 10, result.Pagination.Limit)
+	assert.Equal(t, 2, result.Pagination.TotalItems)
+
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUserFiles_UserNotFound(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	userID := "user-999"
+	params := domain.UserFilesQueryParams{
+		Page:  1,
+		Limit: 10,
+	}
+
+	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+
+	result, err := userUC.GetUserFiles(userID, params)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "User tidak ditemukan")
+
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUserFiles_RepoError(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	userID := "user-1"
+	params := domain.UserFilesQueryParams{
+		Page:  1,
+		Limit: 10,
+	}
+
+	jenisKelamin := "Laki-laki"
+	user := &domain.User{
+		ID:           userID,
+		Email:        "test@example.com",
+		Name:         "Test User",
+		JenisKelamin: &jenisKelamin,
+		IsActive:     true,
+		CreatedAt:    time.Now(),
+	}
+
+	mockUserRepo.On("GetByID", userID).Return(user, nil)
+	mockUserRepo.On("GetUserFiles", userID, "", 1, 10).Return(nil, 0, errors.New("db error"))
+
+	result, err := userUC.GetUserFiles(userID, params)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
+
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUsersForRole_Success(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	roleID := uint(1)
+	role := &domain.Role{
+		ID:       roleID,
+		NamaRole: "admin",
+	}
+
+	users := []domain.UserListItem{
+		{
+			ID:         "user-1",
+			Email:      "admin@example.com",
+			Role:       "admin",
+			DibuatPada: time.Now(),
+		},
+	}
+
+	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
+	mockUserRepo.On("GetByRoleID", roleID).Return(users, nil)
+
+	result, err := userUC.GetUsersForRole(roleID)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Len(t, result, 1)
+	assert.Equal(t, "user-1", result[0].ID)
+
+	mockRoleRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUsersForRole_RoleNotFound(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	roleID := uint(999)
+
+	mockRoleRepo.On("GetByID", roleID).Return(nil, gorm.ErrRecordNotFound)
+
+	result, err := userUC.GetUsersForRole(roleID)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "Role tidak ditemukan")
+
+	mockRoleRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUsersForRole_InternalError(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	roleID := uint(1)
+	role := &domain.Role{
+		ID:       roleID,
+		NamaRole: "admin",
+	}
+
+	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
+	mockUserRepo.On("GetByRoleID", roleID).Return(nil, errors.New("db error"))
+
+	result, err := userUC.GetUsersForRole(roleID)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
+
+	mockRoleRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_BulkAssignRole_Success(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	roleID := uint(1)
+	userIDs := []string{"user-1", "user-2"}
+	role := &domain.Role{
+		ID:       roleID,
+		NamaRole: "admin",
+	}
+
+	users := []*domain.User{
+		{
+			ID:    "user-1",
+			Email: "user1@example.com",
+			Name:  "User 1",
+		},
+		{
+			ID:    "user-2",
+			Email: "user2@example.com",
+			Name:  "User 2",
+		},
+	}
+
+	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
+	mockUserRepo.On("GetByIDs", userIDs).Return(users, nil)
+	mockUserRepo.On("BulkUpdateRole", userIDs, roleID).Return(nil)
+
+	err := userUC.BulkAssignRole(userIDs, roleID)
+
+	assert.NoError(t, err)
+
+	mockRoleRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_BulkAssignRole_RoleNotFound(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	roleID := uint(999)
+	userIDs := []string{"user-1", "user-2"}
+
+	mockRoleRepo.On("GetByID", roleID).Return(nil, gorm.ErrRecordNotFound)
+
+	err := userUC.BulkAssignRole(userIDs, roleID)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Role tidak ditemukan")
+
+	mockRoleRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_BulkAssignRole_UserFetchError(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	roleID := uint(1)
+	userIDs := []string{"user-1", "user-2"}
+	role := &domain.Role{
+		ID:       roleID,
+		NamaRole: "admin",
+	}
+
+	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
+	mockUserRepo.On("GetByIDs", userIDs).Return(nil, errors.New("db error"))
+
+	err := userUC.BulkAssignRole(userIDs, roleID)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
+
+	mockRoleRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_BulkAssignRole_InternalError(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	roleID := uint(1)
+	userIDs := []string{"user-1", "user-2"}
+	role := &domain.Role{
+		ID:       roleID,
+		NamaRole: "admin",
+	}
+
+	users := []*domain.User{
+		{
+			ID:    "user-1",
+			Email: "user1@example.com",
+			Name:  "User 1",
+		},
+		{
+			ID:    "user-2",
+			Email: "user2@example.com",
+			Name:  "User 2",
+		},
+	}
+
+	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
+	mockUserRepo.On("GetByIDs", userIDs).Return(users, nil)
+	mockUserRepo.On("BulkUpdateRole", userIDs, roleID).Return(errors.New("update error"))
+
+	err := userUC.BulkAssignRole(userIDs, roleID)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
+
+	mockRoleRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUserPermissions_UserNotFound(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	userID := "user-999"
+
+	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+
+	result, err := userUC.GetUserPermissions(userID)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "User tidak ditemukan")
+
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetProfile_InternalError(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	userID := "user-1"
+
+	mockUserRepo.On("GetProfileWithCounts", userID).Return(nil, 0, 0, errors.New("db error"))
+
+	result, err := userUC.GetProfile(userID)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
+
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_UpdateProfile_RepoUpdateError(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	userID := "user-1"
+	jenisKelamin := "Laki-laki"
+	user := &domain.User{
+		ID:           userID,
+		Email:        "test@example.com",
+		Name:         "Test User",
+		JenisKelamin: &jenisKelamin,
+		IsActive:     true,
+		CreatedAt:    time.Now(),
+	}
+
+	req := domain.UpdateProfileRequest{
+		Name:         "Updated User",
+		JenisKelamin: "Perempuan",
+	}
+
+	mockUserRepo.On("GetByID", userID).Return(user, nil)
+	mockUserRepo.On("UpdateProfile", userID, req.Name, mock.AnythingOfType("*string"), (*string)(nil)).Return(errors.New("update failed"))
+
+	result, err := userUC.UpdateProfile(userID, req, nil)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
+
+	mockUserRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_DownloadUserFiles_Success(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	tmpFile, err := os.CreateTemp("", "download-user-files-*.txt")
+	assert.NoError(t, err)
+	defer os.Remove(tmpFile.Name())
+	tmpFile.Close()
+
+	ownerUserID := "user-1"
+	projectIDs := []string{"1"}
+	modulIDs := []string{}
+	projectIDsUint := []uint{1}
+
+	jenisKelamin := "Laki-laki"
+	user := &domain.User{
+		ID:           ownerUserID,
+		Email:        "test@example.com",
+		Name:         "Test User",
+		JenisKelamin: &jenisKelamin,
+		IsActive:     true,
+		CreatedAt:    time.Now(),
+	}
+
+	projects := []domain.Project{
+		{
+			ID:       1,
+			PathFile: tmpFile.Name(),
+		},
+	}
+
+	mockUserRepo.On("GetByID", ownerUserID).Return(user, nil)
+	mockProjectRepo.On("GetByIDs", projectIDsUint, ownerUserID).Return(projects, nil)
+	mockModulRepo.On("GetByIDs", modulIDs, ownerUserID).Return([]domain.Modul{}, nil)
+
+	result, err := userUC.DownloadUserFiles(ownerUserID, projectIDs, modulIDs)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
+	assert.Equal(t, tmpFile.Name(), result)
+
+	mockUserRepo.AssertExpectations(t)
+	mockProjectRepo.AssertExpectations(t)
+	mockModulRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_UpdateUserRole_RepoUpdateError(t *testing.T) {
+	mockUserRepo := new(MockUserRepository)
+	mockRoleRepo := new(MockRoleRepository)
+	mockProjectRepo := new(MockProjectRepository)
+	mockModulRepo := new(MockModulRepository)
+
+	cfg := &config.Config{
+		App: config.AppConfig{
+			Env: "development",
+		},
+	}
+	pathResolver := helper.NewPathResolver(cfg)
+
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+
+	userID := "user-1"
+	roleName := "admin"
+	roleID := int(2)
+
+	jenisKelamin := "Laki-laki"
+	user := &domain.User{
+		ID:           userID,
+		Email:        "test@example.com",
+		Name:         "Test User",
+		JenisKelamin: &jenisKelamin,
+		RoleID:       intPtr(1),
+		IsActive:     true,
+		CreatedAt:    time.Now(),
+	}
+
+	role := &domain.Role{
+		ID:       uint(roleID),
+		NamaRole: roleName,
+	}
+
+	mockUserRepo.On("GetByID", userID).Return(user, nil)
+	mockRoleRepo.On("GetByName", roleName).Return(role, nil)
+	mockUserRepo.On("UpdateRole", userID, &roleID).Return(errors.New("update failed"))
+
+	err := userUC.UpdateUserRole(userID, roleName)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
+
+	mockUserRepo.AssertExpectations(t)
+	mockRoleRepo.AssertExpectations(t)
 }

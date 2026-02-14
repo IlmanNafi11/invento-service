@@ -6,7 +6,6 @@ import (
 	"fiber-boiler-plate/internal/helper"
 	"io"
 	"mime/multipart"
-	"os"
 	"testing"
 	"time"
 
@@ -224,12 +223,6 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 		assert.Nil(t, result)
 	})
 
-	t.Run("Non-fileheader type returns nil", func(t *testing.T) {
-		result, err := userHelper.SaveProfilePhoto("string", "1", nil)
-		assert.NoError(t, err)
-		assert.Nil(t, result)
-	})
-
 	t.Run("Valid image file saves successfully", func(t *testing.T) {
 		// Create a pipe for multipart writer
 		pr, pw := io.Pipe()
@@ -287,48 +280,6 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.Contains(t, err.Error(), "2MB")
-	})
-}
-
-func TestUserHelper_DeleteProfilePhoto(t *testing.T) {
-	tempDir := t.TempDir()
-	cfg := &config.Config{
-		Upload: config.UploadConfig{
-			PathDevelopment: tempDir,
-		},
-	}
-	pathResolver := helper.NewPathResolver(cfg)
-	userHelper := helper.NewUserHelper(pathResolver, cfg)
-
-	t.Run("Nil photo path returns no error", func(t *testing.T) {
-		err := userHelper.DeleteProfilePhoto(nil)
-		assert.NoError(t, err)
-	})
-
-	t.Run("Empty photo path returns no error", func(t *testing.T) {
-		emptyPath := ""
-		err := userHelper.DeleteProfilePhoto(&emptyPath)
-		assert.NoError(t, err)
-	})
-
-	t.Run("Non-existent file returns no error", func(t *testing.T) {
-		nonExistentPath := "/tmp/non/existent/file.jpg"
-		err := userHelper.DeleteProfilePhoto(&nonExistentPath)
-		assert.NoError(t, err)
-	})
-
-	t.Run("Existing file is deleted successfully", func(t *testing.T) {
-		// Create a temporary file
-		tempFile, err := os.CreateTemp(tempDir, "test_*.jpg")
-		require.NoError(t, err)
-		tempFile.Close()
-
-		filePath := tempFile.Name()
-		err = userHelper.DeleteProfilePhoto(&filePath)
-
-		assert.NoError(t, err)
-		_, err = os.Stat(filePath)
-		assert.True(t, os.IsNotExist(err))
 	})
 }
 

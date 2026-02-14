@@ -59,7 +59,7 @@ func (m *MockUserUsecase) GetProfile(userID string) (*domain.ProfileData, error)
 	return args.Get(0).(*domain.ProfileData), args.Error(1)
 }
 
-func (m *MockUserUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error) {
+func (m *MockUserUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*domain.ProfileData, error) {
 	args := m.Called(userID, req, fotoProfil)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -485,7 +485,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 		JenisKelamin: "Perempuan",
 	}
 
-	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, nil).Return(expectedData, nil)
+	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(expectedData, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "user")
@@ -815,7 +815,7 @@ func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, nil).Return(nil, appErr)
+	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(nil, appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "user")
@@ -1022,6 +1022,292 @@ func TestUserController_DownloadUserFiles_InternalError(t *testing.T) {
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/user/1/download", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_GetProfile_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := setupTestAppWithAuthForUser(controller)
+	app.Get("/api/v1/profile", controller.GetProfile)
+
+	mockUserUC.On("GetProfile", "00000000-0000-0000-0000-000000000001").Return(nil, errors.New("database error"))
+
+	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
+	req := httptest.NewRequest("GET", "/api/v1/profile", nil)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-Test-User-ID", "1")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_GetProfile_NotFound(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := setupTestAppWithAuthForUser(controller)
+	app.Get("/api/v1/profile", controller.GetProfile)
+
+	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
+	mockUserUC.On("GetProfile", "00000000-0000-0000-0000-000000000001").Return(nil, appErr)
+
+	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
+	req := httptest.NewRequest("GET", "/api/v1/profile", nil)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-Test-User-ID", "1")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_GetUserPermissions_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := setupTestAppWithAuthForUser(controller)
+	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
+
+	mockUserUC.On("GetUserPermissions", "00000000-0000-0000-0000-000000000001").Return(nil, errors.New("db error"))
+
+	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
+	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-Test-User-ID", "1")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_GetUserPermissions_NotFound(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := setupTestAppWithAuthForUser(controller)
+	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
+
+	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
+	mockUserUC.On("GetUserPermissions", "00000000-0000-0000-0000-000000000001").Return(nil, appErr)
+
+	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
+	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-Test-User-ID", "1")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_GetUsersForRole_Success(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
+
+	expectedData := []domain.UserListItem{
+		{
+			ID:         "00000000-0000-0000-0000-000000000001",
+			Email:      "admin@example.com",
+			Role:       "admin",
+			DibuatPada: time.Now(),
+		},
+	}
+
+	mockUserUC.On("GetUsersForRole", uint(1)).Return(expectedData, nil)
+
+	resp := app_testing.MakeRequest(app, "GET", "/api/v1/role/1/users", nil, "")
+
+	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+	var response map[string]interface{}
+	err := json.NewDecoder(resp.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "Daftar user untuk role berhasil diambil", response["message"])
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_GetUsersForRole_NotFound(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
+
+	appErr := apperrors.NewNotFoundError("Role tidak ditemukan")
+	mockUserUC.On("GetUsersForRole", uint(999)).Return(nil, appErr)
+
+	resp := app_testing.MakeRequest(app, "GET", "/api/v1/role/999/users", nil, "")
+
+	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_GetUsersForRole_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
+
+	mockUserUC.On("GetUsersForRole", uint(1)).Return(nil, errors.New("db error"))
+
+	resp := app_testing.MakeRequest(app, "GET", "/api/v1/role/1/users", nil, "")
+
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_BulkAssignRole_Success(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
+
+	reqBody := domain.BulkAssignRoleRequest{
+		UserIDs: []string{"user-1", "user-2"},
+	}
+
+	mockUserUC.On("BulkAssignRole", []string{"user-1", "user-2"}, uint(1)).Return(nil)
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("POST", "/api/v1/role/1/users/bulk", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+
+	var response map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "Role berhasil ditetapkan ke user", response["message"])
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_BulkAssignRole_NotFound(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
+
+	reqBody := domain.BulkAssignRoleRequest{
+		UserIDs: []string{"user-1", "user-2"},
+	}
+
+	appErr := apperrors.NewNotFoundError("Role tidak ditemukan")
+	mockUserUC.On("BulkAssignRole", []string{"user-1", "user-2"}, uint(999)).Return(appErr)
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("POST", "/api/v1/role/999/users/bulk", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_BulkAssignRole_ValidationError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
+
+	reqBody := domain.BulkAssignRoleRequest{
+		UserIDs: []string{},
+	}
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("POST", "/api/v1/role/1/users/bulk", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
+}
+
+func TestUserController_BulkAssignRole_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := fiber.New()
+	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
+
+	reqBody := domain.BulkAssignRoleRequest{
+		UserIDs: []string{"user-1", "user-2"},
+	}
+
+	mockUserUC.On("BulkAssignRole", []string{"user-1", "user-2"}, uint(1)).Return(errors.New("db error"))
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("POST", "/api/v1/role/1/users/bulk", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
+
+	mockUserUC.AssertExpectations(t)
+}
+
+func TestUserController_UpdateProfile_InternalError(t *testing.T) {
+	mockUserUC := new(MockUserUsecase)
+	controller := httpcontroller.NewUserController(mockUserUC)
+
+	app := setupTestAppWithAuthForUser(controller)
+	app.Put("/api/v1/profile", controller.UpdateProfile)
+
+	reqBody := domain.UpdateProfileRequest{
+		Name:         "Updated User",
+		JenisKelamin: "Perempuan",
+	}
+
+	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(nil, errors.New("db error"))
+
+	bodyBytes, _ := json.Marshal(reqBody)
+	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "user")
+	req := httptest.NewRequest("PUT", "/api/v1/profile", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("X-Test-User-ID", "1")
 
 	resp, err := app.Test(req)
 

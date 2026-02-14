@@ -83,6 +83,18 @@ func (m *authTestUserRepo) GetByID(id string) (*domain.User, error) {
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
+func (m *authTestUserRepo) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
+	return nil, 0, 0, nil
+}
+
+func (m *authTestUserRepo) GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error) {
+	return nil, 0, nil
+}
+
+func (m *authTestUserRepo) GetByIDs(userIDs []string) ([]*domain.User, error) {
+	return nil, nil
+}
+
 func (m *authTestUserRepo) Create(user *domain.User) error {
 	args := m.Called(user)
 	return args.Error(0)

@@ -65,17 +65,12 @@ func (uh *UserHelper) AggregateUserPermissions(permissions [][]string) []domain.
 	return result
 }
 
-func (uh *UserHelper) SaveProfilePhoto(fotoProfil interface{}, userID string, currentPhotoPath *string) (*string, error) {
+func (uh *UserHelper) SaveProfilePhoto(fotoProfil *multipart.FileHeader, userID string, currentPhotoPath *string) (*string, error) {
 	if fotoProfil == nil {
 		return nil, nil
 	}
 
-	fileHeader, ok := fotoProfil.(*multipart.FileHeader)
-	if !ok {
-		return nil, nil
-	}
-
-	if err := ValidateImageFile(fileHeader); err != nil {
+	if err := ValidateImageFile(fotoProfil); err != nil {
 		return nil, err
 	}
 
@@ -90,20 +85,13 @@ func (uh *UserHelper) SaveProfilePhoto(fotoProfil interface{}, userID string, cu
 		return nil, errors.New("gagal membuat direktori profil")
 	}
 
-	ext := GetFileExtension(fileHeader.Filename)
+	ext := GetFileExtension(fotoProfil.Filename)
 	filename := fmt.Sprintf("profil%s", ext)
 	destPath := uh.pathResolver.GetProfilFilePath(userID, filename)
 
-	if err := SaveUploadedFile(fileHeader, destPath); err != nil {
+	if err := SaveUploadedFile(fotoProfil, destPath); err != nil {
 		return nil, errors.New("gagal menyimpan foto profil")
 	}
 
 	return &destPath, nil
-}
-
-func (uh *UserHelper) DeleteProfilePhoto(photoPath *string) error {
-	if photoPath != nil && *photoPath != "" {
-		return DeleteFile(*photoPath)
-	}
-	return nil
 }

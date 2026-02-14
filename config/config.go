@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
-	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -77,8 +76,6 @@ func LoadConfig() *Config {
 		log.Println("Tidak dapat memuat file .env, menggunakan environment variables")
 	}
 
-	viper.AutomaticEnv()
-
 	config := &Config{
 		App: AppConfig{
 			Name:           getEnv("APP_NAME", "Fiber Boilerplate"),
@@ -89,10 +86,10 @@ func LoadConfig() *Config {
 		},
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "3306"),
-			User:     getEnv("DB_USER", "root"),
-			Password: getEnvAllowEmpty("DB_PASSWORD", "admin"),
-			Name:     getEnv("DB_NAME", "fiber_boilerplate"),
+			Port:     getEnv("DB_PORT", "5432"),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnvAllowEmpty("DB_PASSWORD", ""),
+			Name:     getEnv("DB_NAME", "postgres"),
 			SeedData: getEnvAsBool("DB_SEED_DATA", false),
 		},
 		Upload: UploadConfig{
@@ -162,13 +159,6 @@ func getEnvAsInt64(key string, defaultValue int64) int64 {
 		return value
 	}
 	return defaultValue
-}
-
-func maskToken(token string) string {
-	if len(token) <= 10 {
-		return "***"
-	}
-	return token[:10] + "..."
 }
 
 func getEnvAllowEmpty(key, defaultValue string) string {

@@ -145,7 +145,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	baseCtrl := base.NewBaseController(cfg.Supabase.URL, casbinEnforcer)
 	roleController := http.NewRoleController(roleUsecase, baseCtrl)
 
-	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, projectRepo, modulRepo, casbinEnforcer, pathResolver, cfg, db)
+	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, projectRepo, modulRepo, casbinEnforcer, pathResolver, cfg)
 	userController := http.NewUserController(userUsecase)
 
 	projectUsecase := usecase.NewProjectUsecase(projectRepo, fileManager)

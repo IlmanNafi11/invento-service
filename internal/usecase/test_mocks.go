@@ -81,6 +81,30 @@ func (m *MockUserRepository) GetByID(id string) (*domain.User, error) {
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
+func (m *MockUserRepository) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
+	args := m.Called(userID)
+	if args.Get(0) != nil {
+		return args.Get(0).(*domain.User), args.Int(1), args.Int(2), args.Error(3)
+	}
+	return nil, args.Int(1), args.Int(2), args.Error(3)
+}
+
+func (m *MockUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error) {
+	args := m.Called(userID, search, page, limit)
+	if args.Get(0) != nil {
+		return args.Get(0).([]domain.UserFileItem), args.Int(1), args.Error(2)
+	}
+	return nil, args.Int(1), args.Error(2)
+}
+
+func (m *MockUserRepository) GetByIDs(userIDs []string) ([]*domain.User, error) {
+	args := m.Called(userIDs)
+	if args.Get(0) != nil {
+		return args.Get(0).([]*domain.User), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func (m *MockUserRepository) Create(user *domain.User) error {
 	args := m.Called(user)
 	return args.Error(0)

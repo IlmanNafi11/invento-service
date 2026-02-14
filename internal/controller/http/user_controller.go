@@ -53,6 +53,10 @@ func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 
 	result, err := ctrl.userUsecase.GetUserList(params)
 	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
+		}
 		return ctrl.SendInternalError(c)
 	}
 
@@ -191,6 +195,10 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 
 	result, err := ctrl.userUsecase.GetProfile(userID)
 	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
+		}
 		return ctrl.SendInternalError(c)
 	}
 
@@ -226,16 +234,9 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 		return nil // validation error response already sent
 	}
 
-	fotoProfil, errFile := c.FormFile("foto_profil")
+	fotoProfil, _ := c.FormFile("foto_profil")
 
-	var fotoProfilToPass interface{}
-	if errFile == nil && fotoProfil != nil {
-		fotoProfilToPass = fotoProfil
-	} else {
-		fotoProfilToPass = nil
-	}
-
-	result, err := ctrl.userUsecase.UpdateProfile(userID, req, fotoProfilToPass)
+	result, err := ctrl.userUsecase.UpdateProfile(userID, req, fotoProfil)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -266,6 +267,10 @@ func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 
 	result, err := ctrl.userUsecase.GetUserPermissions(userID)
 	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return helper.SendAppError(c, appErr)
+		}
 		return ctrl.SendInternalError(c)
 	}
 

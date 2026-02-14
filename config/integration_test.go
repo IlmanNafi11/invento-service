@@ -226,8 +226,8 @@ LOG_FORMAT=json
 		assert.Equal(t, "3000", cfg.App.Port)
 		assert.Equal(t, "development", cfg.App.Env)
 		assert.Equal(t, "localhost", cfg.Database.Host)
-		assert.Equal(t, "3306", cfg.Database.Port)
-		assert.Equal(t, "root", cfg.Database.User)
+		assert.Equal(t, "5432", cfg.Database.Port)
+		assert.Equal(t, "postgres", cfg.Database.User)
 		assert.Equal(t, "INFO", cfg.Logging.Level)
 		assert.Equal(t, "text", cfg.Logging.Format)
 	})
@@ -338,7 +338,7 @@ func TestIntegrationConfigWithSQLite(t *testing.T) {
 
 		// Test basic operations
 		type TestTable struct {
-			ID   uint   `gorm:"primarykey"`
+			ID   uint `gorm:"primarykey"`
 			Data string
 		}
 
@@ -421,23 +421,6 @@ func TestIntegrationConfigHelperFunctions(t *testing.T) {
 		os.Unsetenv("TEST_BOOL_VAR")
 	})
 
-	t.Run("MaskToken", func(t *testing.T) {
-		// Test with long token
-		longToken := "this_is_a_very_long_token_that_should_be_masked"
-		masked := maskToken(longToken)
-		assert.Equal(t, "this_is_a_...", masked)
-		assert.LessOrEqual(t, len(masked), 13)
-
-		// Test with short token
-		shortToken := "short"
-		masked = maskToken(shortToken)
-		assert.Equal(t, "***", masked)
-
-		// Test with empty token
-		emptyToken := ""
-		masked = maskToken(emptyToken)
-		assert.Equal(t, "***", masked)
-	})
 }
 
 // TestIntegrationDatabaseConnectionWithConfig tests database connection using config

@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fiber-boiler-plate/config"
 	"fiber-boiler-plate/internal/domain"
+	apperrors "fiber-boiler-plate/internal/errors"
 	"fiber-boiler-plate/internal/helper"
 	"fiber-boiler-plate/internal/usecase/repo"
+	"mime/multipart"
 	"strconv"
 
 	"gorm.io/gorm"
@@ -17,7 +19,7 @@ type UserUsecase interface {
 	DeleteUser(userID string) error
 	GetUserFiles(userID string, params domain.UserFilesQueryParams) (*domain.UserFilesData, error)
 	GetProfile(userID string) (*domain.ProfileData, error)
-	UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error)
+	UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*domain.ProfileData, error)
 	GetUserPermissions(userID string) ([]domain.UserPermissionItem, error)
 	DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error)
 	GetUsersForRole(roleID uint) ([]domain.UserListItem, error)
@@ -34,7 +36,6 @@ type userUsecase struct {
 	downloadHelper *helper.DownloadHelper
 	pathResolver   *helper.PathResolver
 	config         *config.Config
-	db             *gorm.DB
 }
 
 func NewUserUsecase(
@@ -45,7 +46,6 @@ func NewUserUsecase(
 	casbinEnforcer *helper.CasbinEnforcer,
 	pathResolver *helper.PathResolver,
 	cfg *config.Config,
-	db *gorm.DB,
 ) UserUsecase {
 	return &userUsecase{
 		userRepo:       userRepo,
@@ -57,7 +57,6 @@ func NewUserUsecase(
 		downloadHelper: helper.NewDownloadHelper(pathResolver),
 		pathResolver:   pathResolver,
 		config:         cfg,
-		db:             db,
 	}
 }
 
@@ -68,7 +67,7 @@ func (uc *userUsecase) GetUserList(params domain.UserListQueryParams) (*domain.U
 
 	users, total, err := uc.userRepo.GetAll(params.Search, params.FilterRole, params.Page, params.Limit)
 	if err != nil {
-		return nil, errors.New("gagal mengambil daftar user")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	pagination := helper.CalculatePagination(params.Page, params.Limit, total)
@@ -83,17 +82,17 @@ func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("user tidak ditemukan")
+			return apperrors.NewNotFoundError("User")
 		}
-		return errors.New("gagal mengambil data user")
+		return apperrors.NewInternalError(err)
 	}
 
 	role, err := uc.roleRepo.GetByName(roleName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("role tidak ditemukan")
+			return apperrors.NewNotFoundError("Role")
 		}
-		return errors.New("gagal mengambil data role")
+		return apperrors.NewInternalError(err)
 	}
 
 	roleID := int(role.ID)
@@ -103,21 +102,21 @@ func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
 
 	if uc.casbinEnforcer != nil && user.Role != nil {
 		if err := uc.casbinEnforcer.RemoveRoleForUser(userID, user.Role.NamaRole); err != nil {
-			return errors.New("gagal menghapus role lama dari casbin")
+			return apperrors.NewInternalError(err)
 		}
 	}
 
 	if err := uc.userRepo.UpdateRole(userID, &roleID); err != nil {
-		return errors.New("gagal memperbarui role user")
+		return apperrors.NewInternalError(err)
 	}
 
 	if uc.casbinEnforcer != nil {
 		if err := uc.casbinEnforcer.AddRoleForUser(userID, roleName); err != nil {
-			return errors.New("gagal menambahkan role baru ke casbin")
+			return apperrors.NewInternalError(err)
 		}
 
 		if err := uc.casbinEnforcer.SavePolicy(); err != nil {
-			return errors.New("gagal menyimpan policy casbin")
+			return apperrors.NewInternalError(err)
 		}
 	}
 
@@ -128,13 +127,13 @@ func (uc *userUsecase) DeleteUser(userID string) error {
 	_, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("user tidak ditemukan")
+			return apperrors.NewNotFoundError("User")
 		}
-		return errors.New("gagal mengambil data user")
+		return apperrors.NewInternalError(err)
 	}
 
 	if err := uc.userRepo.Delete(userID); err != nil {
-		return errors.New("gagal menghapus user")
+		return apperrors.NewInternalError(err)
 	}
 
 	return nil
@@ -144,134 +143,53 @@ func (uc *userUsecase) GetUserFiles(userID string, params domain.UserFilesQueryP
 	_, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("User")
 		}
-		return nil, errors.New("gagal mengambil data user")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	normalizedParams := helper.NormalizePaginationParams(params.Page, params.Limit)
 	params.Page = normalizedParams.Page
 	params.Limit = normalizedParams.Limit
 
-	var allFiles []domain.UserFileItem
-	var projectFiles []struct {
-		ID          uint
-		NamaFile    string
-		Kategori    string
-		DownloadURL string
+	items, total, err := uc.userRepo.GetUserFiles(userID, params.Search, params.Page, params.Limit)
+	if err != nil {
+		return nil, apperrors.NewInternalError(err)
 	}
 
-	search := params.Search
-	if err := uc.db.Raw(`
-		SELECT 
-			p.id,
-			p.nama_project as nama_file,
-			'Project' as kategori,
-			p.path_file as download_url
-		FROM projects p
-		WHERE p.user_id = ?
-			AND (? = '' OR LOWER(p.nama_project) LIKE '%' || LOWER(?) || '%')
-		ORDER BY p.updated_at DESC
-	`, userID, search, search).Scan(&projectFiles).Error; err != nil {
-		return nil, errors.New("gagal mengambil data project")
-	}
-
-	for _, pf := range projectFiles {
-		normalizedURL := pf.DownloadURL
-		if normalizedPath := uc.pathResolver.ConvertToAPIPath(&pf.DownloadURL); normalizedPath != nil {
-			normalizedURL = *normalizedPath
+	for i := range items {
+		if normalizedPath := uc.pathResolver.ConvertToAPIPath(&items[i].DownloadURL); normalizedPath != nil {
+			items[i].DownloadURL = *normalizedPath
 		}
-		allFiles = append(allFiles, domain.UserFileItem{
-			ID:          strconv.FormatUint(uint64(pf.ID), 10),
-			NamaFile:    pf.NamaFile,
-			Kategori:    pf.Kategori,
-			DownloadURL: normalizedURL,
-		})
 	}
 
-	var modulFiles []struct {
-		ID          uint
-		NamaFile    string
-		Kategori    string
-		DownloadURL string
-	}
-
-	if err := uc.db.Raw(`
-		SELECT 
-			m.id,
-			m.file_name as nama_file,
-			'Modul' as kategori,
-			m.file_path as download_url
-		FROM moduls m
-		WHERE m.user_id = ?
-			AND (? = '' OR LOWER(m.file_name) LIKE '%' || LOWER(?) || '%')
-		ORDER BY m.updated_at DESC
-	`, userID, search, search).Scan(&modulFiles).Error; err != nil {
-		return nil, errors.New("gagal mengambil data modul")
-	}
-
-	for _, mf := range modulFiles {
-		normalizedURL := mf.DownloadURL
-		if normalizedPath := uc.pathResolver.ConvertToAPIPath(&mf.DownloadURL); normalizedPath != nil {
-			normalizedURL = *normalizedPath
-		}
-		allFiles = append(allFiles, domain.UserFileItem{
-			ID:          strconv.FormatUint(uint64(mf.ID), 10),
-			NamaFile:    mf.NamaFile,
-			Kategori:    mf.Kategori,
-			DownloadURL: normalizedURL,
-		})
-	}
-
-	total := len(allFiles)
-	offset := (params.Page - 1) * params.Limit
-	end := offset + params.Limit
-
-	if offset > total {
-		offset = total
-	}
-	if end > total {
-		end = total
-	}
-
-	paginatedFiles := allFiles[offset:end]
 	pagination := helper.CalculatePagination(params.Page, params.Limit, total)
 
 	return &domain.UserFilesData{
-		Items:      paginatedFiles,
+		Items:      items,
 		Pagination: pagination,
 	}, nil
 }
 
 func (uc *userUsecase) GetProfile(userID string) (*domain.ProfileData, error) {
-	user, err := uc.userRepo.GetByID(userID)
+	user, jumlahProject, jumlahModul, err := uc.userRepo.GetProfileWithCounts(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("User")
 		}
-		return nil, errors.New("gagal mengambil data user")
-	}
-
-	jumlahProject, err := uc.projectRepo.CountByUserID(userID)
-	if err != nil {
-		jumlahProject = 0
-	}
-
-	jumlahModul, err := uc.modulRepo.CountByUserID(userID)
-	if err != nil {
-		jumlahModul = 0
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
-func (uc *userUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil interface{}) (*domain.ProfileData, error) {
+func (uc *userUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*domain.ProfileData, error) {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("User")
 		}
-		return nil, errors.New("gagal mengambil data user")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	var jenisKelaminPtr *string
@@ -281,23 +199,34 @@ func (uc *userUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequ
 
 	fotoProfilPath, err := uc.userHelper.SaveProfilePhoto(fotoProfil, userID, user.FotoProfil)
 	if err != nil {
-		return nil, err
+		return nil, apperrors.NewValidationError(err.Error(), err)
 	}
 
 	if err := uc.userRepo.UpdateProfile(userID, req.Name, jenisKelaminPtr, fotoProfilPath); err != nil {
-		return nil, errors.New("gagal memperbarui profil")
+		return nil, apperrors.NewInternalError(err)
 	}
 
-	return uc.GetProfile(userID)
+	user.Name = req.Name
+	if jenisKelaminPtr != nil {
+		user.JenisKelamin = jenisKelaminPtr
+	}
+	if fotoProfilPath != nil {
+		user.FotoProfil = fotoProfilPath
+	}
+
+	jumlahProject, _ := uc.projectRepo.CountByUserID(userID)
+	jumlahModul, _ := uc.modulRepo.CountByUserID(userID)
+
+	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
 func (uc *userUsecase) GetUserPermissions(userID string) ([]domain.UserPermissionItem, error) {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("User")
 		}
-		return nil, errors.New("gagal mengambil data user")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	if user.Role == nil {
@@ -311,7 +240,7 @@ func (uc *userUsecase) GetUserPermissions(userID string) ([]domain.UserPermissio
 
 	permissions, err := uc.casbinEnforcer.GetPermissionsForRole(user.Role.NamaRole)
 	if err != nil {
-		return nil, errors.New("gagal mengambil permissions user")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	return uc.userHelper.AggregateUserPermissions(permissions), nil
@@ -325,9 +254,9 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 	_, err := uc.userRepo.GetByID(ownerUserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", errors.New("user tidak ditemukan")
+			return "", apperrors.NewNotFoundError("User")
 		}
-		return "", errors.New("gagal mengambil data user")
+		return "", apperrors.NewInternalError(err)
 	}
 
 	// Convert string IDs to uint for repository calls
@@ -335,33 +264,41 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 	for _, idStr := range projectIDs {
 		id, err := strconv.ParseUint(idStr, 10, 32)
 		if err != nil {
-			return "", errors.New("invalid project ID format")
+			return "", apperrors.NewValidationError("Format project ID tidak valid", err)
 		}
 		projectIDsUint = append(projectIDsUint, uint(id))
 	}
 
 	projects, err := uc.projectRepo.GetByIDs(projectIDsUint, ownerUserID)
 	if err != nil {
-		return "", errors.New("gagal mengambil data project")
+		return "", apperrors.NewInternalError(err)
 	}
 
 	moduls, err := uc.modulRepo.GetByIDs(modulIDs, ownerUserID)
 	if err != nil {
-		return "", errors.New("gagal mengambil data modul")
+		return "", apperrors.NewInternalError(err)
 	}
 
 	if len(projects)+len(moduls) == 0 {
-		return "", errors.New("file tidak ditemukan")
+		return "", apperrors.NewNotFoundError("File")
 	}
 
 	filePaths, _, err := uc.downloadHelper.PrepareFilesForDownload(projects, moduls)
 	if err != nil {
-		return "", err
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return "", appErr
+		}
+		return "", apperrors.NewInternalError(err)
 	}
 
 	zipPath, err := uc.downloadHelper.CreateDownloadZip(filePaths, ownerUserID)
 	if err != nil {
-		return "", err
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return "", appErr
+		}
+		return "", apperrors.NewInternalError(err)
 	}
 
 	return zipPath, nil
@@ -371,14 +308,14 @@ func (uc *userUsecase) GetUsersForRole(roleID uint) ([]domain.UserListItem, erro
 	_, err := uc.roleRepo.GetByID(roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("role tidak ditemukan")
+			return nil, apperrors.NewNotFoundError("Role")
 		}
-		return nil, errors.New("gagal mengambil data role")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	users, err := uc.userRepo.GetByRoleID(roleID)
 	if err != nil {
-		return nil, errors.New("gagal mengambil daftar user")
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	return users, nil
@@ -388,40 +325,37 @@ func (uc *userUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
 	role, err := uc.roleRepo.GetByID(roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("role tidak ditemukan")
+			return apperrors.NewNotFoundError("Role")
 		}
-		return errors.New("gagal mengambil data role")
+		return apperrors.NewInternalError(err)
 	}
 
-	for _, userID := range userIDs {
-		user, err := uc.userRepo.GetByID(userID)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				continue
-			}
-			return errors.New("gagal mengambil data user")
-		}
+	users, err := uc.userRepo.GetByIDs(userIDs)
+	if err != nil {
+		return apperrors.NewInternalError(err)
+	}
 
+	for _, user := range users {
 		if uc.casbinEnforcer != nil && user.Role != nil {
-			if err := uc.casbinEnforcer.RemoveRoleForUser(userID, user.Role.NamaRole); err != nil {
-				return errors.New("gagal menghapus role lama dari casbin")
+			if err := uc.casbinEnforcer.RemoveRoleForUser(user.ID, user.Role.NamaRole); err != nil {
+				return apperrors.NewInternalError(err)
 			}
 		}
 
 		if uc.casbinEnforcer != nil {
-			if err := uc.casbinEnforcer.AddRoleForUser(userID, role.NamaRole); err != nil {
-				return errors.New("gagal menambahkan role baru ke casbin")
+			if err := uc.casbinEnforcer.AddRoleForUser(user.ID, role.NamaRole); err != nil {
+				return apperrors.NewInternalError(err)
 			}
 		}
 	}
 
 	if err := uc.userRepo.BulkUpdateRole(userIDs, roleID); err != nil {
-		return errors.New("gagal memperbarui role user")
+		return apperrors.NewInternalError(err)
 	}
 
 	if uc.casbinEnforcer != nil {
 		if err := uc.casbinEnforcer.SavePolicy(); err != nil {
-			return errors.New("gagal menyimpan policy casbin")
+			return apperrors.NewInternalError(err)
 		}
 	}
 
