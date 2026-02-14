@@ -34,6 +34,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	}
 
 	app := fiber.New(fiber.Config{
+		ReadBufferSize: 16384, // 16KB - default 4KB terlalu kecil untuk JWT cookies + Authorization headers
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			requestID := middleware.GetRequestID(c)
 			reqLogger := appLogger.WithRequestID(requestID)
