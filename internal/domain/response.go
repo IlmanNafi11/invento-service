@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type BaseResponse struct {
-	Success bool   `json:"success"`
+	Status  string `json:"status"`
 	Message string `json:"message"`
 	Code    int    `json:"code"`
 }

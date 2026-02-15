@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -99,7 +98,7 @@ type PerformanceConfig struct {
 
 func LoadConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
-		log.Println("Tidak dapat memuat file .env, menggunakan environment variables")
+		fmt.Fprintf(os.Stderr, "Tidak dapat memuat file .env, menggunakan environment variables\n")
 	}
 
 	config := &Config{

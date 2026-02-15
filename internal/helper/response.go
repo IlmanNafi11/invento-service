@@ -17,7 +17,7 @@ func SendSuccessResponse(c *fiber.Ctx, code int, message string, data interface{
 
 	response := domain.SuccessResponse{
 		BaseResponse: domain.BaseResponse{
-			Success: true,
+			Status: "success",
 			Message: message,
 			Code:    code,
 		},
@@ -34,7 +34,7 @@ func SendErrorResponse(c *fiber.Ctx, code int, message string, errors interface{
 
 	response := domain.ErrorResponse{
 		BaseResponse: domain.BaseResponse{
-			Success: false,
+			Status: "error",
 			Message: message,
 			Code:    code,
 		},
