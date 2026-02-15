@@ -3,7 +3,6 @@ package usecase
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -11,6 +10,8 @@ import (
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
 	"invento-service/internal/usecase/repo"
+
+	zlog "github.com/rs/zerolog/log"
 )
 
 type ModulUsecase interface {
@@ -104,7 +105,7 @@ func (uc *modulUsecase) Delete(modulID string, userID string) error {
 		if err := helper.DeleteFile(modul.FilePath); err != nil {
 			// File deletion after DB delete is critical but non-blocking;
 			// log the error so it can be investigated.
-			log.Printf("WARNING: ModulUsecase.Delete: gagal menghapus file modul %s: %v", modul.FilePath, err)
+			zlog.Warn().Err(err).Str("file", modul.FilePath).Msg("ModulUsecase.Delete: failed to delete modul file")
 		}
 	}
 

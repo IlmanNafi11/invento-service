@@ -2,31 +2,37 @@ package main
 
 import (
 	"context"
-	"invento-service/config"
-	"invento-service/internal/app"
-	"log"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"invento-service/config"
+	"invento-service/internal/app"
+
+	"github.com/rs/zerolog"
 )
 
 func main() {
+	// Pre-config logger for fatal startup errors (logger not yet configured)
+	bootLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("config load failed: %v", err)
+		bootLogger.Fatal().Err(err).Msg("config load failed")
 	}
 	if err := cfg.Validate(); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		bootLogger.Fatal().Err(err).Msg("config validation failed")
 	}
 
-	db, err := config.ConnectDatabase(cfg)
+	db, err := config.ConnectDatabase(cfg, bootLogger)
 	if err != nil {
-		log.Fatalf("database connection failed: %v", err)
+		bootLogger.Fatal().Err(err).Msg("database connection failed")
 	}
 
 	server, err := app.NewServer(cfg, db)
 	if err != nil {
-		log.Fatalf("server init failed: %v", err)
+		bootLogger.Fatal().Err(err).Msg("server init failed")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -34,7 +40,7 @@ func main() {
 
 	go func() {
 		if err := server.Listen(":" + cfg.App.Port); err != nil {
-			log.Printf("server listen error: %v", err)
+			bootLogger.Error().Err(err).Msg("server listen error")
 		}
 	}()
 
@@ -45,7 +51,7 @@ func main() {
 	defer cancel()
 
 	if err := server.ShutdownWithContext(shutdownCtx); err != nil {
-		log.Printf("forced shutdown: %v", err)
+		bootLogger.Error().Err(err).Msg("forced shutdown")
 	}
-	log.Println("server stopped gracefully")
+	bootLogger.Info().Msg("server stopped gracefully")
 }

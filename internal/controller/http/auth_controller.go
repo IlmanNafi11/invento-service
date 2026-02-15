@@ -10,6 +10,7 @@ import (
 	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 )
 
 // AuthController handles authentication-related HTTP requests.
@@ -19,18 +20,18 @@ type AuthController struct {
 	*base.BaseController
 	authUsecase  usecase.AuthUsecase
 	cookieHelper *helper.CookieHelper
-	logger       *helper.Logger
+	logger       zerolog.Logger
 }
 
 // NewAuthController creates a new AuthController instance.
 // Initializes base controller without JWT/Casbin since auth endpoints
 // handle credentials directly (no authentication required).
-func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *helper.CookieHelper, cfg *config.Config) *AuthController {
+func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *helper.CookieHelper, cfg *config.Config, logger zerolog.Logger) *AuthController {
 	return &AuthController{
 		BaseController: base.NewBaseController(cfg.Supabase.URL, nil),
 		authUsecase:    authUsecase,
 		cookieHelper:   cookieHelper,
-		logger:         helper.NewLogger(),
+		logger:         logger.With().Str("component", "AuthController").Logger(),
 	}
 }
 
@@ -161,7 +162,7 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 	accessToken, _ := c.Locals("access_token").(string)
 	if accessToken != "" {
 		if err := ctrl.authUsecase.Logout(accessToken); err != nil {
-			ctrl.logger.Warn("Supabase logout failed, clearing cookies anyway", "error", err)
+			ctrl.logger.Warn().Err(err).Msg("Supabase logout failed, clearing cookies anyway")
 		}
 	}
 
@@ -193,7 +194,7 @@ func (ctrl *AuthController) RequestPasswordReset(c *fiber.Ctx) error {
 	}
 
 	if err := ctrl.authUsecase.RequestPasswordReset(req); err != nil {
-		ctrl.logger.Warn("Request password reset failed", "error", err, "email", req.Email)
+		ctrl.logger.Warn().Err(err).Str("email", req.Email).Msg("request password reset failed")
 	}
 
 	return ctrl.SendSuccess(c, nil, "Link reset password telah dikirim ke email Anda")

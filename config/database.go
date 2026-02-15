@@ -4,18 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"net"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/rs/zerolog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-func ConnectDatabase(cfg *Config) (*gorm.DB, error) {
+func ConnectDatabase(cfg *Config, dbLogger zerolog.Logger) (*gorm.DB, error) {
 	// Use Supabase connection URL if available, otherwise fall back to local database
 	dsn := cfg.Supabase.DBURL
 	if dsn == "" {
@@ -33,9 +33,9 @@ func ConnectDatabase(cfg *Config) (*gorm.DB, error) {
 			cfg.Database.Name,
 			sslMode,
 		)
-		log.Println("Using local database connection")
+		dbLogger.Info().Msg("using local database connection")
 	} else {
-		log.Println("Using Supabase database connection")
+		dbLogger.Info().Msg("using Supabase database connection")
 	}
 
 	pgxConfig, err := pgx.ParseConfig(dsn)
@@ -83,6 +83,6 @@ func ConnectDatabase(cfg *Config) (*gorm.DB, error) {
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Performance.DBConnMaxLifetime) * time.Second)
 	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Performance.DBConnMaxIdleTime) * time.Second)
 
-	log.Println("Berhasil terhubung ke database PostgreSQL")
+	dbLogger.Info().Msg("connected to PostgreSQL database")
 	return db, nil
 }

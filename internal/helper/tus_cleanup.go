@@ -2,8 +2,9 @@ package helper
 
 import (
 	"invento-service/internal/domain"
-	"log"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type TusProjectUploadCleanupRepository interface {
@@ -30,6 +31,7 @@ type TusCleanup struct {
 	lockTTL         time.Duration
 	stopChan        chan bool
 	isRunning       bool
+	logger          zerolog.Logger
 }
 
 func NewTusCleanup(
@@ -39,6 +41,7 @@ func NewTusCleanup(
 	modulStore *TusStore,
 	cleanupInterval int,
 	idleTimeout int,
+	logger zerolog.Logger,
 ) *TusCleanup {
 	return &TusCleanup{
 		projectRepo:     projectRepo,
@@ -50,6 +53,7 @@ func NewTusCleanup(
 		lockTTL:         30 * time.Minute,
 		stopChan:        make(chan bool),
 		isRunning:       false,
+		logger:          logger.With().Str("component", "TusCleanup").Logger(),
 	}
 }
 
@@ -60,7 +64,7 @@ func (tc *TusCleanup) Start() {
 
 	tc.isRunning = true
 	go tc.run()
-	log.Println("TusCleanup: background cleanup dimulai")
+	tc.logger.Info().Msg("background cleanup started")
 }
 
 func (tc *TusCleanup) Stop() {
@@ -70,7 +74,7 @@ func (tc *TusCleanup) Stop() {
 
 	tc.stopChan <- true
 	tc.isRunning = false
-	log.Println("TusCleanup: background cleanup dihentikan")
+	tc.logger.Info().Msg("background cleanup stopped")
 }
 
 func (tc *TusCleanup) run() {
@@ -88,28 +92,28 @@ func (tc *TusCleanup) run() {
 }
 
 func (tc *TusCleanup) performCleanup() {
-	log.Println("TusCleanup: memulai cleanup cycle")
+	tc.logger.Debug().Msg("starting cleanup cycle")
 
 	if err := tc.CleanupExpiredProjects(); err != nil {
-		log.Printf("TusCleanup: error cleanup expired project: %v", err)
+		tc.logger.Error().Err(err).Msg("error cleanup expired project")
 	}
 
 	if err := tc.CleanupAbandonedProjects(); err != nil {
-		log.Printf("TusCleanup: error cleanup abandoned project: %v", err)
+		tc.logger.Error().Err(err).Msg("error cleanup abandoned project")
 	}
 
 	if err := tc.CleanupExpiredModuls(); err != nil {
-		log.Printf("TusCleanup: error cleanup expired modul: %v", err)
+		tc.logger.Error().Err(err).Msg("error cleanup expired modul")
 	}
 
 	if err := tc.CleanupAbandonedModuls(); err != nil {
-		log.Printf("TusCleanup: error cleanup abandoned modul: %v", err)
+		tc.logger.Error().Err(err).Msg("error cleanup abandoned modul")
 	}
 
 	tc.cleanupStaleLocks(tc.projectStore, "project")
 	tc.cleanupStaleLocks(tc.modulStore, "modul")
 
-	log.Println("TusCleanup: cleanup cycle selesai")
+	tc.logger.Debug().Msg("cleanup cycle completed")
 }
 
 func (tc *TusCleanup) cleanupStaleLocks(store *TusStore, label string) {
@@ -119,7 +123,7 @@ func (tc *TusCleanup) cleanupStaleLocks(store *TusStore, label string) {
 
 	cleaned := store.CleanupStaleLocks(tc.lockTTL)
 	if cleaned > 0 {
-		log.Printf("TusCleanup: membersihkan %d stale lock %s", cleaned, label)
+		tc.logger.Info().Int("count", cleaned).Str("type", label).Msg("cleaned stale locks")
 	}
 }
 
@@ -134,16 +138,16 @@ func (tc *TusCleanup) cleanupUploads(
 	for _, uploadID := range uploadIDs {
 		if store != nil {
 			if err := store.Terminate(uploadID); err != nil {
-				log.Printf("TusCleanup: gagal delete file %s upload %s: %v", label, uploadID, err)
+				tc.logger.Error().Err(err).Str("type", label).Str("upload_id", uploadID).Msg("failed to delete upload file")
 			}
 		}
 
 		if err := updateStatus(uploadID, newStatus); err != nil {
-			log.Printf("TusCleanup: gagal update status %s upload %s: %v", label, uploadID, err)
+			tc.logger.Error().Err(err).Str("type", label).Str("upload_id", uploadID).Msg("failed to update upload status")
 			continue
 		}
 
-		log.Printf("TusCleanup: %s upload %s berhasil di-cleanup", label, uploadID)
+		tc.logger.Info().Str("type", label).Str("upload_id", uploadID).Msg("upload cleaned up")
 		cleaned++
 	}
 
@@ -171,7 +175,7 @@ func (tc *TusCleanup) CleanupExpiredProjects() error {
 
 	cleaned := tc.cleanupUploads(uploadIDs, tc.projectStore, domain.UploadStatusExpired, "project", tc.projectRepo.UpdateStatus)
 	if cleaned > 0 {
-		log.Printf("TusCleanup: menemukan dan cleanup %d project upload expired", cleaned)
+		tc.logger.Info().Int("count", cleaned).Msg("cleaned expired project uploads")
 	}
 
 	return nil
@@ -198,7 +202,7 @@ func (tc *TusCleanup) CleanupAbandonedProjects() error {
 
 	cleaned := tc.cleanupUploads(uploadIDs, tc.projectStore, domain.UploadStatusFailed, "project abandoned", tc.projectRepo.UpdateStatus)
 	if cleaned > 0 {
-		log.Printf("TusCleanup: menemukan dan cleanup %d project upload abandoned", cleaned)
+		tc.logger.Info().Int("count", cleaned).Msg("cleaned abandoned project uploads")
 	}
 
 	return nil
@@ -225,7 +229,7 @@ func (tc *TusCleanup) CleanupExpiredModuls() error {
 
 	cleaned := tc.cleanupUploads(uploadIDs, tc.modulStore, domain.UploadStatusExpired, "modul", tc.modulRepo.UpdateStatus)
 	if cleaned > 0 {
-		log.Printf("TusCleanup: menemukan dan cleanup %d modul upload expired", cleaned)
+		tc.logger.Info().Int("count", cleaned).Msg("cleaned expired modul uploads")
 	}
 
 	return nil
@@ -252,7 +256,7 @@ func (tc *TusCleanup) CleanupAbandonedModuls() error {
 
 	cleaned := tc.cleanupUploads(uploadIDs, tc.modulStore, domain.UploadStatusFailed, "modul abandoned", tc.modulRepo.UpdateStatus)
 	if cleaned > 0 {
-		log.Printf("TusCleanup: menemukan dan cleanup %d modul upload abandoned", cleaned)
+		tc.logger.Info().Int("count", cleaned).Msg("cleaned abandoned modul uploads")
 	}
 
 	return nil

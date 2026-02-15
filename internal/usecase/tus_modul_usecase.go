@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 	"invento-service/internal/usecase/repo"
 
 	"github.com/google/uuid"
+	zlog "github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -304,7 +304,7 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 	if oldFilePath != "" {
 		if err := helper.DeleteFile(oldFilePath); err != nil {
 			// Old file deletion after successful update is critical but non-blocking
-			log.Printf("WARNING: TusModulUsecase.completeModulUpdate: gagal menghapus file lama %s: %v", oldFilePath, err)
+			zlog.Warn().Err(err).Str("file", oldFilePath).Msg("TusModulUsecase.completeModulUpdate: failed to delete old file")
 		}
 	}
 	return modul.ID, nil

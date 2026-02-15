@@ -3,20 +3,24 @@ package repo
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
 
 type modulRepository struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger zerolog.Logger
 }
 
-func NewModulRepository(db *gorm.DB) ModulRepository {
-	return &modulRepository{db: db}
+func NewModulRepository(db *gorm.DB, logger zerolog.Logger) ModulRepository {
+	return &modulRepository{
+		db:     db,
+		logger: logger.With().Str("component", "ModulRepository").Logger(),
+	}
 }
 
 func (r *modulRepository) Create(modul *domain.Modul) error {
@@ -63,8 +67,7 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 	`
 
 	if err := r.db.Raw(countQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus).Scan(&total).Error; err != nil {
-		log.Printf("[ERROR] ModulRepository.GetByUserID count query failed - query: %s, params: userID=%s, search=%s, filterType=%s, filterStatus=%s, error: %v",
-			countQuery, userID, search, filterType, filterStatus, err)
+		r.logger.Error().Err(err).Str("user_id", userID).Str("search", search).Str("filter_type", filterType).Str("filter_status", filterStatus).Msg("count query failed")
 		return nil, 0, fmt.Errorf("ModulRepository.GetByUserID: count query: %w", err)
 	}
 
@@ -88,8 +91,7 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 	`
 
 	if err := r.db.Raw(dataQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus, limit, offset).Scan(&modulListItems).Error; err != nil {
-		log.Printf("[ERROR] ModulRepository.GetByUserID data query failed - query: %s, params: userID=%s, search=%s, filterType=%s, filterStatus=%s, limit=%d, offset=%d, error: %v",
-			dataQuery, userID, search, filterType, filterStatus, limit, offset, err)
+		r.logger.Error().Err(err).Str("user_id", userID).Str("search", search).Str("filter_type", filterType).Str("filter_status", filterStatus).Int("limit", limit).Int("offset", offset).Msg("data query failed")
 		return nil, 0, fmt.Errorf("ModulRepository.GetByUserID: data query: %w", err)
 	}
 

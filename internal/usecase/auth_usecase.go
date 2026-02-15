@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/supabase-community/supabase-go"
 	"gorm.io/gorm"
 )
@@ -31,7 +32,7 @@ type authUsecase struct {
 	supabaseClient     *supabase.Client
 	supabaseServiceKey string
 	config             *config.Config
-	logger             *helper.Logger
+	logger             zerolog.Logger
 }
 
 func NewAuthUsecase(
@@ -40,6 +41,7 @@ func NewAuthUsecase(
 	supabaseClient *supabase.Client,
 	supabaseServiceKey string,
 	config *config.Config,
+	logger zerolog.Logger,
 ) (AuthUsecase, error) {
 	authURL := config.Supabase.URL + "/auth/v1"
 	authService, err := supabaseAuth.NewAuthService(authURL, supabaseServiceKey)
@@ -54,7 +56,7 @@ func NewAuthUsecase(
 		supabaseClient:     supabaseClient,
 		supabaseServiceKey: supabaseServiceKey,
 		config:             config,
-		logger:             helper.NewLogger(),
+		logger:             logger.With().Str("component", "AuthUsecase").Logger(),
 	}, nil
 }
 
@@ -63,13 +65,14 @@ func NewAuthUsecaseWithDeps(
 	roleRepo repo.RoleRepository,
 	authService domain.AuthService,
 	config *config.Config,
+	logger zerolog.Logger,
 ) AuthUsecase {
 	return &authUsecase{
 		userRepo:    userRepo,
 		roleRepo:    roleRepo,
 		authService: authService,
 		config:      config,
-		logger:      helper.NewLogger(),
+		logger:      logger.With().Str("component", "AuthUsecase").Logger(),
 	}
 }
 
@@ -124,9 +127,9 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 
 	if err := uc.userRepo.Create(user); err != nil {
 		// Rollback: Delete user from Supabase if local DB creation fails
-		uc.logger.Error("Failed to create local user, rolling back Supabase user", "error", err, "supabase_user_id", authResp.User.ID)
+		uc.logger.Error().Err(err).Str("supabase_user_id", authResp.User.ID).Msg("failed to create local user, rolling back Supabase user")
 		if deleteErr := uc.authService.DeleteUser(ctx, authResp.User.ID); deleteErr != nil {
-			uc.logger.Error("Failed to rollback Supabase user deletion", "error", deleteErr, "supabase_user_id", authResp.User.ID)
+			uc.logger.Error().Err(deleteErr).Str("supabase_user_id", authResp.User.ID).Msg("failed to rollback Supabase user deletion")
 		}
 		return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: create local user: %w", err))
 	}
@@ -191,7 +194,7 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 			}
 
 			if createErr := uc.userRepo.Create(user); createErr != nil {
-				uc.logger.Error("Failed to sync Supabase user to local database", "error", createErr, "email", req.Email)
+				uc.logger.Error().Err(createErr).Str("email", req.Email).Msg("failed to sync Supabase user to local database")
 				return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Login: sync user: %w", createErr))
 			}
 

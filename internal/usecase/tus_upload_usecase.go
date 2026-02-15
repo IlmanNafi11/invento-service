@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"time"
 
 	"invento-service/config"
@@ -14,6 +13,7 @@ import (
 	"invento-service/internal/usecase/repo"
 
 	"github.com/google/uuid"
+	zlog "github.com/rs/zerolog/log"
 )
 
 type TusUploadUsecase interface {
@@ -319,7 +319,7 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload, fina
 	if oldFilePath != "" && oldFilePath != finalFilePath {
 		if err := helper.DeleteFile(oldFilePath); err != nil {
 			// Old file deletion after successful update is critical but non-blocking
-			log.Printf("WARNING: TusUploadUsecase.completeProjectUpdate: gagal menghapus file lama %s: %v", oldFilePath, err)
+			zlog.Warn().Err(err).Str("file", oldFilePath).Msg("TusUploadUsecase.completeProjectUpdate: failed to delete old file")
 		}
 	}
 
@@ -399,7 +399,7 @@ func (uc *tusUploadUsecase) cancelUpload(uploadID string, userID string, project
 	}
 
 	if err := uc.tusManager.CancelUpload(uploadID); err != nil {
-		log.Printf("Warning: gagal menghapus file upload: %v", err)
+		zlog.Warn().Err(err).Str("upload_id", uploadID).Msg("failed to delete upload file")
 	}
 
 	uc.tusManager.FinishUpload(uploadID)

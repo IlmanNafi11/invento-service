@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
-	"invento-service/config"
-	"invento-service/internal/app"
-	"log"
+	"os"
 	"os/signal"
 	"runtime/debug"
 	"syscall"
 	"time"
+
+	"invento-service/config"
+	"invento-service/internal/app"
+
+	"github.com/rs/zerolog"
 )
 
 // @title Invento Service API
@@ -26,35 +29,38 @@ import (
 // @description Access token stored in HttpOnly cookie (set automatically on login/register/refresh)
 
 func main() {
+	// Pre-config logger for fatal startup errors (logger not yet configured)
+	bootLogger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("config load failed: %v", err)
+		bootLogger.Fatal().Err(err).Msg("config load failed")
 	}
 	if err := cfg.Validate(); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		bootLogger.Fatal().Err(err).Msg("config validation failed")
 	}
 
 	// Apply runtime memory configuration from config
 	// This overrides GOMEMLIMIT/GOGC env vars for consistency
 	if memLimit, err := config.ParseMemLimit(cfg.Performance.GoMemLimit); err == nil && memLimit > 0 {
 		debug.SetMemoryLimit(memLimit)
-		log.Printf("GOMEMLIMIT set to %s (%d bytes)", cfg.Performance.GoMemLimit, memLimit)
+		bootLogger.Info().Str("gomemlimit", cfg.Performance.GoMemLimit).Int64("bytes", memLimit).Msg("GOMEMLIMIT set")
 	} else if err != nil {
-		log.Printf("WARNING: invalid GOMEMLIMIT value %q: %v", cfg.Performance.GoMemLimit, err)
+		bootLogger.Warn().Str("value", cfg.Performance.GoMemLimit).Err(err).Msg("invalid GOMEMLIMIT value")
 	}
 	if cfg.Performance.GoGC >= 0 {
 		oldGOGC := debug.SetGCPercent(cfg.Performance.GoGC)
-		log.Printf("GOGC set to %d (was %d)", cfg.Performance.GoGC, oldGOGC)
+		bootLogger.Info().Int("gogc", cfg.Performance.GoGC).Int("was", oldGOGC).Msg("GOGC set")
 	}
 
-	db, err := config.ConnectDatabase(cfg)
+	db, err := config.ConnectDatabase(cfg, bootLogger)
 	if err != nil {
-		log.Fatalf("database connection failed: %v", err)
+		bootLogger.Fatal().Err(err).Msg("database connection failed")
 	}
 
 	server, err := app.NewServer(cfg, db)
 	if err != nil {
-		log.Fatalf("server init failed: %v", err)
+		bootLogger.Fatal().Err(err).Msg("server init failed")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -62,7 +68,7 @@ func main() {
 
 	go func() {
 		if err := server.Listen(":" + cfg.App.Port); err != nil {
-			log.Printf("server listen error: %v", err)
+			bootLogger.Error().Err(err).Msg("server listen error")
 		}
 	}()
 
@@ -73,7 +79,7 @@ func main() {
 	defer cancel()
 
 	if err := server.ShutdownWithContext(shutdownCtx); err != nil {
-		log.Printf("forced shutdown: %v", err)
+		bootLogger.Error().Err(err).Msg("forced shutdown")
 	}
-	log.Println("server stopped gracefully")
+	bootLogger.Info().Msg("server stopped gracefully")
 }

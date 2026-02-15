@@ -3,12 +3,13 @@ package helper
 import (
 	"fmt"
 	"io"
-	"log"
 	"strconv"
 
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
+
+	"github.com/rs/zerolog"
 )
 
 type TusManager struct {
@@ -16,14 +17,16 @@ type TusManager struct {
 	queue       *TusQueue
 	fileManager *FileManager
 	config      *config.Config
+	logger      zerolog.Logger
 }
 
-func NewTusManager(store *TusStore, queue *TusQueue, fileManager *FileManager, config *config.Config) *TusManager {
+func NewTusManager(store *TusStore, queue *TusQueue, fileManager *FileManager, config *config.Config, logger zerolog.Logger) *TusManager {
 	return &TusManager{
 		store:       store,
 		queue:       queue,
 		fileManager: fileManager,
 		config:      config,
+		logger:      logger.With().Str("component", "TusManager").Logger(),
 	}
 }
 
@@ -53,7 +56,7 @@ func (tm *TusManager) ResetUploadQueue() error {
 
 	for _, activeUploadID := range activeUploadIDs {
 		if err := tm.store.Terminate(activeUploadID); err != nil {
-			log.Printf("Warning: gagal menghapus upload aktif %s: %v", activeUploadID, err)
+			tm.logger.Warn().Err(err).Str("upload_id", activeUploadID).Msg("failed to terminate active upload")
 		}
 	}
 

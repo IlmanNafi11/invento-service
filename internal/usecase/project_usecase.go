@@ -7,11 +7,12 @@ import (
 	"invento-service/internal/helper"
 	"invento-service/internal/usecase/repo"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	zlog "github.com/rs/zerolog/log"
 )
 
 type ProjectUsecase interface {
@@ -115,7 +116,7 @@ func (uc *projectUsecase) Delete(projectID uint, userID string) error {
 		if err := helper.DeleteFile(project.PathFile); err != nil {
 			// File deletion after DB delete is critical but non-blocking;
 			// log the error so it can be investigated.
-			log.Printf("WARNING: ProjectUsecase.Delete: gagal menghapus file project %s: %v", project.PathFile, err)
+			zlog.Warn().Err(err).Str("file", project.PathFile).Msg("ProjectUsecase.Delete: failed to delete project file")
 		}
 	}
 
@@ -188,7 +189,7 @@ func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, er
 	go func(zipPath string) {
 		time.Sleep(5 * time.Minute)
 		if err := os.Remove(zipPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-			log.Printf("WARNING: gagal menghapus file zip sementara %s: %v", zipPath, err)
+			zlog.Warn().Err(err).Str("file", zipPath).Msg("failed to delete temporary zip file")
 		}
 	}(zipFilePath)
 

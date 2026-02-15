@@ -8,35 +8,46 @@ import (
 	"invento-service/internal/controller/base"
 	"invento-service/internal/controller/http"
 	"invento-service/internal/helper"
-	"invento-service/internal/logger"
 	"invento-service/internal/middleware"
 	supabaseAuth "invento-service/internal/supabase"
 	"invento-service/internal/usecase"
 	"invento-service/internal/usecase/repo"
+	"io"
+	"os"
 	"runtime"
 	"runtime/metrics"
+	"strings"
 	"time"
 
+	"github.com/gofiber/contrib/fiberzerolog"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/rs/zerolog"
 	"github.com/supabase-community/supabase-go"
 	"github.com/swaggo/fiber-swagger"
 	"gorm.io/gorm"
 )
 
+// initLogger creates a zerolog.Logger configured for the given environment and level.
+func initLogger(env, level string) zerolog.Logger {
+	var output io.Writer
+	if env == "development" {
+		output = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: "15:04:05"}
+	} else {
+		output = os.Stderr
+	}
+	lvl, err := zerolog.ParseLevel(strings.ToLower(level))
+	if err != nil {
+		lvl = zerolog.ErrorLevel // production default
+	}
+	return zerolog.New(output).Level(lvl).With().Timestamp().Str("service", "invento-service").Logger()
+}
+
 func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	// Initialize structured logger
-	logLevel := logger.ParseLogLevel(cfg.Logging.Level)
-	logFormat := logger.ParseLogFormat(cfg.Logging.Format)
-	isDevelopment := cfg.App.Env == "development"
-
-	appLogger := logger.NewLogger(logLevel, logFormat)
-	if isDevelopment && logFormat == logger.TextFormat {
-		// Use default text logger for development
-		appLogger = logger.NewDefaultLogger(isDevelopment)
-	}
+	appLogger := initLogger(cfg.App.Env, cfg.Logging.Level)
 
 	app := fiber.New(fiber.Config{
 		ReadBufferSize:    cfg.Performance.FiberReadBufferSize,
@@ -44,13 +55,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 		Concurrency:       cfg.Performance.FiberConcurrency,
 		ReduceMemoryUsage: cfg.Performance.FiberReduceMemory,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			requestID := middleware.GetRequestID(c)
-			reqLogger := appLogger.WithRequestID(requestID)
-			reqLogger.Error("[ERROR_HANDLER] Error occurred", map[string]interface{}{
-				"error":  err.Error(),
-				"path":   c.Path(),
-				"method": c.Method(),
-			})
+			appLogger.Error().Str("path", c.Path()).Str("method", c.Method()).Err(err).Msg("unhandled error")
 
 			if c.Path() != "" && len(c.Path()) >= 8 && c.Path()[:8] == "/uploads" {
 				return err
@@ -60,7 +65,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 				if e, ok := err.(*fiber.Error); ok {
 					if e.Code == fiber.StatusNotFound {
 						return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-							"success":   false,
+							"status":    "error",
 							"message":   "Endpoint tidak ditemukan",
 							"code":      404,
 							"timestamp": time.Now().Format(time.RFC3339),
@@ -81,34 +86,24 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	// Conditionally enable pprof profiling endpoint
 	if cfg.Performance.EnablePprof {
 		app.Use(pprof.New())
-		appLogger.Info("pprof profiling enabled at /debug/pprof/*", nil)
+		appLogger.Info().Msg("pprof profiling enabled at /debug/pprof/*")
 	}
 
 	// Apply middleware in order: RequestID -> Logger -> Recover -> CORS
 	app.Use(middleware.RequestID())
-	app.Use(middleware.RequestLogger(appLogger))
+	app.Use(fiberzerolog.New(fiberzerolog.Config{
+		Logger:   &appLogger,
+		SkipURIs: []string{"/health", "/uploads"},
+	}))
 	app.Use(recover.New())
 
 	// Log startup information
-	appLogger.Info("Server starting", map[string]interface{}{
-		"app":                 cfg.App.Name,
-		"env":                 cfg.App.Env,
-		"port":                cfg.App.Port,
-		"log_level":           cfg.Logging.Level,
-		"log_format":          cfg.Logging.Format,
-		"fiber_concurrency":   cfg.Performance.FiberConcurrency,
-		"stream_request_body": cfg.Performance.FiberStreamRequestBody,
-		"reduce_memory":       cfg.Performance.FiberReduceMemory,
-		"pprof_enabled":       cfg.Performance.EnablePprof,
-	})
+	appLogger.Info().Str("app", cfg.App.Name).Str("env", cfg.App.Env).Str("port", cfg.App.Port).Msg("server starting")
 
 	// Start background memory monitor
 	if memLimit, err := config.ParseMemLimit(cfg.Performance.GoMemLimit); err == nil {
-		startMemoryMonitor(cfg.Performance.MemoryWarningThreshold, memLimit, appLogger)
-		appLogger.Info("Memory monitor started", map[string]interface{}{
-			"gomemlimit":    cfg.Performance.GoMemLimit,
-			"threshold_pct": cfg.Performance.MemoryWarningThreshold * 100,
-		})
+		startMemoryMonitor(cfg.Performance.MemoryWarningThreshold, memLimit, &appLogger)
+		appLogger.Info().Str("gomemlimit", cfg.Performance.GoMemLimit).Float64("threshold_pct", cfg.Performance.MemoryWarningThreshold*100).Msg("memory monitor started")
 	}
 
 	corsOrigin := cfg.App.CorsOriginDev
@@ -133,7 +128,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	permissionRepo := repo.NewPermissionRepository(db)
 	rolePermissionRepo := repo.NewRolePermissionRepository(db)
 	projectRepo := repo.NewProjectRepository(db)
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, appLogger)
 	tusUploadRepo := repo.NewTusUploadRepository(db)
 	tusModulUploadRepo := repo.NewTusModulUploadRepository(db)
 
@@ -159,8 +154,8 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	tusQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
 	tusModulQueue := helper.NewTusQueue(cfg.Upload.MaxQueueModulPerUser)
 	fileManager := helper.NewFileManager(cfg)
-	tusProjectManager := helper.NewTusManager(tusProjectStore, tusQueue, fileManager, cfg)
-	tusModulManager := helper.NewTusManager(tusModulStore, tusModulQueue, fileManager, cfg)
+	tusProjectManager := helper.NewTusManager(tusProjectStore, tusQueue, fileManager, cfg, appLogger)
+	tusModulManager := helper.NewTusManager(tusModulStore, tusModulQueue, fileManager, cfg, appLogger)
 
 	if activeIDs, err := tusUploadRepo.GetActiveUploadIDs(); err == nil && len(activeIDs) > 0 {
 		tusQueue.LoadFromDB(activeIDs)
@@ -169,11 +164,11 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 		tusModulQueue.LoadFromDB(activeIDs)
 	}
 
-	authUsecase, err := usecase.NewAuthUsecase(userRepo, roleRepo, supabaseClient, supabaseServiceKey, cfg)
+	authUsecase, err := usecase.NewAuthUsecase(userRepo, roleRepo, supabaseClient, supabaseServiceKey, cfg, appLogger)
 	if err != nil {
 		return nil, fmt.Errorf("auth usecase init: %w", err)
 	}
-	authController := http.NewAuthController(authUsecase, cookieHelper, cfg)
+	authController := http.NewAuthController(authUsecase, cookieHelper, cfg, appLogger)
 
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
 	baseCtrl := base.NewBaseController(cfg.Supabase.URL, casbinEnforcer)
@@ -193,7 +188,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	modulController := http.NewModulController(modulUsecase, cfg, baseCtrl)
 	tusModulController := http.NewTusModulController(tusModulUsecase, cfg, baseCtrl)
 
-	tusCleanup := helper.NewTusCleanup(tusUploadRepo, tusModulUploadRepo, tusProjectStore, tusModulStore, cfg.Upload.CleanupInterval, cfg.Upload.IdleTimeout)
+	tusCleanup := helper.NewTusCleanup(tusUploadRepo, tusModulUploadRepo, tusProjectStore, tusModulStore, cfg.Upload.CleanupInterval, cfg.Upload.IdleTimeout, appLogger)
 	tusCleanup.Start()
 
 	statisticUsecase := usecase.NewStatisticUsecase(userRepo, projectRepo, modulRepo, roleRepo, casbinEnforcer, db)
@@ -294,7 +289,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	app.Get("/health", healthController.BasicHealthCheck)
 
 	// Enable Swagger UI
-	appLogger.Info("Swagger UI enabled at /swagger/*", nil)
+	appLogger.Info().Msg("swagger UI enabled at /swagger/*")
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 
 	return app, nil
@@ -303,7 +298,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 // startMemoryMonitor starts a background goroutine that periodically checks heap
 // memory usage and logs a warning when it exceeds the threshold percentage of GOMEMLIMIT.
 // Uses runtime/metrics instead of runtime.ReadMemStats to avoid stop-the-world pauses.
-func startMemoryMonitor(thresholdPct float64, limitBytes int64, appLogger *logger.Logger) {
+func startMemoryMonitor(thresholdPct float64, limitBytes int64, appLogger *zerolog.Logger) {
 	if limitBytes <= 0 || thresholdPct <= 0 {
 		return
 	}
@@ -320,13 +315,13 @@ func startMemoryMonitor(thresholdPct float64, limitBytes int64, appLogger *logge
 			metrics.Read(samples)
 			heapBytes := int64(samples[0].Value.Uint64())
 			if heapBytes > thresholdBytes {
-				appLogger.Warn("Heap memory approaching GOMEMLIMIT", map[string]interface{}{
-					"heap_bytes":    heapBytes,
-					"heap_mb":       heapBytes / (1024 * 1024),
-					"limit_mb":      limitBytes / (1024 * 1024),
-					"threshold_pct": thresholdPct * 100,
-					"goroutines":    runtime.NumGoroutine(),
-				})
+				appLogger.Warn().
+					Int64("heap_bytes", heapBytes).
+					Int64("heap_mb", heapBytes/(1024*1024)).
+					Int64("limit_mb", limitBytes/(1024*1024)).
+					Float64("threshold_pct", thresholdPct*100).
+					Int("goroutines", runtime.NumGoroutine()).
+					Msg("heap memory approaching GOMEMLIMIT")
 			}
 		}
 	}()

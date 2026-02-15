@@ -3,11 +3,11 @@ package helper
 import (
 	"invento-service/internal/domain"
 	"invento-service/internal/usecase/repo"
-	"log"
 	"strconv"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	zlog "github.com/rs/zerolog/log"
 )
 
 // CasbinPermissionChecker is an interface for checking permissions.
@@ -80,7 +80,7 @@ func RBACMiddleware(casbinEnforcer CasbinPermissionChecker, resource string, act
 
 		allowed, err := casbinEnforcer.CheckPermission(role, resource, action)
 		if err != nil {
-			log.Printf("[ERROR] RBACMiddleware: Casbin CheckPermission failed - role=%s, resource=%s, action=%s, error=%v", role, resource, action, err)
+			zlog.Error().Err(err).Str("role", role).Str("resource", resource).Str("action", action).Msg("RBAC CheckPermission failed")
 			return SendInternalServerErrorResponse(c)
 		}
 
