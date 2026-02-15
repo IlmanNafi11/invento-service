@@ -181,7 +181,8 @@ LOG_FORMAT=json
 		defer os.Chdir(originalDir)
 
 		// Load config - this will use the .env file in current directory
-		cfg := LoadConfig()
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
 
 		// Verify config values
 		assert.Equal(t, "Test Application", cfg.App.Name)
@@ -219,10 +220,11 @@ LOG_FORMAT=json
 		}()
 
 		// Load config with defaults
-		cfg := LoadConfig()
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
 
 		// Verify default values are used
-		assert.Equal(t, "Fiber Boilerplate", cfg.App.Name)
+		assert.Equal(t, "invento-service", cfg.App.Name)
 		assert.Equal(t, "3000", cfg.App.Port)
 		assert.Equal(t, "development", cfg.App.Env)
 		assert.Equal(t, "localhost", cfg.Database.Host)
@@ -267,7 +269,8 @@ LOG_FORMAT=json
 		}()
 
 		// Load config
-		cfg := LoadConfig()
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
 
 		// Verify environment variables take precedence
 		assert.Equal(t, "Env App Name", cfg.App.Name)
@@ -284,7 +287,8 @@ LOG_FORMAT=json
 // TestIntegrationConfigValidation tests config validation
 func TestIntegrationConfigValidation(t *testing.T) {
 	t.Run("DatabaseConfigDefaults", func(t *testing.T) {
-		cfg := LoadConfig()
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
 
 		// Verify database config has sensible defaults
 		assert.NotEmpty(t, cfg.Database.Host)
@@ -294,7 +298,8 @@ func TestIntegrationConfigValidation(t *testing.T) {
 	})
 
 	t.Run("SupabaseConfigDefaults", func(t *testing.T) {
-		cfg := LoadConfig()
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
 
 		// Verify Supabase config has sensible defaults
 		// Note: URL, AnonKey, ServiceKey, and DBURL may be empty in test environment
@@ -302,7 +307,8 @@ func TestIntegrationConfigValidation(t *testing.T) {
 	})
 
 	t.Run("UploadConfigDefaults", func(t *testing.T) {
-		cfg := LoadConfig()
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
 
 		// Verify upload config has sensible defaults
 		assert.Greater(t, cfg.Upload.MaxSize, int64(0))
@@ -427,7 +433,8 @@ func TestIntegrationConfigHelperFunctions(t *testing.T) {
 func TestIntegrationDatabaseConnectionWithConfig(t *testing.T) {
 	t.Run("ConnectWithConfigDefaults", func(t *testing.T) {
 		// Load default config
-		cfg := LoadConfig()
+		cfg, err := LoadConfig()
+		require.NoError(t, err)
 
 		// Verify config is loaded
 		assert.NotNil(t, cfg)

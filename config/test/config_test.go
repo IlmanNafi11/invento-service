@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLoadConfig_DefaultValues(t *testing.T) {
@@ -23,7 +24,8 @@ func TestLoadConfig_DefaultValues(t *testing.T) {
 	os.Setenv("SUPABASE_ANON_KEY", "test_anon_key")
 	os.Setenv("SUPABASE_SERVICE_ROLE_KEY", "test_service_role_key")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "test-app", cfg.App.Name)
 	assert.Equal(t, "8080", cfg.App.Port)
@@ -43,7 +45,8 @@ func TestLoadConfig_DatabaseBooleanValues(t *testing.T) {
 
 	os.Setenv("APP_NAME", "test-app")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.NotNil(t, cfg.Database)
 }
@@ -56,7 +59,8 @@ func TestLoadConfig_SupabaseConfiguration(t *testing.T) {
 	os.Setenv("SUPABASE_ANON_KEY", "test_anon_key")
 	os.Setenv("SUPABASE_SERVICE_ROLE_KEY", "test_service_role_key")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "https://test.supabase.co", cfg.Supabase.URL)
 	assert.Equal(t, "test_anon_key", cfg.Supabase.AnonKey)
@@ -120,7 +124,8 @@ func TestLoadConfig_UploadConfiguration(t *testing.T) {
 	os.Setenv("TUS_RESUMABLE_VERSION", "1.0.0")
 	os.Setenv("TUS_MAX_RESUME_ATTEMPTS", "5")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, int64(1048576000), cfg.Upload.MaxSize)
 	assert.Equal(t, int64(2097152000), cfg.Upload.MaxSizeProject)
@@ -145,7 +150,8 @@ func TestLoadConfig_UploadConfiguration_DefaultValues(t *testing.T) {
 
 	os.Setenv("APP_NAME", "test-app")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, int64(524288000), cfg.Upload.MaxSize)
 	assert.Equal(t, int64(524288000), cfg.Upload.MaxSizeProject)
@@ -173,7 +179,8 @@ func TestLoadConfig_LoggingConfiguration(t *testing.T) {
 	os.Setenv("LOG_FORMAT", "json")
 	os.Setenv("LOG_REQUEST_BODY", "true")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "DEBUG", cfg.Logging.Level)
 	assert.Equal(t, "json", cfg.Logging.Format)
@@ -185,7 +192,8 @@ func TestLoadConfig_LoggingConfiguration_DefaultValues(t *testing.T) {
 
 	os.Setenv("APP_NAME", "test-app")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "INFO", cfg.Logging.Level)
 	assert.Equal(t, "text", cfg.Logging.Format)
@@ -242,7 +250,8 @@ func TestLoadConfig_LoggingConfiguration_BooleanVariations(t *testing.T) {
 			os.Setenv("APP_NAME", "test-app")
 			os.Setenv("LOG_REQUEST_BODY", tt.logRequestBody)
 
-			cfg := config.LoadConfig()
+			cfg, err := config.LoadConfig()
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.expectedResult, cfg.Logging.LogRequestBody)
 		})
@@ -255,7 +264,8 @@ func TestLoadConfig_SwaggerConfiguration(t *testing.T) {
 	os.Setenv("APP_NAME", "test-app")
 	os.Setenv("SWAGGER_ENABLED", "true")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.True(t, cfg.Swagger.Enabled)
 }
@@ -265,7 +275,8 @@ func TestLoadConfig_SwaggerConfiguration_DefaultValues(t *testing.T) {
 
 	os.Setenv("APP_NAME", "test-app")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.False(t, cfg.Swagger.Enabled)
 }
@@ -330,7 +341,8 @@ func TestLoadConfig_SwaggerConfiguration_BooleanVariations(t *testing.T) {
 			os.Setenv("APP_NAME", "test-app")
 			os.Setenv("SWAGGER_ENABLED", tt.swaggerEnabled)
 
-			cfg := config.LoadConfig()
+			cfg, err := config.LoadConfig()
+			require.NoError(t, err)
 
 			assert.Equal(t, tt.expectedResult, cfg.Swagger.Enabled)
 		})
@@ -358,7 +370,8 @@ func TestLoadConfig_AllConfigurations(t *testing.T) {
 	os.Setenv("LOG_REQUEST_BODY", "true")
 	os.Setenv("SWAGGER_ENABLED", "true")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	// App config
 	assert.Equal(t, "test-app", cfg.App.Name)
@@ -397,7 +410,8 @@ func TestLoadConfig_AppConfig_CorsOrigins(t *testing.T) {
 	os.Setenv("CORS_ORIGIN_DEVELOPMENT", "http://localhost:3000")
 	os.Setenv("CORS_ORIGIN_PRODUCTION", "https://example.com")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "http://localhost:3000", cfg.App.CorsOriginDev)
 	assert.Equal(t, "https://example.com", cfg.App.CorsOriginProd)
@@ -408,7 +422,8 @@ func TestLoadConfig_AppConfig_CorsOrigins_DefaultValues(t *testing.T) {
 
 	os.Setenv("APP_NAME", "test-app")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "http://localhost:5173", cfg.App.CorsOriginDev)
 	assert.Equal(t, "https://yourdomain.com", cfg.App.CorsOriginProd)
@@ -424,7 +439,8 @@ func TestLoadConfig_Database_AllFields(t *testing.T) {
 	os.Setenv("DB_PASSWORD", "testpassword")
 	os.Setenv("DB_NAME", "testdbname")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "testhost", cfg.Database.Host)
 	assert.Equal(t, "5433", cfg.Database.Port)
@@ -442,7 +458,8 @@ func TestLoadConfig_Supabase_AllFields(t *testing.T) {
 	os.Setenv("SUPABASE_SERVICE_ROLE_KEY", "custom_service_role_key")
 	os.Setenv("SUPABASE_DB_URL", "postgresql://user:pass@custom.supabase.co:5432/dbname")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "https://custom.supabase.co", cfg.Supabase.URL)
 	assert.Equal(t, "custom_anon_key", cfg.Supabase.AnonKey)
@@ -455,7 +472,8 @@ func TestLoadConfig_Supabase_DefaultValues(t *testing.T) {
 
 	os.Setenv("APP_NAME", "test-app")
 
-	cfg := config.LoadConfig()
+	cfg, err := config.LoadConfig()
+	require.NoError(t, err)
 
 	assert.Equal(t, "", cfg.Supabase.URL)
 	assert.Equal(t, "", cfg.Supabase.AnonKey)
