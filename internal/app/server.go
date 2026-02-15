@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"invento-service/config"
 	_ "invento-service/docs"
 	"invento-service/internal/controller/base"
@@ -21,7 +22,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
+func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	// Initialize structured logger
 	logLevel := logger.ParseLogLevel(cfg.Logging.Level)
 	logFormat := logger.ParseLogFormat(cfg.Logging.Format)
@@ -113,19 +114,19 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	// Initialize Supabase client
 	supabaseClient, err := supabase.NewClient(cfg.Supabase.URL, cfg.Supabase.ServiceKey, nil)
 	if err != nil {
-		panic("Gagal inisialisasi Supabase client: " + err.Error())
+		return nil, fmt.Errorf("supabase client init: %w", err)
 	}
 
 	supabaseServiceKey := cfg.Supabase.ServiceKey
 	authURL := cfg.Supabase.URL + "/auth/v1"
 	supabaseAuthService, err := supabaseAuth.NewAuthService(authURL, supabaseServiceKey)
 	if err != nil {
-		panic("Gagal inisialisasi Supabase Auth service: " + err.Error())
+		return nil, fmt.Errorf("supabase auth service init: %w", err)
 	}
 
 	casbinEnforcer, err := helper.NewCasbinEnforcer(db)
 	if err != nil {
-		panic("Gagal inisialisasi Casbin enforcer: " + err.Error())
+		return nil, fmt.Errorf("casbin enforcer init: %w", err)
 	}
 	tusProjectStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeProject)
 	tusModulStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeModul)
@@ -142,7 +143,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 		tusModulQueue.LoadFromDB(activeIDs)
 	}
 
-	authUsecase := usecase.NewAuthUsecase(userRepo, roleRepo, supabaseClient, supabaseServiceKey, cfg)
+	authUsecase, err := usecase.NewAuthUsecase(userRepo, roleRepo, supabaseClient, supabaseServiceKey, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("auth usecase init: %w", err)
+	}
 	authController := http.NewAuthController(authUsecase, cookieHelper, cfg)
 
 	roleUsecase := usecase.NewRoleUsecase(roleRepo, permissionRepo, rolePermissionRepo, casbinEnforcer)
@@ -267,5 +271,5 @@ func NewServer(cfg *config.Config, db *gorm.DB) *fiber.App {
 	appLogger.Info("Swagger UI enabled at /swagger/*", nil)
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 
-	return app
+	return app, nil
 }

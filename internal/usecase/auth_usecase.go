@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
@@ -39,11 +40,11 @@ func NewAuthUsecase(
 	supabaseClient *supabase.Client,
 	supabaseServiceKey string,
 	config *config.Config,
-) AuthUsecase {
+) (AuthUsecase, error) {
 	authURL := config.Supabase.URL + "/auth/v1"
 	authService, err := supabaseAuth.NewAuthService(authURL, supabaseServiceKey)
 	if err != nil {
-		panic("Gagal inisialisasi auth service: " + err.Error())
+		return nil, fmt.Errorf("auth service init: %w", err)
 	}
 
 	return &authUsecase{
@@ -54,7 +55,7 @@ func NewAuthUsecase(
 		supabaseServiceKey: supabaseServiceKey,
 		config:             config,
 		logger:             helper.NewLogger(),
-	}
+	}, nil
 }
 
 func NewAuthUsecaseWithDeps(

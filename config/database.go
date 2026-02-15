@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func ConnectDatabase(cfg *Config) *gorm.DB {
+func ConnectDatabase(cfg *Config) (*gorm.DB, error) {
 	// Use Supabase connection URL if available, otherwise fall back to local database
 	dsn := cfg.Supabase.DBURL
 	if dsn == "" {
@@ -40,7 +40,7 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 
 	pgxConfig, err := pgx.ParseConfig(dsn)
 	if err != nil {
-		log.Fatal("Gagal parsing konfigurasi database:", err)
+		return nil, fmt.Errorf("database config parse: %w", err)
 	}
 	// Disable prepared statement caching for compatibility with Supabase PgBouncer (transaction mode)
 	pgxConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
@@ -67,7 +67,7 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 	connStr := stdlib.RegisterConnConfig(pgxConfig)
 	sqlDB, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Fatal("Gagal membuka koneksi database:", err)
+		return nil, fmt.Errorf("database connection open: %w", err)
 	}
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
@@ -76,7 +76,7 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
-		log.Fatal("Gagal menghubungkan ke database:", err)
+		return nil, fmt.Errorf("database connection open: %w", err)
 	}
 	sqlDB.SetMaxIdleConns(5)
 	sqlDB.SetMaxOpenConns(20)
@@ -84,5 +84,5 @@ func ConnectDatabase(cfg *Config) *gorm.DB {
 	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
 
 	log.Println("Berhasil terhubung ke database PostgreSQL")
-	return db
+	return db, nil
 }

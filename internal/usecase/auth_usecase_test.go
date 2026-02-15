@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -589,7 +590,8 @@ func TestAuth_EdgeCases(t *testing.T) {
 		cfg := newTestConfig()
 		cfg.Supabase.JWTSecret = "test-secret"
 
-		uc := NewAuthUsecase(mockUser, mockRole, nil, "service-key", cfg)
+		uc, err := NewAuthUsecase(mockUser, mockRole, nil, "service-key", cfg)
+		require.NoError(t, err)
 
 		assert.NotNil(t, uc)
 	})
