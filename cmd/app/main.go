@@ -6,6 +6,7 @@ import (
 	"invento-service/internal/app"
 	"log"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 	"time"
 )
@@ -31,6 +32,19 @@ func main() {
 	}
 	if err := cfg.Validate(); err != nil {
 		log.Fatalf("config validation failed: %v", err)
+	}
+
+	// Apply runtime memory configuration from config
+	// This overrides GOMEMLIMIT/GOGC env vars for consistency
+	if memLimit, err := config.ParseMemLimit(cfg.Performance.GoMemLimit); err == nil && memLimit > 0 {
+		debug.SetMemoryLimit(memLimit)
+		log.Printf("GOMEMLIMIT set to %s (%d bytes)", cfg.Performance.GoMemLimit, memLimit)
+	} else if err != nil {
+		log.Printf("WARNING: invalid GOMEMLIMIT value %q: %v", cfg.Performance.GoMemLimit, err)
+	}
+	if cfg.Performance.GoGC >= 0 {
+		oldGOGC := debug.SetGCPercent(cfg.Performance.GoGC)
+		log.Printf("GOGC set to %d (was %d)", cfg.Performance.GoGC, oldGOGC)
 	}
 
 	db, err := config.ConnectDatabase(cfg)
