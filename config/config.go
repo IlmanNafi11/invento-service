@@ -1,9 +1,11 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -70,14 +72,14 @@ type SupabaseConfig struct {
 	JWTSecret  string
 }
 
-func LoadConfig() *Config {
+func LoadConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Tidak dapat memuat file .env, menggunakan environment variables")
 	}
 
 	config := &Config{
 		App: AppConfig{
-			Name:           getEnv("APP_NAME", "Fiber Boilerplate"),
+			Name:           getEnv("APP_NAME", "invento-service"),
 			Port:           getEnv("APP_PORT", "3000"),
 			Env:            getEnv("APP_ENV", "development"),
 			CorsOriginDev:  getEnv("CORS_ORIGIN_DEVELOPMENT", "http://localhost:5173"),
@@ -125,7 +127,23 @@ func LoadConfig() *Config {
 		},
 	}
 
-	return config
+	return config, nil
+}
+
+// Validate checks that all critical environment variables are set.
+// Call this explicitly in main() so tests can skip validation.
+func (c *Config) Validate() error {
+	var missing []string
+	if c.Supabase.URL == "" {
+		missing = append(missing, "SUPABASE_URL")
+	}
+	if c.Supabase.ServiceKey == "" {
+		missing = append(missing, "SUPABASE_SERVICE_ROLE_KEY")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("missing required environment variables: %s", strings.Join(missing, ", "))
+	}
+	return nil
 }
 
 func getEnv(key, defaultValue string) string {

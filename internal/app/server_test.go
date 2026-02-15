@@ -41,11 +41,10 @@ func TestNewServer_CreatesFiberApp(t *testing.T) {
 
 	cfg := createTestConfig()
 
-	// This test verifies that NewServer can be called without panic
+	// This test verifies that NewServer can be called without error
 	// The actual server creation may require additional setup
-	assert.NotPanics(t, func() {
-		_ = app.NewServer(cfg, db)
-	}, "NewServer should not panic when called with valid config and db")
+	_, err := app.NewServer(cfg, db)
+	require.NoError(t, err, "NewServer should not return error when called with valid config and db")
 }
 
 // TestNewServer_WithDevelopmentConfig tests server creation with development config
@@ -102,9 +101,8 @@ func TestNewServer_WithDevelopmentConfig(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	assert.NotPanics(t, func() {
-		_ = app.NewServer(cfg, db)
-	}, "NewServer should work with development config")
+	_, err := app.NewServer(cfg, db)
+	require.NoError(t, err, "NewServer should work with development config")
 }
 
 // TestNewServer_WithProductionConfig tests server creation with production config
@@ -113,9 +111,8 @@ func TestNewServer_WithProductionConfig(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	assert.NotPanics(t, func() {
-		_ = app.NewServer(cfg, db)
-	}, "NewServer should work with production config")
+	_, err := app.NewServer(cfg, db)
+	require.NoError(t, err, "NewServer should work with production config")
 }
 
 // TestServer_ErrorHandler_NotFound tests the custom error handler for 404
@@ -124,7 +121,8 @@ func TestServer_ErrorHandler_NotFound(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Test a non-existent route
 	req := httptest.NewRequest("GET", "/non-existent-route", nil)
@@ -146,7 +144,8 @@ func TestServer_ErrorHandler_UploadsPath(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Test an upload path that doesn't exist
 	req := httptest.NewRequest("GET", "/uploads/non-existent-file.txt", nil)
@@ -164,7 +163,8 @@ func TestServer_ErrorHandler_TusProtocol(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Test TUS protocol request - returns 401 because of JWT middleware, but route exists
 	req := httptest.NewRequest("PATCH", "/api/v1/project/upload/123", nil)
@@ -182,7 +182,8 @@ func TestServer_RouteRegistration_AuthRoutes(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Test that auth routes exist (even if they return authentication errors)
 	routes := []struct {
@@ -221,7 +222,8 @@ func TestServer_RouteRegistration_RoleRoutes(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	routes := []struct {
 		method string
@@ -254,7 +256,8 @@ func TestServer_RouteRegistration_UserRoutes(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	routes := []struct {
 		method string
@@ -286,7 +289,8 @@ func TestServer_RouteRegistration_ProfileRoutes(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	routes := []struct {
 		method string
@@ -314,7 +318,8 @@ func TestServer_RouteRegistration_ProjectRoutes(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	routes := []struct {
 		method string
@@ -357,7 +362,8 @@ func TestServer_RouteRegistration_ModulRoutes(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	routes := []struct {
 		method string
@@ -398,7 +404,8 @@ func TestServer_RouteRegistration_StatisticsRoutes(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	routes := []struct {
 		method string
@@ -425,7 +432,8 @@ func TestServer_RouteRegistration_MonitoringRoutes(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	routes := []struct {
 		method string
@@ -456,7 +464,8 @@ func TestServer_RouteRegistration_SwaggerRoute(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Test swagger route
 	req := httptest.NewRequest("GET", "/swagger/index.html", nil)
@@ -474,7 +483,8 @@ func TestServer_Middleware_RequestID(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Make a request and check for X-Request-ID header
 	req := httptest.NewRequest("GET", "/health", nil)
@@ -494,7 +504,8 @@ func TestServer_Middleware_CORS_Development(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Make a request with Origin header
 	req := httptest.NewRequest("GET", "/health", nil)
@@ -521,7 +532,8 @@ func TestServer_Middleware_CORS_Production(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Make a request with Origin header
 	req := httptest.NewRequest("GET", "/health", nil)
@@ -541,7 +553,8 @@ func TestServer_StaticFileUploads(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Test that uploads route responds (likely 404 for non-existent file, but route exists)
 	req := httptest.NewRequest("GET", "/uploads/test.txt", nil)
@@ -560,35 +573,35 @@ func TestServer_LoggerConfiguration(t *testing.T) {
 		env           string
 		logLevel      string
 		logFormat     string
-		expectPanic   bool
+		expectError   bool
 	}{
 		{
 			name:        "Development with text format",
 			env:         "development",
 			logLevel:    "INFO",
 			logFormat:   "text",
-			expectPanic: false,
+			expectError: false,
 		},
 		{
 			name:        "Development with json format",
 			env:         "development",
 			logLevel:    "DEBUG",
 			logFormat:   "json",
-			expectPanic: false,
+			expectError: false,
 		},
 		{
 			name:        "Production",
 			env:         "production",
 			logLevel:    "WARN",
 			logFormat:   "json",
-			expectPanic: false,
+			expectError: false,
 		},
 		{
 			name:        "Test environment",
 			env:         "test",
 			logLevel:    "ERROR",
 			logFormat:   "text",
-			expectPanic: false,
+			expectError: false,
 		},
 	}
 
@@ -602,14 +615,11 @@ func TestServer_LoggerConfiguration(t *testing.T) {
 			db := setupTestDB(t)
 			defer teardownTestDB(db)
 
-			if tt.expectPanic {
-				assert.Panics(t, func() {
-					_ = app.NewServer(cfg, db)
-				})
+			_, err := app.NewServer(cfg, db)
+			if tt.expectError {
+				assert.Error(t, err)
 			} else {
-				assert.NotPanics(t, func() {
-					_ = app.NewServer(cfg, db)
-				})
+				assert.NoError(t, err)
 			}
 		})
 	}
@@ -666,7 +676,8 @@ func TestServer_Shutdown(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Make a test request to ensure server is running
 	req := httptest.NewRequest("GET", "/health", nil)
@@ -685,7 +696,8 @@ func TestServer_ShutdownWithContext(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Make a test request
 	req := httptest.NewRequest("GET", "/health", nil)
@@ -713,7 +725,8 @@ func TestServer_MultipleRequests(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Make multiple concurrent requests
 	numRequests := 10
@@ -751,7 +764,8 @@ func TestServer_DifferentHTTPMethods(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 
@@ -773,7 +787,8 @@ func TestServer_HeaderHandling(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	req := httptest.NewRequest("GET", "/health", nil)
 	req.Header.Set("User-Agent", "test-agent")
@@ -832,9 +847,8 @@ func TestServer_ConfigVariations(t *testing.T) {
 			db := setupTestDB(t)
 			defer teardownTestDB(db)
 
-			assert.NotPanics(t, func() {
-				_ = app.NewServer(cfg, db)
-			}, "NewServer should not panic with config variation: %s", tt.name)
+			_, err := app.NewServer(cfg, db)
+			assert.NoError(t, err, "NewServer should not return error with config variation: %s", tt.name)
 		})
 	}
 }
@@ -846,7 +860,8 @@ func TestServer_CORSHeadersVerification(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	// Make a regular GET request and check CORS headers are set
 	req := httptest.NewRequest("GET", "/health", nil)
@@ -867,7 +882,8 @@ func TestServer_ErrorHandlerBehavior(t *testing.T) {
 	db := setupTestDB(t)
 	defer teardownTestDB(db)
 
-	appInstance := app.NewServer(cfg, db)
+	appInstance, err := app.NewServer(cfg, db)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name           string
