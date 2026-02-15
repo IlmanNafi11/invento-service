@@ -408,7 +408,7 @@ func TestRBACMiddleware_ValidRoleWithoutPermission_Returns403(t *testing.T) {
 	var body map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	require.NoError(t, err)
-	assert.Equal(t, false, body["success"])
+	assert.Equal(t, "error", body["status"])
 }
 
 func TestRBACMiddleware_InvalidRole_Returns403(t *testing.T) {

@@ -20,7 +20,7 @@ func SetupTestApp(cfg *config.Config) *fiber.App {
 				code = e.Code
 			}
 			return c.Status(code).JSON(fiber.Map{
-				"success": false,
+				"status":  "error",
 				"message": err.Error(),
 				"code":    code,
 			})

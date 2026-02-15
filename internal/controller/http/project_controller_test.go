@@ -93,7 +93,7 @@ func TestProjectController_GetByID_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Detail project berhasil diambil", response["message"])
 	assert.Equal(t, float64(200), response["code"])
 
@@ -132,7 +132,7 @@ func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "error", response["status"])
 	assert.Equal(t, "Project tidak ditemukan", response["message"])
 
 	mockUC.AssertExpectations(t)
@@ -187,7 +187,7 @@ func TestProjectController_GetList_WithFilters(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 
 	mockUC.AssertExpectations(t)
 }
@@ -227,7 +227,7 @@ func TestProjectController_UpdateMetadata_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Metadata project berhasil diperbarui", response["message"])
 
 	mockUC.AssertExpectations(t)
@@ -260,7 +260,7 @@ func TestProjectController_Delete_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Project berhasil dihapus", response["message"])
 
 	mockUC.AssertExpectations(t)
@@ -333,7 +333,7 @@ func TestProjectController_UpdateMetadata_AccessDenied(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "error", response["status"])
 
 	mockUC.AssertExpectations(t)
 }
@@ -403,7 +403,7 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 			var response map[string]interface{}
 			err = json.NewDecoder(resp.Body).Decode(&response)
 			assert.NoError(t, err)
-			assert.Equal(t, true, response["success"])
+			assert.Equal(t, "success", response["status"])
 
 			mockUC.AssertExpectations(t)
 		})
@@ -499,7 +499,7 @@ func TestProjectController_Delete_ProjectNotFound(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "error", response["status"])
 	assert.Equal(t, "Project tidak ditemukan", response["message"])
 
 	mockUC.AssertExpectations(t)
@@ -594,7 +594,7 @@ func TestProjectController_Download_ProjectNotFound(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "error", response["status"])
 	assert.Equal(t, "Project tidak ditemukan", response["message"])
 
 	mockUC.AssertExpectations(t)
@@ -628,7 +628,7 @@ func TestProjectController_GetList_UseCaseError(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "error", response["status"])
 
 	mockUC.AssertExpectations(t)
 }
@@ -708,7 +708,7 @@ func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
 			var response map[string]interface{}
 			err = json.NewDecoder(resp.Body).Decode(&response)
 			assert.NoError(t, err)
-			assert.Equal(t, true, response["success"])
+			assert.Equal(t, "success", response["status"])
 
 			mockUC.AssertExpectations(t)
 		})
@@ -805,7 +805,7 @@ func TestProjectController_GetList_FilterKategoriBoundaryCases(t *testing.T) {
 			var response map[string]interface{}
 			err = json.NewDecoder(resp.Body).Decode(&response)
 			assert.NoError(t, err)
-			assert.Equal(t, true, response["success"])
+			assert.Equal(t, "success", response["status"])
 
 			mockUC.AssertExpectations(t)
 		})

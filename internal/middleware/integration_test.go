@@ -7,7 +7,6 @@ import (
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
-	"invento-service/internal/logger"
 	"net/http/httptest"
 	"testing"
 
@@ -19,9 +18,6 @@ import (
 // TestIntegrationMiddlewareRequestFlow tests complete request flow through middleware stack
 func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 	t.Run("FullMiddlewareStackSuccessFlow", func(t *testing.T) {
-		// Create logger
-		log := logger.NewLogger(logger.INFO, logger.TextFormat)
-
 		// Create Fiber app with full middleware stack
 		app := fiber.New(fiber.Config{
 			ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -34,7 +30,6 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 
 		// Apply middleware stack in correct order
 		app.Use(RequestID())
-		app.Use(RequestLogger(log))
 
 		// Add test handler
 		app.Get("/api/test", func(c *fiber.Ctx) error {
@@ -61,7 +56,7 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify response structure
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "Success", result.Message)
 		assert.NotNil(t, result.Data)
 
@@ -73,7 +68,6 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 	t.Run("MiddlewareExecutionOrder", func(t *testing.T) {
 		// Track middleware execution order
 		executionOrder := []string{}
-		log := logger.NewLogger(logger.INFO, logger.TextFormat)
 
 		app := fiber.New()
 
@@ -82,7 +76,6 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 			executionOrder = append(executionOrder, "middleware1")
 			return c.Next()
 		})
-		app.Use(RequestLogger(log))
 		app.Use(func(c *fiber.Ctx) error {
 			executionOrder = append(executionOrder, "middleware2")
 			return c.Next()
@@ -106,11 +99,8 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 	})
 
 	t.Run("MiddlewareShortCircuitOnValidation", func(t *testing.T) {
-		log := logger.NewLogger(logger.INFO, logger.TextFormat)
-
 		app := fiber.New()
 		app.Use(RequestID())
-		app.Use(RequestLogger(log))
 
 		type TestRequest struct {
 			Name string `json:"name" validate:"required"`
@@ -143,14 +133,12 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		var result domain.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 }
 
 // TestIntegrationMiddlewareErrorScenarios tests various error scenarios
 func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
-	log := logger.NewLogger(logger.INFO, logger.TextFormat)
-
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
@@ -162,7 +150,6 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 
 	// Apply middleware
 	app.Use(RequestID())
-	app.Use(RequestLogger(log))
 
 	// Define error routes
 	app.Get("/error/notfound", func(c *fiber.Ctx) error {
@@ -210,7 +197,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Resource tidak ditemukan", result.Message)
 		assert.Equal(t, fiber.StatusNotFound, result.Code)
 	})
@@ -229,7 +216,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Contains(t, result.Message, "tidak valid")
 	})
 
@@ -247,7 +234,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Token tidak valid", result.Message)
 	})
 
@@ -265,7 +252,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Akses ditolak", result.Message)
 	})
 
@@ -283,7 +270,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Data sudah ada", result.Message)
 	})
 
@@ -301,7 +288,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Terjadi kesalahan pada server", result.Message)
 	})
 
@@ -319,7 +306,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Ukuran file terlalu besar", result.Message)
 	})
 }
@@ -327,14 +314,8 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 // TestIntegrationMiddlewareRequestIDInLogs tests that request ID is properly logged
 func TestIntegrationMiddlewareRequestIDInLogs(t *testing.T) {
 	t.Run("RequestIDIsGeneratedAndLogged", func(t *testing.T) {
-		// Create a buffer to capture log output
-		var logBuffer bytes.Buffer
-		log := logger.NewLogger(logger.INFO, logger.TextFormat)
-		log.SetOutput(&logBuffer)
-
 		app := fiber.New()
 		app.Use(RequestID())
-		app.Use(RequestLogger(log))
 
 		app.Get("/test", func(c *fiber.Ctx) error {
 			return c.SendString("OK")
@@ -356,11 +337,9 @@ func TestIntegrationMiddlewareRequestIDInLogs(t *testing.T) {
 
 	t.Run("CustomRequestIDIsPreserved", func(t *testing.T) {
 		customRequestID := "custom-req-id-12345"
-		log := logger.NewLogger(logger.INFO, logger.TextFormat)
 
 		app := fiber.New()
 		app.Use(RequestID())
-		app.Use(RequestLogger(log))
 
 		app.Get("/test", func(c *fiber.Ctx) error {
 			requestID := GetRequestID(c)
@@ -388,8 +367,6 @@ func TestIntegrationMiddlewareRequestIDInLogs(t *testing.T) {
 
 // TestIntegrationMiddlewareValidationIntegration tests validation middleware integration
 func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
-	log := logger.NewLogger(logger.INFO, logger.TextFormat)
-
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
@@ -400,7 +377,6 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 	})
 
 	app.Use(RequestID())
-	app.Use(RequestLogger(log))
 
 	type CreateUserRequest struct {
 		Name     string `json:"name" validate:"required,min=3"`
@@ -442,7 +418,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		var result domain.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 	})
 
 	t.Run("InvalidRequest_NameTooShort", func(t *testing.T) {
@@ -463,7 +439,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		var result domain.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 
 	t.Run("InvalidRequest_InvalidEmail", func(t *testing.T) {
@@ -484,7 +460,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		var result domain.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 
 	t.Run("InvalidRequest_PasswordTooShort", func(t *testing.T) {
@@ -505,7 +481,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		var result domain.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 
 	t.Run("InvalidRequest_MultipleErrors", func(t *testing.T) {
@@ -529,14 +505,12 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		var result domain.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 }
 
 // TestIntegrationMiddlewareWithRealWorldScenarios tests realistic API scenarios
 func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
-	log := logger.NewLogger(logger.INFO, logger.TextFormat)
-
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
@@ -547,7 +521,6 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 	})
 
 	app.Use(RequestID())
-	app.Use(RequestLogger(log))
 
 	// Simulate a simple CRUD API for items
 	type Item struct {
@@ -664,7 +637,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		var result domain.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 	})
 
 	t.Run("Scenario_GetItem_Success", func(t *testing.T) {
@@ -676,7 +649,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		var result domain.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 	})
 
 	t.Run("Scenario_GetItem_NotFound", func(t *testing.T) {
@@ -688,7 +661,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		var result domain.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		// SendNotFoundResponse uses the message parameter directly
 		assert.Equal(t, "Item", result.Message)
 	})
@@ -707,7 +680,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		var result domain.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "Item created", result.Message)
 	})
 
@@ -725,7 +698,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		var result domain.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 
 	t.Run("Scenario_UpdateItem_Success", func(t *testing.T) {
@@ -742,7 +715,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		var result domain.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "Item updated", result.Message)
 	})
 
@@ -755,7 +728,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		var result domain.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "Item deleted", result.Message)
 	})
 }

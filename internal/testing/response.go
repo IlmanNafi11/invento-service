@@ -130,15 +130,15 @@ func AssertResponseCode(t *testing.T, resp *http.Response, expectedCode int) {
 	assert.Equal(t, float64(expectedCode), code, "Code mismatch")
 }
 
-// AssertSuccessField asserts that the success field is true
+// AssertSuccessField asserts that the status field is "success"
 func AssertSuccessField(t *testing.T, resp *http.Response) {
 	var body map[string]interface{}
 	err := json.NewDecoder(resp.Body).Decode(&body)
 	assert.NoError(t, err, "Failed to decode response body")
 
-	success, exists := body["success"]
-	assert.True(t, exists, "Expected 'success' field in response")
-	assert.Equal(t, true, success, "Expected success to be true")
+	status, exists := body["status"]
+	assert.True(t, exists, "Expected 'status' field in response")
+	assert.Equal(t, "success", status, "Expected status to be 'success'")
 }
 
 // AssertDataFieldExists asserts that the data field exists in the response

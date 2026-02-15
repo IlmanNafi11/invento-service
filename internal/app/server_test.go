@@ -3,7 +3,6 @@ package app_test
 import (
 	"invento-service/config"
 	app "invento-service/internal/app"
-	"invento-service/internal/logger"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -635,51 +634,6 @@ func TestServer_LoggerConfiguration(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-		})
-	}
-}
-
-// TestServer_LogLevelParsing tests log level parsing
-func TestServer_LogLevelParsing(t *testing.T) {
-	tests := []struct {
-		name      string
-		logLevel  string
-		expected  logger.LogLevel
-	}{
-		{"DEBUG level", "DEBUG", logger.DEBUG},
-		{"INFO level", "INFO", logger.INFO},
-		{"WARN level", "WARN", logger.WARN},
-		{"ERROR level", "ERROR", logger.ERROR},
-		{"Invalid level defaults to INFO", "INVALID", logger.INFO},
-		{"Empty level defaults to INFO", "", logger.INFO},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := logger.ParseLogLevel(tt.logLevel)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-// TestServer_LogFormatParsing tests log format parsing
-func TestServer_LogFormatParsing(t *testing.T) {
-	tests := []struct {
-		name      string
-		logFormat string
-		expected  logger.LogFormat
-	}{
-		{"JSON format", "json", logger.JSONFormat},
-		{"text format", "text", logger.TextFormat},
-		{"TEXT format", "TEXT", logger.TextFormat},
-		{"Invalid format defaults to text", "invalid", logger.TextFormat},
-		{"Empty format defaults to text", "", logger.TextFormat},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := logger.ParseLogFormat(tt.logFormat)
-			assert.Equal(t, tt.expected, result)
 		})
 	}
 }

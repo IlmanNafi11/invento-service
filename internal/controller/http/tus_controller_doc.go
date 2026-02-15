@@ -155,7 +155,7 @@ package http
 //
 // # Response:
 // {
-//   "success": true,
+//   "status": "success",
 //   "message": "Upload berhasil diinisiasi",
 //   "code": 201,
 //   "data": {

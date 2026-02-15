@@ -170,7 +170,7 @@ func TestUserController_GetUserList_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Daftar user berhasil diambil", response["message"])
 
 	mockUserUC.AssertExpectations(t)
@@ -224,7 +224,7 @@ func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 
 	mockUserUC.AssertExpectations(t)
 }
@@ -255,7 +255,7 @@ func TestUserController_UpdateUserRole_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Role user berhasil diperbarui", response["message"])
 
 	mockUserUC.AssertExpectations(t)
@@ -308,7 +308,7 @@ func TestUserController_DeleteUser_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "User berhasil dihapus", response["message"])
 
 	mockUserUC.AssertExpectations(t)
@@ -364,7 +364,7 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Daftar file user berhasil diambil", response["message"])
 
 	mockUserUC.AssertExpectations(t)
@@ -416,7 +416,7 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 
 	mockUserUC.AssertExpectations(t)
 }
@@ -455,7 +455,7 @@ func TestUserController_GetProfile_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Profil user berhasil diambil", response["message"])
 
 	mockUserUC.AssertExpectations(t)
@@ -502,7 +502,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Profil berhasil diperbarui", response["message"])
 
 	mockUserUC.AssertExpectations(t)
@@ -595,7 +595,7 @@ func TestUserController_GetUserPermissions_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Permissions user berhasil diambil", response["message"])
 
 	mockUserUC.AssertExpectations(t)
@@ -626,7 +626,7 @@ func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 
 	mockUserUC.AssertExpectations(t)
 }
@@ -692,7 +692,7 @@ func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "error", response["status"])
 	assert.Contains(t, response["message"], "Project IDs atau Modul IDs")
 }
 
@@ -1146,7 +1146,7 @@ func TestUserController_GetUsersForRole_Success(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Daftar user untuk role berhasil diambil", response["message"])
 
 	mockUserUC.AssertExpectations(t)
@@ -1210,7 +1210,7 @@ func TestUserController_BulkAssignRole_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Role berhasil ditetapkan ke user", response["message"])
 
 	mockUserUC.AssertExpectations(t)

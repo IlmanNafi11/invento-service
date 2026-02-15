@@ -61,7 +61,7 @@ func TestHealthController_BasicHealthCheck_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Server berjalan dengan baik", response["message"])
 	assert.Equal(t, float64(200), response["code"])
 
@@ -106,7 +106,7 @@ func TestHealthController_ComprehensiveHealthCheck_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Pemeriksaan kesehatan sistem berhasil", response["message"])
 	assert.Equal(t, float64(200), response["code"])
 
@@ -151,7 +151,7 @@ func TestHealthController_ComprehensiveHealthCheck_Unhealthy(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "error", response["status"])
 	assert.Equal(t, "Beberapa komponen sistem mengalami masalah", response["message"])
 	assert.Equal(t, float64(503), response["code"])
 
@@ -216,7 +216,7 @@ func TestHealthController_GetSystemMetrics_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Metrics sistem berhasil diambil", response["message"])
 	assert.Equal(t, float64(200), response["code"])
 
@@ -271,7 +271,7 @@ func TestHealthController_GetApplicationStatus_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Status aplikasi berhasil diambil", response["message"])
 	assert.Equal(t, float64(200), response["code"])
 

@@ -7,7 +7,6 @@ import (
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
-	"invento-service/internal/logger"
 	"invento-service/internal/middleware"
 	"fmt"
 	"net/http/httptest"
@@ -20,9 +19,6 @@ import (
 
 // TestIntegrationMiddlewareChain tests that all middleware work together correctly
 func TestIntegrationMiddlewareChain(t *testing.T) {
-	// Create logger for testing
-	log := logger.NewLogger(logger.INFO, logger.TextFormat)
-
 	// Create Fiber app with middleware chain
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -31,22 +27,21 @@ func TestIntegrationMiddlewareChain(t *testing.T) {
 				code = e.Code
 			}
 			return c.Status(code).JSON(fiber.Map{
-				"success": false,
+				"status":  "error",
 				"message": err.Error(),
 				"code":    code,
 			})
 		},
 	})
 
-	// Apply middleware chain: RequestID -> Logging
+	// Apply middleware chain: RequestID
 	app.Use(middleware.RequestID())
-	app.Use(middleware.RequestLogger(log))
 
 	// Add test handler
 	app.Get("/test", func(c *fiber.Ctx) error {
 		requestID := middleware.GetRequestID(c)
 		return c.JSON(fiber.Map{
-			"success":    true,
+			"status":    "success",
 			"message":    "Test successful",
 			"request_id": requestID,
 		})
@@ -68,7 +63,7 @@ func TestIntegrationMiddlewareChain(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify response structure
-	assert.True(t, result["success"].(bool))
+	assert.Equal(t, "success", result["status"].(string))
 	assert.Equal(t, "Test successful", result["message"])
 	assert.Equal(t, requestID, result["request_id"], "Request ID should match header")
 }
@@ -112,7 +107,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Test Resource tidak ditemukan", result.Message)
 		assert.Equal(t, fiber.StatusNotFound, result.Code)
 	})
@@ -127,7 +122,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Field wajib diisi", result.Message)
 		assert.Equal(t, fiber.StatusBadRequest, result.Code)
 	})
@@ -142,7 +137,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Token tidak valid", result.Message)
 		assert.Equal(t, fiber.StatusUnauthorized, result.Code)
 	})
@@ -157,7 +152,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Akses ditolak", result.Message)
 		assert.Equal(t, fiber.StatusForbidden, result.Code)
 	})
@@ -172,7 +167,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Data sudah ada", result.Message)
 		assert.Equal(t, fiber.StatusConflict, result.Code)
 	})
@@ -187,7 +182,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Equal(t, "Terjadi kesalahan pada server", result.Message)
 		assert.Equal(t, fiber.StatusInternalServerError, result.Code)
 	})
@@ -235,7 +230,7 @@ func TestIntegrationDTOMiddleware(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "Data valid", result.Message)
 	})
 
@@ -255,7 +250,7 @@ func TestIntegrationDTOMiddleware(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		assert.Contains(t, result.Message, "valid")
 	})
 
@@ -276,7 +271,7 @@ func TestIntegrationDTOMiddleware(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 }
 
@@ -334,7 +329,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 
 		listData, ok := result.Data.(map[string]interface{})
 		require.True(t, ok)
@@ -357,7 +352,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 
 		listData, ok := result.Data.(map[string]interface{})
 		require.True(t, ok)
@@ -386,8 +381,6 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 // TestIntegrationCompleteRequestCycle tests a complete request/response cycle
 func TestIntegrationCompleteRequestCycle(t *testing.T) {
 	// Setup complete application stack
-	log := logger.NewLogger(logger.INFO, logger.TextFormat)
-
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
@@ -399,7 +392,6 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 
 	// Apply middleware
 	app.Use(middleware.RequestID())
-	app.Use(middleware.RequestLogger(log))
 
 	// Define request types
 	type CreateUserRequest struct {
@@ -495,7 +487,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "User berhasil dibuat", result.Message)
 
 		user, ok := result.Data.(map[string]interface{})
@@ -520,7 +512,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 
 	t.Run("GetUser_Success", func(t *testing.T) {
@@ -533,7 +525,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "User ditemukan", result.Message)
 	})
 
@@ -547,7 +539,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 		// SendNotFoundResponse uses the message parameter directly
 		assert.Equal(t, "User", result.Message)
 	})
@@ -568,7 +560,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "User berhasil diupdate", result.Message)
 	})
 
@@ -582,7 +574,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.True(t, result.Success)
+		assert.Equal(t, "success", result.Status)
 		assert.Equal(t, "User berhasil dihapus", result.Message)
 	})
 
@@ -596,17 +588,14 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
-		assert.False(t, result.Success)
+		assert.Equal(t, "error", result.Status)
 	})
 }
 
 // TestIntegrationRequestIDPropagation tests that request ID is propagated through the entire request
 func TestIntegrationRequestIDPropagation(t *testing.T) {
-	log := logger.NewLogger(logger.INFO, logger.TextFormat)
-
 	app := fiber.New()
 	app.Use(middleware.RequestID())
-	app.Use(middleware.RequestLogger(log))
 
 	app.Get("/propagate", func(c *fiber.Ctx) error {
 		requestID := middleware.GetRequestID(c)

@@ -83,7 +83,7 @@ func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Data statistik berhasil diambil", response["message"])
 
 	data := response["data"].(map[string]interface{})
@@ -128,7 +128,7 @@ func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T)
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, float64(totalProject), data["total_project"])
@@ -169,7 +169,7 @@ func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, true, response["success"])
+	assert.Equal(t, "success", response["status"])
 	assert.Equal(t, "Data statistik berhasil diambil", response["message"])
 
 	data := response["data"].(map[string]interface{})
@@ -247,7 +247,7 @@ func TestStatisticController_GetStatistics_AppError(t *testing.T) {
 	var response map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Equal(t, false, response["success"])
+	assert.Equal(t, "error", response["status"])
 
 	mockStatisticUC.AssertExpectations(t)
 }
@@ -318,14 +318,14 @@ func TestStatisticController_GetStatistics_ResponseStructure(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify response structure
-	assert.Contains(t, response, "success", "Response should have 'success' field")
+	assert.Contains(t, response, "status", "Response should have 'status' field")
 	assert.Contains(t, response, "message", "Response should have 'message' field")
 	assert.Contains(t, response, "code", "Response should have 'code' field")
 	assert.Contains(t, response, "data", "Response should have 'data' field")
 	assert.Contains(t, response, "timestamp", "Response should have 'timestamp' field")
 
 	// Verify field types
-	assert.IsType(t, true, response["success"])
+	assert.IsType(t, "string", response["status"])
 	assert.IsType(t, "", response["message"])
 	assert.IsType(t, float64(0), response["code"])
 	assert.IsType(t, map[string]interface{}{}, response["data"])

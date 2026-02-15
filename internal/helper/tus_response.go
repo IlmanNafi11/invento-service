@@ -12,7 +12,7 @@ func SendTusInitiateResponse(c *fiber.Ctx, uploadID string, uploadURL string, fi
 	SetTusLocationHeader(c, uploadURL)
 
 	response := map[string]interface{}{
-		"success": true,
+		"status":  "success",
 		"message": "Upload berhasil diinisiasi",
 		"code":    fiber.StatusCreated,
 		"data": map[string]interface{}{
@@ -48,7 +48,7 @@ func SendTusDeleteResponse(c *fiber.Ctx) error {
 
 func SendTusSlotResponse(c *fiber.Ctx, available bool, message string, queueLength int, activeCount int, maxConcurrent int) error {
 	response := map[string]interface{}{
-		"success": true,
+		"status":  "success",
 		"message": "Pengecekan slot upload berhasil",
 		"code":    fiber.StatusOK,
 		"data": map[string]interface{}{
