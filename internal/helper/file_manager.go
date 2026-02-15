@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"fiber-boiler-plate/config"
+	"invento-service/config"
 	"fmt"
 	"os"
 	"path/filepath"

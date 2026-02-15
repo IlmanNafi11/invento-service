@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/internal/domain"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/require"

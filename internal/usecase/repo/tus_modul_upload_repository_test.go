@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

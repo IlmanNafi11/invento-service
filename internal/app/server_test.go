@@ -1,9 +1,9 @@
 package app_test
 
 import (
-	"fiber-boiler-plate/config"
-	app "fiber-boiler-plate/internal/app"
-	"fiber-boiler-plate/internal/logger"
+	"invento-service/config"
+	app "invento-service/internal/app"
+	"invento-service/internal/logger"
 	"net/http/httptest"
 	"strings"
 	"testing"

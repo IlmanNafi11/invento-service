@@ -1,7 +1,7 @@
 package testing_test
 
 import (
-	testutil "fiber-boiler-plate/internal/testing"
+	testutil "invento-service/internal/testing"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -6,9 +6,9 @@ import (
 	"log"
 	"strconv"
 
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
-	apperrors "fiber-boiler-plate/internal/errors"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
 )
 
 type TusManager struct {

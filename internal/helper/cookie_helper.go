@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"fiber-boiler-plate/config"
+	"invento-service/config"
 	"time"
 
 	"github.com/gofiber/fiber/v2"

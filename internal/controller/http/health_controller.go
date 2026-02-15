@@ -1,9 +1,9 @@
 package http
 
 import (
-	"fiber-boiler-plate/internal/controller/base"
-	"fiber-boiler-plate/internal/helper"
-	"fiber-boiler-plate/internal/usecase"
+	"invento-service/internal/controller/base"
+	"invento-service/internal/helper"
+	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
 )

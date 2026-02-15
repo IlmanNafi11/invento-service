@@ -1,9 +1,9 @@
 package helper_test
 
 import (
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/helper"
 	"io"
 	"mime/multipart"
 	"testing"

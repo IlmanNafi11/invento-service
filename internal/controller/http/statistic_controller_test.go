@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	
-	"fiber-boiler-plate/internal/domain"
-	apperrors "fiber-boiler-plate/internal/errors"
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
 	"net/http/httptest"
 	"testing"
 
@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	// Import alias for the http package to test it
-	httpcontroller "fiber-boiler-plate/internal/controller/http"
+	httpcontroller "invento-service/internal/controller/http"
 )
 
 // MockStatisticUsecase is a mock for usecase.StatisticUsecase

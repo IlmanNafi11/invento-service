@@ -2,11 +2,11 @@ package http
 
 import (
 	"errors"
-	"fiber-boiler-plate/internal/controller/base"
-	"fiber-boiler-plate/internal/domain"
-	apperrors "fiber-boiler-plate/internal/errors"
-	"fiber-boiler-plate/internal/helper"
-	"fiber-boiler-plate/internal/usecase"
+	"invento-service/internal/controller/base"
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
+	"invento-service/internal/helper"
+	"invento-service/internal/usecase"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"

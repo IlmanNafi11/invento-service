@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/app"
+	"invento-service/config"
+	"invento-service/internal/app"
 	"log"
 )
 

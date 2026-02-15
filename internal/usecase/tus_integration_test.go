@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
-	"fiber-boiler-plate/internal/usecase/repo"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/helper"
+	"invento-service/internal/usecase/repo"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

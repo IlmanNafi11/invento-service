@@ -1,9 +1,9 @@
 package repo_test
 
 import (
-	"fiber-boiler-plate/internal/domain"
-	testhelper "fiber-boiler-plate/internal/testing"
-	"fiber-boiler-plate/internal/usecase/repo"
+	"invento-service/internal/domain"
+	testhelper "invento-service/internal/testing"
+	"invento-service/internal/usecase/repo"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

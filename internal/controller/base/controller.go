@@ -2,7 +2,7 @@ package base
 
 import (
 	"errors"
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/internal/helper"
 	"strconv"
 
 	"github.com/go-playground/validator/v10"

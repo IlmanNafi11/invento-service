@@ -38,7 +38,7 @@ Backend boilerplate menggunakan Fiber Framework dengan implementasi Clean Archit
 ## Struktur Project
 
 ```
-fiber-boiler-plate/
+invento-service/
 ├── api/                       # OpenAPI specifications
 │   ├── auth.yaml             # Authentication endpoints
 │   └── health.yaml           # Health check endpoints
@@ -110,7 +110,7 @@ fiber-boiler-plate/
 
 ```bash
 git clone <repository-url>
-cd fiber-boiler-plate
+cd invento-service
 ```
 
 ### 3. Environment Setup
@@ -230,7 +230,7 @@ Response:
   "data": {
     "status": "healthy",
     "app": {
-      "name": "fiber-boiler-plate",
+      "name": "invento-service",
       "version": "1.0.0",
       "environment": "development",
       "uptime": "5h 30m 15s"

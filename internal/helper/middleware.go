@@ -1,8 +1,8 @@
 package helper
 
 import (
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/usecase/repo"
+	"invento-service/internal/domain"
+	"invento-service/internal/usecase/repo"
 	"log"
 	"strconv"
 	"strings"

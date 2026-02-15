@@ -1,7 +1,7 @@
 package supabase
 
 import (
-	apperrors "fiber-boiler-plate/internal/errors"
+	apperrors "invento-service/internal/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"

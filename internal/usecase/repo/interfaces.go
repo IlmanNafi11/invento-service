@@ -3,7 +3,7 @@ package repo
 import (
 	"time"
 
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/internal/domain"
 )
 
 type UserRepository interface {

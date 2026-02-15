@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/internal/domain"
 	"fmt"
 	"io"
 	"net/http"

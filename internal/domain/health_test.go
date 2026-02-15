@@ -39,7 +39,7 @@ func TestBasicHealthCheck_Structure(t *testing.T) {
 func TestAppInfo_Structure(t *testing.T) {
 	startTime := time.Now()
 	appInfo := AppInfo{
-		Name:        "fiber-boiler-plate",
+		Name:        "invento-service",
 		Version:     "1.0.0",
 		Environment: "test",
 		Uptime:      "1h 30m 45s",
@@ -47,7 +47,7 @@ func TestAppInfo_Structure(t *testing.T) {
 		Status:      "running",
 	}
 
-	assert.Equal(t, "fiber-boiler-plate", appInfo.Name)
+	assert.Equal(t, "invento-service", appInfo.Name)
 	assert.Equal(t, "1.0.0", appInfo.Version)
 	assert.Equal(t, "test", appInfo.Environment)
 	assert.Equal(t, "1h 30m 45s", appInfo.Uptime)

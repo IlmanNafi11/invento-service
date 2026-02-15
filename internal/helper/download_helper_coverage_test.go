@@ -1,8 +1,8 @@
 package helper
 
 import (
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/config"
+	"invento-service/internal/domain"
 	"os"
 	"path/filepath"
 	"testing"

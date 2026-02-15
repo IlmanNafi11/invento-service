@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"fiber-boiler-plate/internal/controller/base"
-	httpcontroller "fiber-boiler-plate/internal/controller/http"
-	"fiber-boiler-plate/internal/domain"
-	apperrors "fiber-boiler-plate/internal/errors"
-	"fiber-boiler-plate/internal/helper"
-	app_testing "fiber-boiler-plate/internal/testing"
+	"invento-service/internal/controller/base"
+	httpcontroller "invento-service/internal/controller/http"
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
+	"invento-service/internal/helper"
+	app_testing "invento-service/internal/testing"
 )
 
 // MockModulUsecase mocks the ModulUsecase interface

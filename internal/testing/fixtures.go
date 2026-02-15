@@ -1,7 +1,7 @@
 package testing
 
 import (
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/internal/domain"
 	"time"
 )
 

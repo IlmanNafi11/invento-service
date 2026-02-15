@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/config"
+	"invento-service/internal/domain"
 	"testing"
 	"time"
 

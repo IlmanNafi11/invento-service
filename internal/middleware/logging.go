@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"fiber-boiler-plate/internal/logger"
+	"invento-service/internal/logger"
 
 	"github.com/gofiber/fiber/v2"
 )

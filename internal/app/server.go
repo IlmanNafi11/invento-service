@@ -1,16 +1,16 @@
 package app
 
 import (
-	"fiber-boiler-plate/config"
-	_ "fiber-boiler-plate/docs"
-	"fiber-boiler-plate/internal/controller/base"
-	"fiber-boiler-plate/internal/controller/http"
-	"fiber-boiler-plate/internal/helper"
-	"fiber-boiler-plate/internal/logger"
-	"fiber-boiler-plate/internal/middleware"
-	supabaseAuth "fiber-boiler-plate/internal/supabase"
-	"fiber-boiler-plate/internal/usecase"
-	"fiber-boiler-plate/internal/usecase/repo"
+	"invento-service/config"
+	_ "invento-service/docs"
+	"invento-service/internal/controller/base"
+	"invento-service/internal/controller/http"
+	"invento-service/internal/helper"
+	"invento-service/internal/logger"
+	"invento-service/internal/middleware"
+	supabaseAuth "invento-service/internal/supabase"
+	"invento-service/internal/usecase"
+	"invento-service/internal/usecase/repo"
 	"time"
 
 	"github.com/gofiber/fiber/v2"

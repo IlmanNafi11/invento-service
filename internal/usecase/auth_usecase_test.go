@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 	"errors"
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/config"
+	"invento-service/internal/domain"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

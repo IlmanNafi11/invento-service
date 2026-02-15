@@ -2,7 +2,7 @@ package logger_test
 
 import (
 	"bytes"
-	"fiber-boiler-plate/internal/logger"
+	"invento-service/internal/logger"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"

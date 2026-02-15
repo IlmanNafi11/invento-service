@@ -1,7 +1,7 @@
 package testing
 
 import (
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/internal/helper"
 	"fmt"
 
 	"github.com/casbin/casbin/v2"

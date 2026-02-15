@@ -1,11 +1,11 @@
 package http
 
 import (
-	"fiber-boiler-plate/config"
-	base "fiber-boiler-plate/internal/controller/base"
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
-	"fiber-boiler-plate/internal/usecase"
+	"invento-service/config"
+	base "invento-service/internal/controller/base"
+	"invento-service/internal/domain"
+	"invento-service/internal/helper"
+	"invento-service/internal/usecase"
 	"strconv"
 
 	"github.com/go-playground/validator/v10"

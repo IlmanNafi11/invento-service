@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/internal/domain"
+	"invento-service/internal/helper"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

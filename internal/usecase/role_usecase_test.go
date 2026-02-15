@@ -2,9 +2,9 @@ package usecase
 
 import (
 	goerrors "errors"
-	"fiber-boiler-plate/internal/domain"
-	apperrors "fiber-boiler-plate/internal/errors"
-	mocks "fiber-boiler-plate/internal/usecase/test"
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
+	mocks "invento-service/internal/usecase/test"
 	"testing"
 	"time"
 

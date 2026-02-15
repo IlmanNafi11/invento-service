@@ -1,9 +1,9 @@
 package middleware
 
 import (
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
-	customValidator "fiber-boiler-plate/internal/validator"
+	"invento-service/internal/domain"
+	"invento-service/internal/helper"
+	customValidator "invento-service/internal/validator"
 	"reflect"
 
 	"github.com/go-playground/validator/v10"

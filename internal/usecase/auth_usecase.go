@@ -2,12 +2,12 @@ package usecase
 
 import (
 	"context"
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
-	apperrors "fiber-boiler-plate/internal/errors"
-	"fiber-boiler-plate/internal/helper"
-	supabaseAuth "fiber-boiler-plate/internal/supabase"
-	"fiber-boiler-plate/internal/usecase/repo"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
+	"invento-service/internal/helper"
+	supabaseAuth "invento-service/internal/supabase"
+	"invento-service/internal/usecase/repo"
 	"strings"
 	"time"
 

@@ -1,8 +1,8 @@
 package helper_test
 
 import (
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/internal/domain"
+	"invento-service/internal/helper"
 	"net/http/httptest"
 	"testing"
 

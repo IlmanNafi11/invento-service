@@ -5,7 +5,7 @@ import (
 	"mime/multipart"
 	"path/filepath"
 
-	"fiber-boiler-plate/config"
+	"invento-service/config"
 )
 
 type ModulHelper struct {

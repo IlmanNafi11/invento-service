@@ -2,9 +2,9 @@ package usecase
 
 import (
 	"errors"
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/helper"
 	"os"
 	"testing"
 	"time"

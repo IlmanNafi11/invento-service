@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	httpcontroller "fiber-boiler-plate/internal/controller/http"
-	"fiber-boiler-plate/internal/domain"
-	apperrors "fiber-boiler-plate/internal/errors"
-	app_testing "fiber-boiler-plate/internal/testing"
+	httpcontroller "invento-service/internal/controller/http"
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
+	app_testing "invento-service/internal/testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

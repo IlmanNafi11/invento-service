@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	apperrors "fiber-boiler-plate/internal/errors"
+	apperrors "invento-service/internal/errors"
 )
 
 // AuthError represents the error response from Supabase Auth API.

@@ -2,7 +2,7 @@ package helper_test
 
 import (
 	"bytes"
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/internal/helper"
 	"mime/multipart"
 	"net/http/httptest"
 	"os"

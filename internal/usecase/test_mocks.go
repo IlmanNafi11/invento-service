@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/config"
+	"invento-service/internal/domain"
 	"time"
 
 	"github.com/stretchr/testify/mock"

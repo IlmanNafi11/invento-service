@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fiber-boiler-plate/config"
+	"invento-service/config"
 )
 
 // @title                       Invento Service API

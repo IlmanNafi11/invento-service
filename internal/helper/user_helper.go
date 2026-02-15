@@ -2,8 +2,8 @@ package helper
 
 import (
 	"errors"
-	"fiber-boiler-plate/config"
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/config"
+	"invento-service/internal/domain"
 	"fmt"
 	"mime/multipart"
 )

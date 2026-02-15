@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/supabase-community/supabase-go"
-	"fiber-boiler-plate/config"
+	"invento-service/config"
 )
 
 type Client struct {

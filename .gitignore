@@ -3,3 +3,37 @@
 keys/*
 uploads/temp/*
 uploads/profil/*
+# Claude Code / OMC
+.claude
+.omc
+.omc-project
+.serena
+*/AGENTS.md
+AGENTS.md
+docs/API_STANDARDS.md
+docs/MIGRATION_NOTES.md
+internal/errors/EXAMPLES.md
+internal/testing/README.md
+
+# Build artifacts
+/app
+/main
+*.test
+config.test
+domain.test
+dto.test
+errors.test
+invento-service
+
+# Coverage files
+coverage*.out
+
+# Temp files
+*.tmp
+*.bak
+test_results.log
+clients/
+uploads
+.planning
+.opencode
+.mcp.json

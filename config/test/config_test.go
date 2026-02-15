@@ -1,7 +1,7 @@
 package config_test
 
 import (
-	"fiber-boiler-plate/config"
+	"invento-service/config"
 	"os"
 	"testing"
 

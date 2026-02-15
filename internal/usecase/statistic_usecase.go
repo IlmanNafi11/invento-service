@@ -1,9 +1,9 @@
 package usecase
 
 import (
-	"fiber-boiler-plate/internal/domain"
-	"fiber-boiler-plate/internal/helper"
-	"fiber-boiler-plate/internal/usecase/repo"
+	"invento-service/internal/domain"
+	"invento-service/internal/helper"
+	"invento-service/internal/usecase/repo"
 
 	"gorm.io/gorm"
 )

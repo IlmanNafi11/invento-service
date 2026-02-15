@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"io"
 
-	apperrors "fiber-boiler-plate/internal/errors"
-	"fiber-boiler-plate/internal/helper"
+	apperrors "invento-service/internal/errors"
+	"invento-service/internal/helper"
 
 	"github.com/gofiber/fiber/v2"
 )

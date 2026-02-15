@@ -1,7 +1,7 @@
 package testing
 
 import (
-	"fiber-boiler-plate/config"
+	"invento-service/config"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"

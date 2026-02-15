@@ -1,9 +1,9 @@
 package helper
 
 import (
-	"fiber-boiler-plate/internal/domain"
-	apperrors "fiber-boiler-plate/internal/errors"
-	"fiber-boiler-plate/internal/version"
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
+	"invento-service/internal/version"
 	"strconv"
 	"time"
 

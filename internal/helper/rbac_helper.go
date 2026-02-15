@@ -2,7 +2,7 @@ package helper
 
 import (
 	"errors"
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/internal/domain"
 )
 
 // RBACPermissionRepository defines the permission repo methods needed by RBACHelper.

@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/internal/helper"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/stretchr/testify/mock"

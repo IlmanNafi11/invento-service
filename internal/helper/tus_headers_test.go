@@ -1,7 +1,7 @@
 package helper_test
 
 import (
-	"fiber-boiler-plate/internal/helper"
+	"invento-service/internal/helper"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"

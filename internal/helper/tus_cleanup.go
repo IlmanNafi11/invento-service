@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/internal/domain"
 	"log"
 	"time"
 )

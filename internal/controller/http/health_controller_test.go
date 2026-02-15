@@ -2,8 +2,8 @@ package http_test
 
 import (
 	"encoding/json"
-	httpcontroller "fiber-boiler-plate/internal/controller/http"
-	"fiber-boiler-plate/internal/domain"
+	httpcontroller "invento-service/internal/controller/http"
+	"invento-service/internal/domain"
 	"net/http/httptest"
 	"testing"
 	"time"

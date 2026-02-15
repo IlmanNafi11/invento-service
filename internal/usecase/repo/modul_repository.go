@@ -1,7 +1,7 @@
 package repo
 
 import (
-	"fiber-boiler-plate/internal/domain"
+	"invento-service/internal/domain"
 	"log"
 
 	"gorm.io/gorm"
