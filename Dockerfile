@@ -30,6 +30,9 @@ RUN mkdir -p uploads keys && \
 
 USER appuser
 
+ENV GOMEMLIMIT=350MiB
+ENV GOGC=50
+
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
