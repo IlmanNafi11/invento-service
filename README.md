@@ -1,4 +1,4 @@
-# Fiber Boilerplate
+# Invento Service
 
 Backend boilerplate menggunakan Fiber Framework dengan implementasi Clean Architecture, authentication system, dan Redis caching.
 
