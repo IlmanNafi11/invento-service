@@ -9,12 +9,12 @@ import (
 
 func TestBaseResponse_Structure(t *testing.T) {
 	response := BaseResponse{
-		Success: true,
+		Status:  "success",
 		Message: "Operasi berhasil",
 		Code:    200,
 	}
 
-	assert.True(t, response.Success)
+	assert.Equal(t, "success", response.Status)
 	assert.Equal(t, "Operasi berhasil", response.Message)
 	assert.Equal(t, 200, response.Code)
 }
@@ -28,7 +28,7 @@ func TestSuccessResponse_Structure(t *testing.T) {
 
 	response := SuccessResponse{
 		BaseResponse: BaseResponse{
-			Success: true,
+			Status:  "success",
 			Message: "Data berhasil diambil",
 			Code:    200,
 		},
@@ -36,7 +36,7 @@ func TestSuccessResponse_Structure(t *testing.T) {
 		Timestamp: now,
 	}
 
-	assert.True(t, response.Success)
+	assert.Equal(t, "success", response.Status)
 	assert.Equal(t, "Data berhasil diambil", response.Message)
 	assert.Equal(t, 200, response.Code)
 	assert.Equal(t, data, response.Data)
@@ -49,7 +49,7 @@ func TestErrorResponse_Structure(t *testing.T) {
 
 	response := ErrorResponse{
 		BaseResponse: BaseResponse{
-			Success: false,
+			Status:  "error",
 			Message: "Validasi gagal",
 			Code:    400,
 		},
@@ -57,7 +57,7 @@ func TestErrorResponse_Structure(t *testing.T) {
 		Timestamp: now,
 	}
 
-	assert.False(t, response.Success)
+	assert.Equal(t, "error", response.Status)
 	assert.Equal(t, "Validasi gagal", response.Message)
 	assert.Equal(t, 400, response.Code)
 	assert.Equal(t, errors, response.Errors)
