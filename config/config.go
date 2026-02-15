@@ -11,12 +11,13 @@ import (
 )
 
 type Config struct {
-	App      AppConfig
-	Database DatabaseConfig
-	Supabase SupabaseConfig
-	Upload   UploadConfig
-	Logging  LoggingConfig
-	Swagger  SwaggerConfig
+	App         AppConfig
+	Database    DatabaseConfig
+	Supabase    SupabaseConfig
+	Upload      UploadConfig
+	Logging     LoggingConfig
+	Swagger     SwaggerConfig
+	Performance PerformanceConfig
 }
 
 type AppConfig struct {
@@ -72,6 +73,30 @@ type SupabaseConfig struct {
 	JWTSecret  string
 }
 
+type PerformanceConfig struct {
+	// Fiber settings
+	FiberConcurrency       int  // FIBER_CONCURRENCY, default 1024
+	FiberReduceMemory      bool // FIBER_REDUCE_MEMORY_USAGE, default false
+	FiberStreamRequestBody bool // FIBER_STREAM_REQUEST_BODY, default true
+	FiberReadBufferSize    int  // FIBER_READ_BUFFER_SIZE, default 16384
+
+	// Database pool
+	DBMaxOpenConns    int // DB_MAX_OPEN_CONNS, default 10
+	DBMaxIdleConns    int // DB_MAX_IDLE_CONNS, default 3
+	DBConnMaxLifetime int // DB_CONN_MAX_LIFETIME, default 1800 (seconds)
+	DBConnMaxIdleTime int // DB_CONN_MAX_IDLE_TIME, default 300 (seconds)
+
+	// Go runtime
+	GoMemLimit string // GOMEMLIMIT, default "350MiB"
+	GoGC       int    // GOGC, default 100
+
+	// Profiling
+	EnablePprof bool // ENABLE_PPROF, default false
+
+	// Memory monitoring
+	MemoryWarningThreshold float64 // MEMORY_WARNING_THRESHOLD, default 0.8 (80%)
+}
+
 func LoadConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("Tidak dapat memuat file .env, menggunakan environment variables")
@@ -124,6 +149,20 @@ func LoadConfig() (*Config, error) {
 			AnonKey:    getEnv("SUPABASE_ANON_KEY", ""),
 			DBURL:      getEnv("SUPABASE_DB_URL", ""),
 			JWTSecret:  getEnv("SUPABASE_JWT_SECRET", ""),
+		},
+		Performance: PerformanceConfig{
+			FiberConcurrency:       getEnvAsInt("FIBER_CONCURRENCY", 1024),
+			FiberReduceMemory:      getEnvAsBool("FIBER_REDUCE_MEMORY_USAGE", false),
+			FiberStreamRequestBody: getEnvAsBool("FIBER_STREAM_REQUEST_BODY", true),
+			FiberReadBufferSize:    getEnvAsInt("FIBER_READ_BUFFER_SIZE", 16384),
+			DBMaxOpenConns:         getEnvAsInt("DB_MAX_OPEN_CONNS", 10),
+			DBMaxIdleConns:         getEnvAsInt("DB_MAX_IDLE_CONNS", 3),
+			DBConnMaxLifetime:      getEnvAsInt("DB_CONN_MAX_LIFETIME", 1800),
+			DBConnMaxIdleTime:      getEnvAsInt("DB_CONN_MAX_IDLE_TIME", 300),
+			GoMemLimit:             getEnv("GOMEMLIMIT", "350MiB"),
+			GoGC:                   getEnvAsInt("GOGC", 100),
+			EnablePprof:            getEnvAsBool("ENABLE_PPROF", false),
+			MemoryWarningThreshold: getEnvAsFloat64("MEMORY_WARNING_THRESHOLD", 0.8),
 		},
 	}
 
@@ -183,4 +222,26 @@ func getEnvAllowEmpty(key, defaultValue string) string {
 		return defaultValue
 	}
 	return value
+}
+
+func getEnvAsFloat64(key string, defaultValue float64) float64 {
+	valueStr := getEnv(key, "")
+	if value, err := strconv.ParseFloat(valueStr, 64); err == nil {
+		return value
+	}
+	return defaultValue
+}
+
+// ParseMemLimit parses memory limit strings like "350MiB" or "1GiB" to bytes.
+func ParseMemLimit(s string) (int64, error) {
+	s = strings.TrimSpace(s)
+	if strings.HasSuffix(s, "MiB") {
+		val, err := strconv.ParseInt(strings.TrimSuffix(s, "MiB"), 10, 64)
+		return val * 1024 * 1024, err
+	}
+	if strings.HasSuffix(s, "GiB") {
+		val, err := strconv.ParseInt(strings.TrimSuffix(s, "GiB"), 10, 64)
+		return val * 1024 * 1024 * 1024, err
+	}
+	return strconv.ParseInt(s, 10, 64)
 }
