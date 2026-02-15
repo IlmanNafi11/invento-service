@@ -31,7 +31,7 @@ RUN mkdir -p uploads keys && \
 USER appuser
 
 ENV GOMEMLIMIT=350MiB
-ENV GOGC=50
+ENV GOGC=100
 
 EXPOSE 8080
 
