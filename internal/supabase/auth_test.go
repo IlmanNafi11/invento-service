@@ -78,7 +78,7 @@ func newTestAuthService(t *testing.T, serverURL string) *AuthService {
 
 	return &AuthService{
 		authURL:     serverURL,
-		serviceKey:  "test-service-key",
+		serviceKey:  "test-service-key", // test fixture - not a real credential
 		httpClient:  &http.Client{Timeout: 5 * time.Second},
 		jwtVerifier: verifier,
 	}

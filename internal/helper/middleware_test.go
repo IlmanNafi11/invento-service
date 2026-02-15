@@ -160,6 +160,7 @@ func TestSupabaseAuthMiddleware_InvalidTokenFormat_Returns401(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
+	// test fixtures - not real credentials
 	tests := []struct {
 		name       string
 		authHeader string
