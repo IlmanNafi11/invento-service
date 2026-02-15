@@ -96,6 +96,20 @@ func TestNewServer_WithDevelopmentConfig(t *testing.T) {
 		Swagger: config.SwaggerConfig{
 			Enabled: false,
 		},
+		Performance: config.PerformanceConfig{
+			FiberConcurrency:       256,
+			FiberReduceMemory:      false,
+			FiberStreamRequestBody: false,
+			FiberReadBufferSize:    16384,
+			DBMaxOpenConns:         10,
+			DBMaxIdleConns:         3,
+			DBConnMaxLifetime:      1800,
+			DBConnMaxIdleTime:      300,
+			GoMemLimit:             "350MiB",
+			GoGC:                   100,
+			EnablePprof:            false,
+			MemoryWarningThreshold: 0.8,
+		},
 	}
 
 	db := setupTestDB(t)
@@ -980,6 +994,20 @@ func createTestConfig() *config.Config {
 		},
 		Swagger: config.SwaggerConfig{
 			Enabled: false,
+		},
+		Performance: config.PerformanceConfig{
+			FiberConcurrency:       256,
+			FiberReduceMemory:      false,
+			FiberStreamRequestBody: false,
+			FiberReadBufferSize:    16384,
+			DBMaxOpenConns:         10,
+			DBMaxIdleConns:         3,
+			DBConnMaxLifetime:      1800,
+			DBConnMaxIdleTime:      300,
+			GoMemLimit:             "350MiB",
+			GoGC:                   100,
+			EnablePprof:            false,
+			MemoryWarningThreshold: 0.8,
 		},
 	}
 }

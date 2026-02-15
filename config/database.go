@@ -78,10 +78,10 @@ func ConnectDatabase(cfg *Config) (*gorm.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("database connection open: %w", err)
 	}
-	sqlDB.SetMaxIdleConns(5)
-	sqlDB.SetMaxOpenConns(20)
-	sqlDB.SetConnMaxLifetime(30 * time.Minute)
-	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
+	sqlDB.SetMaxIdleConns(cfg.Performance.DBMaxIdleConns)
+	sqlDB.SetMaxOpenConns(cfg.Performance.DBMaxOpenConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Performance.DBConnMaxLifetime) * time.Second)
+	sqlDB.SetConnMaxIdleTime(time.Duration(cfg.Performance.DBConnMaxIdleTime) * time.Second)
 
 	log.Println("Berhasil terhubung ke database PostgreSQL")
 	return db, nil

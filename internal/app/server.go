@@ -13,10 +13,13 @@ import (
 	supabaseAuth "invento-service/internal/supabase"
 	"invento-service/internal/usecase"
 	"invento-service/internal/usecase/repo"
+	"runtime"
+	"runtime/metrics"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/pprof"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/supabase-community/supabase-go"
 	"github.com/swaggo/fiber-swagger"
@@ -36,7 +39,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	}
 
 	app := fiber.New(fiber.Config{
-		ReadBufferSize: 16384, // 16KB - default 4KB terlalu kecil untuk JWT cookies + Authorization headers
+		ReadBufferSize:    cfg.Performance.FiberReadBufferSize,
+		StreamRequestBody: cfg.Performance.FiberStreamRequestBody,
+		Concurrency:       cfg.Performance.FiberConcurrency,
+		ReduceMemoryUsage: cfg.Performance.FiberReduceMemory,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			requestID := middleware.GetRequestID(c)
 			reqLogger := appLogger.WithRequestID(requestID)
@@ -72,6 +78,12 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 		},
 	})
 
+	// Conditionally enable pprof profiling endpoint
+	if cfg.Performance.EnablePprof {
+		app.Use(pprof.New())
+		appLogger.Info("pprof profiling enabled at /debug/pprof/*", nil)
+	}
+
 	// Apply middleware in order: RequestID -> Logger -> Recover -> CORS
 	app.Use(middleware.RequestID())
 	app.Use(middleware.RequestLogger(appLogger))
@@ -79,12 +91,25 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 
 	// Log startup information
 	appLogger.Info("Server starting", map[string]interface{}{
-		"app":        cfg.App.Name,
-		"env":        cfg.App.Env,
-		"port":       cfg.App.Port,
-		"log_level":  cfg.Logging.Level,
-		"log_format": cfg.Logging.Format,
+		"app":                 cfg.App.Name,
+		"env":                 cfg.App.Env,
+		"port":                cfg.App.Port,
+		"log_level":           cfg.Logging.Level,
+		"log_format":          cfg.Logging.Format,
+		"fiber_concurrency":   cfg.Performance.FiberConcurrency,
+		"stream_request_body": cfg.Performance.FiberStreamRequestBody,
+		"reduce_memory":       cfg.Performance.FiberReduceMemory,
+		"pprof_enabled":       cfg.Performance.EnablePprof,
 	})
+
+	// Start background memory monitor
+	if memLimit, err := config.ParseMemLimit(cfg.Performance.GoMemLimit); err == nil {
+		startMemoryMonitor(cfg.Performance.MemoryWarningThreshold, memLimit, appLogger)
+		appLogger.Info("Memory monitor started", map[string]interface{}{
+			"gomemlimit":    cfg.Performance.GoMemLimit,
+			"threshold_pct": cfg.Performance.MemoryWarningThreshold * 100,
+		})
+	}
 
 	corsOrigin := cfg.App.CorsOriginDev
 	if cfg.App.Env == "production" {
@@ -273,4 +298,36 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 
 	return app, nil
+}
+
+// startMemoryMonitor starts a background goroutine that periodically checks heap
+// memory usage and logs a warning when it exceeds the threshold percentage of GOMEMLIMIT.
+// Uses runtime/metrics instead of runtime.ReadMemStats to avoid stop-the-world pauses.
+func startMemoryMonitor(thresholdPct float64, limitBytes int64, appLogger *logger.Logger) {
+	if limitBytes <= 0 || thresholdPct <= 0 {
+		return
+	}
+	thresholdBytes := int64(float64(limitBytes) * thresholdPct)
+
+	go func() {
+		samples := []metrics.Sample{
+			{Name: "/memory/classes/heap/objects:bytes"},
+		}
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			metrics.Read(samples)
+			heapBytes := int64(samples[0].Value.Uint64())
+			if heapBytes > thresholdBytes {
+				appLogger.Warn("Heap memory approaching GOMEMLIMIT", map[string]interface{}{
+					"heap_bytes":    heapBytes,
+					"heap_mb":       heapBytes / (1024 * 1024),
+					"limit_mb":      limitBytes / (1024 * 1024),
+					"threshold_pct": thresholdPct * 100,
+					"goroutines":    runtime.NumGoroutine(),
+				})
+			}
+		}
+	}()
 }
