@@ -3,6 +3,7 @@
 keys/*
 uploads/temp/*
 uploads/profil/*
+
 # Claude Code / OMC
 .claude
 .omc
@@ -37,3 +38,4 @@ uploads
 .planning
 .opencode
 .mcp.json
+migrations/app/backup_mysql
