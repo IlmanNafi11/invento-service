@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -273,7 +274,7 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 	tusStore := helper.NewTusStore(pathResolver, 10*1024*1024)
 	tusQueue := helper.NewTusQueue(3)
 	fileManager := helper.NewFileManager(cfg)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, fileManager, cfg)
+	tusManager := helper.NewTusManager(tusStore, tusQueue, fileManager, cfg, zerolog.Nop())
 
 	_ = NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
@@ -304,7 +305,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 	pathResolver := helper.NewPathResolver(cfg)
 	tusStore := helper.NewTusStore(pathResolver, 52428800)
 	tusQueue := helper.NewTusQueue(3)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, nil, cfg)
+	tusManager := helper.NewTusManager(tusStore, tusQueue, nil, cfg, zerolog.Nop())
 	fileManager := helper.NewFileManager(cfg)
 
 	tusModulUc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
@@ -347,7 +348,7 @@ func TestUploadChunk_Success(t *testing.T) {
 	tusStore := helper.NewTusStore(pathResolver, 10*1024*1024)
 	tusQueue := helper.NewTusQueue(3)
 	fileManager := helper.NewFileManager(cfg)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, fileManager, cfg)
+	tusManager := helper.NewTusManager(tusStore, tusQueue, fileManager, cfg, zerolog.Nop())
 
 	_ = NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 

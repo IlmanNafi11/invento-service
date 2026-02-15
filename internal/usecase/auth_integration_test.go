@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -221,7 +222,7 @@ func setupIntegrationTest(t *testing.T) *IntegrationTestSuite {
 	mockAuth := new(IntegrationMockAuthService)
 
 	// Create auth usecase with dependencies
-	authUsecase := NewAuthUsecaseWithDeps(userRepo, roleRepo, mockAuth, cfg)
+	authUsecase := NewAuthUsecaseWithDeps(userRepo, roleRepo, mockAuth, cfg, zerolog.Nop())
 
 	return &IntegrationTestSuite{
 		db:          db,

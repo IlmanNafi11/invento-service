@@ -7,6 +7,7 @@ import (
 	"invento-service/internal/domain"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -199,7 +200,7 @@ func TestRegister_Success(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.RegisterRequest{
 		Name:     "Test User",
@@ -245,7 +246,7 @@ func TestRegister_SupabaseFails(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.RegisterRequest{
 		Name:     "Test User",
@@ -275,7 +276,7 @@ func TestRegister_LocalDBFails_RollbackSupabaseUser(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.RegisterRequest{
 		Name:     "Test User",
@@ -315,7 +316,7 @@ func TestRegister_EmailAlreadyExists(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.RegisterRequest{
 		Name:     "Test User",
@@ -342,7 +343,7 @@ func TestRegister_InvalidEmail(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.RegisterRequest{
 		Name:     "Test User",
@@ -366,7 +367,7 @@ func TestLogin_Success_ExistingUser(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.AuthRequest{
 		Email:    "test@student.polije.ac.id",
@@ -411,7 +412,7 @@ func TestLogin_Success_NewUserSync(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.AuthRequest{
 		Email:    "newuser@student.polije.ac.id",
@@ -452,7 +453,7 @@ func TestLogin_SupabaseFails(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.AuthRequest{
 		Email:    "test@student.polije.ac.id",
@@ -478,7 +479,7 @@ func TestLogin_UserInactive(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.AuthRequest{
 		Email:    "inactive@student.polije.ac.id",
@@ -515,7 +516,7 @@ func TestRequestPasswordReset_Success(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	req := domain.ResetPasswordRequest{
 		Email: "test@student.polije.ac.id",
@@ -535,7 +536,7 @@ func TestRefreshToken_Success(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	mockAuth.On("RefreshToken", mock.Anything, "refresh_token_old").Return(&domain.AuthServiceResponse{
 		AccessToken:  "new_access_token",
@@ -559,7 +560,7 @@ func TestRefreshToken_ServiceFails(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	mockAuth.On("RefreshToken", mock.Anything, "refresh_token_old").Return(nil, errors.New("service error"))
 	newRefreshToken, resp, err := uc.RefreshToken("refresh_token_old")
@@ -575,7 +576,7 @@ func TestLogout_Success(t *testing.T) {
 	mockRole := new(authTestRoleRepo)
 	cfg := newTestConfig()
 
-	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 	mockAuth.On("Logout", mock.Anything, "access_token").Return(nil)
 
 	err := uc.Logout("access_token")
@@ -590,7 +591,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		cfg := newTestConfig()
 		cfg.Supabase.JWTSecret = "test-secret"
 
-		uc, err := NewAuthUsecase(mockUser, mockRole, nil, "service-key", cfg)
+		uc, err := NewAuthUsecase(mockUser, mockRole, nil, "service-key", cfg, zerolog.Nop())
 		require.NoError(t, err)
 
 		assert.NotNil(t, uc)
@@ -602,7 +603,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.RegisterRequest{
 			Name:     "Test User",
 			Email:    "test@student.polije.ac.id",
@@ -627,7 +628,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.RegisterRequest{
 			Name:     "Test User",
 			Email:    "test@student.polije.ac.id",
@@ -652,7 +653,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.RegisterRequest{
 			Name:     "Test User",
 			Email:    "test@student.polije.ac.id",
@@ -678,7 +679,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.RegisterRequest{
 			Name:     "Test User",
 			Email:    "test@student.polije.ac.id",
@@ -713,7 +714,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.AuthRequest{
 			Email:    "test@student.polije.ac.id",
 			Password: "password123",
@@ -743,7 +744,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.AuthRequest{
 			Email:    "invalid@gmail.com",
 			Password: "password123",
@@ -773,7 +774,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.AuthRequest{
 			Email:    "fallback@student.polije.ac.id",
 			Password: "password123",
@@ -807,7 +808,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.AuthRequest{
 			Email:    "newuser@student.polije.ac.id",
 			Password: "password123",
@@ -838,7 +839,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.AuthRequest{
 			Email:    "newuser@student.polije.ac.id",
 			Password: "password123",
@@ -870,7 +871,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		mockAuth.On("Logout", mock.Anything, "access_token").Return(errors.New("logout failed"))
 
 		err := uc.Logout("access_token")
@@ -886,7 +887,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.ResetPasswordRequest{Email: "test@student.polije.ac.id"}
 		mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, mock.Anything).Return(errors.New("request reset failed"))
 
@@ -904,7 +905,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		cfg := newTestConfig()
 		cfg.App.Env = "production"
 
-		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg)
+		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		req := domain.ResetPasswordRequest{Email: "test@student.polije.ac.id"}
 		expectedRedirect := cfg.App.CorsOriginProd + "/reset-password"
 		mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, expectedRedirect).Return(nil)

@@ -8,6 +8,7 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -73,7 +74,7 @@ func newTestTusCleanup(t *testing.T) (*TusCleanup, *TusStore, *mockTusUploadRepo
 	projectRepo := &mockTusUploadRepository{}
 	modulRepo := &mockTusModulUploadCleanupRepository{}
 
-	cleanup := NewTusCleanup(projectRepo, modulRepo, store, store, 1, 1)
+	cleanup := NewTusCleanup(projectRepo, modulRepo, store, store, 1, 1, zerolog.Nop())
 	return cleanup, store, projectRepo, modulRepo
 }
 

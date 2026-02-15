@@ -6,6 +6,7 @@ import (
 	"invento-service/internal/usecase/repo"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +28,7 @@ func TestModulRepository_Create_Success(t *testing.T) {
 		Status:    "completed",
 	}
 
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 	err = modulRepo.Create(modul)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, modul.ID)
@@ -52,7 +53,7 @@ func TestModulRepository_GetByID_Success(t *testing.T) {
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 	result, err := modulRepo.GetByID(modul.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -78,7 +79,7 @@ func TestModulRepository_GetByIDs_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 	ids := []string{moduls[0].ID, moduls[1].ID}
 	result, err := modulRepo.GetByIDs(ids, userID)
 	assert.NoError(t, err)
@@ -104,7 +105,7 @@ func TestModulRepository_GetByUserID_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 
 	// Test without filters
 	result, total, err := modulRepo.GetByUserID(userID, "", "", "", 1, 10)
@@ -149,7 +150,7 @@ func TestModulRepository_CountByUserID_Success(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 	count, err := modulRepo.CountByUserID(userID)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
@@ -174,7 +175,7 @@ func TestModulRepository_Update_Success(t *testing.T) {
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 	modul.Judul = "New Name"
 	modul.Status = "pending"
 	err = modulRepo.Update(modul)
@@ -207,7 +208,7 @@ func TestModulRepository_Delete_Success(t *testing.T) {
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 	err = modulRepo.Delete(modul.ID)
 	assert.NoError(t, err)
 
@@ -236,7 +237,7 @@ func TestModulRepository_UpdateMetadata_Success(t *testing.T) {
 	err = db.Create(modul).Error
 	require.NoError(t, err)
 
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 	modul.Judul = "Updated Name"
 	modul.Deskripsi = "Updated Deskripsi"
 	err = modulRepo.UpdateMetadata(modul)

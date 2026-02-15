@@ -15,6 +15,7 @@ import (
 	"invento-service/internal/helper"
 	"invento-service/internal/usecase/repo"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -93,13 +94,13 @@ func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 	projectQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
 	modulQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentModul)
 
-	projectManager := helper.NewTusManager(projectStore, projectQueue, fileManager, cfg)
-	modulManager := helper.NewTusManager(modulStore, modulQueue, fileManager, cfg)
+	projectManager := helper.NewTusManager(projectStore, projectQueue, fileManager, cfg, zerolog.Nop())
+	modulManager := helper.NewTusManager(modulStore, modulQueue, fileManager, cfg, zerolog.Nop())
 
 	tusUploadRepo := repo.NewTusUploadRepository(db)
 	projectRepo := repo.NewProjectRepository(db)
 	tusModulUploadRepo := repo.NewTusModulUploadRepository(db)
-	modulRepo := repo.NewModulRepository(db)
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
 
 	uploadUsecase := NewTusUploadUsecase(
 		tusUploadRepo,

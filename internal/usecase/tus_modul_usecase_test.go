@@ -12,6 +12,7 @@ import (
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -41,7 +42,7 @@ func newTusModulTestDeps(t *testing.T) (*tusModulUsecase, *MockTusModulUploadRep
 	pathResolver := helper.NewPathResolver(cfg)
 	tusStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	tusQueue := helper.NewTusQueue(5)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, nil, cfg)
+	tusManager := helper.NewTusManager(tusStore, tusQueue, nil, cfg, zerolog.Nop())
 	fileManager := helper.NewFileManager(cfg)
 
 	uc := NewTusModulUsecase(mockTusModulRepo, mockModulRepo, tusManager, fileManager, cfg).(*tusModulUsecase)

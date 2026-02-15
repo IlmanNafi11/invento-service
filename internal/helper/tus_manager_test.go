@@ -8,6 +8,7 @@ import (
 
 	"invento-service/config"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,7 +31,7 @@ func newTestTusManager(t *testing.T) (*TusManager, *TusStore, *TusQueue) {
 	resolver := NewPathResolver(cfg)
 	store := NewTusStore(resolver, cfg.Upload.MaxSize)
 	queue := NewTusQueue(cfg.Upload.MaxConcurrentProject)
-	manager := NewTusManager(store, queue, nil, cfg)
+	manager := NewTusManager(store, queue, nil, cfg, zerolog.Nop())
 
 	return manager, store, queue
 }
