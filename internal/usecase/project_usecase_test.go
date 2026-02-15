@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestProjectUsecase_CreateProject_Success(t *testing.T) {
@@ -63,7 +62,7 @@ func TestProjectUsecase_GetProjectByID_NotFound(t *testing.T) {
 	userID := "user-1"
 	projectID := uint(999)
 
-	mockProjectRepo.On("GetByID", projectID).Return(nil, gorm.ErrRecordNotFound)
+	mockProjectRepo.On("GetByID", projectID).Return(nil, apperrors.ErrRecordNotFound)
 
 	result, err := projectUC.GetByID(projectID, userID)
 
@@ -323,7 +322,7 @@ func TestProjectUsecase_UpdateProject_NotFound(t *testing.T) {
 		NamaProject: "Updated Name",
 	}
 
-	mockProjectRepo.On("GetByID", projectID).Return(nil, gorm.ErrRecordNotFound)
+	mockProjectRepo.On("GetByID", projectID).Return(nil, apperrors.ErrRecordNotFound)
 
 	err := projectUC.UpdateMetadata(projectID, userID, req)
 
@@ -409,7 +408,7 @@ func TestProjectUsecase_DeleteProject_NotFound(t *testing.T) {
 	userID := "user-1"
 	projectID := uint(999)
 
-	mockProjectRepo.On("GetByID", projectID).Return(nil, gorm.ErrRecordNotFound)
+	mockProjectRepo.On("GetByID", projectID).Return(nil, apperrors.ErrRecordNotFound)
 
 	err := projectUC.Delete(projectID, userID)
 

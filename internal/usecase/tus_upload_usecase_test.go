@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
 
 	"github.com/stretchr/testify/assert"
@@ -358,7 +359,7 @@ func TestTusUploadUsecase(t *testing.T) {
 
 		t.Run("project not found", func(t *testing.T) {
 			uc, _, projectRepo, _ := newTusUploadTestDeps(t)
-			projectRepo.On("GetByID", uint(9)).Return(nil, gorm.ErrRecordNotFound).Once()
+			projectRepo.On("GetByID", uint(9)).Return(nil, apperrors.ErrRecordNotFound).Once()
 
 			res, err := uc.InitiateProjectUpdateUpload(9, "u1", 512, metadata)
 			require.Error(t, err)

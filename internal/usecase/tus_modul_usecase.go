@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -60,7 +61,7 @@ func NewTusModulUsecase(
 func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error) {
 	activeCount, err := uc.tusModulUploadRepo.CountActiveByUserID(userID)
 	if err != nil {
-		return nil, apperrors.NewInternalError(fmt.Errorf("gagal mengecek slot upload: %w", err))
+		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.CheckModulUploadSlot: %w", err))
 	}
 
 	maxQueue := int64(uc.config.Upload.MaxQueueModulPerUser)
@@ -88,10 +89,10 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, up
 func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Modul")
 		}
-		return nil, apperrors.NewInternalError(fmt.Errorf("gagal mengambil data modul: %w", err))
+		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.InitiateModulUpdateUpload: %w", err))
 	}
 
 	if modul.UserID != userID {
@@ -141,7 +142,7 @@ func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadM
 	}
 
 	if err := uc.tusModulUploadRepo.Create(tusUpload); err != nil {
-		return nil, apperrors.NewInternalError(fmt.Errorf("gagal membuat upload record: %w", err))
+		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.initiateUpload: create record: %w", err))
 	}
 
 	metadataMap := map[string]string{
@@ -155,7 +156,7 @@ func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadM
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
 		_ = uc.tusModulUploadRepo.Delete(uploadID)
-		return nil, apperrors.NewInternalError(fmt.Errorf("gagal inisiasi TUS upload: %w", err))
+		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.initiateUpload: init storage: %w", err))
 	}
 
 	return &domain.TusModulUploadResponse{
@@ -193,19 +194,19 @@ func (uc *tusModulUsecase) handleChunk(uploadID string, userID string, offset in
 
 	if tusUpload.Status == domain.UploadStatusPending {
 		if err := uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.UploadStatusUploading); err != nil {
-			return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
+			return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.handleChunk: update status: %w", err))
 		}
 		tusUpload.Status = domain.UploadStatusUploading
 	}
 
 	newOffset, err := uc.tusManager.HandleChunk(uploadID, offset, chunk)
 	if err != nil {
-		return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("gagal menulis chunk: %w", err))
+		return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.handleChunk: write chunk: %w", err))
 	}
 
 	progress := float64(newOffset) / float64(tusUpload.FileSize) * 100
 	if err := uc.tusModulUploadRepo.UpdateOffset(uploadID, newOffset, progress); err != nil {
-		return newOffset, apperrors.NewInternalError(fmt.Errorf("gagal update offset: %w", err))
+		return newOffset, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.handleChunk: update offset: %w", err))
 	}
 
 	tusUpload.CurrentOffset = newOffset
@@ -222,14 +223,14 @@ func (uc *tusModulUsecase) handleChunk(uploadID string, userID string, offset in
 func (uc *tusModulUsecase) completeUpload(tusUpload *domain.TusModulUpload, userID string) error {
 	dirPath, randomDir, err := uc.fileManager.CreateModulUploadDirectory(userID)
 	if err != nil {
-		return apperrors.NewInternalError(fmt.Errorf("gagal membuat direktori modul: %w", err))
+		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeUpload: create dir: %w", err))
 	}
 
 	fileName := fmt.Sprintf("%s.dat", tusUpload.ID)
 	finalPath := filepath.Join(dirPath, fileName)
 	if err := uc.tusManager.FinalizeUpload(tusUpload.ID, finalPath); err != nil {
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
-		return apperrors.NewInternalError(fmt.Errorf("gagal finalisasi upload: %w", err))
+		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeUpload: finalize: %w", err))
 	}
 
 	var modulID string
@@ -249,7 +250,7 @@ func (uc *tusModulUsecase) completeUpload(tusUpload *domain.TusModulUpload, user
 	}
 
 	if err := uc.tusModulUploadRepo.Complete(tusUpload.ID, modulID, finalPath); err != nil {
-		return apperrors.NewInternalError(fmt.Errorf("gagal update status upload: %w", err))
+		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeUpload: complete record: %w", err))
 	}
 
 	return nil
@@ -270,7 +271,7 @@ func (uc *tusModulUsecase) completeModulCreate(tusUpload *domain.TusModulUpload,
 	if err := uc.modulRepo.Create(modul); err != nil {
 		_ = helper.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
-		return "", apperrors.NewInternalError(fmt.Errorf("gagal menyimpan data modul: %w", err))
+		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulCreate: %w", err))
 	}
 
 	return modul.ID, nil
@@ -283,7 +284,7 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 
 	modul, err := uc.modulRepo.GetByID(*tusUpload.ModulID)
 	if err != nil {
-		return "", apperrors.NewInternalError(fmt.Errorf("gagal mengambil data modul: %w", err))
+		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulUpdate: get modul: %w", err))
 	}
 
 	oldFilePath := modul.FilePath
@@ -297,10 +298,15 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 	if err := uc.modulRepo.Update(modul); err != nil {
 		_ = helper.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
-		return "", apperrors.NewInternalError(fmt.Errorf("gagal update data modul: %w", err))
+		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulUpdate: %w", err))
 	}
 
-	_ = helper.DeleteFile(oldFilePath)
+	if oldFilePath != "" {
+		if err := helper.DeleteFile(oldFilePath); err != nil {
+			// Old file deletion after successful update is critical but non-blocking
+			log.Printf("WARNING: TusModulUsecase.completeModulUpdate: gagal menghapus file lama %s: %v", oldFilePath, err)
+		}
+	}
 	return modul.ID, nil
 }
 
@@ -373,11 +379,11 @@ func (uc *tusModulUsecase) cancelUpload(uploadID string, userID string, modulID 
 	}
 
 	if err := uc.tusManager.CancelUpload(uploadID); err != nil {
-		return apperrors.NewInternalError(fmt.Errorf("gagal membatalkan upload: %w", err))
+		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.cancelUpload: cancel storage: %w", err))
 	}
 
 	if err := uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.UploadStatusCancelled); err != nil {
-		return apperrors.NewInternalError(fmt.Errorf("gagal update status: %w", err))
+		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.cancelUpload: update status: %w", err))
 	}
 
 	return nil
@@ -389,7 +395,7 @@ func (uc *tusModulUsecase) getOwnedUpload(uploadID string, userID string, modulI
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Upload")
 		}
-		return nil, apperrors.NewInternalError(fmt.Errorf("gagal mengambil data upload: %w", err))
+		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.getOwnedUpload: %w", err))
 	}
 
 	if tusUpload.UserID != userID {

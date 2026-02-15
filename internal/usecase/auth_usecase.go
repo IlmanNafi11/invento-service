@@ -93,7 +93,7 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 		if err == gorm.ErrRecordNotFound {
 			return "", nil, apperrors.NewNotFoundError("Role " + emailInfo.RoleName)
 		}
-		return "", nil, apperrors.NewInternalError(err)
+		return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: get role: %w", err))
 	}
 
 	// Register with Supabase
@@ -109,7 +109,7 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 		if strings.Contains(err.Error(), "already registered") || strings.Contains(err.Error(), "already exists") {
 			return "", nil, apperrors.NewConflictError("Email sudah terdaftar di sistem autentikasi")
 		}
-		return "", nil, apperrors.NewInternalError(err)
+		return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: supabase register: %w", err))
 	}
 
 	// Create user in local database with Supabase user ID
@@ -128,7 +128,7 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 		if deleteErr := uc.authService.DeleteUser(ctx, authResp.User.ID); deleteErr != nil {
 			uc.logger.Error("Failed to rollback Supabase user deletion", "error", deleteErr, "supabase_user_id", authResp.User.ID)
 		}
-		return "", nil, apperrors.NewInternalError(err)
+		return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: create local user: %w", err))
 	}
 
 	user.Role = role
@@ -173,7 +173,7 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 
 			role, roleErr := uc.roleRepo.GetByName(emailInfo.RoleName)
 			if roleErr != nil {
-				return "", nil, apperrors.NewInternalError(roleErr)
+				return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Login: get role: %w", roleErr))
 			}
 
 			roleID := int(role.ID)
@@ -192,12 +192,12 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 
 			if createErr := uc.userRepo.Create(user); createErr != nil {
 				uc.logger.Error("Failed to sync Supabase user to local database", "error", createErr, "email", req.Email)
-				return "", nil, apperrors.NewInternalError(createErr)
+				return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Login: sync user: %w", createErr))
 			}
 
 			user.Role = role
 		} else {
-			return "", nil, apperrors.NewInternalError(err)
+			return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Login: get user: %w", err))
 		}
 	}
 
@@ -254,7 +254,7 @@ func (uc *authUsecase) RequestPasswordReset(req domain.ResetPasswordRequest) err
 	}
 
 	if err := uc.authService.RequestPasswordReset(ctx, req.Email, redirectURL); err != nil {
-		return apperrors.NewInternalError(err)
+		return apperrors.NewInternalError(fmt.Errorf("AuthUsecase.RequestPasswordReset: %w", err))
 	}
 
 	return nil
@@ -263,7 +263,7 @@ func (uc *authUsecase) RequestPasswordReset(req domain.ResetPasswordRequest) err
 func (uc *authUsecase) Logout(token string) error {
 	ctx := context.Background()
 	if err := uc.authService.Logout(ctx, token); err != nil {
-		return apperrors.NewInternalError(err)
+		return apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Logout: %w", err))
 	}
 
 	return nil

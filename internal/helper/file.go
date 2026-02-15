@@ -81,23 +81,7 @@ func GetFileType(filename string) string {
 }
 
 func GetFileSize(fileHeader *multipart.FileHeader) string {
-	size := fileHeader.Size
-	const (
-		KB = 1024
-		MB = KB * 1024
-		GB = MB * 1024
-	)
-
-	switch {
-	case size >= GB:
-		return fmt.Sprintf("%.2fGB", float64(size)/float64(GB))
-	case size >= MB:
-		return fmt.Sprintf("%.2fMB", float64(size)/float64(MB))
-	case size >= KB:
-		return fmt.Sprintf("%.2fKB", float64(size)/float64(KB))
-	default:
-		return fmt.Sprintf("%dB", size)
-	}
+	return FormatFileSize(fileHeader.Size)
 }
 
 func DetectProjectCategory(filename string) string {
@@ -334,21 +318,5 @@ func GetFileSizeFromPath(filePath string) string {
 		return "0B"
 	}
 
-	size := info.Size()
-	const (
-		KB = 1024
-		MB = KB * 1024
-		GB = MB * 1024
-	)
-
-	switch {
-	case size >= GB:
-		return fmt.Sprintf("%.2fGB", float64(size)/float64(GB))
-	case size >= MB:
-		return fmt.Sprintf("%.2fMB", float64(size)/float64(MB))
-	case size >= KB:
-		return fmt.Sprintf("%.2fKB", float64(size)/float64(KB))
-	default:
-		return fmt.Sprintf("%dB", size)
-	}
+	return FormatFileSize(info.Size())
 }

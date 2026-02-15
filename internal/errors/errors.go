@@ -1,10 +1,19 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+)
+
+// Sentinel errors for repository-level error translation.
+// Repositories return these instead of ORM-specific errors (e.g., gorm.ErrRecordNotFound),
+// keeping the usecase layer decoupled from the database implementation.
+var (
+	ErrRecordNotFound = errors.New("record not found")
+	ErrDuplicateEntry = errors.New("duplicate entry")
 )
 
 // NewValidationError creates a validation error with HTTP 400 status.

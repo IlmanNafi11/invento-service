@@ -1,8 +1,12 @@
 package repo
 
 import (
-	"invento-service/internal/domain"
+	"errors"
+	"fmt"
 	"log"
+
+	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
 
 	"gorm.io/gorm"
 )
@@ -16,14 +20,20 @@ func NewModulRepository(db *gorm.DB) ModulRepository {
 }
 
 func (r *modulRepository) Create(modul *domain.Modul) error {
-	return r.db.Create(modul).Error
+	if err := r.db.Create(modul).Error; err != nil {
+		return fmt.Errorf("ModulRepository.Create: %w", err)
+	}
+	return nil
 }
 
 func (r *modulRepository) GetByID(id string) (*domain.Modul, error) {
 	var modul domain.Modul
 	err := r.db.Where("id = ?", id).First(&modul).Error
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperrors.ErrRecordNotFound
+		}
+		return nil, fmt.Errorf("ModulRepository.GetByID: %w", err)
 	}
 	return &modul, nil
 }
@@ -32,7 +42,7 @@ func (r *modulRepository) GetByIDs(ids []string, userID string) ([]domain.Modul,
 	var moduls []domain.Modul
 	err := r.db.Where("id IN ? AND user_id = ?", ids, userID).Find(&moduls).Error
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ModulRepository.GetByIDs: %w", err)
 	}
 	return moduls, nil
 }
@@ -55,7 +65,7 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 	if err := r.db.Raw(countQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus).Scan(&total).Error; err != nil {
 		log.Printf("[ERROR] ModulRepository.GetByUserID count query failed - query: %s, params: userID=%s, search=%s, filterType=%s, filterStatus=%s, error: %v",
 			countQuery, userID, search, filterType, filterStatus, err)
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("ModulRepository.GetByUserID: count query: %w", err)
 	}
 
 	dataQuery := `
@@ -80,7 +90,7 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 	if err := r.db.Raw(dataQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus, limit, offset).Scan(&modulListItems).Error; err != nil {
 		log.Printf("[ERROR] ModulRepository.GetByUserID data query failed - query: %s, params: userID=%s, search=%s, filterType=%s, filterStatus=%s, limit=%d, offset=%d, error: %v",
 			dataQuery, userID, search, filterType, filterStatus, limit, offset, err)
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("ModulRepository.GetByUserID: data query: %w", err)
 	}
 
 	return modulListItems, int(total), nil
@@ -89,22 +99,34 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 func (r *modulRepository) CountByUserID(userID string) (int, error) {
 	var count int64
 	err := r.db.Model(&domain.Modul{}).Where("user_id = ?", userID).Count(&count).Error
-	return int(count), err
+	if err != nil {
+		return 0, fmt.Errorf("ModulRepository.CountByUserID: %w", err)
+	}
+	return int(count), nil
 }
 
 func (r *modulRepository) Update(modul *domain.Modul) error {
-	return r.db.Save(modul).Error
+	if err := r.db.Save(modul).Error; err != nil {
+		return fmt.Errorf("ModulRepository.Update: %w", err)
+	}
+	return nil
 }
 
 func (r *modulRepository) Delete(id string) error {
-	return r.db.Where("id = ?", id).Delete(&domain.Modul{}).Error
+	if err := r.db.Where("id = ?", id).Delete(&domain.Modul{}).Error; err != nil {
+		return fmt.Errorf("ModulRepository.Delete: %w", err)
+	}
+	return nil
 }
 
 func (r *modulRepository) UpdateMetadata(modul *domain.Modul) error {
-	return r.db.Model(&domain.Modul{}).
+	if err := r.db.Model(&domain.Modul{}).
 		Where("id = ?", modul.ID).
 		Updates(map[string]interface{}{
 			"judul":     modul.Judul,
 			"deskripsi": modul.Deskripsi,
-		}).Error
+		}).Error; err != nil {
+		return fmt.Errorf("ModulRepository.UpdateMetadata: %w", err)
+	}
+	return nil
 }

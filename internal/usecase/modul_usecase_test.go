@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
 func TestCreateModul_Success(t *testing.T) {
@@ -86,13 +85,13 @@ func TestGetModulByID_NotFound(t *testing.T) {
 
 	modulID := "550e8400-e29b-41d4-a716-446655440999"
 
-	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound)
+	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound)
 
 	modul, err := mockModulRepo.GetByID(modulID)
 
 	assert.Error(t, err)
 	assert.Nil(t, modul)
-	assert.Equal(t, gorm.ErrRecordNotFound, err)
+	assert.Equal(t, apperrors.ErrRecordNotFound, err)
 	mockModulRepo.AssertExpectations(t)
 }
 
@@ -528,7 +527,7 @@ func TestModulUsecase_GetByID_NotFound(t *testing.T) {
 	modulID := "550e8400-e29b-41d4-a716-446655440999"
 	userID := "user-1"
 
-	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound)
+	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound)
 
 	result, err := modulUC.GetByID(modulID, userID)
 
@@ -655,7 +654,7 @@ func TestModulUsecase_UpdateMetadata_NotFound(t *testing.T) {
 	userID := "user-1"
 	req := domain.ModulUpdateRequest{Judul: "Baru"}
 
-	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound).Once()
+	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
 
 	err := modulUC.UpdateMetadata(modulID, userID, req)
 	require.Error(t, err)
@@ -690,7 +689,7 @@ func TestModulUsecase_Delete_NotFound(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulID := "550e8400-e29b-41d4-a716-446655440999"
-	mockModulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound).Once()
+	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
 
 	err := modulUC.Delete(modulID, "user-1")
 	require.Error(t, err)

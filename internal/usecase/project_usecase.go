@@ -12,8 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type ProjectUsecase interface {
@@ -46,7 +44,7 @@ func (uc *projectUsecase) GetList(userID string, search string, filterSemester i
 
 	projects, total, err := uc.projectRepo.GetByUserID(userID, search, filterSemester, filterKategori, page, limit)
 	if err != nil {
-		return nil, newInternalError("gagal mengambil data project", err)
+		return nil, newInternalError("gagal mengambil data project", fmt.Errorf("ProjectUsecase.GetList: %w", err))
 	}
 
 	totalPages := (total + limit - 1) / limit
@@ -97,7 +95,7 @@ func (uc *projectUsecase) UpdateMetadata(projectID uint, userID string, req doma
 	}
 
 	if err := uc.projectRepo.Update(project); err != nil {
-		return newInternalError("gagal mengupdate project", err)
+		return newInternalError("gagal mengupdate project", fmt.Errorf("ProjectUsecase.UpdateMetadata: %w", err))
 	}
 
 	return nil
@@ -110,12 +108,14 @@ func (uc *projectUsecase) Delete(projectID uint, userID string) error {
 	}
 
 	if err := uc.projectRepo.Delete(projectID); err != nil {
-		return newInternalError("gagal menghapus project", err)
+		return newInternalError("gagal menghapus project", fmt.Errorf("ProjectUsecase.Delete: %w", err))
 	}
 
 	if project.PathFile != "" {
 		if err := helper.DeleteFile(project.PathFile); err != nil {
-			log.Printf("WARNING: gagal menghapus file project %s: %v", project.PathFile, err)
+			// File deletion after DB delete is critical but non-blocking;
+			// log the error so it can be investigated.
+			log.Printf("WARNING: ProjectUsecase.Delete: gagal menghapus file project %s: %v", project.PathFile, err)
 		}
 	}
 
@@ -147,7 +147,7 @@ func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, er
 
 	projects, err := uc.projectRepo.GetByIDs(projectIDs, userID)
 	if err != nil {
-		return "", newInternalError("gagal mengambil data project", err)
+		return "", newInternalError("gagal mengambil data project", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
 
 	if len(projects) == 0 {
@@ -170,19 +170,19 @@ func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, er
 
 	tempDir := "./uploads/temp"
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
-		return "", newInternalError("gagal membuat direktori temp", err)
+		return "", newInternalError("gagal membuat direktori temp", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
 
 	identifier, err := helper.GenerateUniqueIdentifier(8)
 	if err != nil {
-		return "", newInternalError("gagal generate identifier", err)
+		return "", newInternalError("gagal generate identifier", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
 
 	zipFileName := fmt.Sprintf("projects_%s.zip", identifier)
 	zipFilePath := filepath.Join(tempDir, zipFileName)
 
 	if err := helper.CreateZipArchive(filePaths, zipFilePath); err != nil {
-		return "", newInternalError("gagal membuat file zip", err)
+		return "", newInternalError("gagal membuat file zip", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
 
 	go func(zipPath string) {
@@ -198,11 +198,11 @@ func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, er
 func (uc *projectUsecase) getOwnedProject(projectID uint, userID string) (*domain.Project, error) {
 	project, err := uc.projectRepo.GetByID(projectID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("project")
 		}
 
-		return nil, newInternalError("gagal mengambil data project", err)
+		return nil, newInternalError("gagal mengambil data project", fmt.Errorf("ProjectUsecase.getOwnedProject: %w", err))
 	}
 
 	if project.UserID != userID {

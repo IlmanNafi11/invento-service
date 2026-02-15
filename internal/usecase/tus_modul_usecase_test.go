@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
 
 	"github.com/stretchr/testify/assert"
@@ -328,7 +329,7 @@ func TestTusModulUsecase(t *testing.T) {
 
 		t.Run("modul not found", func(t *testing.T) {
 			uc, _, modulRepo, _ := newTusModulTestDeps(t)
-			modulRepo.On("GetByID", modulID).Return(nil, gorm.ErrRecordNotFound).Once()
+			modulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
 
 			res, err := uc.InitiateModulUpdateUpload(modulID, "u1", 2048, meta)
 			require.Error(t, err)
@@ -564,7 +565,7 @@ func TestTusModulUsecase_CheckModulUploadSlot_RepoError(t *testing.T) {
 	res, err := uc.CheckModulUploadSlot("u1")
 	require.Error(t, err)
 	assert.Nil(t, res)
-	assert.Contains(t, err.Error(), "gagal mengecek slot upload")
+	assert.Contains(t, err.Error(), "TusModulUsecase.CheckModulUploadSlot")
 
 	tusRepo.AssertExpectations(t)
 }

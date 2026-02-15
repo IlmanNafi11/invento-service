@@ -2,16 +2,15 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
 
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
 	"invento-service/internal/usecase/repo"
-	"fmt"
-	"os"
-	"path/filepath"
-
-	"gorm.io/gorm"
 )
 
 type ModulUsecase interface {
@@ -42,7 +41,7 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 
 	moduls, total, err := uc.modulRepo.GetByUserID(userID, search, filterType, filterStatus, page, limit)
 	if err != nil {
-		return nil, apperrors.NewInternalError(err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("ModulUsecase.GetList: %w", err))
 	}
 
 	totalPages := (total + limit - 1) / limit
@@ -61,10 +60,10 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 func (uc *modulUsecase) GetByID(modulID string, userID string) (*domain.ModulResponse, error) {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Modul")
 		}
-		return nil, apperrors.NewInternalError(err)
+		return nil, apperrors.NewInternalError(fmt.Errorf("ModulUsecase.GetByID: %w", err))
 	}
 
 	if modul.UserID != userID {
@@ -87,10 +86,10 @@ func (uc *modulUsecase) GetByID(modulID string, userID string) (*domain.ModulRes
 func (uc *modulUsecase) Delete(modulID string, userID string) error {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("Modul")
 		}
-		return apperrors.NewInternalError(err)
+		return apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Delete: %w", err))
 	}
 
 	if modul.UserID != userID {
@@ -98,10 +97,16 @@ func (uc *modulUsecase) Delete(modulID string, userID string) error {
 	}
 
 	if err := uc.modulRepo.Delete(modulID); err != nil {
-		return apperrors.NewInternalError(err)
+		return apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Delete: %w", err))
 	}
 
-	_ = helper.DeleteFile(modul.FilePath)
+	if modul.FilePath != "" {
+		if err := helper.DeleteFile(modul.FilePath); err != nil {
+			// File deletion after DB delete is critical but non-blocking;
+			// log the error so it can be investigated.
+			log.Printf("WARNING: ModulUsecase.Delete: gagal menghapus file modul %s: %v", modul.FilePath, err)
+		}
+	}
 
 	return nil
 }
@@ -113,7 +118,7 @@ func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, erro
 
 	moduls, err := uc.modulRepo.GetByIDs(modulIDs, userID)
 	if err != nil {
-		return "", apperrors.NewInternalError(err)
+		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
 
 	if len(moduls) == 0 {
@@ -134,19 +139,19 @@ func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, erro
 
 	tempDir := "./uploads/temp"
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
-		return "", apperrors.NewInternalError(err)
+		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
 
 	identifier, err := helper.GenerateUniqueIdentifier(8)
 	if err != nil {
-		return "", apperrors.NewInternalError(err)
+		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
 
 	zipFileName := fmt.Sprintf("moduls_%s.zip", identifier)
 	zipFilePath := filepath.Join(tempDir, zipFileName)
 
 	if err := helper.CreateZipArchive(filePaths, zipFilePath); err != nil {
-		return "", apperrors.NewInternalError(err)
+		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
 
 	return zipFilePath, nil
@@ -155,10 +160,10 @@ func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, erro
 func (uc *modulUsecase) UpdateMetadata(modulID string, userID string, req domain.ModulUpdateRequest) error {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("Modul")
 		}
-		return apperrors.NewInternalError(err)
+		return apperrors.NewInternalError(fmt.Errorf("ModulUsecase.UpdateMetadata: %w", err))
 	}
 
 	if modul.UserID != userID {
@@ -173,7 +178,7 @@ func (uc *modulUsecase) UpdateMetadata(modulID string, userID string, req domain
 	}
 
 	if err := uc.modulRepo.UpdateMetadata(modul); err != nil {
-		return apperrors.NewInternalError(err)
+		return apperrors.NewInternalError(fmt.Errorf("ModulUsecase.UpdateMetadata: %w", err))
 	}
 
 	return nil
