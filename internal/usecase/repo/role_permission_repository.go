@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"invento-service/internal/domain"
 
 	"gorm.io/gorm"
@@ -14,33 +15,33 @@ func NewRolePermissionRepository(db *gorm.DB) RolePermissionRepository {
 	return &rolePermissionRepository{db: db}
 }
 
-func (r *rolePermissionRepository) Create(rolePermission *domain.RolePermission) error {
-	return r.db.Create(rolePermission).Error
+func (r *rolePermissionRepository) Create(ctx context.Context, rolePermission *domain.RolePermission) error {
+	return r.db.WithContext(ctx).Create(rolePermission).Error
 }
 
-func (r *rolePermissionRepository) BulkCreate(rolePermissions []domain.RolePermission) error {
+func (r *rolePermissionRepository) BulkCreate(ctx context.Context, rolePermissions []domain.RolePermission) error {
 	if len(rolePermissions) == 0 {
 		return nil
 	}
-	return r.db.Create(&rolePermissions).Error
+	return r.db.WithContext(ctx).Create(&rolePermissions).Error
 }
 
-func (r *rolePermissionRepository) GetByRoleID(roleID uint) ([]domain.RolePermission, error) {
+func (r *rolePermissionRepository) GetByRoleID(ctx context.Context, roleID uint) ([]domain.RolePermission, error) {
 	var rolePermissions []domain.RolePermission
-	err := r.db.Where("role_id = ?", roleID).Preload("Permission").Find(&rolePermissions).Error
+	err := r.db.WithContext(ctx).Where("role_id = ?", roleID).Preload("Permission").Find(&rolePermissions).Error
 	if err != nil {
 		return nil, err
 	}
 	return rolePermissions, nil
 }
 
-func (r *rolePermissionRepository) DeleteByRoleID(roleID uint) error {
-	return r.db.Where("role_id = ?", roleID).Delete(&domain.RolePermission{}).Error
+func (r *rolePermissionRepository) DeleteByRoleID(ctx context.Context, roleID uint) error {
+	return r.db.WithContext(ctx).Where("role_id = ?", roleID).Delete(&domain.RolePermission{}).Error
 }
 
-func (r *rolePermissionRepository) GetPermissionsForRole(roleID uint) ([]domain.Permission, error) {
+func (r *rolePermissionRepository) GetPermissionsForRole(ctx context.Context, roleID uint) ([]domain.Permission, error) {
 	var permissions []domain.Permission
-	err := r.db.Table("permissions").
+	err := r.db.WithContext(ctx).Table("permissions").
 		Joins("INNER JOIN role_permissions ON role_permissions.permission_id = permissions.id").
 		Where("role_permissions.role_id = ?", roleID).
 		Find(&permissions).Error

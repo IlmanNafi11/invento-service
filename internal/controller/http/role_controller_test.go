@@ -2,9 +2,9 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 
-	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"net/http"
@@ -24,48 +24,48 @@ type MockRoleUsecase struct {
 	mock.Mock
 }
 
-func (m *MockRoleUsecase) GetAvailablePermissions() ([]dto.ResourcePermissions, error) {
-	args := m.Called()
+func (m *MockRoleUsecase) GetAvailablePermissions(ctx context.Context) ([]dto.ResourcePermissions, error) {
+	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]dto.ResourcePermissions), args.Error(1)
 }
 
-func (m *MockRoleUsecase) GetRoleList(params dto.RoleListQueryParams) (*dto.RoleListData, error) {
-	args := m.Called(params)
+func (m *MockRoleUsecase) GetRoleList(ctx context.Context, params dto.RoleListQueryParams) (*dto.RoleListData, error) {
+	args := m.Called(ctx, params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.RoleListData), args.Error(1)
 }
 
-func (m *MockRoleUsecase) CreateRole(req dto.RoleCreateRequest) (*dto.RoleDetailResponse, error) {
-	args := m.Called(req)
+func (m *MockRoleUsecase) CreateRole(ctx context.Context, req dto.RoleCreateRequest) (*dto.RoleDetailResponse, error) {
+	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.RoleDetailResponse), args.Error(1)
 }
 
-func (m *MockRoleUsecase) GetRoleDetail(id uint) (*dto.RoleDetailResponse, error) {
-	args := m.Called(id)
+func (m *MockRoleUsecase) GetRoleDetail(ctx context.Context, id uint) (*dto.RoleDetailResponse, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.RoleDetailResponse), args.Error(1)
 }
 
-func (m *MockRoleUsecase) UpdateRole(id uint, req dto.RoleUpdateRequest) (*dto.RoleDetailResponse, error) {
-	args := m.Called(id, req)
+func (m *MockRoleUsecase) UpdateRole(ctx context.Context, id uint, req dto.RoleUpdateRequest) (*dto.RoleDetailResponse, error) {
+	args := m.Called(ctx, id, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.RoleDetailResponse), args.Error(1)
 }
 
-func (m *MockRoleUsecase) DeleteRole(id uint) error {
-	args := m.Called(id)
+func (m *MockRoleUsecase) DeleteRole(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
@@ -85,7 +85,7 @@ func TestRoleController_GetAvailablePermissions_Success(t *testing.T) {
 			},
 		},
 	}
-	mockRoleUC.On("GetAvailablePermissions").Return(expectedPermissions, nil)
+	mockRoleUC.On("GetAvailablePermissions", mock.Anything).Return(expectedPermissions, nil)
 
 	req := httptest.NewRequest("GET", "/role/permissions", nil)
 	resp, err := app.Test(req)
@@ -108,7 +108,7 @@ func TestRoleController_GetRoleList_Success(t *testing.T) {
 		},
 		Pagination: dto.PaginationData{Page: 1, Limit: 10, TotalPages: 1, TotalItems: 1},
 	}
-	mockRoleUC.On("GetRoleList", mock.Anything).Return(expectedResult, nil)
+	mockRoleUC.On("GetRoleList", mock.Anything, mock.Anything).Return(expectedResult, nil)
 
 	req := httptest.NewRequest("GET", "/role?page=1&limit=10", nil)
 	resp, err := app.Test(req)
@@ -137,7 +137,7 @@ func TestRoleController_CreateRole_Success(t *testing.T) {
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}
-	mockRoleUC.On("CreateRole", reqBody).Return(expectedResponse, nil)
+	mockRoleUC.On("CreateRole", mock.Anything, reqBody).Return(expectedResponse, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/role", bytes.NewReader(bodyBytes))
@@ -163,7 +163,7 @@ func TestRoleController_GetRoleDetail_Success(t *testing.T) {
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}
-	mockRoleUC.On("GetRoleDetail", uint(1)).Return(expectedResponse, nil)
+	mockRoleUC.On("GetRoleDetail", mock.Anything, uint(1)).Return(expectedResponse, nil)
 
 	req := httptest.NewRequest("GET", "/role/1", nil)
 	resp, err := app.Test(req)
@@ -192,7 +192,7 @@ func TestRoleController_UpdateRole_Success(t *testing.T) {
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}
-	mockRoleUC.On("UpdateRole", uint(1), reqBody).Return(expectedResponse, nil)
+	mockRoleUC.On("UpdateRole", mock.Anything, uint(1), reqBody).Return(expectedResponse, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("PUT", "/role/1", bytes.NewReader(bodyBytes))
@@ -211,7 +211,7 @@ func TestRoleController_DeleteRole_Success(t *testing.T) {
 	app := fiber.New()
 	app.Delete("/role/:id", controller.DeleteRole)
 
-	mockRoleUC.On("DeleteRole", uint(1)).Return(nil)
+	mockRoleUC.On("DeleteRole", mock.Anything, uint(1)).Return(nil)
 
 	req := httptest.NewRequest("DELETE", "/role/1", nil)
 	resp, err := app.Test(req)
@@ -290,7 +290,7 @@ func TestRoleController_UpdateRole_NotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("Role tidak ditemukan")
-	mockRoleUC.On("UpdateRole", uint(999), reqBody).Return(nil, appErr)
+	mockRoleUC.On("UpdateRole", mock.Anything, uint(999), reqBody).Return(nil, appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("PUT", "/role/999", bytes.NewReader(bodyBytes))
@@ -337,7 +337,7 @@ func TestRoleController_UpdateRole_DuplicateName(t *testing.T) {
 	}
 
 	appErr := apperrors.NewConflictError("nama role sudah ada")
-	mockRoleUC.On("UpdateRole", uint(1), reqBody).Return(nil, appErr)
+	mockRoleUC.On("UpdateRole", mock.Anything, uint(1), reqBody).Return(nil, appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("PUT", "/role/1", bytes.NewReader(bodyBytes))
@@ -358,7 +358,7 @@ func TestRoleController_DeleteRole_NotFound(t *testing.T) {
 	app.Delete("/role/:id", controller.DeleteRole)
 
 	appErr := apperrors.NewNotFoundError("Role tidak ditemukan")
-	mockRoleUC.On("DeleteRole", uint(999)).Return(appErr)
+	mockRoleUC.On("DeleteRole", mock.Anything, uint(999)).Return(appErr)
 
 	req := httptest.NewRequest("DELETE", "/role/999", nil)
 	resp, err := app.Test(req)
@@ -377,7 +377,7 @@ func TestRoleController_DeleteRole_Forbidden(t *testing.T) {
 	app.Delete("/role/:id", controller.DeleteRole)
 
 	appErr := apperrors.NewForbiddenError("Role sedang digunakan oleh user lain")
-	mockRoleUC.On("DeleteRole", uint(1)).Return(appErr)
+	mockRoleUC.On("DeleteRole", mock.Anything, uint(1)).Return(appErr)
 
 	req := httptest.NewRequest("DELETE", "/role/1", nil)
 	resp, err := app.Test(req)
@@ -395,7 +395,7 @@ func TestRoleController_GetRoleList_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Get("/role", controller.GetRoleList)
 
-	mockRoleUC.On("GetRoleList", mock.Anything).Return(nil, assert.AnError)
+	mockRoleUC.On("GetRoleList", mock.Anything, mock.Anything).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest("GET", "/role?page=1&limit=10", nil)
 	resp, err := app.Test(req)

@@ -1,6 +1,7 @@
 package repo_test
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
@@ -35,7 +36,7 @@ func (suite *RoleRepositoryTestSuite) TestCreate_Success() {
 		NamaRole: "editor",
 	}
 
-	err := suite.roleRepo.Create(role)
+	err := suite.roleRepo.Create(context.Background(), role)
 	assert.NoError(suite.T(), err)
 	assert.NotZero(suite.T(), role.ID)
 
@@ -53,7 +54,7 @@ func (suite *RoleRepositoryTestSuite) TestGetByID_Success() {
 	err := suite.db.Create(role).Error
 	require.NoError(suite.T(), err)
 
-	result, err := suite.roleRepo.GetByID(role.ID)
+	result, err := suite.roleRepo.GetByID(context.Background(), role.ID)
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), result)
 	assert.Equal(suite.T(), role.ID, result.ID)
@@ -61,7 +62,7 @@ func (suite *RoleRepositoryTestSuite) TestGetByID_Success() {
 }
 
 func (suite *RoleRepositoryTestSuite) TestGetByID_NotFound() {
-	result, err := suite.roleRepo.GetByID(999)
+	result, err := suite.roleRepo.GetByID(context.Background(), 999)
 	assert.Error(suite.T(), err)
 	assert.Nil(suite.T(), result)
 }
@@ -73,14 +74,14 @@ func (suite *RoleRepositoryTestSuite) TestGetByName_Success() {
 	err := suite.db.Create(role).Error
 	require.NoError(suite.T(), err)
 
-	result, err := suite.roleRepo.GetByName("moderator")
+	result, err := suite.roleRepo.GetByName(context.Background(), "moderator")
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), result)
 	assert.Equal(suite.T(), "moderator", result.NamaRole)
 }
 
 func (suite *RoleRepositoryTestSuite) TestGetByName_NotFound() {
-	result, err := suite.roleRepo.GetByName("nonexistent")
+	result, err := suite.roleRepo.GetByName(context.Background(), "nonexistent")
 	assert.Error(suite.T(), err)
 	assert.Nil(suite.T(), result)
 }
@@ -93,7 +94,7 @@ func (suite *RoleRepositoryTestSuite) TestUpdate_Success() {
 	require.NoError(suite.T(), err)
 
 	role.NamaRole = "newname"
-	err = suite.roleRepo.Update(role)
+	err = suite.roleRepo.Update(context.Background(), role)
 	assert.NoError(suite.T(), err)
 
 	// Verify update
@@ -110,7 +111,7 @@ func (suite *RoleRepositoryTestSuite) TestDelete_Success() {
 	err := suite.db.Create(role).Error
 	require.NoError(suite.T(), err)
 
-	err = suite.roleRepo.Delete(role.ID)
+	err = suite.roleRepo.Delete(context.Background(), role.ID)
 	assert.NoError(suite.T(), err)
 
 	// Verify deletion
@@ -132,14 +133,14 @@ func (suite *RoleRepositoryTestSuite) TestGetAll_Success() {
 	}
 
 	// Test without filters
-	result, total, err := suite.roleRepo.GetAll("", 1, 10)
+	result, total, err := suite.roleRepo.GetAll(context.Background(), "", 1, 10)
 	assert.NoError(suite.T(), err)
 	assert.Len(suite.T(), result, 3)
 	assert.Equal(suite.T(), 3, total)
 	// Search tidak diuji di SQLite karena query repository memakai ILIKE (khusus PostgreSQL).
 
 	// Test pagination
-	result, total, err = suite.roleRepo.GetAll("", 1, 2)
+	result, total, err = suite.roleRepo.GetAll(context.Background(), "", 1, 2)
 	assert.NoError(suite.T(), err)
 	assert.Len(suite.T(), result, 2)
 	assert.Equal(suite.T(), 3, total)

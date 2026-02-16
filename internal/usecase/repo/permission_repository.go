@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	"strings"
@@ -16,29 +17,29 @@ func NewPermissionRepository(db *gorm.DB) PermissionRepository {
 	return &permissionRepository{db: db}
 }
 
-func (r *permissionRepository) Create(permission *domain.Permission) error {
-	return r.db.Create(permission).Error
+func (r *permissionRepository) Create(ctx context.Context, permission *domain.Permission) error {
+	return r.db.WithContext(ctx).Create(permission).Error
 }
 
-func (r *permissionRepository) GetByID(id uint) (*domain.Permission, error) {
+func (r *permissionRepository) GetByID(ctx context.Context, id uint) (*domain.Permission, error) {
 	var permission domain.Permission
-	err := r.db.First(&permission, id).Error
+	err := r.db.WithContext(ctx).First(&permission, id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &permission, nil
 }
 
-func (r *permissionRepository) GetByResourceAndAction(resource, action string) (*domain.Permission, error) {
+func (r *permissionRepository) GetByResourceAndAction(ctx context.Context, resource, action string) (*domain.Permission, error) {
 	var permission domain.Permission
-	err := r.db.Where("resource = ? AND action = ?", resource, action).First(&permission).Error
+	err := r.db.WithContext(ctx).Where("resource = ? AND action = ?", resource, action).First(&permission).Error
 	if err != nil {
 		return nil, err
 	}
 	return &permission, nil
 }
 
-func (r *permissionRepository) GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error) {
+func (r *permissionRepository) GetAllByResourceActions(ctx context.Context, permissions map[string][]string) ([]domain.Permission, error) {
 	if len(permissions) == 0 {
 		return nil, nil
 	}
@@ -53,25 +54,25 @@ func (r *permissionRepository) GetAllByResourceActions(permissions map[string][]
 	}
 
 	var result []domain.Permission
-	query := r.db.Where(strings.Join(conditions, " OR "), args...)
+	query := r.db.WithContext(ctx).Where(strings.Join(conditions, " OR "), args...)
 	if err := query.Find(&result).Error; err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (r *permissionRepository) GetAll() ([]domain.Permission, error) {
+func (r *permissionRepository) GetAll(ctx context.Context) ([]domain.Permission, error) {
 	var permissions []domain.Permission
-	err := r.db.Order("resource ASC, action ASC").Find(&permissions).Error
+	err := r.db.WithContext(ctx).Order("resource ASC, action ASC").Find(&permissions).Error
 	if err != nil {
 		return nil, err
 	}
 	return permissions, nil
 }
 
-func (r *permissionRepository) GetAvailablePermissions() ([]dto.ResourcePermissions, error) {
+func (r *permissionRepository) GetAvailablePermissions(ctx context.Context) ([]dto.ResourcePermissions, error) {
 	var permissions []domain.Permission
-	if err := r.db.Order("resource ASC, action ASC").Find(&permissions).Error; err != nil {
+	if err := r.db.WithContext(ctx).Order("resource ASC, action ASC").Find(&permissions).Error; err != nil {
 		return nil, err
 	}
 
@@ -94,6 +95,6 @@ func (r *permissionRepository) GetAvailablePermissions() ([]dto.ResourcePermissi
 	return result, nil
 }
 
-func (r *permissionRepository) BulkCreate(permissions []domain.Permission) error {
-	return r.db.Create(&permissions).Error
+func (r *permissionRepository) BulkCreate(ctx context.Context, permissions []domain.Permission) error {
+	return r.db.WithContext(ctx).Create(&permissions).Error
 }

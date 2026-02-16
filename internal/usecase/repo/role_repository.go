@@ -1,9 +1,10 @@
 package repo
 
 import (
+	"context"
+	"fmt"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
-	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -16,40 +17,40 @@ func NewRoleRepository(db *gorm.DB) RoleRepository {
 	return &roleRepository{db: db}
 }
 
-func (r *roleRepository) Create(role *domain.Role) error {
-	return r.db.Create(role).Error
+func (r *roleRepository) Create(ctx context.Context, role *domain.Role) error {
+	return r.db.WithContext(ctx).Create(role).Error
 }
 
-func (r *roleRepository) GetByID(id uint) (*domain.Role, error) {
+func (r *roleRepository) GetByID(ctx context.Context, id uint) (*domain.Role, error) {
 	var role domain.Role
-	err := r.db.First(&role, id).Error
+	err := r.db.WithContext(ctx).First(&role, id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &role, nil
 }
 
-func (r *roleRepository) GetByName(name string) (*domain.Role, error) {
+func (r *roleRepository) GetByName(ctx context.Context, name string) (*domain.Role, error) {
 	var role domain.Role
-	err := r.db.Where("nama_role = ?", name).First(&role).Error
+	err := r.db.WithContext(ctx).Where("nama_role = ?", name).First(&role).Error
 	if err != nil {
 		return nil, err
 	}
 	return &role, nil
 }
 
-func (r *roleRepository) Update(role *domain.Role) error {
-	return r.db.Save(role).Error
+func (r *roleRepository) Update(ctx context.Context, role *domain.Role) error {
+	return r.db.WithContext(ctx).Save(role).Error
 }
 
-func (r *roleRepository) Delete(id uint) error {
-	return r.db.Delete(&domain.Role{}, id).Error
+func (r *roleRepository) Delete(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Delete(&domain.Role{}, id).Error
 }
 
-func (r *roleRepository) GetAll(search string, page, limit int) ([]dto.RoleListItem, int, error) {
+func (r *roleRepository) GetAll(ctx context.Context, search string, page, limit int) ([]dto.RoleListItem, int, error) {
 	var total int64
 
-	query := r.db.Model(&domain.Role{})
+	query := r.db.WithContext(ctx).Model(&domain.Role{})
 
 	if search != "" {
 		searchPattern := fmt.Sprintf("%%%s%%", search)
@@ -63,7 +64,7 @@ func (r *roleRepository) GetAll(search string, page, limit int) ([]dto.RoleListI
 	offset := (page - 1) * limit
 	var roleListItems []dto.RoleListItem
 
-	listQuery := r.db.Model(&domain.Role{}).
+	listQuery := r.db.WithContext(ctx).Model(&domain.Role{}).
 		Select("roles.id, roles.nama_role, roles.updated_at as tanggal_diperbarui, COUNT(role_permissions.id) as jumlah_permission").
 		Joins("LEFT JOIN role_permissions ON role_permissions.role_id = roles.id").
 		Group("roles.id").

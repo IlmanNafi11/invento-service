@@ -45,7 +45,8 @@ func NewRoleController(roleUsecase usecase.RoleUsecase, baseController *base.Bas
 // @Router   /role/permissions [get]
 // @Security  BearerAuth
 func (ctrl *RoleController) GetAvailablePermissions(c *fiber.Ctx) error {
-	permissions, err := ctrl.roleUsecase.GetAvailablePermissions()
+	ctx := c.UserContext()
+	permissions, err := ctrl.roleUsecase.GetAvailablePermissions(ctx)
 	if err != nil {
 		return ctrl.SendInternalError(c)
 	}
@@ -78,7 +79,8 @@ func (ctrl *RoleController) GetRoleList(c *fiber.Ctx) error {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
 
-	result, err := ctrl.roleUsecase.GetRoleList(params)
+	ctx := c.UserContext()
+	result, err := ctrl.roleUsecase.GetRoleList(ctx, params)
 	if err != nil {
 		return ctrl.SendInternalError(c)
 	}
@@ -110,7 +112,8 @@ func (ctrl *RoleController) CreateRole(c *fiber.Ctx) error {
 		return nil
 	}
 
-	result, err := ctrl.roleUsecase.CreateRole(req)
+	ctx := c.UserContext()
+	result, err := ctrl.roleUsecase.CreateRole(ctx, req)
 	if err != nil {
 		return ctrl.handleRoleError(c, err)
 	}
@@ -138,7 +141,8 @@ func (ctrl *RoleController) GetRoleDetail(c *fiber.Ctx) error {
 		return err
 	}
 
-	result, err := ctrl.roleUsecase.GetRoleDetail(id)
+	ctx := c.UserContext()
+	result, err := ctrl.roleUsecase.GetRoleDetail(ctx, id)
 	if err != nil {
 		return ctrl.handleRoleError(c, err)
 	}
@@ -177,7 +181,8 @@ func (ctrl *RoleController) UpdateRole(c *fiber.Ctx) error {
 		return nil
 	}
 
-	result, err := ctrl.roleUsecase.UpdateRole(id, req)
+	ctx := c.UserContext()
+	result, err := ctrl.roleUsecase.UpdateRole(ctx, id, req)
 	if err != nil {
 		return ctrl.handleRoleError(c, err)
 	}
@@ -205,7 +210,8 @@ func (ctrl *RoleController) DeleteRole(c *fiber.Ctx) error {
 		return err
 	}
 
-	err = ctrl.roleUsecase.DeleteRole(id)
+	ctx := c.UserContext()
+	err = ctrl.roleUsecase.DeleteRole(ctx, id)
 	if err != nil {
 		return ctrl.handleRoleError(c, err)
 	}

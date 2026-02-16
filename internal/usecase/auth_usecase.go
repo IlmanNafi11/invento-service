@@ -92,7 +92,7 @@ func (uc *authUsecase) Register(req dto.RegisterRequest) (string, *dto.AuthRespo
 	}
 
 	// Get role for the user
-	role, err := uc.roleRepo.GetByName(emailInfo.RoleName)
+	role, err := uc.roleRepo.GetByName(ctx, emailInfo.RoleName)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return "", nil, apperrors.NewNotFoundError("Role " + emailInfo.RoleName)
@@ -175,7 +175,7 @@ func (uc *authUsecase) Login(req dto.AuthRequest) (string, *dto.AuthResponse, er
 				return "", nil, apperrors.NewValidationError(validateErr.Error(), validateErr)
 			}
 
-			role, roleErr := uc.roleRepo.GetByName(emailInfo.RoleName)
+			role, roleErr := uc.roleRepo.GetByName(ctx, emailInfo.RoleName)
 			if roleErr != nil {
 				return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Login: get role: %w", roleErr))
 			}

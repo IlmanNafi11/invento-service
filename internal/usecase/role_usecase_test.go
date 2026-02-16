@@ -1,8 +1,10 @@
 package usecase
 
 import (
+	"context"
 	goerrors "errors"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	mocks "invento-service/internal/usecase/test"
 	"testing"
@@ -42,9 +44,9 @@ func TestRoleUsecase_GetAvailablePermissions_Success(t *testing.T) {
 		},
 	}
 
-	mockPermissionRepo.On("GetAvailablePermissions").Return(expectedPermissions, nil)
+	mockPermissionRepo.On("GetAvailablePermissions", mock.Anything).Return(expectedPermissions, nil)
 
-	result, err := roleUC.GetAvailablePermissions()
+	result, err := roleUC.GetAvailablePermissions(context.Background())
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -62,9 +64,9 @@ func TestRoleUsecase_GetAvailablePermissions_Error(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, nil)
 
-	mockPermissionRepo.On("GetAvailablePermissions").Return(nil, assert.AnError)
+	mockPermissionRepo.On("GetAvailablePermissions", mock.Anything).Return(nil, assert.AnError)
 
-	result, err := roleUC.GetAvailablePermissions()
+	result, err := roleUC.GetAvailablePermissions(context.Background())
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -94,14 +96,14 @@ func TestRoleUsecase_GetRoleList_Success(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetAll", "", 1, 10).Return(roles, 2, nil)
+	mockRoleRepo.On("GetAll", mock.Anything, "", 1, 10).Return(roles, 2, nil)
 
 	params := dto.RoleListQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
 
-	result, err := roleUC.GetRoleList(params)
+	result, err := roleUC.GetRoleList(context.Background(), params)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -120,14 +122,14 @@ func TestRoleUsecase_GetRoleList_WithError(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, nil)
 
-	mockRoleRepo.On("GetAll", "", 1, 10).Return(nil, 0, assert.AnError)
+	mockRoleRepo.On("GetAll", mock.Anything, "", 1, 10).Return(nil, 0, assert.AnError)
 
 	params := dto.RoleListQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
 
-	result, err := roleUC.GetRoleList(params)
+	result, err := roleUC.GetRoleList(context.Background(), params)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -151,7 +153,7 @@ func TestRoleUsecase_GetRoleList_WithSearch(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetAll", "admin", 1, 10).Return(roles, 1, nil)
+	mockRoleRepo.On("GetAll", mock.Anything, "admin", 1, 10).Return(roles, 1, nil)
 
 	params := dto.RoleListQueryParams{
 		Search: "admin",
@@ -159,7 +161,7 @@ func TestRoleUsecase_GetRoleList_WithSearch(t *testing.T) {
 		Limit:  10,
 	}
 
-	result, err := roleUC.GetRoleList(params)
+	result, err := roleUC.GetRoleList(context.Background(), params)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -178,9 +180,9 @@ func TestRoleUsecase_GetRoleDetail_NotFound(t *testing.T) {
 
 	roleID := uint(999)
 
-	mockRoleRepo.On("GetByID", roleID).Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(nil, gorm.ErrRecordNotFound)
 
-	result, err := roleUC.GetRoleDetail(roleID)
+	result, err := roleUC.GetRoleDetail(context.Background(), roleID)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrNotFound, fiber.StatusNotFound, "Role tidak ditemukan")
 	assert.Nil(t, result)
@@ -197,9 +199,9 @@ func TestRoleUsecase_GetRoleDetail_DBError(t *testing.T) {
 
 	roleID := uint(1)
 
-	mockRoleRepo.On("GetByID", roleID).Return(nil, assert.AnError)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(nil, assert.AnError)
 
-	result, err := roleUC.GetRoleDetail(roleID)
+	result, err := roleUC.GetRoleDetail(context.Background(), roleID)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -227,10 +229,10 @@ func TestRoleUsecase_GetRoleDetail_Success(t *testing.T) {
 		{ID: 2, Resource: "projects", Action: "create", Label: "Create"},
 	}
 
-	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
-	mockRolePermissionRepo.On("GetPermissionsForRole", roleID).Return(permissions, nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
+	mockRolePermissionRepo.On("GetPermissionsForRole", mock.Anything, roleID).Return(permissions, nil)
 
-	result, err := roleUC.GetRoleDetail(roleID)
+	result, err := roleUC.GetRoleDetail(context.Background(), roleID)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -256,21 +258,21 @@ func TestRoleUsecase_CreateRole_Success(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetByName", "editor").Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("GetByName", mock.Anything, "editor").Return(nil, gorm.ErrRecordNotFound)
 
-	mockRoleRepo.On("Create", mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
+	mockRoleRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
 		role := args.Get(0).(*domain.Role)
 		role.ID = 1
 		role.CreatedAt = time.Now()
 		role.UpdatedAt = time.Now()
 	}).Return(nil)
 
-	mockPermissionRepo.On("GetAllByResourceActions", req.Permissions).Return([]domain.Permission{
+	mockPermissionRepo.On("GetAllByResourceActions", mock.Anything, req.Permissions).Return([]domain.Permission{
 		{ID: 1, Resource: "projects", Action: "read", Label: "Read"},
 		{ID: 2, Resource: "projects", Action: "create", Label: "Create"},
 	}, nil)
 
-	mockRolePermissionRepo.On("BulkCreate", mock.MatchedBy(func(rolePermissions []domain.RolePermission) bool {
+	mockRolePermissionRepo.On("BulkCreate", mock.Anything, mock.MatchedBy(func(rolePermissions []domain.RolePermission) bool {
 		if len(rolePermissions) != 2 {
 			return false
 		}
@@ -288,7 +290,7 @@ func TestRoleUsecase_CreateRole_Success(t *testing.T) {
 	mockCasbinEnforcer.On("AddPermissionForRole", "editor", "projects", "create").Return(nil)
 	mockCasbinEnforcer.On("SavePolicy").Return(nil)
 
-	result, err := roleUC.CreateRole(req)
+	result, err := roleUC.CreateRole(context.Background(), req)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -316,9 +318,9 @@ func TestRoleUsecase_CreateRole_DuplicateName(t *testing.T) {
 	}
 
 	existingRole := &domain.Role{ID: 1, NamaRole: "admin"}
-	mockRoleRepo.On("GetByName", "admin").Return(existingRole, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, "admin").Return(existingRole, nil)
 
-	result, err := roleUC.CreateRole(req)
+	result, err := roleUC.CreateRole(context.Background(), req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrConflict, fiber.StatusConflict, "Nama role sudah ada")
 	assert.Nil(t, result)
@@ -339,7 +341,7 @@ func TestRoleUsecase_CreateRole_EmptyPermissions(t *testing.T) {
 		Permissions: map[string][]string{},
 	}
 
-	result, err := roleUC.CreateRole(req)
+	result, err := roleUC.CreateRole(context.Background(), req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrValidation, fiber.StatusBadRequest, "permission tidak boleh kosong")
 	assert.Nil(t, result)
@@ -360,10 +362,10 @@ func TestRoleUsecase_CreateRole_CreateRepoError(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetByName", "editor").Return(nil, gorm.ErrRecordNotFound)
-	mockRoleRepo.On("Create", mock.AnythingOfType("*domain.Role")).Return(assert.AnError)
+	mockRoleRepo.On("GetByName", mock.Anything, "editor").Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Role")).Return(assert.AnError)
 
-	result, err := roleUC.CreateRole(req)
+	result, err := roleUC.CreateRole(context.Background(), req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -386,15 +388,15 @@ func TestRoleUsecase_CreateRole_SetPermissionsError(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetByName", "editor").Return(nil, gorm.ErrRecordNotFound)
-	mockRoleRepo.On("Create", mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
+	mockRoleRepo.On("GetByName", mock.Anything, "editor").Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
 		role := args.Get(0).(*domain.Role)
 		role.ID = 1
 	}).Return(nil)
 
-	mockPermissionRepo.On("GetAllByResourceActions", req.Permissions).Return(nil, assert.AnError)
+	mockPermissionRepo.On("GetAllByResourceActions", mock.Anything, req.Permissions).Return(nil, assert.AnError)
 
-	result, err := roleUC.CreateRole(req)
+	result, err := roleUC.CreateRole(context.Background(), req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -418,23 +420,23 @@ func TestRoleUsecase_CreateRole_SavePolicyError(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetByName", "editor").Return(nil, gorm.ErrRecordNotFound)
-	mockRoleRepo.On("Create", mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
+	mockRoleRepo.On("GetByName", mock.Anything, "editor").Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
 		role := args.Get(0).(*domain.Role)
 		role.ID = 1
 		role.CreatedAt = time.Now()
 		role.UpdatedAt = time.Now()
 	}).Return(nil)
 
-	mockPermissionRepo.On("GetAllByResourceActions", req.Permissions).Return([]domain.Permission{
+	mockPermissionRepo.On("GetAllByResourceActions", mock.Anything, req.Permissions).Return([]domain.Permission{
 		{ID: 1, Resource: "projects", Action: "read", Label: "Read"},
 	}, nil)
 
-	mockRolePermissionRepo.On("BulkCreate", mock.AnythingOfType("[]domain.RolePermission")).Return(nil)
+	mockRolePermissionRepo.On("BulkCreate", mock.Anything, mock.AnythingOfType("[]domain.RolePermission")).Return(nil)
 	mockCasbinEnforcer.On("AddPermissionForRole", "editor", "projects", "read").Return(nil)
 	mockCasbinEnforcer.On("SavePolicy").Return(assert.AnError)
 
-	result, err := roleUC.CreateRole(req)
+	result, err := roleUC.CreateRole(context.Background(), req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -459,11 +461,11 @@ func TestRoleUsecase_UpdateRole_UpdateRepoError(t *testing.T) {
 	}
 
 	existingRole := &domain.Role{ID: 1, NamaRole: "editor"}
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
-	mockRoleRepo.On("GetByName", "editor_updated").Return(nil, gorm.ErrRecordNotFound)
-	mockRoleRepo.On("Update", mock.AnythingOfType("*domain.Role")).Return(assert.AnError)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, "editor_updated").Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Role")).Return(assert.AnError)
 
-	result, err := roleUC.UpdateRole(roleID, req)
+	result, err := roleUC.UpdateRole(context.Background(), roleID, req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -488,12 +490,12 @@ func TestRoleUsecase_UpdateRole_RemovePermissionsError(t *testing.T) {
 	}
 
 	existingRole := &domain.Role{ID: 1, NamaRole: "editor"}
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
-	mockRoleRepo.On("GetByName", "editor_updated").Return(nil, gorm.ErrRecordNotFound)
-	mockRoleRepo.On("Update", mock.AnythingOfType("*domain.Role")).Return(nil)
-	mockRolePermissionRepo.On("DeleteByRoleID", roleID).Return(assert.AnError)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, "editor_updated").Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Role")).Return(nil)
+	mockRolePermissionRepo.On("DeleteByRoleID", mock.Anything, roleID).Return(assert.AnError)
 
-	result, err := roleUC.UpdateRole(roleID, req)
+	result, err := roleUC.UpdateRole(context.Background(), roleID, req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -516,7 +518,7 @@ func TestRoleUsecase_UpdateRole_EmptyPermissions(t *testing.T) {
 		Permissions: map[string][]string{},
 	}
 
-	result, err := roleUC.UpdateRole(roleID, req)
+	result, err := roleUC.UpdateRole(context.Background(), roleID, req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrValidation, fiber.StatusBadRequest, "permission tidak boleh kosong")
 	assert.Nil(t, result)
@@ -539,22 +541,22 @@ func TestRoleUsecase_UpdateRole_SameNameNoConflict(t *testing.T) {
 	}
 
 	existingRole := &domain.Role{ID: 1, NamaRole: "editor", CreatedAt: time.Now(), UpdatedAt: time.Now()}
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
 	// No GetByName call since name is same
-	mockRoleRepo.On("Update", mock.AnythingOfType("*domain.Role")).Return(nil)
+	mockRoleRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Role")).Return(nil)
 
-	mockRolePermissionRepo.On("DeleteByRoleID", roleID).Return(nil)
+	mockRolePermissionRepo.On("DeleteByRoleID", mock.Anything, roleID).Return(nil)
 	mockCasbinEnforcer.On("RemoveAllPermissionsForRole", "editor").Return(nil)
 
-	mockPermissionRepo.On("GetAllByResourceActions", req.Permissions).Return([]domain.Permission{
+	mockPermissionRepo.On("GetAllByResourceActions", mock.Anything, req.Permissions).Return([]domain.Permission{
 		{ID: 1, Resource: "projects", Action: "read", Label: "Read"},
 	}, nil)
 
-	mockRolePermissionRepo.On("BulkCreate", mock.AnythingOfType("[]domain.RolePermission")).Return(nil)
+	mockRolePermissionRepo.On("BulkCreate", mock.Anything, mock.AnythingOfType("[]domain.RolePermission")).Return(nil)
 	mockCasbinEnforcer.On("AddPermissionForRole", "editor", "projects", "read").Return(nil)
 	mockCasbinEnforcer.On("SavePolicy").Return(nil)
 
-	result, err := roleUC.UpdateRole(roleID, req)
+	result, err := roleUC.UpdateRole(context.Background(), roleID, req)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -577,13 +579,13 @@ func TestRoleUsecase_DeleteRole_DeleteRepoError(t *testing.T) {
 	roleID := uint(1)
 	existingRole := &domain.Role{ID: 1, NamaRole: "editor"}
 
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
-	mockRolePermissionRepo.On("DeleteByRoleID", roleID).Return(nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
+	mockRolePermissionRepo.On("DeleteByRoleID", mock.Anything, roleID).Return(nil)
 	mockCasbinEnforcer.On("RemoveAllPermissionsForRole", "editor").Return(nil)
 	mockCasbinEnforcer.On("DeleteRole", "editor").Return(nil)
-	mockRoleRepo.On("Delete", roleID).Return(assert.AnError)
+	mockRoleRepo.On("Delete", mock.Anything, roleID).Return(assert.AnError)
 
-	err := roleUC.DeleteRole(roleID)
+	err := roleUC.DeleteRole(context.Background(), roleID)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 
@@ -602,14 +604,14 @@ func TestRoleUsecase_DeleteRole_SavePolicyError(t *testing.T) {
 	roleID := uint(1)
 	existingRole := &domain.Role{ID: 1, NamaRole: "editor"}
 
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
-	mockRolePermissionRepo.On("DeleteByRoleID", roleID).Return(nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
+	mockRolePermissionRepo.On("DeleteByRoleID", mock.Anything, roleID).Return(nil)
 	mockCasbinEnforcer.On("RemoveAllPermissionsForRole", "editor").Return(nil)
 	mockCasbinEnforcer.On("DeleteRole", "editor").Return(nil)
-	mockRoleRepo.On("Delete", roleID).Return(nil)
+	mockRoleRepo.On("Delete", mock.Anything, roleID).Return(nil)
 	mockCasbinEnforcer.On("SavePolicy").Return(assert.AnError)
 
-	err := roleUC.DeleteRole(roleID)
+	err := roleUC.DeleteRole(context.Background(), roleID)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 
@@ -627,10 +629,10 @@ func TestRoleUsecase_GetRoleDetail_PermissionRepoError(t *testing.T) {
 	roleID := uint(1)
 	role := &domain.Role{ID: 1, NamaRole: "admin"}
 
-	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
-	mockRolePermissionRepo.On("GetPermissionsForRole", roleID).Return(nil, assert.AnError)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
+	mockRolePermissionRepo.On("GetPermissionsForRole", mock.Anything, roleID).Return(nil, assert.AnError)
 
-	result, err := roleUC.GetRoleDetail(roleID)
+	result, err := roleUC.GetRoleDetail(context.Background(), roleID)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 	assert.Nil(t, result)
@@ -662,19 +664,19 @@ func TestRoleUsecase_UpdateRole_Success(t *testing.T) {
 		UpdatedAt: time.Now().Add(-24 * time.Hour),
 	}
 
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
-	mockRoleRepo.On("GetByName", "editor_updated").Return(nil, gorm.ErrRecordNotFound)
-	mockRoleRepo.On("Update", mock.AnythingOfType("*domain.Role")).Return(nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, "editor_updated").Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Role")).Return(nil)
 
-	mockRolePermissionRepo.On("DeleteByRoleID", roleID).Return(nil)
+	mockRolePermissionRepo.On("DeleteByRoleID", mock.Anything, roleID).Return(nil)
 	mockCasbinEnforcer.On("RemoveAllPermissionsForRole", "editor").Return(nil)
 
-	mockPermissionRepo.On("GetAllByResourceActions", req.Permissions).Return([]domain.Permission{
+	mockPermissionRepo.On("GetAllByResourceActions", mock.Anything, req.Permissions).Return([]domain.Permission{
 		{ID: 1, Resource: "projects", Action: "read", Label: "Read"},
 		{ID: 3, Resource: "projects", Action: "update", Label: "Update"},
 	}, nil)
 
-	mockRolePermissionRepo.On("BulkCreate", mock.MatchedBy(func(rolePermissions []domain.RolePermission) bool {
+	mockRolePermissionRepo.On("BulkCreate", mock.Anything, mock.MatchedBy(func(rolePermissions []domain.RolePermission) bool {
 		if len(rolePermissions) != 2 {
 			return false
 		}
@@ -692,7 +694,7 @@ func TestRoleUsecase_UpdateRole_Success(t *testing.T) {
 	mockCasbinEnforcer.On("AddPermissionForRole", "editor_updated", "projects", "update").Return(nil)
 	mockCasbinEnforcer.On("SavePolicy").Return(nil)
 
-	result, err := roleUC.UpdateRole(roleID, req)
+	result, err := roleUC.UpdateRole(context.Background(), roleID, req)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -720,9 +722,9 @@ func TestRoleUsecase_UpdateRole_NotFound(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetByID", roleID).Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(nil, gorm.ErrRecordNotFound)
 
-	result, err := roleUC.UpdateRole(roleID, req)
+	result, err := roleUC.UpdateRole(context.Background(), roleID, req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrNotFound, fiber.StatusNotFound, "Role tidak ditemukan")
 	assert.Nil(t, result)
@@ -749,10 +751,10 @@ func TestRoleUsecase_UpdateRole_DuplicateName(t *testing.T) {
 	existingRole := &domain.Role{ID: 1, NamaRole: "editor"}
 	conflictingRole := &domain.Role{ID: 2, NamaRole: "admin"}
 
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
-	mockRoleRepo.On("GetByName", "admin").Return(conflictingRole, nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, "admin").Return(conflictingRole, nil)
 
-	result, err := roleUC.UpdateRole(roleID, req)
+	result, err := roleUC.UpdateRole(context.Background(), roleID, req)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrConflict, fiber.StatusConflict, "Nama role sudah ada")
 	assert.Nil(t, result)
@@ -771,14 +773,14 @@ func TestRoleUsecase_DeleteRole_Success(t *testing.T) {
 	roleID := uint(1)
 	existingRole := &domain.Role{ID: 1, NamaRole: "editor"}
 
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
-	mockRolePermissionRepo.On("DeleteByRoleID", roleID).Return(nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
+	mockRolePermissionRepo.On("DeleteByRoleID", mock.Anything, roleID).Return(nil)
 	mockCasbinEnforcer.On("RemoveAllPermissionsForRole", "editor").Return(nil)
 	mockCasbinEnforcer.On("DeleteRole", "editor").Return(nil)
-	mockRoleRepo.On("Delete", roleID).Return(nil)
+	mockRoleRepo.On("Delete", mock.Anything, roleID).Return(nil)
 	mockCasbinEnforcer.On("SavePolicy").Return(nil)
 
-	err := roleUC.DeleteRole(roleID)
+	err := roleUC.DeleteRole(context.Background(), roleID)
 
 	assert.NoError(t, err)
 
@@ -796,9 +798,9 @@ func TestRoleUsecase_DeleteRole_NotFound(t *testing.T) {
 
 	roleID := uint(999)
 
-	mockRoleRepo.On("GetByID", roleID).Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(nil, gorm.ErrRecordNotFound)
 
-	err := roleUC.DeleteRole(roleID)
+	err := roleUC.DeleteRole(context.Background(), roleID)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrNotFound, fiber.StatusNotFound, "Role tidak ditemukan")
 
@@ -814,9 +816,9 @@ func TestRoleUsecase_DeleteRole_DBError(t *testing.T) {
 
 	roleID := uint(1)
 
-	mockRoleRepo.On("GetByID", roleID).Return(nil, assert.AnError)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(nil, assert.AnError)
 
-	err := roleUC.DeleteRole(roleID)
+	err := roleUC.DeleteRole(context.Background(), roleID)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 
@@ -834,12 +836,12 @@ func TestRoleUsecase_DeleteRole_CasbinDeleteRoleError(t *testing.T) {
 	roleID := uint(1)
 	existingRole := &domain.Role{ID: 1, NamaRole: "editor"}
 
-	mockRoleRepo.On("GetByID", roleID).Return(existingRole, nil)
-	mockRolePermissionRepo.On("DeleteByRoleID", roleID).Return(nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(existingRole, nil)
+	mockRolePermissionRepo.On("DeleteByRoleID", mock.Anything, roleID).Return(nil)
 	mockCasbinEnforcer.On("RemoveAllPermissionsForRole", "editor").Return(nil)
 	mockCasbinEnforcer.On("DeleteRole", "editor").Return(assert.AnError)
 
-	err := roleUC.DeleteRole(roleID)
+	err := roleUC.DeleteRole(context.Background(), roleID)
 
 	assertRoleUsecaseAppError(t, err, apperrors.ErrInternal, fiber.StatusInternalServerError, "Terjadi kesalahan pada server")
 

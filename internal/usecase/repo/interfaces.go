@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"time"
 
 	"invento-service/internal/domain"
@@ -23,30 +24,30 @@ type UserRepository interface {
 }
 
 type RoleRepository interface {
-	Create(role *domain.Role) error
-	GetByID(id uint) (*domain.Role, error)
-	GetByName(name string) (*domain.Role, error)
-	Update(role *domain.Role) error
-	Delete(id uint) error
-	GetAll(search string, page, limit int) ([]dto.RoleListItem, int, error)
+	Create(ctx context.Context, role *domain.Role) error
+	GetByID(ctx context.Context, id uint) (*domain.Role, error)
+	GetByName(ctx context.Context, name string) (*domain.Role, error)
+	Update(ctx context.Context, role *domain.Role) error
+	Delete(ctx context.Context, id uint) error
+	GetAll(ctx context.Context, search string, page, limit int) ([]dto.RoleListItem, int, error)
 }
 
 type PermissionRepository interface {
-	Create(permission *domain.Permission) error
-	GetByID(id uint) (*domain.Permission, error)
-	GetByResourceAndAction(resource, action string) (*domain.Permission, error)
-	GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error)
-	GetAll() ([]domain.Permission, error)
-	GetAvailablePermissions() ([]dto.ResourcePermissions, error)
-	BulkCreate(permissions []domain.Permission) error
+	Create(ctx context.Context, permission *domain.Permission) error
+	GetByID(ctx context.Context, id uint) (*domain.Permission, error)
+	GetByResourceAndAction(ctx context.Context, resource, action string) (*domain.Permission, error)
+	GetAllByResourceActions(ctx context.Context, permissions map[string][]string) ([]domain.Permission, error)
+	GetAll(ctx context.Context) ([]domain.Permission, error)
+	GetAvailablePermissions(ctx context.Context) ([]dto.ResourcePermissions, error)
+	BulkCreate(ctx context.Context, permissions []domain.Permission) error
 }
 
 type RolePermissionRepository interface {
-	Create(rolePermission *domain.RolePermission) error
-	BulkCreate(rolePermissions []domain.RolePermission) error
-	GetByRoleID(roleID uint) ([]domain.RolePermission, error)
-	DeleteByRoleID(roleID uint) error
-	GetPermissionsForRole(roleID uint) ([]domain.Permission, error)
+	Create(ctx context.Context, rolePermission *domain.RolePermission) error
+	BulkCreate(ctx context.Context, rolePermissions []domain.RolePermission) error
+	GetByRoleID(ctx context.Context, roleID uint) ([]domain.RolePermission, error)
+	DeleteByRoleID(ctx context.Context, roleID uint) error
+	GetPermissionsForRole(ctx context.Context, roleID uint) ([]domain.Permission, error)
 }
 
 type ProjectRepository interface {

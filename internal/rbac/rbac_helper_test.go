@@ -1,6 +1,7 @@
 package rbac
 
 import (
+	"context"
 	"errors"
 	"invento-service/internal/domain"
 	"testing"
@@ -119,33 +120,33 @@ func (m *MockCasbinEnforcerForRBAC) DeleteAllRolesForUser(userID string) error {
 }
 
 type MockPermissionRepoForRBAC struct {
-	GetAllByResourceActionsFunc func(permissions map[string][]string) ([]domain.Permission, error)
+	GetAllByResourceActionsFunc func(ctx context.Context, permissions map[string][]string) ([]domain.Permission, error)
 }
 
-func (m *MockPermissionRepoForRBAC) GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error) {
+func (m *MockPermissionRepoForRBAC) GetAllByResourceActions(ctx context.Context, permissions map[string][]string) ([]domain.Permission, error) {
 	if m.GetAllByResourceActionsFunc == nil {
 		return nil, nil
 	}
-	return m.GetAllByResourceActionsFunc(permissions)
+	return m.GetAllByResourceActionsFunc(ctx, permissions)
 }
 
 type MockRolePermissionRepoForRBAC struct {
-	BulkCreateFunc     func(rolePermissions []domain.RolePermission) error
-	DeleteByRoleIDFunc func(roleID uint) error
+	BulkCreateFunc     func(ctx context.Context, rolePermissions []domain.RolePermission) error
+	DeleteByRoleIDFunc func(ctx context.Context, roleID uint) error
 }
 
-func (m *MockRolePermissionRepoForRBAC) BulkCreate(rolePermissions []domain.RolePermission) error {
+func (m *MockRolePermissionRepoForRBAC) BulkCreate(ctx context.Context, rolePermissions []domain.RolePermission) error {
 	if m.BulkCreateFunc == nil {
 		return nil
 	}
-	return m.BulkCreateFunc(rolePermissions)
+	return m.BulkCreateFunc(ctx, rolePermissions)
 }
 
-func (m *MockRolePermissionRepoForRBAC) DeleteByRoleID(roleID uint) error {
+func (m *MockRolePermissionRepoForRBAC) DeleteByRoleID(ctx context.Context, roleID uint) error {
 	if m.DeleteByRoleIDFunc == nil {
 		return nil
 	}
-	return m.DeleteByRoleIDFunc(roleID)
+	return m.DeleteByRoleIDFunc(ctx, roleID)
 }
 
 func TestNewRBACHelper(t *testing.T) {
@@ -254,7 +255,7 @@ func TestRBACHelper_SetRolePermissions_Success(t *testing.T) {
 	}
 
 	mockPermRepo := &MockPermissionRepoForRBAC{
-		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+		GetAllByResourceActionsFunc: func(_ context.Context, input map[string][]string) ([]domain.Permission, error) {
 			assert.Equal(t, permissions, input)
 			return []domain.Permission{
 				{ID: 1, Resource: "users", Action: "read"},
@@ -264,7 +265,7 @@ func TestRBACHelper_SetRolePermissions_Success(t *testing.T) {
 	}
 
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
-		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+		BulkCreateFunc: func(_ context.Context, rolePermissions []domain.RolePermission) error {
 			assert.Len(t, rolePermissions, 2)
 			assert.Equal(t, uint(10), rolePermissions[0].RoleID)
 			assert.Equal(t, uint(10), rolePermissions[1].RoleID)
@@ -275,7 +276,7 @@ func TestRBACHelper_SetRolePermissions_Success(t *testing.T) {
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "read").Return(nil)
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "write").Return(nil)
 
-	details, count, err := rh.SetRolePermissions(10, "admin", permissions, mockPermRepo, mockRolePermRepo)
+	details, count, err := rh.SetRolePermissions(context.Background(), 10, "admin", permissions, mockPermRepo, mockRolePermRepo)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
@@ -290,14 +291,14 @@ func TestRBACHelper_SetRolePermissions_PermissionRepoError(t *testing.T) {
 	rh := NewRBACHelper(mockCasbin)
 
 	mockPermRepo := &MockPermissionRepoForRBAC{
-		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+		GetAllByResourceActionsFunc: func(_ context.Context, input map[string][]string) ([]domain.Permission, error) {
 			return nil, errors.New("db error")
 		},
 	}
 
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{}
 
-	details, count, err := rh.SetRolePermissions(1, "admin", map[string][]string{"users": {"read"}}, mockPermRepo, mockRolePermRepo)
+	details, count, err := rh.SetRolePermissions(context.Background(), 1, "admin", map[string][]string{"users": {"read"}}, mockPermRepo, mockRolePermRepo)
 
 	assert.Error(t, err)
 	assert.Equal(t, "gagal mengambil data permission", err.Error())
@@ -311,19 +312,19 @@ func TestRBACHelper_SetRolePermissions_BulkCreateError(t *testing.T) {
 
 	permissions := map[string][]string{"users": {"read"}}
 	mockPermRepo := &MockPermissionRepoForRBAC{
-		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+		GetAllByResourceActionsFunc: func(_ context.Context, input map[string][]string) ([]domain.Permission, error) {
 			return []domain.Permission{{ID: 1, Resource: "users", Action: "read"}}, nil
 		},
 	}
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
-		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+		BulkCreateFunc: func(_ context.Context, rolePermissions []domain.RolePermission) error {
 			return errors.New("insert error")
 		},
 	}
 
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "read").Return(nil)
 
-	details, count, err := rh.SetRolePermissions(1, "admin", permissions, mockPermRepo, mockRolePermRepo)
+	details, count, err := rh.SetRolePermissions(context.Background(), 1, "admin", permissions, mockPermRepo, mockRolePermRepo)
 
 	assert.Error(t, err)
 	assert.Equal(t, "gagal membuat role permission", err.Error())
@@ -337,19 +338,19 @@ func TestRBACHelper_SetRolePermissions_EmptyPermissions(t *testing.T) {
 	rh := NewRBACHelper(mockCasbin)
 
 	mockPermRepo := &MockPermissionRepoForRBAC{
-		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+		GetAllByResourceActionsFunc: func(_ context.Context, input map[string][]string) ([]domain.Permission, error) {
 			assert.Empty(t, input)
 			return nil, nil
 		},
 	}
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
-		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+		BulkCreateFunc: func(_ context.Context, rolePermissions []domain.RolePermission) error {
 			t.Fatalf("BulkCreate tidak boleh dipanggil untuk permission kosong")
 			return nil
 		},
 	}
 
-	details, count, err := rh.SetRolePermissions(1, "admin", map[string][]string{}, mockPermRepo, mockRolePermRepo)
+	details, count, err := rh.SetRolePermissions(context.Background(), 1, "admin", map[string][]string{}, mockPermRepo, mockRolePermRepo)
 
 	assert.NoError(t, err)
 	assert.Empty(t, details)
@@ -366,7 +367,7 @@ func TestRBACHelper_SetRolePermissions_MultipleResourcesMultipleActions(t *testi
 	}
 
 	mockPermRepo := &MockPermissionRepoForRBAC{
-		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+		GetAllByResourceActionsFunc: func(_ context.Context, input map[string][]string) ([]domain.Permission, error) {
 			return []domain.Permission{
 				{ID: 1, Resource: "users", Action: "read"},
 				{ID: 2, Resource: "users", Action: "write"},
@@ -377,7 +378,7 @@ func TestRBACHelper_SetRolePermissions_MultipleResourcesMultipleActions(t *testi
 	}
 
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
-		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+		BulkCreateFunc: func(_ context.Context, rolePermissions []domain.RolePermission) error {
 			assert.Len(t, rolePermissions, 4)
 			return nil
 		},
@@ -388,7 +389,7 @@ func TestRBACHelper_SetRolePermissions_MultipleResourcesMultipleActions(t *testi
 	mockCasbin.On("AddPermissionForRole", "admin", "projects", "create").Return(nil)
 	mockCasbin.On("AddPermissionForRole", "admin", "projects", "delete").Return(nil)
 
-	details, count, err := rh.SetRolePermissions(1, "admin", permissions, mockPermRepo, mockRolePermRepo)
+	details, count, err := rh.SetRolePermissions(context.Background(), 1, "admin", permissions, mockPermRepo, mockRolePermRepo)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 4, count)
@@ -405,7 +406,7 @@ func TestRBACHelper_SetRolePermissions_PermissionsNotFoundInDBAreSkipped(t *test
 	}
 
 	mockPermRepo := &MockPermissionRepoForRBAC{
-		GetAllByResourceActionsFunc: func(input map[string][]string) ([]domain.Permission, error) {
+		GetAllByResourceActionsFunc: func(_ context.Context, input map[string][]string) ([]domain.Permission, error) {
 			return []domain.Permission{
 				{ID: 1, Resource: "users", Action: "read"},
 				{ID: 2, Resource: "users", Action: "write"},
@@ -414,7 +415,7 @@ func TestRBACHelper_SetRolePermissions_PermissionsNotFoundInDBAreSkipped(t *test
 	}
 
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
-		BulkCreateFunc: func(rolePermissions []domain.RolePermission) error {
+		BulkCreateFunc: func(_ context.Context, rolePermissions []domain.RolePermission) error {
 			assert.Len(t, rolePermissions, 2)
 			return nil
 		},
@@ -423,7 +424,7 @@ func TestRBACHelper_SetRolePermissions_PermissionsNotFoundInDBAreSkipped(t *test
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "read").Return(nil)
 	mockCasbin.On("AddPermissionForRole", "admin", "users", "write").Return(nil)
 
-	details, count, err := rh.SetRolePermissions(1, "admin", permissions, mockPermRepo, mockRolePermRepo)
+	details, count, err := rh.SetRolePermissions(context.Background(), 1, "admin", permissions, mockPermRepo, mockRolePermRepo)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
@@ -437,13 +438,13 @@ func TestRBACHelper_RemoveAllRolePermissions_DeleteByRoleIDError(t *testing.T) {
 	rh := NewRBACHelper(mockCasbin)
 
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
-		DeleteByRoleIDFunc: func(roleID uint) error {
+		DeleteByRoleIDFunc: func(_ context.Context, roleID uint) error {
 			assert.Equal(t, uint(1), roleID)
 			return errors.New("db error")
 		},
 	}
 
-	err := rh.RemoveAllRolePermissions(1, "admin", mockRolePermRepo)
+	err := rh.RemoveAllRolePermissions(context.Background(), 1, "admin", mockRolePermRepo)
 
 	assert.Error(t, err)
 	assert.Equal(t, "gagal menghapus permission lama", err.Error())
@@ -454,13 +455,13 @@ func TestRBACHelper_RemoveAllRolePermissions_CasbinRemoveError(t *testing.T) {
 	rh := NewRBACHelper(mockCasbin)
 
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
-		DeleteByRoleIDFunc: func(roleID uint) error {
+		DeleteByRoleIDFunc: func(_ context.Context, roleID uint) error {
 			return nil
 		},
 	}
 	mockCasbin.On("RemoveAllPermissionsForRole", "admin").Return(errors.New("casbin error"))
 
-	err := rh.RemoveAllRolePermissions(1, "admin", mockRolePermRepo)
+	err := rh.RemoveAllRolePermissions(context.Background(), 1, "admin", mockRolePermRepo)
 
 	assert.Error(t, err)
 	assert.Equal(t, "gagal menghapus policy casbin lama", err.Error())
@@ -472,14 +473,14 @@ func TestRBACHelper_RemoveAllRolePermissions_Success(t *testing.T) {
 	rh := NewRBACHelper(mockCasbin)
 
 	mockRolePermRepo := &MockRolePermissionRepoForRBAC{
-		DeleteByRoleIDFunc: func(roleID uint) error {
+		DeleteByRoleIDFunc: func(_ context.Context, roleID uint) error {
 			assert.Equal(t, uint(1), roleID)
 			return nil
 		},
 	}
 	mockCasbin.On("RemoveAllPermissionsForRole", "admin").Return(nil)
 
-	err := rh.RemoveAllRolePermissions(1, "admin", mockRolePermRepo)
+	err := rh.RemoveAllRolePermissions(context.Background(), 1, "admin", mockRolePermRepo)
 
 	assert.NoError(t, err)
 	mockCasbin.AssertExpectations(t)

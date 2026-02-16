@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/dto"
@@ -89,7 +90,7 @@ func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
 		return apperrors.NewInternalError(err)
 	}
 
-	role, err := uc.roleRepo.GetByName(roleName)
+	role, err := uc.roleRepo.GetByName(context.Background(), roleName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("Role")
@@ -307,7 +308,7 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 }
 
 func (uc *userUsecase) GetUsersForRole(roleID uint) ([]dto.UserListItem, error) {
-	_, err := uc.roleRepo.GetByID(roleID)
+	_, err := uc.roleRepo.GetByID(context.Background(), roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Role")
@@ -324,7 +325,7 @@ func (uc *userUsecase) GetUsersForRole(roleID uint) ([]dto.UserListItem, error) 
 }
 
 func (uc *userUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
-	role, err := uc.roleRepo.GetByID(roleID)
+	role, err := uc.roleRepo.GetByID(context.Background(), roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("Role")

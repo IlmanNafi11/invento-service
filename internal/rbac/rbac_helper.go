@@ -1,6 +1,7 @@
 package rbac
 
 import (
+	"context"
 	"errors"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
@@ -9,13 +10,13 @@ import (
 // RBACPermissionRepository defines the permission repo methods needed by RBACHelper.
 // This avoids importing repo package (which would create import cycles with testing).
 type RBACPermissionRepository interface {
-	GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error)
+	GetAllByResourceActions(ctx context.Context, permissions map[string][]string) ([]domain.Permission, error)
 }
 
 // RBACRolePermissionRepository defines the role-permission repo methods needed by RBACHelper.
 type RBACRolePermissionRepository interface {
-	BulkCreate(rolePermissions []domain.RolePermission) error
-	DeleteByRoleID(roleID uint) error
+	BulkCreate(ctx context.Context, rolePermissions []domain.RolePermission) error
+	DeleteByRoleID(ctx context.Context, roleID uint) error
 }
 
 type RBACHelper struct {
@@ -29,13 +30,14 @@ func NewRBACHelper(casbinEnforcer CasbinEnforcerInterface) *RBACHelper {
 }
 
 func (rh *RBACHelper) SetRolePermissions(
+	ctx context.Context,
 	roleID uint,
 	roleName string,
 	permissions map[string][]string,
 	permissionRepo RBACPermissionRepository,
 	rolePermissionRepo RBACRolePermissionRepository,
 ) ([]dto.RolePermissionDetail, int, error) {
-	dbPermissions, err := permissionRepo.GetAllByResourceActions(permissions)
+	dbPermissions, err := permissionRepo.GetAllByResourceActions(ctx, permissions)
 	if err != nil {
 		return nil, 0, errors.New("gagal mengambil data permission")
 	}
@@ -81,7 +83,7 @@ func (rh *RBACHelper) SetRolePermissions(
 	}
 
 	if len(rolePermissions) > 0 {
-		if err := rolePermissionRepo.BulkCreate(rolePermissions); err != nil {
+		if err := rolePermissionRepo.BulkCreate(ctx, rolePermissions); err != nil {
 			return nil, 0, errors.New("gagal membuat role permission")
 		}
 	}
@@ -89,8 +91,8 @@ func (rh *RBACHelper) SetRolePermissions(
 	return permissionDetails, permissionCount, nil
 }
 
-func (rh *RBACHelper) RemoveAllRolePermissions(roleID uint, roleName string, rolePermissionRepo RBACRolePermissionRepository) error {
-	if err := rolePermissionRepo.DeleteByRoleID(roleID); err != nil {
+func (rh *RBACHelper) RemoveAllRolePermissions(ctx context.Context, roleID uint, roleName string, rolePermissionRepo RBACRolePermissionRepository) error {
+	if err := rolePermissionRepo.DeleteByRoleID(ctx, roleID); err != nil {
 		return errors.New("gagal menghapus permission lama")
 	}
 
