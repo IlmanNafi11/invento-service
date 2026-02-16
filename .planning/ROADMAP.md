@@ -168,7 +168,17 @@ Plans:
 
 **Risk**: Context propagation changes every interface signature -- largest blast radius of any phase. Mitigated by changing one domain at a time (e.g., user first, then modul, then project) and running tests after each domain.
 
-**Plans**: TBD
+**Plans:** 8 plans
+
+Plans:
+- [ ] 05-01-PLAN.md -- Foundation: install copier, migrate response types to dto, extract routes.go, centralized ErrorHandler
+- [ ] 05-02-PLAN.md -- DTO migration: move all domain-specific request/response types to dto/, create mapping functions
+- [ ] 05-03-PLAN.md -- Context propagation for Role/Permission and User domains
+- [ ] 05-04-PLAN.md -- Context propagation for Project, Modul, Auth, Statistic, and Health domains
+- [ ] 05-05-PLAN.md -- Context propagation for TUS Upload and TUS Modul Upload domains (completes context rollout)
+- [ ] 05-06-PLAN.md -- Split test_mocks.go and top 15 oversized test files (>750 lines)
+- [ ] 05-07-PLAN.md -- Split remaining 14 oversized test files (501-750 lines)
+- [ ] 05-08-PLAN.md -- Test parallelization (t.Parallel()) and final 500-line enforcement verification
 
 ### Phase 6: Polish & Verification
 **Goal**: The codebase is clean, verified under load to stay within memory limits, and all documentation reflects the final state.
