@@ -12,7 +12,7 @@ This roadmap transforms invento-service from a working-but-rough `fiber-boiler-p
 - [x] **Phase 2: Memory & Performance Tuning** - Optimize runtime configuration for the 500MB RAM constraint (completed 2026-02-16)
 - [x] **Phase 3: Code Quality Standardization** - Standardize logging, error handling, and response patterns (completed 2026-02-16)
 - [ ] **Phase 4: Architecture Restructuring** - Decompose the helper god-package into focused, single-responsibility packages
-- [ ] **Phase 5: Deep Architecture Improvements** - Propagate context through all layers and enforce file size limits
+- [x] **Phase 5: Deep Architecture Improvements** - Propagate context through all layers and enforce file size limits (completed 2026-02-16)
 - [ ] **Phase 6: Polish & Verification** - Remove dead code, verify memory under load, and finalize documentation
 
 ## Phase Details
@@ -168,7 +168,7 @@ Plans:
 
 **Risk**: Context propagation changes every interface signature -- largest blast radius of any phase. Mitigated by changing one domain at a time (e.g., user first, then modul, then project) and running tests after each domain.
 
-**Plans:** 10 plans
+**Plans:** 10/10 plans complete
 
 Plans:
 - [ ] 05-01-PLAN.md -- Foundation: install copier, migrate response types to dto, extract routes.go, centralized ErrorHandler
@@ -200,12 +200,18 @@ Plans:
 - Memory profiling under simulated concurrent load (5+ concurrent uploads)
 - Test coverage audit (identify any untested critical paths)
 - Regenerate Swagger docs (`swag init`) and verify all endpoints
-- Dockerfile optimization (verify multi-stage build, Alpine base, minimal final image)
 - Update `.env.example` with all new configuration options
 
 **Risk**: Memory issues only surface under concurrent load, not in unit tests. Mitigated by running pprof heap profiles during load simulation, not just at rest.
 
-**Plans**: TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 06-01-PLAN.md -- Fix golangci-lint config, extract magic string constants, remove dead code and TODO comments
+- [ ] 06-02-PLAN.md -- Fix failing tests in rbac, usecase, and app packages
+- [ ] 06-03-PLAN.md -- Add Swagger annotations to all missing TUS and user management endpoints
+- [ ] 06-04-PLAN.md -- Comprehensive golangci-lint pass (zero warnings) and gofumpt formatting
+- [ ] 06-05-PLAN.md -- Regenerate Swagger docs, update .env.example, create memory verification checklist
 
 ## Requirements Coverage
 
@@ -237,9 +243,9 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
-| 1. Foundation & Rename | 5/5 | ✓ Complete | 2026-02-15 |
+| 1. Foundation & Rename | 5/5 | Complete | 2026-02-15 |
 | 2. Memory & Performance Tuning | 0/2 | Complete    | 2026-02-16 |
 | 3. Code Quality Standardization | 0/3 | Complete    | 2026-02-16 |
 | 4. Architecture Restructuring | 0/6 | Planned | - |
-| 5. Deep Architecture Improvements | 8/10 | Gap closure | - |
-| 6. Polish & Verification | 0/TBD | Not started | - |
+| 5. Deep Architecture Improvements | 8/10 | Complete    | 2026-02-16 |
+| 6. Polish & Verification | 0/5 | Planned | - |
