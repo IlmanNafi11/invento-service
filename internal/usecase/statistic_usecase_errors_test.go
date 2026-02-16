@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/sqlite"
@@ -18,10 +19,11 @@ func TestStatisticUsecase_ActualGetStatistics_NoPermissions(t *testing.T) {
 	mockRoleRepo := new(MockRoleRepository)
 
 	// Create a real Casbin enforcer for testing
-	casbinDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	casbinDB, err := gorm.Open(sqlite.Open("file:stat_err_noperm?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("failed to open casbin test database: %v", err)
 	}
+	casbinDB.AutoMigrate(&gormadapter.CasbinRule{})
 	casbinEnforcer, err := rbac.NewCasbinEnforcer(casbinDB)
 	if err != nil {
 		t.Fatalf("failed to create casbin enforcer: %v", err)
@@ -55,10 +57,11 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 	mockRoleRepo := new(MockRoleRepository)
 
 	// Create a real Casbin enforcer for testing
-	casbinDB, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	casbinDB, err := gorm.Open(sqlite.Open("file:stat_err_partial?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("failed to open casbin test database: %v", err)
 	}
+	casbinDB.AutoMigrate(&gormadapter.CasbinRule{})
 	casbinEnforcer, err := rbac.NewCasbinEnforcer(casbinDB)
 	if err != nil {
 		t.Fatalf("failed to create casbin enforcer: %v", err)

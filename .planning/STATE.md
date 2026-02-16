@@ -108,6 +108,8 @@ Recent decisions affecting current work:
 - [05-08]: Fixed pre-existing mock bugs from 05-04 context propagation (args.Get index, missing mock.Anything)
 - [Phase 05-09]: Thread ctx through health private helpers (getDatabaseStatus, getDetailedDatabaseStatus, getServicesStatus) for full context propagation; PingContext(ctx) for database checks
 
+- [06-01]: Locals key constants in middleware package; environment constants in config package (no circular imports)
+- [06-01]: Godoc example comments preserved even when containing Go code patterns
 - [06-03]: TUS Upload tag for project endpoints, TUS Modul Upload for modul endpoints, Role Management for user role endpoints
 - [06-03]: Modul IDs use string type (UUID) in Swagger @Param, project IDs use int
 
@@ -123,5 +125,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06-03-PLAN.md
-Resume file: .planning/phases/06-polish-verification/06-03-SUMMARY.md
+Stopped at: Completed 06-01-PLAN.md
+Resume file: .planning/phases/06-polish-verification/06-01-SUMMARY.md
