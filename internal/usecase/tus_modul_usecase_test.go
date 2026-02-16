@@ -531,7 +531,7 @@ func TestTusModulUsecase_InitiateModulUpload_RepoCreateError(t *testing.T) {
 	res, err := uc.InitiateModulUpload("u1", 1024, meta)
 	require.Error(t, err)
 	assert.Nil(t, res)
-	assert.Contains(t, err.Error(), "gagal membuat upload record")
+	assert.Contains(t, err.Error(), "create record")
 
 	tusRepo.AssertExpectations(t)
 }

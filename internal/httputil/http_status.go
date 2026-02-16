@@ -1,4 +1,4 @@
-package helper
+package httputil
 
 const (
 	StatusOK                  = 200

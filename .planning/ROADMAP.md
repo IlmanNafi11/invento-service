@@ -134,7 +134,15 @@ Plans:
 
 **Risk**: Circular dependencies surface during extraction, requiring unexpected refactoring. Mitigated by mapping all deps before moving any code, extracting leaf packages first.
 
-**Plans**: TBD
+**Plans:** 6 plans
+
+Plans:
+- [ ] 04-01-PLAN.md -- Extract httputil package (HTTP response helpers, status constants, pagination, query parsing, cookie, validator)
+- [ ] 04-02-PLAN.md -- Extract storage package (file operations, FileManager, PathResolver, domain helpers)
+- [ ] 04-03-PLAN.md -- Extract rbac package (Casbin enforcer, RBAC helpers, constants from internal/constants/)
+- [ ] 04-04-PLAN.md -- Extract middleware functions into existing internal/middleware/ package (auth, RBAC, TUS middleware)
+- [ ] 04-05-PLAN.md -- Extract upload package (TUS store, queue, manager, cleanup, headers, metadata, response)
+- [ ] 04-06-PLAN.md -- Final cleanup: inline orphan email.go, delete internal/helper/ entirely
 
 ### Phase 5: Deep Architecture Improvements
 **Goal**: All layers accept `context.Context` for proper timeout/cancellation support, route registration is modular, and no source file exceeds 500 lines.
@@ -220,6 +228,6 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 | 1. Foundation & Rename | 5/5 | ✓ Complete | 2026-02-15 |
 | 2. Memory & Performance Tuning | 0/2 | Planned | - |
 | 3. Code Quality Standardization | 0/3 | Planned | - |
-| 4. Architecture Restructuring | 0/TBD | Not started | - |
+| 4. Architecture Restructuring | 0/6 | Planned | - |
 | 5. Deep Architecture Improvements | 0/TBD | Not started | - |
 | 6. Polish & Verification | 0/TBD | Not started | - |

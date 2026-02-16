@@ -1,8 +1,8 @@
-package helper_test
+package httputil_test
 
 import (
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"net/http/httptest"
 	"testing"
 
@@ -17,7 +17,7 @@ func TestSendSuccessResponse(t *testing.T) {
 			"id":   1,
 			"name": "Test",
 		}
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "Data berhasil diambil", data)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "Data berhasil diambil", data)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -30,7 +30,7 @@ func TestSendSuccessResponse(t *testing.T) {
 func TestSendErrorResponse(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendErrorResponse(c, fiber.StatusBadRequest, "Request tidak valid", nil)
+		return httputil.SendErrorResponse(c, fiber.StatusBadRequest, "Request tidak valid", nil)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -43,7 +43,7 @@ func TestSendErrorResponse(t *testing.T) {
 func TestSendInternalServerErrorResponse(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendInternalServerErrorResponse(c)
+		return httputil.SendInternalServerErrorResponse(c)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -56,7 +56,7 @@ func TestSendInternalServerErrorResponse(t *testing.T) {
 func TestSendUnauthorizedResponse(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendUnauthorizedResponse(c)
+		return httputil.SendUnauthorizedResponse(c)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -69,7 +69,7 @@ func TestSendUnauthorizedResponse(t *testing.T) {
 func TestSendForbiddenResponse(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendForbiddenResponse(c)
+		return httputil.SendForbiddenResponse(c)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -82,7 +82,7 @@ func TestSendForbiddenResponse(t *testing.T) {
 func TestSendNotFoundResponse(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendNotFoundResponse(c, "Data tidak ditemukan")
+		return httputil.SendNotFoundResponse(c, "Data tidak ditemukan")
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -105,7 +105,7 @@ func TestSendListResponse(t *testing.T) {
 			TotalItems: 50,
 			TotalPages: 5,
 		}
-		return helper.SendListResponse(c, fiber.StatusOK, "Data berhasil diambil", items, pagination)
+		return httputil.SendListResponse(c, fiber.StatusOK, "Data berhasil diambil", items, pagination)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -122,7 +122,7 @@ func TestSendValidationErrorResponse(t *testing.T) {
 			{Field: "email", Message: "Email wajib diisi"},
 			{Field: "password", Message: "Password minimal 8 karakter"},
 		}
-		return helper.SendValidationErrorResponse(c, errors)
+		return httputil.SendValidationErrorResponse(c, errors)
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)

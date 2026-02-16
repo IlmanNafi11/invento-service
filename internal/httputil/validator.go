@@ -1,4 +1,4 @@
-package helper
+package httputil
 
 import (
 	"invento-service/internal/domain"

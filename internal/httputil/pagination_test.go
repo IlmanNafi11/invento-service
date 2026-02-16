@@ -1,8 +1,8 @@
-package helper_test
+package httputil_test
 
 import (
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -83,7 +83,7 @@ func TestNormalizePaginationParams(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := helper.NormalizePaginationParams(tt.page, tt.limit)
+			result := httputil.NormalizePaginationParams(tt.page, tt.limit)
 
 			assert.Equal(t, tt.expectedPage, result.Page)
 			assert.Equal(t, tt.expectedLimit, result.Limit)
@@ -195,7 +195,7 @@ func TestCalculatePagination(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := helper.CalculatePagination(tt.page, tt.limit, tt.totalItems)
+			result := httputil.CalculatePagination(tt.page, tt.limit, tt.totalItems)
 
 			assert.Equal(t, tt.expectedPage, result.Page)
 			assert.Equal(t, tt.expectedLimit, result.Limit)
@@ -206,7 +206,7 @@ func TestCalculatePagination(t *testing.T) {
 }
 
 func TestCalculatePagination_ReturnsPaginationData(t *testing.T) {
-	result := helper.CalculatePagination(2, 20, 100)
+	result := httputil.CalculatePagination(2, 20, 100)
 
 	assert.IsType(t, domain.PaginationData{}, result)
 	assert.Equal(t, 2, result.Page)
@@ -274,7 +274,7 @@ func TestCalculateOffset(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			offset := helper.CalculateOffset(tt.page, tt.limit)
+			offset := httputil.CalculateOffset(tt.page, tt.limit)
 			assert.Equal(t, tt.expectedOffset, offset)
 		})
 	}
@@ -290,8 +290,8 @@ func TestCalculatePagination_Integration(t *testing.T) {
 
 	for page := 1; page <= totalPages; page++ {
 		t.Run("page_integration", func(t *testing.T) {
-			pagination := helper.CalculatePagination(page, limit, totalItems)
-			offset := helper.CalculateOffset(page, limit)
+			pagination := httputil.CalculatePagination(page, limit, totalItems)
+			offset := httputil.CalculateOffset(page, limit)
 
 			// Verify pagination data
 			assert.Equal(t, page, pagination.Page)
@@ -342,7 +342,7 @@ func TestNormalizePaginationParams_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := helper.NormalizePaginationParams(tt.page, tt.limit)
+			result := httputil.NormalizePaginationParams(tt.page, tt.limit)
 
 			assert.Equal(t, tt.expectedPage, result.Page)
 			assert.Equal(t, tt.expectedLimit, result.Limit)
@@ -351,7 +351,7 @@ func TestNormalizePaginationParams_EdgeCases(t *testing.T) {
 }
 
 func TestCalculatePagination_SingleItem(t *testing.T) {
-	result := helper.CalculatePagination(1, 10, 1)
+	result := httputil.CalculatePagination(1, 10, 1)
 
 	assert.Equal(t, 1, result.Page)
 	assert.Equal(t, 10, result.Limit)
@@ -361,7 +361,7 @@ func TestCalculatePagination_SingleItem(t *testing.T) {
 
 func TestCalculatePagination_LargeLimit(t *testing.T) {
 	// When limit is capped at 100
-	result := helper.CalculatePagination(1, 200, 500)
+	result := httputil.CalculatePagination(1, 200, 500)
 
 	assert.Equal(t, 1, result.Page)
 	assert.Equal(t, 100, result.Limit) // Should be capped at 100
@@ -404,7 +404,7 @@ func TestCalculateOffset_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			offset := helper.CalculateOffset(tt.page, tt.limit)
+			offset := httputil.CalculateOffset(tt.page, tt.limit)
 			assert.Equal(t, tt.expectedOffset, offset)
 		})
 	}
