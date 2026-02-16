@@ -52,6 +52,7 @@ func NewModulController(
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /modul [get]
 func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return nil
@@ -62,7 +63,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
 
-	result, err := ctrl.modulUsecase.GetList(userID, params.Search, params.FilterType, params.FilterStatus, params.Page, params.Limit)
+	result, err := ctrl.modulUsecase.GetList(ctx, userID, params.Search, params.FilterType, params.FilterStatus, params.Page, params.Limit)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -91,6 +92,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /modul/{id} [delete]
 func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return nil
@@ -101,7 +103,7 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err = ctrl.modulUsecase.Delete(modulID, userID)
+	err = ctrl.modulUsecase.Delete(ctx, modulID, userID)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -131,6 +133,7 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /modul/{id} [patch]
 func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return nil
@@ -150,7 +153,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err = ctrl.modulUsecase.UpdateMetadata(modulID, userID, req)
+	err = ctrl.modulUsecase.UpdateMetadata(ctx, modulID, userID, req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -178,6 +181,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /modul/download [post]
 func (ctrl *ModulController) Download(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return nil
@@ -196,7 +200,7 @@ func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 		return nil
 	}
 
-	filePath, err := ctrl.modulUsecase.Download(userID, req.IDs)
+	filePath, err := ctrl.modulUsecase.Download(ctx, userID, req.IDs)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {

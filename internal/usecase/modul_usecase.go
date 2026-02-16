@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -15,11 +16,11 @@ import (
 )
 
 type ModulUsecase interface {
-	GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error)
-	GetByID(modulID string, userID string) (*dto.ModulResponse, error)
-	UpdateMetadata(modulID string, userID string, req dto.UpdateModulRequest) error
-	Delete(modulID string, userID string) error
-	Download(userID string, modulIDs []string) (string, error)
+	GetList(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error)
+	GetByID(ctx context.Context, modulID string, userID string) (*dto.ModulResponse, error)
+	UpdateMetadata(ctx context.Context, modulID string, userID string, req dto.UpdateModulRequest) error
+	Delete(ctx context.Context, modulID string, userID string) error
+	Download(ctx context.Context, userID string, modulIDs []string) (string, error)
 }
 
 type modulUsecase struct {
@@ -32,7 +33,7 @@ func NewModulUsecase(modulRepo repo.ModulRepository) ModulUsecase {
 	}
 }
 
-func (uc *modulUsecase) GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error) {
+func (uc *modulUsecase) GetList(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -40,7 +41,7 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 		limit = 10
 	}
 
-	moduls, total, err := uc.modulRepo.GetByUserID(userID, search, filterType, filterStatus, page, limit)
+	moduls, total, err := uc.modulRepo.GetByUserID(ctx, userID, search, filterType, filterStatus, page, limit)
 	if err != nil {
 		return nil, apperrors.NewInternalError(fmt.Errorf("ModulUsecase.GetList: %w", err))
 	}
@@ -58,8 +59,8 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 	}, nil
 }
 
-func (uc *modulUsecase) GetByID(modulID string, userID string) (*dto.ModulResponse, error) {
-	modul, err := uc.modulRepo.GetByID(modulID)
+func (uc *modulUsecase) GetByID(ctx context.Context, modulID string, userID string) (*dto.ModulResponse, error) {
+	modul, err := uc.modulRepo.GetByID(ctx, modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Modul")
@@ -84,8 +85,8 @@ func (uc *modulUsecase) GetByID(modulID string, userID string) (*dto.ModulRespon
 	}, nil
 }
 
-func (uc *modulUsecase) Delete(modulID string, userID string) error {
-	modul, err := uc.modulRepo.GetByID(modulID)
+func (uc *modulUsecase) Delete(ctx context.Context, modulID string, userID string) error {
+	modul, err := uc.modulRepo.GetByID(ctx, modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("Modul")
@@ -97,7 +98,7 @@ func (uc *modulUsecase) Delete(modulID string, userID string) error {
 		return apperrors.NewForbiddenError("Tidak memiliki akses ke modul ini")
 	}
 
-	if err := uc.modulRepo.Delete(modulID); err != nil {
+	if err := uc.modulRepo.Delete(ctx, modulID); err != nil {
 		return apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Delete: %w", err))
 	}
 
@@ -112,12 +113,12 @@ func (uc *modulUsecase) Delete(modulID string, userID string) error {
 	return nil
 }
 
-func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, error) {
+func (uc *modulUsecase) Download(ctx context.Context, userID string, modulIDs []string) (string, error) {
 	if len(modulIDs) == 0 {
 		return "", apperrors.NewValidationError("ID modul tidak boleh kosong", nil)
 	}
 
-	moduls, err := uc.modulRepo.GetByIDs(modulIDs, userID)
+	moduls, err := uc.modulRepo.GetByIDs(ctx, modulIDs, userID)
 	if err != nil {
 		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
@@ -158,8 +159,8 @@ func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, erro
 	return zipFilePath, nil
 }
 
-func (uc *modulUsecase) UpdateMetadata(modulID string, userID string, req dto.UpdateModulRequest) error {
-	modul, err := uc.modulRepo.GetByID(modulID)
+func (uc *modulUsecase) UpdateMetadata(ctx context.Context, modulID string, userID string, req dto.UpdateModulRequest) error {
+	modul, err := uc.modulRepo.GetByID(ctx, modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("Modul")
@@ -178,7 +179,7 @@ func (uc *modulUsecase) UpdateMetadata(modulID string, userID string, req dto.Up
 		modul.Deskripsi = req.Deskripsi
 	}
 
-	if err := uc.modulRepo.UpdateMetadata(modul); err != nil {
+	if err := uc.modulRepo.UpdateMetadata(ctx, modul); err != nil {
 		return apperrors.NewInternalError(fmt.Errorf("ModulUsecase.UpdateMetadata: %w", err))
 	}
 

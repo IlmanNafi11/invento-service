@@ -51,24 +51,24 @@ type RolePermissionRepository interface {
 }
 
 type ProjectRepository interface {
-	Create(project *domain.Project) error
-	GetByID(id uint) (*domain.Project, error)
-	GetByIDs(ids []uint, userID string) ([]domain.Project, error)
-	GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error)
-	CountByUserID(userID string) (int, error)
-	Update(project *domain.Project) error
-	Delete(id uint) error
+	Create(ctx context.Context, project *domain.Project) error
+	GetByID(ctx context.Context, id uint) (*domain.Project, error)
+	GetByIDs(ctx context.Context, ids []uint, userID string) ([]domain.Project, error)
+	GetByUserID(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error)
+	CountByUserID(ctx context.Context, userID string) (int, error)
+	Update(ctx context.Context, project *domain.Project) error
+	Delete(ctx context.Context, id uint) error
 }
 
 type ModulRepository interface {
-	Create(modul *domain.Modul) error
-	GetByID(id string) (*domain.Modul, error)
-	GetByIDs(ids []string, userID string) ([]domain.Modul, error)
-	GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error)
-	CountByUserID(userID string) (int, error)
-	Update(modul *domain.Modul) error
-	Delete(id string) error
-	UpdateMetadata(modul *domain.Modul) error
+	Create(ctx context.Context, modul *domain.Modul) error
+	GetByID(ctx context.Context, id string) (*domain.Modul, error)
+	GetByIDs(ctx context.Context, ids []string, userID string) ([]domain.Modul, error)
+	GetByUserID(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error)
+	CountByUserID(ctx context.Context, userID string) (int, error)
+	Update(ctx context.Context, modul *domain.Modul) error
+	Delete(ctx context.Context, id string) error
+	UpdateMetadata(ctx context.Context, modul *domain.Modul) error
 }
 
 type TusUploadRepository interface {

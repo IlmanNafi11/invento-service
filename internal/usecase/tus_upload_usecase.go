@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -93,7 +94,7 @@ func (uc *tusUploadUsecase) InitiateUpload(userID string, userEmail string, user
 }
 
 func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
-	project, err := uc.projectRepo.GetByID(projectID)
+	project, err := uc.projectRepo.GetByID(context.Background(), projectID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Project")
@@ -291,7 +292,7 @@ func (uc *tusUploadUsecase) completeProjectCreate(upload *domain.TusUpload, fina
 		PathFile:    finalFilePath,
 	}
 
-	if err := uc.projectRepo.Create(project); err != nil {
+	if err := uc.projectRepo.Create(context.Background(), project); err != nil {
 		return 0, apperrors.NewInternalError(fmt.Errorf("TusUploadUsecase.completeProjectCreate: %w", err))
 	}
 
@@ -303,7 +304,7 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload, fina
 		return 0, apperrors.NewValidationError("project ID tidak ditemukan", nil)
 	}
 
-	project, err := uc.projectRepo.GetByID(*upload.ProjectID)
+	project, err := uc.projectRepo.GetByID(context.Background(), *upload.ProjectID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return 0, apperrors.NewNotFoundError("Project")
@@ -318,7 +319,7 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload, fina
 	project.Ukuran = storage.GetFileSizeFromPath(finalFilePath)
 	project.PathFile = finalFilePath
 
-	if err := uc.projectRepo.Update(project); err != nil {
+	if err := uc.projectRepo.Update(context.Background(), project); err != nil {
 		return 0, apperrors.NewInternalError(fmt.Errorf("TusUploadUsecase.completeProjectUpdate: %w", err))
 	}
 

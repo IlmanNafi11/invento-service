@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -24,16 +25,16 @@ func NewModulRepository(db *gorm.DB, logger zerolog.Logger) ModulRepository {
 	}
 }
 
-func (r *modulRepository) Create(modul *domain.Modul) error {
-	if err := r.db.Create(modul).Error; err != nil {
+func (r *modulRepository) Create(ctx context.Context, modul *domain.Modul) error {
+	if err := r.db.WithContext(ctx).Create(modul).Error; err != nil {
 		return fmt.Errorf("ModulRepository.Create: %w", err)
 	}
 	return nil
 }
 
-func (r *modulRepository) GetByID(id string) (*domain.Modul, error) {
+func (r *modulRepository) GetByID(ctx context.Context, id string) (*domain.Modul, error) {
 	var modul domain.Modul
-	err := r.db.Where("id = ?", id).First(&modul).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&modul).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.ErrRecordNotFound
@@ -43,16 +44,16 @@ func (r *modulRepository) GetByID(id string) (*domain.Modul, error) {
 	return &modul, nil
 }
 
-func (r *modulRepository) GetByIDs(ids []string, userID string) ([]domain.Modul, error) {
+func (r *modulRepository) GetByIDs(ctx context.Context, ids []string, userID string) ([]domain.Modul, error) {
 	var moduls []domain.Modul
-	err := r.db.Where("id IN ? AND user_id = ?", ids, userID).Find(&moduls).Error
+	err := r.db.WithContext(ctx).Where("id IN ? AND user_id = ?", ids, userID).Find(&moduls).Error
 	if err != nil {
 		return nil, fmt.Errorf("ModulRepository.GetByIDs: %w", err)
 	}
 	return moduls, nil
 }
 
-func (r *modulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
+func (r *modulRepository) GetByUserID(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
 	var modulListItems []dto.ModulListItem
 	var total int64
 
@@ -67,7 +68,7 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 			AND (? = '' OR status = ?)
 	`
 
-	if err := r.db.Raw(countQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus).Scan(&total).Error; err != nil {
+	if err := r.db.WithContext(ctx).Raw(countQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus).Scan(&total).Error; err != nil {
 		r.logger.Error().Err(err).Str("user_id", userID).Str("search", search).Str("filter_type", filterType).Str("filter_status", filterStatus).Msg("count query failed")
 		return nil, 0, fmt.Errorf("ModulRepository.GetByUserID: count query: %w", err)
 	}
@@ -91,7 +92,7 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 		LIMIT ? OFFSET ?
 	`
 
-	if err := r.db.Raw(dataQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus, limit, offset).Scan(&modulListItems).Error; err != nil {
+	if err := r.db.WithContext(ctx).Raw(dataQuery, userID, search, search, search, filterType, filterType, filterStatus, filterStatus, limit, offset).Scan(&modulListItems).Error; err != nil {
 		r.logger.Error().Err(err).Str("user_id", userID).Str("search", search).Str("filter_type", filterType).Str("filter_status", filterStatus).Int("limit", limit).Int("offset", offset).Msg("data query failed")
 		return nil, 0, fmt.Errorf("ModulRepository.GetByUserID: data query: %w", err)
 	}
@@ -99,31 +100,31 @@ func (r *modulRepository) GetByUserID(userID string, search string, filterType s
 	return modulListItems, int(total), nil
 }
 
-func (r *modulRepository) CountByUserID(userID string) (int, error) {
+func (r *modulRepository) CountByUserID(ctx context.Context, userID string) (int, error) {
 	var count int64
-	err := r.db.Model(&domain.Modul{}).Where("user_id = ?", userID).Count(&count).Error
+	err := r.db.WithContext(ctx).Model(&domain.Modul{}).Where("user_id = ?", userID).Count(&count).Error
 	if err != nil {
 		return 0, fmt.Errorf("ModulRepository.CountByUserID: %w", err)
 	}
 	return int(count), nil
 }
 
-func (r *modulRepository) Update(modul *domain.Modul) error {
-	if err := r.db.Save(modul).Error; err != nil {
+func (r *modulRepository) Update(ctx context.Context, modul *domain.Modul) error {
+	if err := r.db.WithContext(ctx).Save(modul).Error; err != nil {
 		return fmt.Errorf("ModulRepository.Update: %w", err)
 	}
 	return nil
 }
 
-func (r *modulRepository) Delete(id string) error {
-	if err := r.db.Where("id = ?", id).Delete(&domain.Modul{}).Error; err != nil {
+func (r *modulRepository) Delete(ctx context.Context, id string) error {
+	if err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&domain.Modul{}).Error; err != nil {
 		return fmt.Errorf("ModulRepository.Delete: %w", err)
 	}
 	return nil
 }
 
-func (r *modulRepository) UpdateMetadata(modul *domain.Modul) error {
-	if err := r.db.Model(&domain.Modul{}).
+func (r *modulRepository) UpdateMetadata(ctx context.Context, modul *domain.Modul) error {
+	if err := r.db.WithContext(ctx).Model(&domain.Modul{}).
 		Where("id = ?", modul.ID).
 		Updates(map[string]interface{}{
 			"judul":     modul.Judul,

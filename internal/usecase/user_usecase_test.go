@@ -1,9 +1,11 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"invento-service/internal/rbac"
 	"invento-service/internal/storage"
 	"os"
@@ -51,9 +53,9 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 
 	user.Role = role
 
-	mockUserRepo.On("GetProfileWithCounts", userID).Return(user, 5, 10, nil)
+	mockUserRepo.On("GetProfileWithCounts", mock.Anything, userID).Return(user, 5, 10, nil)
 
-	result, err := userUC.GetProfile(userID)
+	result, err := userUC.GetProfile(context.Background(), userID)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -84,9 +86,9 @@ func TestUserUsecase_GetUserByID_NotFound(t *testing.T) {
 
 	userID := "user-999"
 
-	mockUserRepo.On("GetProfileWithCounts", userID).Return(nil, 0, 0, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetProfileWithCounts", mock.Anything, userID).Return(nil, 0, 0, gorm.ErrRecordNotFound)
 
-	result, err := userUC.GetProfile(userID)
+	result, err := userUC.GetProfile(context.Background(), userID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -133,9 +135,9 @@ func TestUserUsecase_ListUsers_Success(t *testing.T) {
 		Limit: 10,
 	}
 
-	mockUserRepo.On("GetAll", "", "", 1, 10).Return(users, total, nil)
+	mockUserRepo.On("GetAll", mock.Anything, "", "", 1, 10).Return(users, total, nil)
 
-	result, err := userUC.GetUserList(params)
+	result, err := userUC.GetUserList(context.Background(), params)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -181,9 +183,9 @@ func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
 		Limit:      10,
 	}
 
-	mockUserRepo.On("GetAll", "admin", "admin", 1, 10).Return(users, total, nil)
+	mockUserRepo.On("GetAll", mock.Anything, "admin", "admin", 1, 10).Return(users, total, nil)
 
-	result, err := userUC.GetUserList(params)
+	result, err := userUC.GetUserList(context.Background(), params)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -229,12 +231,12 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 		JenisKelamin: "Perempuan",
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockUserRepo.On("UpdateProfile", userID, req.Name, mock.AnythingOfType("*string"), mock.AnythingOfType("*string")).Return(nil)
-	mockProjectRepo.On("CountByUserID", userID).Return(5, nil)
-	mockModulRepo.On("CountByUserID", userID).Return(10, nil)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockUserRepo.On("UpdateProfile", mock.Anything, userID, req.Name, mock.AnythingOfType("*string"), mock.AnythingOfType("*string")).Return(nil)
+	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(5, nil)
+	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(10, nil)
 
-	result, err := userUC.UpdateProfile(userID, req, nil)
+	result, err := userUC.UpdateProfile(context.Background(), userID, req, nil)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -265,9 +267,9 @@ func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
 		Name: "Updated Name",
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(nil, gorm.ErrRecordNotFound)
 
-	result, err := userUC.UpdateProfile(userID, req, nil)
+	result, err := userUC.UpdateProfile(context.Background(), userID, req, nil)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -302,10 +304,10 @@ func TestUserUsecase_DeleteUser_Success(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockUserRepo.On("Delete", userID).Return(nil)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockUserRepo.On("Delete", mock.Anything, userID).Return(nil)
 
-	err := userUC.DeleteUser(userID)
+	err := userUC.DeleteUser(context.Background(), userID)
 
 	assert.NoError(t, err)
 
@@ -330,9 +332,9 @@ func TestUserUsecase_DeleteUser_NotFound(t *testing.T) {
 
 	userID := "user-999"
 
-	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(nil, gorm.ErrRecordNotFound)
 
-	err := userUC.DeleteUser(userID)
+	err := userUC.DeleteUser(context.Background(), userID)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "User tidak ditemukan")
@@ -377,9 +379,9 @@ func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
 		Role:         role,
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-	result, err := userUC.GetUserPermissions(userID)
+	result, err := userUC.GetUserPermissions(context.Background(), userID)
 
 	// Since we can't easily mock the casbin enforcer, we'll just check the call flow
 	// In a real scenario, you'd need to mock the casbin enforcer properly
@@ -426,11 +428,11 @@ func TestUserUsecase_UpdateUserRole_Success(t *testing.T) {
 		NamaRole: roleName,
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockRoleRepo.On("GetByName", roleName).Return(role, nil)
-	mockUserRepo.On("UpdateRole", userID, &roleID).Return(nil)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, roleName).Return(role, nil)
+	mockUserRepo.On("UpdateRole", mock.Anything, userID, &roleID).Return(nil)
 
-	err := userUC.UpdateUserRole(userID, roleName)
+	err := userUC.UpdateUserRole(context.Background(), userID, roleName)
 
 	assert.NoError(t, err)
 
@@ -457,9 +459,9 @@ func TestUserUsecase_UpdateUserRole_UserNotFound(t *testing.T) {
 	userID := "user-999"
 	roleName := "admin"
 
-	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(nil, gorm.ErrRecordNotFound)
 
-	err := userUC.UpdateUserRole(userID, roleName)
+	err := userUC.UpdateUserRole(context.Background(), userID, roleName)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "User tidak ditemukan")
@@ -497,10 +499,10 @@ func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
 		CreatedAt:    time.Now(),
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockRoleRepo.On("GetByName", roleName).Return(nil, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, roleName).Return(nil, gorm.ErrRecordNotFound)
 
-	err := userUC.UpdateUserRole(userID, roleName)
+	err := userUC.UpdateUserRole(context.Background(), userID, roleName)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Role tidak ditemukan")
@@ -545,10 +547,10 @@ func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
 		NamaRole: roleName,
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockRoleRepo.On("GetByName", roleName).Return(role, nil)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, roleName).Return(role, nil)
 
-	err := userUC.UpdateUserRole(userID, roleName)
+	err := userUC.UpdateUserRole(context.Background(), userID, roleName)
 
 	assert.NoError(t, err)
 
@@ -576,7 +578,7 @@ func TestUserUsecase_DownloadUserFiles_EmptyIDs(t *testing.T) {
 	projectIDs := []string{}
 	modulIDs := []string{}
 
-	result, err := userUC.DownloadUserFiles(ownerUserID, projectIDs, modulIDs)
+	result, err := userUC.DownloadUserFiles(context.Background(), ownerUserID, projectIDs, modulIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -603,9 +605,9 @@ func TestUserUsecase_DownloadUserFiles_UserNotFound(t *testing.T) {
 	projectIDs := []string{"1"}
 	modulIDs := []string{"1"}
 
-	mockUserRepo.On("GetByID", ownerUserID).Return(nil, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetByID", mock.Anything, ownerUserID).Return(nil, gorm.ErrRecordNotFound)
 
-	result, err := userUC.DownloadUserFiles(ownerUserID, projectIDs, modulIDs)
+	result, err := userUC.DownloadUserFiles(context.Background(), ownerUserID, projectIDs, modulIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -645,11 +647,11 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 		CreatedAt:    time.Now(),
 	}
 
-	mockUserRepo.On("GetByID", ownerUserID).Return(user, nil)
-	mockProjectRepo.On("GetByIDs", projectIDsUint, ownerUserID).Return([]domain.Project{}, nil)
-	mockModulRepo.On("GetByIDs", modulIDs, ownerUserID).Return([]domain.Modul{}, nil)
+	mockUserRepo.On("GetByID", mock.Anything, ownerUserID).Return(user, nil)
+	mockProjectRepo.On("GetByIDs", mock.Anything, projectIDsUint, ownerUserID).Return([]domain.Project{}, nil)
+	mockModulRepo.On("GetByIDs", mock.Anything, modulIDs, ownerUserID).Return([]domain.Modul{}, nil)
 
-	result, err := userUC.DownloadUserFiles(ownerUserID, projectIDs, modulIDs)
+	result, err := userUC.DownloadUserFiles(context.Background(), ownerUserID, projectIDs, modulIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -704,10 +706,10 @@ func TestUserUsecase_GetUserFiles_Success(t *testing.T) {
 		},
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockUserRepo.On("GetUserFiles", userID, "", 1, 10).Return(items, 2, nil)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockUserRepo.On("GetUserFiles", mock.Anything, userID, "", 1, 10).Return(items, 2, nil)
 
-	result, err := userUC.GetUserFiles(userID, params)
+	result, err := userUC.GetUserFiles(context.Background(), userID, params)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -740,9 +742,9 @@ func TestUserUsecase_GetUserFiles_UserNotFound(t *testing.T) {
 		Limit: 10,
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(nil, gorm.ErrRecordNotFound)
 
-	result, err := userUC.GetUserFiles(userID, params)
+	result, err := userUC.GetUserFiles(context.Background(), userID, params)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -782,10 +784,10 @@ func TestUserUsecase_GetUserFiles_RepoError(t *testing.T) {
 		CreatedAt:    time.Now(),
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockUserRepo.On("GetUserFiles", userID, "", 1, 10).Return(nil, 0, errors.New("db error"))
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockUserRepo.On("GetUserFiles", mock.Anything, userID, "", 1, 10).Return(nil, 0, errors.New("db error"))
 
-	result, err := userUC.GetUserFiles(userID, params)
+	result, err := userUC.GetUserFiles(context.Background(), userID, params)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -824,10 +826,10 @@ func TestUserUsecase_GetUsersForRole_Success(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
-	mockUserRepo.On("GetByRoleID", roleID).Return(users, nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
+	mockUserRepo.On("GetByRoleID", mock.Anything, roleID).Return(users, nil)
 
-	result, err := userUC.GetUsersForRole(roleID)
+	result, err := userUC.GetUsersForRole(context.Background(), roleID)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -855,9 +857,9 @@ func TestUserUsecase_GetUsersForRole_RoleNotFound(t *testing.T) {
 
 	roleID := uint(999)
 
-	mockRoleRepo.On("GetByID", roleID).Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(nil, gorm.ErrRecordNotFound)
 
-	result, err := userUC.GetUsersForRole(roleID)
+	result, err := userUC.GetUsersForRole(context.Background(), roleID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -887,10 +889,10 @@ func TestUserUsecase_GetUsersForRole_InternalError(t *testing.T) {
 		NamaRole: "admin",
 	}
 
-	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
-	mockUserRepo.On("GetByRoleID", roleID).Return(nil, errors.New("db error"))
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
+	mockUserRepo.On("GetByRoleID", mock.Anything, roleID).Return(nil, errors.New("db error"))
 
-	result, err := userUC.GetUsersForRole(roleID)
+	result, err := userUC.GetUsersForRole(context.Background(), roleID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -935,11 +937,11 @@ func TestUserUsecase_BulkAssignRole_Success(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
-	mockUserRepo.On("GetByIDs", userIDs).Return(users, nil)
-	mockUserRepo.On("BulkUpdateRole", userIDs, roleID).Return(nil)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
+	mockUserRepo.On("GetByIDs", mock.Anything, userIDs).Return(users, nil)
+	mockUserRepo.On("BulkUpdateRole", mock.Anything, userIDs, roleID).Return(nil)
 
-	err := userUC.BulkAssignRole(userIDs, roleID)
+	err := userUC.BulkAssignRole(context.Background(), userIDs, roleID)
 
 	assert.NoError(t, err)
 
@@ -965,9 +967,9 @@ func TestUserUsecase_BulkAssignRole_RoleNotFound(t *testing.T) {
 	roleID := uint(999)
 	userIDs := []string{"user-1", "user-2"}
 
-	mockRoleRepo.On("GetByID", roleID).Return(nil, gorm.ErrRecordNotFound)
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(nil, gorm.ErrRecordNotFound)
 
-	err := userUC.BulkAssignRole(userIDs, roleID)
+	err := userUC.BulkAssignRole(context.Background(), userIDs, roleID)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Role tidak ditemukan")
@@ -997,10 +999,10 @@ func TestUserUsecase_BulkAssignRole_UserFetchError(t *testing.T) {
 		NamaRole: "admin",
 	}
 
-	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
-	mockUserRepo.On("GetByIDs", userIDs).Return(nil, errors.New("db error"))
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
+	mockUserRepo.On("GetByIDs", mock.Anything, userIDs).Return(nil, errors.New("db error"))
 
-	err := userUC.BulkAssignRole(userIDs, roleID)
+	err := userUC.BulkAssignRole(context.Background(), userIDs, roleID)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -1044,11 +1046,11 @@ func TestUserUsecase_BulkAssignRole_InternalError(t *testing.T) {
 		},
 	}
 
-	mockRoleRepo.On("GetByID", roleID).Return(role, nil)
-	mockUserRepo.On("GetByIDs", userIDs).Return(users, nil)
-	mockUserRepo.On("BulkUpdateRole", userIDs, roleID).Return(errors.New("update error"))
+	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
+	mockUserRepo.On("GetByIDs", mock.Anything, userIDs).Return(users, nil)
+	mockUserRepo.On("BulkUpdateRole", mock.Anything, userIDs, roleID).Return(errors.New("update error"))
 
-	err := userUC.BulkAssignRole(userIDs, roleID)
+	err := userUC.BulkAssignRole(context.Background(), userIDs, roleID)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -1074,9 +1076,9 @@ func TestUserUsecase_GetUserPermissions_UserNotFound(t *testing.T) {
 
 	userID := "user-999"
 
-	mockUserRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(nil, gorm.ErrRecordNotFound)
 
-	result, err := userUC.GetUserPermissions(userID)
+	result, err := userUC.GetUserPermissions(context.Background(), userID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -1102,9 +1104,9 @@ func TestUserUsecase_GetProfile_InternalError(t *testing.T) {
 
 	userID := "user-1"
 
-	mockUserRepo.On("GetProfileWithCounts", userID).Return(nil, 0, 0, errors.New("db error"))
+	mockUserRepo.On("GetProfileWithCounts", mock.Anything, userID).Return(nil, 0, 0, errors.New("db error"))
 
-	result, err := userUC.GetProfile(userID)
+	result, err := userUC.GetProfile(context.Background(), userID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -1144,10 +1146,10 @@ func TestUserUsecase_UpdateProfile_RepoUpdateError(t *testing.T) {
 		JenisKelamin: "Perempuan",
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockUserRepo.On("UpdateProfile", userID, req.Name, mock.AnythingOfType("*string"), (*string)(nil)).Return(errors.New("update failed"))
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockUserRepo.On("UpdateProfile", mock.Anything, userID, req.Name, mock.AnythingOfType("*string"), (*string)(nil)).Return(errors.New("update failed"))
 
-	result, err := userUC.UpdateProfile(userID, req, nil)
+	result, err := userUC.UpdateProfile(context.Background(), userID, req, nil)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -1198,11 +1200,11 @@ func TestUserUsecase_DownloadUserFiles_Success(t *testing.T) {
 		},
 	}
 
-	mockUserRepo.On("GetByID", ownerUserID).Return(user, nil)
-	mockProjectRepo.On("GetByIDs", projectIDsUint, ownerUserID).Return(projects, nil)
-	mockModulRepo.On("GetByIDs", modulIDs, ownerUserID).Return([]domain.Modul{}, nil)
+	mockUserRepo.On("GetByID", mock.Anything, ownerUserID).Return(user, nil)
+	mockProjectRepo.On("GetByIDs", mock.Anything, projectIDsUint, ownerUserID).Return(projects, nil)
+	mockModulRepo.On("GetByIDs", mock.Anything, modulIDs, ownerUserID).Return([]domain.Modul{}, nil)
 
-	result, err := userUC.DownloadUserFiles(ownerUserID, projectIDs, modulIDs)
+	result, err := userUC.DownloadUserFiles(context.Background(), ownerUserID, projectIDs, modulIDs)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result)
@@ -1248,11 +1250,11 @@ func TestUserUsecase_UpdateUserRole_RepoUpdateError(t *testing.T) {
 		NamaRole: roleName,
 	}
 
-	mockUserRepo.On("GetByID", userID).Return(user, nil)
-	mockRoleRepo.On("GetByName", roleName).Return(role, nil)
-	mockUserRepo.On("UpdateRole", userID, &roleID).Return(errors.New("update failed"))
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockRoleRepo.On("GetByName", mock.Anything, roleName).Return(role, nil)
+	mockUserRepo.On("UpdateRole", mock.Anything, userID, &roleID).Return(errors.New("update failed"))
 
-	err := userUC.UpdateUserRole(userID, roleName)
+	err := userUC.UpdateUserRole(context.Background(), userID, roleName)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")

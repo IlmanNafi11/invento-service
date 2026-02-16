@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -89,7 +90,7 @@ func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, up
 }
 
 func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
-	modul, err := uc.modulRepo.GetByID(modulID)
+	modul, err := uc.modulRepo.GetByID(context.Background(), modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Modul")
@@ -273,7 +274,7 @@ func (uc *tusModulUsecase) completeModulCreate(tusUpload *domain.TusModulUpload,
 		Status:    "completed",
 	}
 
-	if err := uc.modulRepo.Create(modul); err != nil {
+	if err := uc.modulRepo.Create(context.Background(), modul); err != nil {
 		_ = storage.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulCreate: %w", err))
@@ -287,7 +288,7 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 		return "", apperrors.NewValidationError("modul_id tidak ditemukan dalam upload record", nil)
 	}
 
-	modul, err := uc.modulRepo.GetByID(*tusUpload.ModulID)
+	modul, err := uc.modulRepo.GetByID(context.Background(), *tusUpload.ModulID)
 	if err != nil {
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulUpdate: get modul: %w", err))
 	}
@@ -300,7 +301,7 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 	modul.FileSize = tusUpload.FileSize
 	modul.MimeType = detectMimeType(finalPath)
 
-	if err := uc.modulRepo.Update(modul); err != nil {
+	if err := uc.modulRepo.Update(context.Background(), modul); err != nil {
 		_ = storage.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulUpdate: %w", err))

@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"invento-service/internal/domain"
@@ -17,11 +18,11 @@ import (
 )
 
 type ProjectUsecase interface {
-	GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error)
-	GetByID(projectID uint, userID string) (*dto.ProjectResponse, error)
-	UpdateMetadata(projectID uint, userID string, req dto.UpdateProjectRequest) error
-	Delete(projectID uint, userID string) error
-	Download(userID string, projectIDs []uint) (string, error)
+	GetList(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error)
+	GetByID(ctx context.Context, projectID uint, userID string) (*dto.ProjectResponse, error)
+	UpdateMetadata(ctx context.Context, projectID uint, userID string, req dto.UpdateProjectRequest) error
+	Delete(ctx context.Context, projectID uint, userID string) error
+	Download(ctx context.Context, userID string, projectIDs []uint) (string, error)
 }
 
 type projectUsecase struct {
@@ -36,7 +37,7 @@ func NewProjectUsecase(projectRepo repo.ProjectRepository, fileManager *storage.
 	}
 }
 
-func (uc *projectUsecase) GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
+func (uc *projectUsecase) GetList(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -44,7 +45,7 @@ func (uc *projectUsecase) GetList(userID string, search string, filterSemester i
 		limit = 10
 	}
 
-	projects, total, err := uc.projectRepo.GetByUserID(userID, search, filterSemester, filterKategori, page, limit)
+	projects, total, err := uc.projectRepo.GetByUserID(ctx, userID, search, filterSemester, filterKategori, page, limit)
 	if err != nil {
 		return nil, newInternalError("gagal mengambil data project", fmt.Errorf("ProjectUsecase.GetList: %w", err))
 	}
@@ -62,8 +63,8 @@ func (uc *projectUsecase) GetList(userID string, search string, filterSemester i
 	}, nil
 }
 
-func (uc *projectUsecase) GetByID(projectID uint, userID string) (*dto.ProjectResponse, error) {
-	project, err := uc.getOwnedProject(projectID, userID)
+func (uc *projectUsecase) GetByID(ctx context.Context, projectID uint, userID string) (*dto.ProjectResponse, error) {
+	project, err := uc.getOwnedProject(ctx, projectID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +81,8 @@ func (uc *projectUsecase) GetByID(projectID uint, userID string) (*dto.ProjectRe
 	}, nil
 }
 
-func (uc *projectUsecase) UpdateMetadata(projectID uint, userID string, req dto.UpdateProjectRequest) error {
-	project, err := uc.getOwnedProject(projectID, userID)
+func (uc *projectUsecase) UpdateMetadata(ctx context.Context, projectID uint, userID string, req dto.UpdateProjectRequest) error {
+	project, err := uc.getOwnedProject(ctx, projectID, userID)
 	if err != nil {
 		return err
 	}
@@ -96,20 +97,20 @@ func (uc *projectUsecase) UpdateMetadata(projectID uint, userID string, req dto.
 		project.Semester = req.Semester
 	}
 
-	if err := uc.projectRepo.Update(project); err != nil {
+	if err := uc.projectRepo.Update(ctx, project); err != nil {
 		return newInternalError("gagal mengupdate project", fmt.Errorf("ProjectUsecase.UpdateMetadata: %w", err))
 	}
 
 	return nil
 }
 
-func (uc *projectUsecase) Delete(projectID uint, userID string) error {
-	project, err := uc.getOwnedProject(projectID, userID)
+func (uc *projectUsecase) Delete(ctx context.Context, projectID uint, userID string) error {
+	project, err := uc.getOwnedProject(ctx, projectID, userID)
 	if err != nil {
 		return err
 	}
 
-	if err := uc.projectRepo.Delete(projectID); err != nil {
+	if err := uc.projectRepo.Delete(ctx, projectID); err != nil {
 		return newInternalError("gagal menghapus project", fmt.Errorf("ProjectUsecase.Delete: %w", err))
 	}
 
@@ -124,13 +125,13 @@ func (uc *projectUsecase) Delete(projectID uint, userID string) error {
 	return nil
 }
 
-func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, error) {
+func (uc *projectUsecase) Download(ctx context.Context, userID string, projectIDs []uint) (string, error) {
 	if len(projectIDs) == 0 {
 		return "", apperrors.NewValidationError("id project tidak boleh kosong", nil)
 	}
 
 	if len(projectIDs) == 1 {
-		project, err := uc.getOwnedProject(projectIDs[0], userID)
+		project, err := uc.getOwnedProject(ctx, projectIDs[0], userID)
 		if err != nil {
 			return "", err
 		}
@@ -147,7 +148,7 @@ func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, er
 		return cleanPath, nil
 	}
 
-	projects, err := uc.projectRepo.GetByIDs(projectIDs, userID)
+	projects, err := uc.projectRepo.GetByIDs(ctx, projectIDs, userID)
 	if err != nil {
 		return "", newInternalError("gagal mengambil data project", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
@@ -197,8 +198,8 @@ func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, er
 	return zipFilePath, nil
 }
 
-func (uc *projectUsecase) getOwnedProject(projectID uint, userID string) (*domain.Project, error) {
-	project, err := uc.projectRepo.GetByID(projectID)
+func (uc *projectUsecase) getOwnedProject(ctx context.Context, projectID uint, userID string) (*domain.Project, error) {
+	project, err := uc.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("project")

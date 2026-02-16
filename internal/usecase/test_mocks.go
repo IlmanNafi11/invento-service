@@ -66,84 +66,84 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) GetByEmail(email string) (*domain.User, error) {
-	args := m.Called(email)
+func (m *MockUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	args := m.Called(ctx, email)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetByID(id string) (*domain.User, error) {
-	args := m.Called(id)
+func (m *MockUserRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
-	args := m.Called(userID)
+func (m *MockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) != nil {
 		return args.Get(0).(*domain.User), args.Int(1), args.Int(2), args.Error(3)
 	}
 	return nil, args.Int(1), args.Int(2), args.Error(3)
 }
 
-func (m *MockUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
-	args := m.Called(userID, search, page, limit)
+func (m *MockUserRepository) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+	args := m.Called(ctx, userID, search, page, limit)
 	if args.Get(0) != nil {
 		return args.Get(0).([]dto.UserFileItem), args.Int(1), args.Error(2)
 	}
 	return nil, args.Int(1), args.Error(2)
 }
 
-func (m *MockUserRepository) GetByIDs(userIDs []string) ([]*domain.User, error) {
-	args := m.Called(userIDs)
+func (m *MockUserRepository) GetByIDs(ctx context.Context, userIDs []string) ([]*domain.User, error) {
+	args := m.Called(ctx, userIDs)
 	if args.Get(0) != nil {
 		return args.Get(0).([]*domain.User), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
 
-func (m *MockUserRepository) Create(user *domain.User) error {
-	args := m.Called(user)
+func (m *MockUserRepository) Create(ctx context.Context, user *domain.User) error {
+	args := m.Called(ctx, user)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error {
-	args := m.Called(userID, name, jenisKelamin, fotoProfil)
+func (m *MockUserRepository) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+	args := m.Called(ctx, userID, name, jenisKelamin, fotoProfil)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
-	args := m.Called(search, filterRole, page, limit)
+func (m *MockUserRepository) GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
+	args := m.Called(ctx, search, filterRole, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
 	return args.Get(0).([]dto.UserListItem), args.Int(1), args.Error(2)
 }
 
-func (m *MockUserRepository) UpdateRole(userID string, roleID *int) error {
-	args := m.Called(userID, roleID)
+func (m *MockUserRepository) UpdateRole(ctx context.Context, userID string, roleID *int) error {
+	args := m.Called(ctx, userID, roleID)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) Delete(userID string) error {
-	args := m.Called(userID)
+func (m *MockUserRepository) Delete(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
-	args := m.Called(roleID)
+func (m *MockUserRepository) GetByRoleID(ctx context.Context, roleID uint) ([]dto.UserListItem, error) {
+	args := m.Called(ctx, roleID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]dto.UserListItem), args.Error(1)
 }
 
-func (m *MockUserRepository) BulkUpdateRole(userIDs []string, roleID uint) error {
-	args := m.Called(userIDs, roleID)
+func (m *MockUserRepository) BulkUpdateRole(ctx context.Context, userIDs []string, roleID uint) error {
+	args := m.Called(ctx, userIDs, roleID)
 	return args.Error(0)
 }
 
@@ -196,56 +196,48 @@ type MockProjectRepository struct {
 	mock.Mock
 }
 
-func (m *MockProjectRepository) Create(project *domain.Project) error {
-	args := m.Called(project)
+func (m *MockProjectRepository) Create(ctx context.Context, project *domain.Project) error {
+	args := m.Called(ctx, project)
 	return args.Error(0)
 }
 
-func (m *MockProjectRepository) GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error) {
-	args := m.Called(userID, search, filterSemester, filterKategori, page, limit)
+func (m *MockProjectRepository) GetByUserID(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error) {
+	args := m.Called(ctx, userID, search, filterSemester, filterKategori, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
 	return args.Get(0).([]dto.ProjectListItem), args.Int(1), args.Error(2)
 }
 
-func (m *MockProjectRepository) GetByID(id uint) (*domain.Project, error) {
-	args := m.Called(id)
+func (m *MockProjectRepository) GetByID(ctx context.Context, id uint) (*domain.Project, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*domain.Project), args.Error(1)
 }
 
-func (m *MockProjectRepository) Update(project *domain.Project) error {
-	args := m.Called(project)
+func (m *MockProjectRepository) Update(ctx context.Context, project *domain.Project) error {
+	args := m.Called(ctx, project)
 	return args.Error(0)
 }
 
-func (m *MockProjectRepository) Delete(id uint) error {
-	args := m.Called(id)
+func (m *MockProjectRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockProjectRepository) GetByIDs(projectIDs []uint, userID string) ([]domain.Project, error) {
-	args := m.Called(projectIDs, userID)
+func (m *MockProjectRepository) GetByIDs(ctx context.Context, projectIDs []uint, userID string) ([]domain.Project, error) {
+	args := m.Called(ctx, projectIDs, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]domain.Project), args.Error(1)
 }
 
-func (m *MockProjectRepository) CountByUserID(userID string) (int, error) {
-	args := m.Called(userID)
+func (m *MockProjectRepository) CountByUserID(ctx context.Context, userID string) (int, error) {
+	args := m.Called(ctx, userID)
 	return args.Int(0), args.Error(1)
-}
-
-func (m *MockProjectRepository) GetByIDsForUser(projectIDs []uint, userID string) ([]domain.Project, error) {
-	args := m.Called(projectIDs, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]domain.Project), args.Error(1)
 }
 
 // MockModulRepository is a mock for ModulRepository
@@ -253,52 +245,52 @@ type MockModulRepository struct {
 	mock.Mock
 }
 
-func (m *MockModulRepository) Create(modul *domain.Modul) error {
-	args := m.Called(modul)
+func (m *MockModulRepository) Create(ctx context.Context, modul *domain.Modul) error {
+	args := m.Called(ctx, modul)
 	return args.Error(0)
 }
 
-func (m *MockModulRepository) GetByID(id string) (*domain.Modul, error) {
-	args := m.Called(id)
+func (m *MockModulRepository) GetByID(ctx context.Context, id string) (*domain.Modul, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*domain.Modul), args.Error(1)
 }
 
-func (m *MockModulRepository) GetByIDs(ids []string, userID string) ([]domain.Modul, error) {
-	args := m.Called(ids, userID)
+func (m *MockModulRepository) GetByIDs(ctx context.Context, ids []string, userID string) ([]domain.Modul, error) {
+	args := m.Called(ctx, ids, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]domain.Modul), args.Error(1)
 }
 
-func (m *MockModulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
-	args := m.Called(userID, search, filterType, filterStatus, page, limit)
+func (m *MockModulRepository) GetByUserID(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
+	args := m.Called(ctx, userID, search, filterType, filterStatus, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
 	return args.Get(0).([]dto.ModulListItem), args.Int(1), args.Error(2)
 }
 
-func (m *MockModulRepository) CountByUserID(userID string) (int, error) {
-	args := m.Called(userID)
+func (m *MockModulRepository) CountByUserID(ctx context.Context, userID string) (int, error) {
+	args := m.Called(ctx, userID)
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockModulRepository) Update(modul *domain.Modul) error {
-	args := m.Called(modul)
+func (m *MockModulRepository) Update(ctx context.Context, modul *domain.Modul) error {
+	args := m.Called(ctx, modul)
 	return args.Error(0)
 }
 
-func (m *MockModulRepository) Delete(id string) error {
-	args := m.Called(id)
+func (m *MockModulRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockModulRepository) UpdateMetadata(modul *domain.Modul) error {
-	args := m.Called(modul)
+func (m *MockModulRepository) UpdateMetadata(ctx context.Context, modul *domain.Modul) error {
+	args := m.Called(ctx, modul)
 	return args.Error(0)
 }
 

@@ -45,6 +45,7 @@ func NewProjectController(projectUsecase usecase.ProjectUsecase, supabaseURL str
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project/{id} [patch]
 func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -69,7 +70,7 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 	}
 
 	// Call usecase
-	err = ctrl.projectUsecase.UpdateMetadata(projectID, userID, req)
+	err = ctrl.projectUsecase.UpdateMetadata(ctx, projectID, userID, req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -98,6 +99,7 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project/{id} [get]
 func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -111,7 +113,7 @@ func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 	}
 
 	// Call usecase
-	result, err := ctrl.projectUsecase.GetByID(projectID, userID)
+	result, err := ctrl.projectUsecase.GetByID(ctx, projectID, userID)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -142,6 +144,7 @@ func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project [get]
 func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -160,7 +163,7 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 	params.Limit = limit
 
 	// Call usecase
-	result, err := ctrl.projectUsecase.GetList(userID, params.Search, params.FilterSemester, params.FilterKategori, params.Page, params.Limit)
+	result, err := ctrl.projectUsecase.GetList(ctx, userID, params.Search, params.FilterSemester, params.FilterKategori, params.Page, params.Limit)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -189,6 +192,7 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project/{id} [delete]
 func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -202,7 +206,7 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 	}
 
 	// Call usecase
-	err = ctrl.projectUsecase.Delete(projectID, userID)
+	err = ctrl.projectUsecase.Delete(ctx, projectID, userID)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -230,6 +234,7 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project/download [post]
 func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	// Get authenticated user ID using base controller
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
@@ -253,7 +258,7 @@ func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
 	}
 
 	// Call usecase
-	filePath, err := ctrl.projectUsecase.Download(userID, req.IDs)
+	filePath, err := ctrl.projectUsecase.Download(ctx, userID, req.IDs)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {

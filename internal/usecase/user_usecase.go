@@ -217,8 +217,8 @@ func (uc *userUsecase) UpdateProfile(ctx context.Context, userID string, req dto
 		user.FotoProfil = fotoProfilPath
 	}
 
-	jumlahProject, _ := uc.projectRepo.CountByUserID(userID)
-	jumlahModul, _ := uc.modulRepo.CountByUserID(userID)
+	jumlahProject, _ := uc.projectRepo.CountByUserID(context.Background(), userID)
+	jumlahModul, _ := uc.modulRepo.CountByUserID(context.Background(), userID)
 
 	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
@@ -272,12 +272,12 @@ func (uc *userUsecase) DownloadUserFiles(ctx context.Context, ownerUserID string
 		projectIDsUint = append(projectIDsUint, uint(id))
 	}
 
-	projects, err := uc.projectRepo.GetByIDs(projectIDsUint, ownerUserID)
+	projects, err := uc.projectRepo.GetByIDs(ctx, projectIDsUint, ownerUserID)
 	if err != nil {
 		return "", apperrors.NewInternalError(err)
 	}
 
-	moduls, err := uc.modulRepo.GetByIDs(modulIDs, ownerUserID)
+	moduls, err := uc.modulRepo.GetByIDs(ctx, modulIDs, ownerUserID)
 	if err != nil {
 		return "", apperrors.NewInternalError(err)
 	}
