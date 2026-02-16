@@ -16,7 +16,7 @@ import (
 	httpcontroller "invento-service/internal/controller/http"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/rbac"
 	app_testing "invento-service/internal/testing"
 )
 
@@ -61,7 +61,7 @@ func (m *MockModulUsecase) Download(userID string, modulIDs []string) (string, e
 
 // Helper function to create test base controller
 func getTestBaseController() *base.BaseController {
-	casbin := &helper.CasbinEnforcer{}
+	casbin := &rbac.CasbinEnforcer{}
 	return base.NewBaseController("https://test.supabase.co", casbin)
 }
 

@@ -2,8 +2,8 @@ package base
 
 import (
 	"errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
+	"invento-service/internal/rbac"
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
@@ -15,13 +15,13 @@ import (
 // It wraps RBAC authorization, validation, and response helpers.
 type BaseController struct {
 	SupabaseURL string
-	Casbin      *helper.CasbinEnforcer
+	Casbin      *rbac.CasbinEnforcer
 	Validator   *validator.Validate
 }
 
 // NewBaseController creates a new base controller instance.
 // All parameters are optional; pass nil for components not needed by the controller.
-func NewBaseController(supabaseURL string, casbin *helper.CasbinEnforcer) *BaseController {
+func NewBaseController(supabaseURL string, casbin *rbac.CasbinEnforcer) *BaseController {
 	return &BaseController{
 		SupabaseURL: supabaseURL,
 		Casbin:      casbin,

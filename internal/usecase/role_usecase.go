@@ -4,8 +4,8 @@ import (
 	"errors"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
+	"invento-service/internal/rbac"
 	"invento-service/internal/usecase/repo"
 
 	"gorm.io/gorm"
@@ -24,17 +24,17 @@ type roleUsecase struct {
 	roleRepo           repo.RoleRepository
 	permissionRepo     repo.PermissionRepository
 	rolePermissionRepo repo.RolePermissionRepository
-	casbinEnforcer     helper.CasbinEnforcerInterface
-	rbacHelper         *helper.RBACHelper
+	casbinEnforcer     rbac.CasbinEnforcerInterface
+	rbacHelper         *rbac.RBACHelper
 }
 
 func NewRoleUsecase(
 	roleRepo repo.RoleRepository,
 	permissionRepo repo.PermissionRepository,
 	rolePermissionRepo repo.RolePermissionRepository,
-	casbinEnforcer helper.CasbinEnforcerInterface,
+	casbinEnforcer rbac.CasbinEnforcerInterface,
 ) RoleUsecase {
-	rbacHelper := helper.NewRBACHelper(casbinEnforcer)
+	rbacHelper := rbac.NewRBACHelper(casbinEnforcer)
 
 	return &roleUsecase{
 		roleRepo:           roleRepo,

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
+	"invento-service/internal/rbac"
 	"invento-service/internal/storage"
 	"os"
 	"testing"
@@ -354,7 +354,7 @@ func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 	// Note: Casbin enforcer is skipped in tests
-	var casbinEnforcer *helper.CasbinEnforcer
+	var casbinEnforcer *rbac.CasbinEnforcer
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, casbinEnforcer, pathResolver, cfg)
 

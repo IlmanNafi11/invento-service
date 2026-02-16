@@ -1,8 +1,8 @@
 package testing
 
 import (
-	"invento-service/internal/helper"
 	"fmt"
+	"invento-service/internal/rbac"
 
 	"github.com/casbin/casbin/v2"
 	casbinmodel "github.com/casbin/casbin/v2/model"
@@ -29,7 +29,7 @@ type TestCasbinEnforcer struct {
 	enforcer *casbin.Enforcer
 }
 
-func NewTestCasbinEnforcer() (helper.CasbinEnforcerInterface, error) {
+func NewTestCasbinEnforcer() (rbac.CasbinEnforcerInterface, error) {
 	m, err := casbinmodel.NewModelFromString(CasbinModelText)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create casbin model: %w", err)
@@ -43,7 +43,7 @@ func NewTestCasbinEnforcer() (helper.CasbinEnforcerInterface, error) {
 	return &TestCasbinEnforcer{enforcer: e}, nil
 }
 
-func NewTestCasbinEnforcerWithPolicies(policies [][]string) (helper.CasbinEnforcerInterface, error) {
+func NewTestCasbinEnforcerWithPolicies(policies [][]string) (rbac.CasbinEnforcerInterface, error) {
 	te, err := NewTestCasbinEnforcer()
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func NewTestCasbinEnforcerWithPolicies(policies [][]string) (helper.CasbinEnforc
 	return testEnforcer, nil
 }
 
-func NewTestCasbinEnforcerFromFile(policyPath string) (helper.CasbinEnforcerInterface, error) {
+func NewTestCasbinEnforcerFromFile(policyPath string) (rbac.CasbinEnforcerInterface, error) {
 	m, err := casbinmodel.NewModelFromString(CasbinModelText)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create casbin model: %w", err)
@@ -220,4 +220,4 @@ func (te *TestCasbinEnforcer) Reset() error {
 	return nil
 }
 
-var _ helper.CasbinEnforcerInterface = (*TestCasbinEnforcer)(nil)
+var _ rbac.CasbinEnforcerInterface = (*TestCasbinEnforcer)(nil)

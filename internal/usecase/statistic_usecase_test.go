@@ -1,10 +1,10 @@
 package usecase
 
 import (
-	"invento-service/internal/domain"
-	"invento-service/internal/helper"
-	"invento-service/internal/usecase/repo"
 	"fmt"
+	"invento-service/internal/domain"
+	"invento-service/internal/rbac"
+	"invento-service/internal/usecase/repo"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -764,7 +764,7 @@ func TestStatisticUsecase_ActualGetStatistics_WithRealEnforcer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open casbin test database: %v", err)
 	}
-	casbinEnforcer, err := helper.NewCasbinEnforcer(casbinDB)
+	casbinEnforcer, err := rbac.NewCasbinEnforcer(casbinDB)
 	if err != nil {
 		t.Fatalf("failed to create casbin enforcer: %v", err)
 	}
@@ -816,7 +816,7 @@ func TestStatisticUsecase_ActualGetStatistics_NoPermissions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open casbin test database: %v", err)
 	}
-	casbinEnforcer, err := helper.NewCasbinEnforcer(casbinDB)
+	casbinEnforcer, err := rbac.NewCasbinEnforcer(casbinDB)
 	if err != nil {
 		t.Fatalf("failed to create casbin enforcer: %v", err)
 	}
@@ -852,7 +852,7 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open casbin test database: %v", err)
 	}
-	casbinEnforcer, err := helper.NewCasbinEnforcer(casbinDB)
+	casbinEnforcer, err := rbac.NewCasbinEnforcer(casbinDB)
 	if err != nil {
 		t.Fatalf("failed to create casbin enforcer: %v", err)
 	}

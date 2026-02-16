@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
+	"invento-service/internal/rbac"
 	"invento-service/internal/usecase/repo"
 
 	"gorm.io/gorm"
@@ -17,7 +17,7 @@ type statisticUsecase struct {
 	projectRepo    repo.ProjectRepository
 	modulRepo      repo.ModulRepository
 	roleRepo       repo.RoleRepository
-	casbinEnforcer *helper.CasbinEnforcer
+	casbinEnforcer *rbac.CasbinEnforcer
 	db             *gorm.DB
 }
 
@@ -26,7 +26,7 @@ func NewStatisticUsecase(
 	projectRepo repo.ProjectRepository,
 	modulRepo repo.ModulRepository,
 	roleRepo repo.RoleRepository,
-	casbinEnforcer *helper.CasbinEnforcer,
+	casbinEnforcer *rbac.CasbinEnforcer,
 	db *gorm.DB,
 ) StatisticUsecase {
 	return &statisticUsecase{

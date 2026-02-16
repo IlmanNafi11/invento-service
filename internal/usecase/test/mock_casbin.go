@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"invento-service/internal/helper"
+	"invento-service/internal/rbac"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/stretchr/testify/mock"
@@ -122,4 +122,4 @@ func NewMockCasbinEnforcer() *MockCasbinEnforcer {
 	return &MockCasbinEnforcer{}
 }
 
-var _ helper.CasbinEnforcerInterface = (*MockCasbinEnforcer)(nil)
+var _ rbac.CasbinEnforcerInterface = (*MockCasbinEnforcer)(nil)

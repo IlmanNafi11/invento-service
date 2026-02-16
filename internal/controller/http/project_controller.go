@@ -5,8 +5,8 @@ import (
 	"invento-service/internal/controller/base"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
+	"invento-service/internal/rbac"
 	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,7 +20,7 @@ type ProjectController struct {
 }
 
 // NewProjectController creates a new project controller instance.
-func NewProjectController(projectUsecase usecase.ProjectUsecase, supabaseURL string, casbin *helper.CasbinEnforcer) *ProjectController {
+func NewProjectController(projectUsecase usecase.ProjectUsecase, supabaseURL string, casbin *rbac.CasbinEnforcer) *ProjectController {
 	return &ProjectController{
 		BaseController: base.NewBaseController(supabaseURL, casbin),
 		projectUsecase: projectUsecase,

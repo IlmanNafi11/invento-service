@@ -19,6 +19,7 @@ import (
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
+	"invento-service/internal/rbac"
 	app_testing "invento-service/internal/testing"
 )
 
@@ -124,7 +125,7 @@ func getTusTestConfig() *config.Config {
 }
 
 func getTusBaseController() *base.BaseController {
-	casbin := &helper.CasbinEnforcer{}
+	casbin := &rbac.CasbinEnforcer{}
 	return base.NewBaseController("https://test.supabase.co", casbin)
 }
 
