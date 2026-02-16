@@ -14,6 +14,8 @@ This roadmap transforms invento-service from a working-but-rough `fiber-boiler-p
 - [x] **Phase 4: Architecture Restructuring** - Decompose the helper god-package into focused, single-responsibility packages (completed 2026-02-16)
 - [x] **Phase 5: Deep Architecture Improvements** - Propagate context through all layers and enforce file size limits (completed 2026-02-16)
 - [x] **Phase 6: Polish & Verification** - Remove dead code, verify memory under load, and finalize documentation (completed 2026-02-16)
+- [ ] **Phase 7: Swagger & Logger Integration Fixes** - Fix Swagger route mismatches and replace global zerolog with injected loggers
+- [ ] **Phase 8: File Size Enforcement & Verification** - Split/trim files exceeding 500-line limit and create formal Phase 6 verification
 
 ## Phase Details
 
@@ -214,6 +216,54 @@ Plans:
 - [x] 06-05-PLAN.md -- Regenerate Swagger docs, update .env.example, create memory verification checklist
 - [x] 06-06-PLAN.md -- Test coverage audit: add tests for config (32.5%) and usecase/repo (65.5%) packages
 
+### Phase 7: Swagger & Logger Integration Fixes
+**Goal**: Swagger documentation accurately reflects actual routes, and all logging uses injected zerolog (no global logger bypass).
+**Depends on**: Phase 6 (all structural changes complete)
+**Requirements**: API-01 (residual), LOG-01 (residual)
+**Gap Closure**: Closes gaps from v1 milestone audit (integration 3→4, integration 5→6)
+
+**Success Criteria** (what must be TRUE):
+  1. Swagger @Router annotations for ComprehensiveHealthCheck and GetApplicationStatus match actual registered routes
+  2. Regenerated Swagger docs (`swag init`) reflect correct paths
+  3. `internal/middleware/rbac_middleware.go` uses injected `zerolog.Logger` instead of global `log.Warn()`
+  4. `internal/storage/download_helper.go` uses injected `zerolog.Logger` instead of global `log.Error()`
+  5. `golangci-lint run` passes with zero warnings
+
+**Scope:**
+- Fix 2 Swagger @Router annotations in health_controller.go
+- Regenerate Swagger docs with `swag init -g cmd/app/main.go -o docs/`
+- Inject zerolog.Logger via struct field or function parameter in rbac_middleware.go
+- Inject zerolog.Logger via struct field or function parameter in download_helper.go
+- Run golangci-lint as final gate
+
+**Risk**: Minimal -- targeted fixes to 4 files. Mitigated by running `go test ./...` after each change.
+
+**Plans:** 0/0 plans complete
+
+### Phase 8: File Size Enforcement & Verification
+**Goal**: All source files comply with the 500-line limit, and Phase 6 has formal verification documentation.
+**Depends on**: Phase 7 (swagger fixes must be done before final verification)
+**Requirements**: ARC-01 (residual)
+**Gap Closure**: Closes gaps from v1 milestone audit (500-line violations, missing verification)
+
+**Success Criteria** (what must be TRUE):
+  1. `internal/controller/http/tus_controller.go` is under 500 lines (currently 540)
+  2. `config/integration_test.go` is under 500 lines (currently 501)
+  3. `clients/go/invento-client/client.go` is under 500 lines (currently 665)
+  4. `06-VERIFICATION.md` exists covering all Phase 6 success criteria
+  5. `go test ./... -count=1` passes after all splits
+
+**Scope:**
+- Split or trim tus_controller.go (540 → <500 lines)
+- Trim config/integration_test.go (501 → <500 lines)
+- Split clients/go/invento-client/client.go (665 → <500 lines)
+- Create formal 06-VERIFICATION.md documenting all Phase 6 criteria verification
+- Final `go test ./...` pass
+
+**Risk**: File splits may break imports or test coverage. Mitigated by splitting one file at a time with test verification.
+
+**Plans:** 0/0 plans complete
+
 ## Requirements Coverage
 
 Every active requirement from PROJECT.md is mapped to exactly one phase.
@@ -240,7 +290,7 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 
 ## Progress
 
-**Execution Order:** 1 -> 2 -> 3 -> 4 -> 5 -> 6
+**Execution Order:** 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
@@ -250,3 +300,5 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 | 4. Architecture Restructuring | 6/6 | Complete | 2026-02-16 |
 | 5. Deep Architecture Improvements | 10/10 | Complete | 2026-02-16 |
 | 6. Polish & Verification | 6/6 | Complete | 2026-02-16 |
+| 7. Swagger & Logger Integration Fixes | 0/0 | Pending | — |
+| 8. File Size Enforcement & Verification | 0/0 | Pending | — |
