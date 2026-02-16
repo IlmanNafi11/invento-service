@@ -3,6 +3,10 @@ package usecase
 import (
 	"context"
 	"errors"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
+	"invento-service/internal/storage"
 	"os"
 	"testing"
 	"time"
@@ -10,10 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
-	"invento-service/config"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
-	"invento-service/internal/storage"
 )
 
 func TestUserUsecase_BulkAssignRole_Success(t *testing.T) {

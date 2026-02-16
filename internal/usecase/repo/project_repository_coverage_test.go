@@ -2,12 +2,12 @@ package repo_test
 
 import (
 	"context"
+	"invento-service/internal/domain"
+	"invento-service/internal/usecase/repo"
 	"testing"
 
-	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	testhelper "invento-service/internal/testing"
-	"invento-service/internal/usecase/repo"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

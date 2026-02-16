@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-
 	"invento-service/internal/domain"
 
 	"github.com/stretchr/testify/mock"
@@ -49,7 +48,7 @@ func (m *MockAuthService) Logout(ctx context.Context, accessToken string) error 
 	return args.Error(0)
 }
 
-func (m *MockAuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
+func (m *MockAuthService) RequestPasswordReset(ctx context.Context, email, redirectTo string) error {
 	args := m.Called(ctx, email, redirectTo)
 	return args.Error(0)
 }

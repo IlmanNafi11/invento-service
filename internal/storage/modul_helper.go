@@ -2,10 +2,9 @@ package storage
 
 import (
 	"errors"
+	"invento-service/config"
 	"mime/multipart"
 	"path/filepath"
-
-	"invento-service/config"
 )
 
 type ModulHelper struct {
@@ -22,12 +21,12 @@ func (mh *ModulHelper) GenerateModulIdentifier() (string, error) {
 	return GenerateRandomString(10)
 }
 
-func (mh *ModulHelper) BuildModulPath(userID string, identifier string, filename string) string {
+func (mh *ModulHelper) BuildModulPath(userID, identifier, filename string) string {
 	basePath := mh.getBasePath()
 	return filepath.Join(basePath, "moduls", userID, identifier, filename)
 }
 
-func (mh *ModulHelper) BuildModulDirectory(userID string, identifier string) string {
+func (mh *ModulHelper) BuildModulDirectory(userID, identifier string) string {
 	basePath := mh.getBasePath()
 	return filepath.Join(basePath, "moduls", userID, identifier)
 }

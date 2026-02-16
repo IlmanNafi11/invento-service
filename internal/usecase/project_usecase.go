@@ -4,22 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
+	"invento-service/internal/storage"
+	"invento-service/internal/usecase/repo"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/storage"
-	"invento-service/internal/usecase/repo"
 
 	zlog "github.com/rs/zerolog/log"
 )
 
 type ProjectUsecase interface {
-	GetList(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error)
+	GetList(ctx context.Context, userID, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error)
 	GetByID(ctx context.Context, projectID uint, userID string) (*dto.ProjectResponse, error)
 	UpdateMetadata(ctx context.Context, projectID uint, userID string, req dto.UpdateProjectRequest) error
 	Delete(ctx context.Context, projectID uint, userID string) error
@@ -38,7 +38,7 @@ func NewProjectUsecase(projectRepo repo.ProjectRepository, fileManager *storage.
 	}
 }
 
-func (uc *projectUsecase) GetList(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
+func (uc *projectUsecase) GetList(ctx context.Context, userID, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
 	if page <= 0 {
 		page = 1
 	}

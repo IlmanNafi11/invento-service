@@ -2,13 +2,13 @@ package upload
 
 import (
 	"fmt"
+	"invento-service/config"
+	"invento-service/internal/dto"
+	"invento-service/internal/storage"
 	"io"
 	"strconv"
 
-	"invento-service/config"
-	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/storage"
 
 	"github.com/rs/zerolog"
 )
@@ -125,7 +125,7 @@ func (tm *TusManager) HandleChunk(uploadID string, offset int64, chunk io.Reader
 	return tm.store.WriteChunk(uploadID, offset, chunk)
 }
 
-func (tm *TusManager) GetUploadStatus(uploadID string) (offset int64, size int64, err error) {
+func (tm *TusManager) GetUploadStatus(uploadID string) (offset, size int64, err error) {
 	info, err := tm.store.GetInfo(uploadID)
 	if err != nil {
 		return 0, 0, err
@@ -142,7 +142,7 @@ func (tm *TusManager) CancelUpload(uploadID string) error {
 	return tm.store.Terminate(uploadID)
 }
 
-func (tm *TusManager) FinalizeUpload(uploadID string, finalPath string) error {
+func (tm *TusManager) FinalizeUpload(uploadID, finalPath string) error {
 	return tm.store.FinalizeUpload(uploadID, finalPath)
 }
 

@@ -1,13 +1,13 @@
 package storage_test
 
 import (
+	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"invento-service/internal/storage"
 )
 
 func TestMoveFile_CopyFallbackPath(t *testing.T) {

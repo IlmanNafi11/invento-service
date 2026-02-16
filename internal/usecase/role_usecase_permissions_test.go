@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 
@@ -10,8 +12,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	mocks "invento-service/internal/usecase/test"
 )

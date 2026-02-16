@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 
@@ -35,7 +34,7 @@ func (m *MockModulRepository) GetByIDs(ctx context.Context, ids []string, userID
 	return args.Get(0).([]domain.Modul), args.Error(1)
 }
 
-func (m *MockModulRepository) GetByUserID(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
+func (m *MockModulRepository) GetByUserID(ctx context.Context, userID, search, filterType, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
 	args := m.Called(ctx, userID, search, filterType, filterStatus, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)

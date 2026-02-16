@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+
 	apperrors "invento-service/internal/errors"
 
 	"github.com/rs/zerolog"
@@ -53,7 +53,7 @@ func (r *modulRepository) GetByIDs(ctx context.Context, ids []string, userID str
 	return moduls, nil
 }
 
-func (r *modulRepository) GetByUserID(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
+func (r *modulRepository) GetByUserID(ctx context.Context, userID, search, filterType, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
 	var modulListItems []dto.ModulListItem
 	var total int64
 

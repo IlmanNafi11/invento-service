@@ -1,10 +1,9 @@
 package testing
 
 import (
-	"time"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"time"
 )
 
 // User fixtures

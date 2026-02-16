@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"strings"
+
 	apperrors "invento-service/internal/errors"
 
 	"gorm.io/gorm"
@@ -52,7 +52,7 @@ func (r *projectRepository) GetByIDs(ctx context.Context, ids []uint, userID str
 	return projects, nil
 }
 
-func (r *projectRepository) GetByUserID(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error) {
+func (r *projectRepository) GetByUserID(ctx context.Context, userID, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error) {
 	var projectListItems []dto.ProjectListItem
 	var total int64
 

@@ -2,6 +2,7 @@ package storage_test
 
 import (
 	"bytes"
+	"invento-service/internal/storage"
 	"mime/multipart"
 	"net/http/httptest"
 	"os"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"invento-service/internal/storage"
 )
 
 func TestGenerateUniqueIdentifier(t *testing.T) {

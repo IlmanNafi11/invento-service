@@ -1,10 +1,9 @@
 package httputil
 
 import (
+	"invento-service/internal/dto"
 	"net/http"
 	"testing"
-
-	"invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

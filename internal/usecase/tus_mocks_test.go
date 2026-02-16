@@ -2,9 +2,8 @@ package usecase
 
 import (
 	"context"
-	"time"
-
 	"invento-service/internal/domain"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -40,12 +39,12 @@ func (m *MockTusModulUploadRepository) UpdateOffset(ctx context.Context, id stri
 	return args.Error(0)
 }
 
-func (m *MockTusModulUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (m *MockTusModulUploadRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	args := m.Called(ctx, id, status)
 	return args.Error(0)
 }
 
-func (m *MockTusModulUploadRepository) Complete(ctx context.Context, id string, modulID string, filePath string) error {
+func (m *MockTusModulUploadRepository) Complete(ctx context.Context, id, modulID, filePath string) error {
 	args := m.Called(ctx, id, modulID, filePath)
 	return args.Error(0)
 }
@@ -136,7 +135,7 @@ func (m *MockTusUploadRepository) UpdateOffset(ctx context.Context, id string, o
 	return args.Error(0)
 }
 
-func (m *MockTusUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (m *MockTusUploadRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	args := m.Called(ctx, id, status)
 	return args.Error(0)
 }

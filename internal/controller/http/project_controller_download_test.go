@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"invento-service/internal/dto"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/dto"
+
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
 )

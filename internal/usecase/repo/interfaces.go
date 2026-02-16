@@ -2,10 +2,9 @@ package repo
 
 import (
 	"context"
-	"time"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"time"
 )
 
 type UserRepository interface {
@@ -15,9 +14,9 @@ type UserRepository interface {
 	Create(ctx context.Context, user *domain.User) error
 	GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error)
 	GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error)
-	GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error)
+	GetUserFiles(ctx context.Context, userID, search string, page, limit int) ([]dto.UserFileItem, int, error)
 	UpdateRole(ctx context.Context, userID string, roleID *int) error
-	UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error
+	UpdateProfile(ctx context.Context, userID, name string, jenisKelamin, fotoProfil *string) error
 	Delete(ctx context.Context, userID string) error
 	GetByRoleID(ctx context.Context, roleID uint) ([]dto.UserListItem, error)
 	BulkUpdateRole(ctx context.Context, userIDs []string, roleID uint) error
@@ -54,7 +53,7 @@ type ProjectRepository interface {
 	Create(ctx context.Context, project *domain.Project) error
 	GetByID(ctx context.Context, id uint) (*domain.Project, error)
 	GetByIDs(ctx context.Context, ids []uint, userID string) ([]domain.Project, error)
-	GetByUserID(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error)
+	GetByUserID(ctx context.Context, userID, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error)
 	CountByUserID(ctx context.Context, userID string) (int, error)
 	Update(ctx context.Context, project *domain.Project) error
 	Delete(ctx context.Context, id uint) error
@@ -64,7 +63,7 @@ type ModulRepository interface {
 	Create(ctx context.Context, modul *domain.Modul) error
 	GetByID(ctx context.Context, id string) (*domain.Modul, error)
 	GetByIDs(ctx context.Context, ids []string, userID string) ([]domain.Modul, error)
-	GetByUserID(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error)
+	GetByUserID(ctx context.Context, userID, search, filterType, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error)
 	CountByUserID(ctx context.Context, userID string) (int, error)
 	Update(ctx context.Context, modul *domain.Modul) error
 	Delete(ctx context.Context, id string) error
@@ -78,7 +77,7 @@ type TusUploadRepository interface {
 	GetActiveByUserID(ctx context.Context, userID string) ([]domain.TusUpload, error)
 	CountActiveByUserID(ctx context.Context, userID string) (int64, error)
 	UpdateOffset(ctx context.Context, id string, offset int64, progress float64) error
-	UpdateStatus(ctx context.Context, id string, status string) error
+	UpdateStatus(ctx context.Context, id, status string) error
 	Complete(ctx context.Context, id string, projectID uint, filePath string) error
 	GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusUpload, error)
 	GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusUpload, error)
@@ -92,8 +91,8 @@ type TusModulUploadRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.TusModulUpload, error)
 	GetByUserID(ctx context.Context, userID string) ([]domain.TusModulUpload, error)
 	UpdateOffset(ctx context.Context, id string, offset int64, progress float64) error
-	UpdateStatus(ctx context.Context, id string, status string) error
-	Complete(ctx context.Context, id string, modulID string, filePath string) error
+	UpdateStatus(ctx context.Context, id, status string) error
+	Complete(ctx context.Context, id, modulID, filePath string) error
 	Delete(ctx context.Context, id string) error
 	GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusModulUpload, error)
 	GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusModulUpload, error)

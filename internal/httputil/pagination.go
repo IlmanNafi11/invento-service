@@ -1,9 +1,8 @@
 package httputil
 
 import (
-	"math"
-
 	"invento-service/internal/dto"
+	"math"
 )
 
 type PaginationParams struct {

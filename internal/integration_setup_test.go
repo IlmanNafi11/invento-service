@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"invento-service/internal/httputil"
+	"invento-service/internal/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/httputil"
-	"invento-service/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

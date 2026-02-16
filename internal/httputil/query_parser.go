@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func ParsePaginationQuery(c *fiber.Ctx) (page int, limit int) {
+func ParsePaginationQuery(c *fiber.Ctx) (page, limit int) {
 	pageStr := c.Query("page", "1")
 	limitStr := c.Query("limit", "10")
 

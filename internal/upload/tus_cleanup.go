@@ -2,9 +2,8 @@ package upload
 
 import (
 	"context"
-	"time"
-
 	"invento-service/internal/domain"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -12,14 +11,14 @@ import (
 type TusProjectUploadCleanupRepository interface {
 	GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusUpload, error)
 	GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusUpload, error)
-	UpdateStatus(ctx context.Context, id string, status string) error
+	UpdateStatus(ctx context.Context, id, status string) error
 	Delete(ctx context.Context, id string) error
 }
 
 type TusModulUploadCleanupRepository interface {
 	GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusModulUpload, error)
 	GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusModulUpload, error)
-	UpdateStatus(ctx context.Context, id string, status string) error
+	UpdateStatus(ctx context.Context, id, status string) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -135,7 +134,7 @@ func (tc *TusCleanup) cleanupUploads(
 	store *TusStore,
 	newStatus string,
 	label string,
-	updateStatus func(ctx context.Context, id string, status string) error,
+	updateStatus func(ctx context.Context, id, status string) error,
 ) int {
 	cleaned := 0
 	for _, uploadID := range uploadIDs {

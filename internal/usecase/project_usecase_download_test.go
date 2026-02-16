@@ -3,14 +3,14 @@ package usecase
 import (
 	"context"
 	"errors"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"invento-service/config"
-	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/storage"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

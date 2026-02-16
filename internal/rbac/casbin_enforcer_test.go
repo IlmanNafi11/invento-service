@@ -1,9 +1,8 @@
 package rbac_test
 
 import (
-	"testing"
-
 	"invento-service/internal/rbac"
+	"testing"
 
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/stretchr/testify/assert"

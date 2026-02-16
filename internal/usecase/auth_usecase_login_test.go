@@ -3,16 +3,15 @@ package usecase
 import (
 	"context"
 	"errors"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
-
-	"invento-service/config"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
 )
 
 type AuthUsecaseMockAuthService struct {
@@ -51,7 +50,7 @@ func (m *AuthUsecaseMockAuthService) RefreshToken(ctx context.Context, refreshTo
 	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
 }
 
-func (m *AuthUsecaseMockAuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
+func (m *AuthUsecaseMockAuthService) RequestPasswordReset(ctx context.Context, email, redirectTo string) error {
 	args := m.Called(ctx, email, redirectTo)
 	return args.Error(0)
 }
@@ -86,11 +85,11 @@ func (m *authTestUserRepo) GetByID(ctx context.Context, id string) (*domain.User
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
-func (m *authTestUserRepo) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount int, modulCount int, err error) {
+func (m *authTestUserRepo) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount, modulCount int, err error) {
 	return nil, 0, 0, nil
 }
 
-func (m *authTestUserRepo) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (m *authTestUserRepo) GetUserFiles(ctx context.Context, userID, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -116,7 +115,7 @@ func (m *authTestUserRepo) UpdateRole(ctx context.Context, userID string, roleID
 	return args.Error(0)
 }
 
-func (m *authTestUserRepo) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (m *authTestUserRepo) UpdateProfile(ctx context.Context, userID, name string, jenisKelamin, fotoProfil *string) error {
 	args := m.Called(userID, name, jenisKelamin, fotoProfil)
 	return args.Error(0)
 }

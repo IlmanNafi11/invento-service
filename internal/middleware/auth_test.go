@@ -3,10 +3,6 @@ package middleware_test
 import (
 	"context"
 	"errors"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
@@ -14,6 +10,9 @@ import (
 	"invento-service/internal/middleware"
 	"invento-service/internal/supabase"
 	"invento-service/internal/usecase/repo"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
@@ -45,7 +44,7 @@ func (m *mockAuthService) RefreshToken(ctx context.Context, refreshToken string)
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockAuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
+func (m *mockAuthService) RequestPasswordReset(ctx context.Context, email, redirectTo string) error {
 	return errors.New("not implemented")
 }
 
@@ -83,11 +82,11 @@ func (m *mockUserRepository) GetByID(ctx context.Context, id string) (*domain.Us
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount int, modulCount int, err error) {
+func (m *mockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount, modulCount int, err error) {
 	return nil, 0, 0, nil
 }
 
-func (m *mockUserRepository) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (m *mockUserRepository) GetUserFiles(ctx context.Context, userID, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -107,7 +106,7 @@ func (m *mockUserRepository) UpdateRole(ctx context.Context, userID string, role
 	return errors.New("not implemented")
 }
 
-func (m *mockUserRepository) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (m *mockUserRepository) UpdateProfile(ctx context.Context, userID, name string, jenisKelamin, fotoProfil *string) error {
 	return errors.New("not implemented")
 }
 

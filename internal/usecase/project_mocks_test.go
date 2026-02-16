@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 
@@ -19,7 +18,7 @@ func (m *MockProjectRepository) Create(ctx context.Context, project *domain.Proj
 	return args.Error(0)
 }
 
-func (m *MockProjectRepository) GetByUserID(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error) {
+func (m *MockProjectRepository) GetByUserID(ctx context.Context, userID, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error) {
 	args := m.Called(ctx, userID, search, filterSemester, filterKategori, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)

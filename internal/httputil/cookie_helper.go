@@ -1,9 +1,8 @@
 package httputil
 
 import (
-	"time"
-
 	"invento-service/config"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )

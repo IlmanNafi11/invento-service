@@ -3,7 +3,6 @@ package httputil
 import (
 	"errors"
 	"fmt"
-
 	"invento-service/internal/dto"
 
 	"github.com/go-playground/validator/v10"

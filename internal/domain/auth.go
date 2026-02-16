@@ -11,7 +11,7 @@ type AuthService interface {
 	Register(ctx context.Context, req AuthServiceRegisterRequest) (*AuthServiceResponse, error)
 	RefreshToken(ctx context.Context, refreshToken string) (*AuthServiceResponse, error)
 	Logout(ctx context.Context, accessToken string) error
-	RequestPasswordReset(ctx context.Context, email string, redirectTo string) error
+	RequestPasswordReset(ctx context.Context, email, redirectTo string) error
 	DeleteUser(ctx context.Context, uid string) error
 }
 

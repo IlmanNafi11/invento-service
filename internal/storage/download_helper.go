@@ -3,11 +3,10 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"invento-service/internal/domain"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"invento-service/internal/domain"
 
 	zlog "github.com/rs/zerolog/log"
 )
@@ -61,7 +60,7 @@ func (dh *DownloadHelper) resolvePath(relativePath string) string {
 	return absPath
 }
 
-func (dh *DownloadHelper) PrepareFilesForDownload(projects []domain.Project, moduls []domain.Modul) (filePaths []string, notFoundFiles []string, err error) {
+func (dh *DownloadHelper) PrepareFilesForDownload(projects []domain.Project, moduls []domain.Modul) (filePaths, notFoundFiles []string, err error) {
 	for _, project := range projects {
 		resolvedPath := dh.resolvePath(project.PathFile)
 

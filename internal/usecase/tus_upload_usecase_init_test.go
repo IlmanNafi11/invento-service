@@ -2,14 +2,14 @@ package usecase
 
 import (
 	"context"
+	"invento-service/internal/domain"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"invento-service/internal/domain"
 	dto "invento-service/internal/dto"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

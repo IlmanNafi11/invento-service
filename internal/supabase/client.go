@@ -2,9 +2,9 @@ package supabase
 
 import (
 	"context"
+	"invento-service/config"
 
 	"github.com/supabase-community/supabase-go"
-	"invento-service/config"
 )
 
 type Client struct {

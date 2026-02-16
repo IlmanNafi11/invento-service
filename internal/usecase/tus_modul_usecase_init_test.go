@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"invento-service/internal/domain"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

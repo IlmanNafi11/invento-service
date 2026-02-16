@@ -4,22 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"invento-service/internal/dto"
+	"invento-service/internal/storage"
+	"invento-service/internal/usecase/repo"
 	"os"
 	"path/filepath"
 
-	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/storage"
-	"invento-service/internal/usecase/repo"
 
 	zlog "github.com/rs/zerolog/log"
 )
 
 type ModulUsecase interface {
-	GetList(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error)
-	GetByID(ctx context.Context, modulID string, userID string) (*dto.ModulResponse, error)
-	UpdateMetadata(ctx context.Context, modulID string, userID string, req dto.UpdateModulRequest) error
-	Delete(ctx context.Context, modulID string, userID string) error
+	GetList(ctx context.Context, userID, search, filterType, filterStatus string, page, limit int) (*dto.ModulListData, error)
+	GetByID(ctx context.Context, modulID, userID string) (*dto.ModulResponse, error)
+	UpdateMetadata(ctx context.Context, modulID, userID string, req dto.UpdateModulRequest) error
+	Delete(ctx context.Context, modulID, userID string) error
 	Download(ctx context.Context, userID string, modulIDs []string) (string, error)
 }
 
@@ -33,7 +33,7 @@ func NewModulUsecase(modulRepo repo.ModulRepository) ModulUsecase {
 	}
 }
 
-func (uc *modulUsecase) GetList(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error) {
+func (uc *modulUsecase) GetList(ctx context.Context, userID, search, filterType, filterStatus string, page, limit int) (*dto.ModulListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -59,7 +59,7 @@ func (uc *modulUsecase) GetList(ctx context.Context, userID string, search strin
 	}, nil
 }
 
-func (uc *modulUsecase) GetByID(ctx context.Context, modulID string, userID string) (*dto.ModulResponse, error) {
+func (uc *modulUsecase) GetByID(ctx context.Context, modulID, userID string) (*dto.ModulResponse, error) {
 	modul, err := uc.modulRepo.GetByID(ctx, modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
@@ -85,7 +85,7 @@ func (uc *modulUsecase) GetByID(ctx context.Context, modulID string, userID stri
 	}, nil
 }
 
-func (uc *modulUsecase) Delete(ctx context.Context, modulID string, userID string) error {
+func (uc *modulUsecase) Delete(ctx context.Context, modulID, userID string) error {
 	modul, err := uc.modulRepo.GetByID(ctx, modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
@@ -159,7 +159,7 @@ func (uc *modulUsecase) Download(ctx context.Context, userID string, modulIDs []
 	return zipFilePath, nil
 }
 
-func (uc *modulUsecase) UpdateMetadata(ctx context.Context, modulID string, userID string, req dto.UpdateModulRequest) error {
+func (uc *modulUsecase) UpdateMetadata(ctx context.Context, modulID, userID string, req dto.UpdateModulRequest) error {
 	modul, err := uc.modulRepo.GetByID(ctx, modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {

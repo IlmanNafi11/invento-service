@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	"invento-service/internal/rbac"
@@ -12,7 +11,7 @@ import (
 )
 
 type StatisticUsecase interface {
-	GetStatistics(ctx context.Context, userID string, userRole string) (*dto.StatisticData, error)
+	GetStatistics(ctx context.Context, userID, userRole string) (*dto.StatisticData, error)
 }
 
 type statisticUsecase struct {
@@ -42,7 +41,7 @@ func NewStatisticUsecase(
 	}
 }
 
-func (su *statisticUsecase) GetStatistics(ctx context.Context, userID string, userRole string) (*dto.StatisticData, error) {
+func (su *statisticUsecase) GetStatistics(ctx context.Context, userID, userRole string) (*dto.StatisticData, error) {
 	result := &dto.StatisticData{}
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")

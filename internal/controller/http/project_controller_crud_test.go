@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"invento-service/internal/dto"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,7 +16,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/dto"
+
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
 )
@@ -25,7 +26,7 @@ type MockProjectUsecase struct {
 	mock.Mock
 }
 
-func (m *MockProjectUsecase) GetList(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
+func (m *MockProjectUsecase) GetList(ctx context.Context, userID, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
 	args := m.Called(userID, search, filterSemester, filterKategori, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

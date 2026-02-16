@@ -1,15 +1,14 @@
 package upload
 
 import (
+	"invento-service/internal/httputil"
 	"strconv"
 	"time"
-
-	"invento-service/internal/httputil"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func SendTusInitiateResponse(c *fiber.Ctx, uploadID string, uploadURL string, fileSize int64) error {
+func SendTusInitiateResponse(c *fiber.Ctx, uploadID, uploadURL string, fileSize int64) error {
 	SetTusResponseHeaders(c, 0, fileSize)
 	SetTusLocationHeader(c, uploadURL)
 
@@ -36,7 +35,7 @@ func SendTusChunkResponse(c *fiber.Ctx, newOffset int64) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-func SendTusHeadResponse(c *fiber.Ctx, offset int64, length int64) error {
+func SendTusHeadResponse(c *fiber.Ctx, offset, length int64) error {
 	c.Set(HeaderTusResumable, TusVersion)
 	c.Set(HeaderUploadOffset, strconv.FormatInt(offset, 10))
 	c.Set(HeaderUploadLength, strconv.FormatInt(length, 10))
@@ -48,7 +47,7 @@ func SendTusDeleteResponse(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
-func SendTusSlotResponse(c *fiber.Ctx, available bool, message string, queueLength int, activeCount int, maxConcurrent int) error {
+func SendTusSlotResponse(c *fiber.Ctx, available bool, message string, queueLength, activeCount, maxConcurrent int) error {
 	response := map[string]interface{}{
 		"status":  "success",
 		"message": "Pengecekan slot upload berhasil",

@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,8 +12,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
 	repo "invento-service/internal/usecase/repo"
 )
 
@@ -40,7 +40,7 @@ type statisticUsecaseWithInterface struct {
 	db             *gorm.DB
 }
 
-func (su *statisticUsecaseWithInterface) GetStatistics(ctx context.Context, userID string, userRole string) (*dto.StatisticData, error) {
+func (su *statisticUsecaseWithInterface) GetStatistics(ctx context.Context, userID, userRole string) (*dto.StatisticData, error) {
 	result := &dto.StatisticData{}
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")

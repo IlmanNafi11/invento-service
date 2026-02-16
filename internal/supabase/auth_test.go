@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"invento-service/internal/domain"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -19,7 +20,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"invento-service/internal/domain"
 )
 
 const authTestKeyID = "auth-test-key-id"

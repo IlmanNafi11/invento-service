@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"invento-service/internal/dto"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 
 	"github.com/gofiber/fiber/v2"

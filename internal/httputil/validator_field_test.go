@@ -1,10 +1,10 @@
 package httputil_test
 
 import (
+	"invento-service/internal/httputil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"invento-service/internal/httputil"
 )
 
 func TestValidateStruct_Numeric_Invalid(t *testing.T) {

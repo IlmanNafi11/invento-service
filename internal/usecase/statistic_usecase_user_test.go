@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"invento-service/internal/rbac"
 	"testing"
 
 	gormadapter "github.com/casbin/gorm-adapter/v3"
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"invento-service/internal/rbac"
 )
 
 func TestStatisticUsecase_GetStatistics_ZeroCounts(t *testing.T) {

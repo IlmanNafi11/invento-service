@@ -2,9 +2,8 @@ package http_test
 
 import (
 	"context"
-	"mime/multipart"
-
 	"invento-service/internal/dto"
+	"mime/multipart"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/mock"
@@ -23,7 +22,7 @@ func (m *MockUserUsecase) GetUserList(ctx context.Context, params dto.UserListQu
 	return args.Get(0).(*dto.UserListData), args.Error(1)
 }
 
-func (m *MockUserUsecase) UpdateUserRole(ctx context.Context, userID string, roleName string) error {
+func (m *MockUserUsecase) UpdateUserRole(ctx context.Context, userID, roleName string) error {
 	args := m.Called(ctx, userID, roleName)
 	return args.Error(0)
 }

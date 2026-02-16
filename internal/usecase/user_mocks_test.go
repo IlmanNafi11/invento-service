@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 
@@ -30,7 +29,7 @@ func (m *MockUserRepository) GetByID(ctx context.Context, id string) (*domain.Us
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount int, modulCount int, err error) {
+func (m *MockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount, modulCount int, err error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) != nil {
 		return args.Get(0).(*domain.User), args.Int(1), args.Int(2), args.Error(3)
@@ -38,7 +37,7 @@ func (m *MockUserRepository) GetProfileWithCounts(ctx context.Context, userID st
 	return nil, args.Int(1), args.Int(2), args.Error(3)
 }
 
-func (m *MockUserRepository) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (m *MockUserRepository) GetUserFiles(ctx context.Context, userID, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	args := m.Called(ctx, userID, search, page, limit)
 	if args.Get(0) != nil {
 		return args.Get(0).([]dto.UserFileItem), args.Int(1), args.Error(2)
@@ -59,7 +58,7 @@ func (m *MockUserRepository) Create(ctx context.Context, user *domain.User) erro
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (m *MockUserRepository) UpdateProfile(ctx context.Context, userID, name string, jenisKelamin, fotoProfil *string) error {
 	args := m.Called(ctx, userID, name, jenisKelamin, fotoProfil)
 	return args.Error(0)
 }

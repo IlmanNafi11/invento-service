@@ -3,6 +3,11 @@ package usecase
 import (
 	"context"
 	"errors"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"strings"
 	"testing"
 	"time"
@@ -10,12 +15,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"invento-service/config"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
+
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 )
 
 func TestCreateModul_Success(t *testing.T) {

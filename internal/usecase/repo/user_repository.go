@@ -2,7 +2,6 @@ package repo
 
 import (
 	"context"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 
@@ -86,7 +85,7 @@ func (r *userRepository) GetAll(ctx context.Context, search, filterRole string, 
 	return userListItems, int(total), nil
 }
 
-func (r *userRepository) GetProfileWithCounts(ctx context.Context, userID string) (userResult *domain.User, projectTotal int, modulTotal int, err error) {
+func (r *userRepository) GetProfileWithCounts(ctx context.Context, userID string) (userResult *domain.User, projectTotal, modulTotal int, err error) {
 	var user domain.User
 
 	err = r.db.WithContext(ctx).Where("id = ? AND is_active = ?", userID, true).Preload("Role").First(&user).Error
@@ -103,7 +102,7 @@ func (r *userRepository) GetProfileWithCounts(ctx context.Context, userID string
 	return &user, int(projectCount), int(modulCount), nil
 }
 
-func (r *userRepository) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (r *userRepository) GetUserFiles(ctx context.Context, userID, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	var items []dto.UserFileItem
 	var total int64
 
@@ -155,7 +154,7 @@ func (r *userRepository) UpdateRole(ctx context.Context, userID string, roleID *
 	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", userID).Update("role_id", roleID).Error
 }
 
-func (r *userRepository) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (r *userRepository) UpdateProfile(ctx context.Context, userID, name string, jenisKelamin, fotoProfil *string) error {
 	updates := map[string]interface{}{
 		"name": name,
 	}

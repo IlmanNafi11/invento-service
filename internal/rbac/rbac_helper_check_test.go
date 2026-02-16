@@ -2,10 +2,9 @@ package rbac
 
 import (
 	"errors"
+	"invento-service/internal/domain"
 	"testing"
 	"time"
-
-	"invento-service/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 )

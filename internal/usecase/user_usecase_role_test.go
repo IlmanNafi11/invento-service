@@ -3,16 +3,16 @@ package usecase
 import (
 	"context"
 	"errors"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
+	"invento-service/internal/storage"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
-	"invento-service/config"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
-	"invento-service/internal/storage"
 )
 
 func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {

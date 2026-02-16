@@ -2,10 +2,9 @@ package repo_test
 
 import (
 	"context"
+	"invento-service/internal/domain"
 	"testing"
 	"time"
-
-	"invento-service/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -41,12 +40,12 @@ func (m *MockTusModulUploadRepository) UpdateOffset(ctx context.Context, id stri
 	return args.Error(0)
 }
 
-func (m *MockTusModulUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (m *MockTusModulUploadRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	args := m.Called(ctx, id, status)
 	return args.Error(0)
 }
 
-func (m *MockTusModulUploadRepository) Complete(ctx context.Context, id string, modulID string, filePath string) error {
+func (m *MockTusModulUploadRepository) Complete(ctx context.Context, id, modulID, filePath string) error {
 	args := m.Called(ctx, id, modulID, filePath)
 	return args.Error(0)
 }

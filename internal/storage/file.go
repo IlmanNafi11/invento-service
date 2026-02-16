@@ -105,7 +105,7 @@ func DetectProjectCategory(filename string) string {
 	}
 }
 
-func CreateUserDirectory(email string, role string) (string, error) {
+func CreateUserDirectory(email, role string) (string, error) {
 	emailParts := strings.Split(email, "@")
 	if len(emailParts) != 2 {
 		return "", errors.New("format email tidak valid")
@@ -130,7 +130,7 @@ func CreateUserDirectory(email string, role string) (string, error) {
 	return userDir, nil
 }
 
-func CreateModulDirectory(email string, role string, fileType string) (string, error) {
+func CreateModulDirectory(email, role, fileType string) (string, error) {
 	emailParts := strings.Split(email, "@")
 	if len(emailParts) != 2 {
 		return "", errors.New("format email tidak valid")
@@ -155,7 +155,7 @@ func CreateModulDirectory(email string, role string, fileType string) (string, e
 	return userDir, nil
 }
 
-func CreateProfilDirectory(email string, role string) (string, error) {
+func CreateProfilDirectory(email, role string) (string, error) {
 	emailParts := strings.Split(email, "@")
 	if len(emailParts) != 2 {
 		return "", errors.New("format email tidak valid")

@@ -68,7 +68,7 @@ func GetTusHeaders(c *fiber.Ctx) (TusHeaders, error) {
 	return headers, nil
 }
 
-func SetTusResponseHeaders(c *fiber.Ctx, offset int64, length int64) {
+func SetTusResponseHeaders(c *fiber.Ctx, offset, length int64) {
 	c.Set(HeaderTusResumable, TusVersion)
 	c.Set(HeaderUploadOffset, strconv.FormatInt(offset, 10))
 

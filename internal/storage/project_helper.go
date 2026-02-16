@@ -3,10 +3,9 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"invento-service/config"
 	"mime/multipart"
 	"path/filepath"
-
-	"invento-service/config"
 )
 
 type ProjectHelper struct {
@@ -23,7 +22,7 @@ func (ph *ProjectHelper) GenerateProjectIdentifier() (string, error) {
 	return GenerateRandomString(10)
 }
 
-func (ph *ProjectHelper) BuildProjectPath(userID uint, identifier string, filename string) string {
+func (ph *ProjectHelper) BuildProjectPath(userID uint, identifier, filename string) string {
 	basePath := ph.getBasePath()
 	return filepath.Join(basePath, "projects", fmt.Sprintf("%d", userID), identifier, filename)
 }

@@ -2,13 +2,12 @@ package upload
 
 import (
 	"context"
-	"path/filepath"
-	"testing"
-	"time"
-
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/storage"
+	"path/filepath"
+	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +27,7 @@ func (m *mockTusUploadRepository) GetAbandonedUploads(ctx context.Context, timeo
 	return args.Get(0).([]domain.TusUpload), args.Error(1)
 }
 
-func (m *mockTusUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (m *mockTusUploadRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	args := m.Called(ctx, id, status)
 	return args.Error(0)
 }
@@ -50,7 +49,7 @@ func (m *mockTusModulUploadCleanupRepository) GetAbandonedUploads(ctx context.Co
 	return args.Get(0).([]domain.TusModulUpload), args.Error(1)
 }
 
-func (m *mockTusModulUploadCleanupRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (m *mockTusModulUploadCleanupRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	args := m.Called(ctx, id, status)
 	return args.Error(0)
 }

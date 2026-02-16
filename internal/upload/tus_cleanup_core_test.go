@@ -1,15 +1,15 @@
 package upload_test
 
 import (
+	"invento-service/internal/domain"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"testing"
 	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"invento-service/internal/domain"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 )
 
 // ==================== TusCleanup Tests ====================

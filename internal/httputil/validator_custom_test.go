@@ -1,10 +1,10 @@
 package httputil_test
 
 import (
+	"invento-service/internal/httputil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"invento-service/internal/httputil"
 )
 
 func TestGetValidationMessage_UUID5(t *testing.T) {

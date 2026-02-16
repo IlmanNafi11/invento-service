@@ -2,11 +2,11 @@ package usecase
 
 import (
 	"context"
-	"testing"
-
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"testing"
+
 	apperrors "invento-service/internal/errors"
 
 	"github.com/gofiber/fiber/v2"
@@ -55,7 +55,7 @@ func (m *IntegrationMockAuthService) RefreshToken(ctx context.Context, refreshTo
 	return args.Get(0).(*domain.AuthServiceResponse), args.Error(1)
 }
 
-func (m *IntegrationMockAuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
+func (m *IntegrationMockAuthService) RequestPasswordReset(ctx context.Context, email, redirectTo string) error {
 	args := m.Called(ctx, email, redirectTo)
 	return args.Error(0)
 }
@@ -96,11 +96,11 @@ func (r *integrationUserRepository) GetByID(ctx context.Context, id string) (*do
 	return &user, nil
 }
 
-func (r *integrationUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount int, modulCount int, err error) {
+func (r *integrationUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount, modulCount int, err error) {
 	return nil, 0, 0, nil
 }
 
-func (r *integrationUserRepository) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (r *integrationUserRepository) GetUserFiles(ctx context.Context, userID, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -120,7 +120,7 @@ func (r *integrationUserRepository) UpdateRole(ctx context.Context, userID strin
 	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", userID).Update("role_id", roleID).Error
 }
 
-func (r *integrationUserRepository) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (r *integrationUserRepository) UpdateProfile(ctx context.Context, userID, name string, jenisKelamin, fotoProfil *string) error {
 	return nil
 }
 

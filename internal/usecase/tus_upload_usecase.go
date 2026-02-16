@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"time"
-
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
-	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
 	"invento-service/internal/usecase/repo"
+	"io"
+	"time"
+
+	apperrors "invento-service/internal/errors"
 
 	"github.com/google/uuid"
 	zlog "github.com/rs/zerolog/log"
@@ -22,16 +22,16 @@ import (
 type TusUploadUsecase interface {
 	CheckUploadSlot(ctx context.Context, userID string) (*dto.TusUploadSlotResponse, error)
 	ResetUploadQueue(ctx context.Context, userID string) error
-	InitiateUpload(ctx context.Context, userID string, userEmail string, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error)
-	HandleChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
-	GetUploadInfo(ctx context.Context, uploadID string, userID string) (*dto.TusUploadInfoResponse, error)
-	CancelUpload(ctx context.Context, uploadID string, userID string) error
-	GetUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error)
+	InitiateUpload(ctx context.Context, userID, userEmail, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error)
+	HandleChunk(ctx context.Context, uploadID, userID string, offset int64, chunk io.Reader) (int64, error)
+	GetUploadInfo(ctx context.Context, uploadID, userID string) (*dto.TusUploadInfoResponse, error)
+	CancelUpload(ctx context.Context, uploadID, userID string) error
+	GetUploadStatus(ctx context.Context, uploadID, userID string) (int64, int64, error)
 	InitiateProjectUpdateUpload(ctx context.Context, projectID uint, userID string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error)
-	HandleProjectUpdateChunk(ctx context.Context, projectID uint, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
-	GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID string, userID string) (int64, int64, error)
-	GetProjectUpdateUploadInfo(ctx context.Context, projectID uint, uploadID string, userID string) (*dto.TusUploadInfoResponse, error)
-	CancelProjectUpdateUpload(ctx context.Context, projectID uint, uploadID string, userID string) error
+	HandleProjectUpdateChunk(ctx context.Context, projectID uint, uploadID, userID string, offset int64, chunk io.Reader) (int64, error)
+	GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID, userID string) (int64, int64, error)
+	GetProjectUpdateUploadInfo(ctx context.Context, projectID uint, uploadID, userID string) (*dto.TusUploadInfoResponse, error)
+	CancelProjectUpdateUpload(ctx context.Context, projectID uint, uploadID, userID string) error
 }
 
 type tusUploadUsecase struct {
@@ -89,7 +89,7 @@ func (uc *tusUploadUsecase) ResetUploadQueue(ctx context.Context, userID string)
 	return nil
 }
 
-func (uc *tusUploadUsecase) InitiateUpload(ctx context.Context, userID string, userEmail string, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
+func (uc *tusUploadUsecase) InitiateUpload(ctx context.Context, userID, userEmail, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
 	return uc.initiateUpload(ctx, userID, fileSize, metadata, domain.UploadTypeProjectCreate, nil)
 }
 
@@ -197,15 +197,15 @@ func (uc *tusUploadUsecase) initiateUpload(ctx context.Context, userID string, f
 	}, nil
 }
 
-func (uc *tusUploadUsecase) HandleChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+func (uc *tusUploadUsecase) HandleChunk(ctx context.Context, uploadID, userID string, offset int64, chunk io.Reader) (int64, error) {
 	return uc.handleChunk(ctx, uploadID, userID, offset, chunk, nil)
 }
 
-func (uc *tusUploadUsecase) HandleProjectUpdateChunk(ctx context.Context, projectID uint, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+func (uc *tusUploadUsecase) HandleProjectUpdateChunk(ctx context.Context, projectID uint, uploadID, userID string, offset int64, chunk io.Reader) (int64, error) {
 	return uc.handleChunk(ctx, uploadID, userID, offset, chunk, &projectID)
 }
 
-func (uc *tusUploadUsecase) handleChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader, projectID *uint) (int64, error) {
+func (uc *tusUploadUsecase) handleChunk(ctx context.Context, uploadID, userID string, offset int64, chunk io.Reader, projectID *uint) (int64, error) {
 	upload, err := uc.getOwnedUpload(ctx, uploadID, userID, projectID)
 	if err != nil {
 		return 0, err
@@ -333,15 +333,15 @@ func (uc *tusUploadUsecase) completeProjectUpdate(ctx context.Context, upload *d
 	return project.ID, nil
 }
 
-func (uc *tusUploadUsecase) GetUploadInfo(ctx context.Context, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
+func (uc *tusUploadUsecase) GetUploadInfo(ctx context.Context, uploadID, userID string) (*dto.TusUploadInfoResponse, error) {
 	return uc.getUploadInfo(ctx, uploadID, userID, nil)
 }
 
-func (uc *tusUploadUsecase) GetProjectUpdateUploadInfo(ctx context.Context, projectID uint, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
+func (uc *tusUploadUsecase) GetProjectUpdateUploadInfo(ctx context.Context, projectID uint, uploadID, userID string) (*dto.TusUploadInfoResponse, error) {
 	return uc.getUploadInfo(ctx, uploadID, userID, &projectID)
 }
 
-func (uc *tusUploadUsecase) getUploadInfo(ctx context.Context, uploadID string, userID string, projectID *uint) (*dto.TusUploadInfoResponse, error) {
+func (uc *tusUploadUsecase) getUploadInfo(ctx context.Context, uploadID, userID string, projectID *uint) (*dto.TusUploadInfoResponse, error) {
 	upload, err := uc.getOwnedUpload(ctx, uploadID, userID, projectID)
 	if err != nil {
 		return nil, err
@@ -367,15 +367,15 @@ func (uc *tusUploadUsecase) getUploadInfo(ctx context.Context, uploadID string, 
 	return response, nil
 }
 
-func (uc *tusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID string, userID string) (offset int64, length int64, err error) {
+func (uc *tusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID, userID string) (offset, length int64, err error) {
 	return uc.getUploadStatus(ctx, uploadID, userID, nil)
 }
 
-func (uc *tusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID string, userID string) (offset int64, length int64, err error) {
+func (uc *tusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID, userID string) (offset, length int64, err error) {
 	return uc.getUploadStatus(ctx, uploadID, userID, &projectID)
 }
 
-func (uc *tusUploadUsecase) getUploadStatus(ctx context.Context, uploadID string, userID string, projectID *uint) (offset int64, length int64, err error) {
+func (uc *tusUploadUsecase) getUploadStatus(ctx context.Context, uploadID, userID string, projectID *uint) (offset, length int64, err error) {
 	upload, err := uc.getOwnedUpload(ctx, uploadID, userID, projectID)
 	if err != nil {
 		return 0, 0, err
@@ -383,15 +383,15 @@ func (uc *tusUploadUsecase) getUploadStatus(ctx context.Context, uploadID string
 	return upload.CurrentOffset, upload.FileSize, nil
 }
 
-func (uc *tusUploadUsecase) CancelUpload(ctx context.Context, uploadID string, userID string) error {
+func (uc *tusUploadUsecase) CancelUpload(ctx context.Context, uploadID, userID string) error {
 	return uc.cancelUpload(ctx, uploadID, userID, nil)
 }
 
-func (uc *tusUploadUsecase) CancelProjectUpdateUpload(ctx context.Context, projectID uint, uploadID string, userID string) error {
+func (uc *tusUploadUsecase) CancelProjectUpdateUpload(ctx context.Context, projectID uint, uploadID, userID string) error {
 	return uc.cancelUpload(ctx, uploadID, userID, &projectID)
 }
 
-func (uc *tusUploadUsecase) cancelUpload(ctx context.Context, uploadID string, userID string, projectID *uint) error {
+func (uc *tusUploadUsecase) cancelUpload(ctx context.Context, uploadID, userID string, projectID *uint) error {
 	upload, err := uc.getOwnedUpload(ctx, uploadID, userID, projectID)
 	if err != nil {
 		return err
@@ -413,7 +413,7 @@ func (uc *tusUploadUsecase) cancelUpload(ctx context.Context, uploadID string, u
 	return nil
 }
 
-func (uc *tusUploadUsecase) getOwnedUpload(ctx context.Context, uploadID string, userID string, projectID *uint) (*domain.TusUpload, error) {
+func (uc *tusUploadUsecase) getOwnedUpload(ctx context.Context, uploadID, userID string, projectID *uint) (*domain.TusUpload, error) {
 	upload, err := uc.tusUploadRepo.GetByID(ctx, uploadID)
 	if err != nil {
 		return nil, apperrors.NewNotFoundError("Upload")

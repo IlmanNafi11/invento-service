@@ -1,10 +1,9 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
-
-	"invento-service/internal/dto"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -35,7 +35,7 @@ func GenerateTestRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 }
 
 // GenerateTestToken generates a valid JWT test token
-func GenerateTestToken(userID string, email, role string) string {
+func GenerateTestToken(userID, email, role string) string {
 	privateKey, _, err := GenerateTestRSAKeys()
 	if err != nil {
 		panic(fmt.Sprintf("failed to generate test keys: %v", err))
@@ -66,7 +66,7 @@ func GenerateTestToken(userID string, email, role string) string {
 }
 
 // GenerateTestTokenWithRoleID generates a test token with a specific role ID
-func GenerateTestTokenWithRoleID(userID string, email, role string, roleID int) string {
+func GenerateTestTokenWithRoleID(userID, email, role string, roleID int) string {
 	privateKey, _, err := GenerateTestRSAKeys()
 	if err != nil {
 		panic(fmt.Sprintf("failed to generate test keys: %v", err))
@@ -134,7 +134,7 @@ func GenerateInvalidToken() string {
 }
 
 // GenerateTokenWithCustomExpiration generates a token with custom expiration
-func GenerateTokenWithCustomExpiration(userID string, email, role string, expiration time.Duration) string {
+func GenerateTokenWithCustomExpiration(userID, email, role string, expiration time.Duration) string {
 	privateKey, _, err := GenerateTestRSAKeys()
 	if err != nil {
 		panic(fmt.Sprintf("failed to generate test keys: %v", err))

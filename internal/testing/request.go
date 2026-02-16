@@ -45,7 +45,7 @@ func MakeRequest(app *fiber.App, method, path string, body interface{}, token st
 }
 
 // MakeAuthenticatedRequest creates a request with authentication token
-func MakeAuthenticatedRequest(app *fiber.App, method, path string, body interface{}, userID string, email, role string) *http.Response {
+func MakeAuthenticatedRequest(app *fiber.App, method, path string, body interface{}, userID, email, role string) *http.Response {
 	token := GenerateTestToken(userID, email, role)
 	return MakeRequest(app, method, path, body, token)
 }
@@ -112,7 +112,7 @@ func MakeRequestWithCookie(app *fiber.App, method, path string, body interface{}
 }
 
 // MakeMultipartRequest creates a multipart form data request
-func MakeMultipartRequest(app *fiber.App, method, path string, body *bytes.Buffer, contentType string, token string) *http.Response {
+func MakeMultipartRequest(app *fiber.App, method, path string, body *bytes.Buffer, contentType, token string) *http.Response {
 	req := httptest.NewRequest(method, path, body)
 	req.Header.Set("Content-Type", contentType)
 

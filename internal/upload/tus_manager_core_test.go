@@ -1,12 +1,12 @@
 package upload_test
 
 import (
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 )
 
 // ==================== TusManager Tests ====================

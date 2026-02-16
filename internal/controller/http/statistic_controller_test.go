@@ -24,7 +24,7 @@ type MockStatisticUsecase struct {
 	mock.Mock
 }
 
-func (m *MockStatisticUsecase) GetStatistics(ctx context.Context, userID string, userRole string) (*dto.StatisticData, error) {
+func (m *MockStatisticUsecase) GetStatistics(ctx context.Context, userID, userRole string) (*dto.StatisticData, error) {
 	args := m.Called(ctx, userID, userRole)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

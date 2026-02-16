@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"invento-service/config"
+	"invento-service/internal/httputil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"invento-service/config"
 	httpcontroller "invento-service/internal/controller/http"
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/httputil"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"

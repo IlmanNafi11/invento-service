@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	"invento-service/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"invento-service/config"
 	app "invento-service/internal/app"
 )
 

@@ -3,23 +3,23 @@ package usecase
 import (
 	"context"
 	"errors"
-	"mime/multipart"
-	"strconv"
-
 	"invento-service/config"
 	"invento-service/internal/dto"
-	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/rbac"
 	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
+	"mime/multipart"
+	"strconv"
+
+	apperrors "invento-service/internal/errors"
 
 	"gorm.io/gorm"
 )
 
 type UserUsecase interface {
 	GetUserList(ctx context.Context, params dto.UserListQueryParams) (*dto.UserListData, error)
-	UpdateUserRole(ctx context.Context, userID string, roleName string) error
+	UpdateUserRole(ctx context.Context, userID, roleName string) error
 	DeleteUser(ctx context.Context, userID string) error
 	GetUserFiles(ctx context.Context, userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error)
 	GetProfile(ctx context.Context, userID string) (*dto.ProfileData, error)
@@ -82,7 +82,7 @@ func (uc *userUsecase) GetUserList(ctx context.Context, params dto.UserListQuery
 	}, nil
 }
 
-func (uc *userUsecase) UpdateUserRole(ctx context.Context, userID string, roleName string) error {
+func (uc *userUsecase) UpdateUserRole(ctx context.Context, userID, roleName string) error {
 	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

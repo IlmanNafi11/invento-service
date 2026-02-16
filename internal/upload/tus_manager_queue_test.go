@@ -2,14 +2,14 @@ package upload_test
 
 import (
 	"bytes"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"path/filepath"
 	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 )
 
 func TestTusManager_GetUploadProgress_Success(t *testing.T) {

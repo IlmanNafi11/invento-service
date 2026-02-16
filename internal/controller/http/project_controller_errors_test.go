@@ -3,6 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	"fmt"
+	"invento-service/internal/dto"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/dto"
+
 	app_testing "invento-service/internal/testing"
 )
 

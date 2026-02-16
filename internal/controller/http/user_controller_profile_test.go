@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"invento-service/internal/dto"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -12,7 +13,7 @@ import (
 	"time"
 
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/dto"
+
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
 

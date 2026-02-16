@@ -3,13 +3,13 @@ package usecase
 import (
 	"context"
 	"errors"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
-	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/rbac"
 	"invento-service/internal/usecase/repo"
+
+	apperrors "invento-service/internal/errors"
 
 	"gorm.io/gorm"
 )

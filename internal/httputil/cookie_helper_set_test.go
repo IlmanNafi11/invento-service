@@ -1,11 +1,10 @@
 package httputil_test
 
 import (
-	"net/http"
-	"testing"
-
 	"invento-service/config"
 	"invento-service/internal/httputil"
+	"net/http"
+	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

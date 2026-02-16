@@ -5,11 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"invento-service/internal/domain"
 	"io"
 	"net/http"
 	"time"
-
-	"invento-service/internal/domain"
 )
 
 var _ domain.AuthService = (*AuthService)(nil)
@@ -201,7 +200,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*d
 	}, nil
 }
 
-func (s *AuthService) RequestPasswordReset(ctx context.Context, email string, redirectTo string) error {
+func (s *AuthService) RequestPasswordReset(ctx context.Context, email, redirectTo string) error {
 	body := map[string]interface{}{
 		"email":       email,
 		"redirect_to": redirectTo,

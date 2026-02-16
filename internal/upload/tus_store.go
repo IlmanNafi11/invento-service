@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"invento-service/internal/storage"
 	"io"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
-
-	"invento-service/internal/storage"
 )
 
 type TusStore struct {
@@ -154,7 +153,7 @@ func (ts *TusStore) GetInfo(uploadID string) (TusFileInfo, error) {
 	return info, nil
 }
 
-func (ts *TusStore) FinalizeUpload(uploadID string, finalPath string) error {
+func (ts *TusStore) FinalizeUpload(uploadID, finalPath string) error {
 	lock := ts.getLock(uploadID)
 	lock.Lock()
 	defer lock.Unlock()

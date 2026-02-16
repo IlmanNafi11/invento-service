@@ -2,11 +2,10 @@ package storage
 
 import (
 	"fmt"
+	"invento-service/config"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"invento-service/config"
 )
 
 type PathResolver struct {
@@ -46,12 +45,12 @@ func (pr *PathResolver) GetProjectPath(userID string) string {
 	return filepath.Join(basePath, "projects", userID)
 }
 
-func (pr *PathResolver) GetProjectFilePath(userID string, identifier string, filename string) string {
+func (pr *PathResolver) GetProjectFilePath(userID, identifier, filename string) string {
 	basePath := pr.GetBasePath()
 	return filepath.Join(basePath, "projects", userID, identifier, filename)
 }
 
-func (pr *PathResolver) GetProjectDirectory(userID string, identifier string) string {
+func (pr *PathResolver) GetProjectDirectory(userID, identifier string) string {
 	basePath := pr.GetBasePath()
 	return filepath.Join(basePath, "projects", userID, identifier)
 }
@@ -99,7 +98,7 @@ func (pr *PathResolver) GetProfilPath(userID string) string {
 	return filepath.Join(basePath, "profil", userID)
 }
 
-func (pr *PathResolver) GetProfilFilePath(userID string, filename string) string {
+func (pr *PathResolver) GetProfilFilePath(userID, filename string) string {
 	basePath := pr.GetBasePath()
 	return filepath.Join(basePath, "profil", userID, filename)
 }
@@ -114,7 +113,7 @@ func (pr *PathResolver) GetModulPath(userID uint, identifier string) string {
 	return filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), identifier)
 }
 
-func (pr *PathResolver) GetModulFilePath(userID uint, identifier string, filename string) string {
+func (pr *PathResolver) GetModulFilePath(userID uint, identifier, filename string) string {
 	basePath := pr.GetBasePath()
 	return filepath.Join(basePath, "moduls", fmt.Sprintf("%d", userID), identifier, filename)
 }

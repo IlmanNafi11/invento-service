@@ -2,10 +2,9 @@ package storage
 
 import (
 	"fmt"
+	"invento-service/config"
 	"os"
 	"path/filepath"
-
-	"invento-service/config"
 )
 
 type FileManager struct {
@@ -40,7 +39,7 @@ func (fm *FileManager) GetUserUploadPath(userID string) (string, error) {
 	return userDirPath, nil
 }
 
-func (fm *FileManager) CreateProjectUploadDirectory(userID string) (uploadDir string, randomDir string, err error) {
+func (fm *FileManager) CreateProjectUploadDirectory(userID string) (uploadDir, randomDir string, err error) {
 	randomDir, err = fm.GenerateRandomDirectory()
 	if err != nil {
 		return "", "", fmt.Errorf("gagal generate random directory: %w", err)
@@ -60,7 +59,7 @@ func (fm *FileManager) CreateProjectUploadDirectory(userID string) (uploadDir st
 	return projectDirPath, randomDir, nil
 }
 
-func (fm *FileManager) GetProjectFilePath(userID string, randomDir, filename string) string {
+func (fm *FileManager) GetProjectFilePath(userID, randomDir, filename string) string {
 	var basePath string
 
 	if fm.config.App.Env == config.EnvProduction {
@@ -86,7 +85,7 @@ func (fm *FileManager) DeleteUserDirectory(userID string) error {
 	return os.RemoveAll(userDirPath)
 }
 
-func (fm *FileManager) DeleteProjectDirectory(userID string, randomDir string) error {
+func (fm *FileManager) DeleteProjectDirectory(userID, randomDir string) error {
 	var basePath string
 
 	if fm.config.App.Env == config.EnvProduction {
@@ -130,7 +129,7 @@ func (fm *FileManager) GetUserModulPath(userID string) (string, error) {
 	return userModulPath, nil
 }
 
-func (fm *FileManager) CreateModulUploadDirectory(userID string) (uploadDir string, randomDir string, err error) {
+func (fm *FileManager) CreateModulUploadDirectory(userID string) (uploadDir, randomDir string, err error) {
 	randomDir, err = GenerateRandomString(10)
 	if err != nil {
 		return "", "", fmt.Errorf("gagal generate random directory: %w", err)
@@ -150,12 +149,12 @@ func (fm *FileManager) CreateModulUploadDirectory(userID string) (uploadDir stri
 	return modulDirPath, randomDir, nil
 }
 
-func (fm *FileManager) GetModulFilePath(userID string, randomDir, filename string) string {
+func (fm *FileManager) GetModulFilePath(userID, randomDir, filename string) string {
 	basePath := fm.GetModulBasePath()
 	return filepath.Join(basePath, "moduls", userID, randomDir, filename)
 }
 
-func (fm *FileManager) DeleteModulDirectory(userID string, randomDir string) error {
+func (fm *FileManager) DeleteModulDirectory(userID, randomDir string) error {
 	basePath := fm.GetModulBasePath()
 	modulDirPath := filepath.Join(basePath, "moduls", userID, randomDir)
 	return os.RemoveAll(modulDirPath)

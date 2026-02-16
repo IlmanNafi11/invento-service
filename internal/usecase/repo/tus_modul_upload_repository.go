@@ -2,9 +2,8 @@ package repo
 
 import (
 	"context"
-	"time"
-
 	"invento-service/internal/domain"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -54,13 +53,13 @@ func (r *tusModulUploadRepository) UpdateOffset(ctx context.Context, id string, 
 		}).Error
 }
 
-func (r *tusModulUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (r *tusModulUploadRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	return r.db.WithContext(ctx).Model(&domain.TusModulUpload{}).
 		Where("id = ?", id).
 		Update("status", status).Error
 }
 
-func (r *tusModulUploadRepository) Complete(ctx context.Context, id string, modulID string, filePath string) error {
+func (r *tusModulUploadRepository) Complete(ctx context.Context, id, modulID, filePath string) error {
 	now := time.Now()
 	return r.db.WithContext(ctx).Model(&domain.TusModulUpload{}).
 		Where("id = ?", id).

@@ -2,6 +2,8 @@ package upload_test
 
 import (
 	"bytes"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,8 +11,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 )
 
 // ==================== TusManager Additional Tests ====================

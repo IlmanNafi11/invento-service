@@ -2,10 +2,9 @@ package repo_test
 
 import (
 	"context"
+	"invento-service/internal/domain"
 	"testing"
 	"time"
-
-	"invento-service/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -51,7 +50,7 @@ func (m *MockTusUploadRepository) UpdateUpload(ctx context.Context, upload *doma
 	return args.Error(0)
 }
 
-func (m *MockTusUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (m *MockTusUploadRepository) UpdateStatus(ctx context.Context, id, status string) error {
 	args := m.Called(ctx, id, status)
 	return args.Error(0)
 }
@@ -72,7 +71,7 @@ func (m *MockTusUploadRepository) GetAbandonedUploads(ctx context.Context, timeo
 	return args.Get(0).([]domain.TusUpload), args.Error(1)
 }
 
-func (m *MockTusUploadRepository) GetByUserIDAndStatus(ctx context.Context, userID string, status string) ([]domain.TusUpload, error) {
+func (m *MockTusUploadRepository) GetByUserIDAndStatus(ctx context.Context, userID, status string) ([]domain.TusUpload, error) {
 	args := m.Called(ctx, userID, status)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
