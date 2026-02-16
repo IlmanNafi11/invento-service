@@ -11,9 +11,9 @@ This roadmap transforms invento-service from a working-but-rough `fiber-boiler-p
 - [x] **Phase 1: Foundation & Rename** - Establish correct module identity, eliminate crashes, and set safety baselines
 - [x] **Phase 2: Memory & Performance Tuning** - Optimize runtime configuration for the 500MB RAM constraint (completed 2026-02-16)
 - [x] **Phase 3: Code Quality Standardization** - Standardize logging, error handling, and response patterns (completed 2026-02-16)
-- [ ] **Phase 4: Architecture Restructuring** - Decompose the helper god-package into focused, single-responsibility packages
+- [x] **Phase 4: Architecture Restructuring** - Decompose the helper god-package into focused, single-responsibility packages (completed 2026-02-16)
 - [x] **Phase 5: Deep Architecture Improvements** - Propagate context through all layers and enforce file size limits (completed 2026-02-16)
-- [ ] **Phase 6: Polish & Verification** - Remove dead code, verify memory under load, and finalize documentation
+- [x] **Phase 6: Polish & Verification** - Remove dead code, verify memory under load, and finalize documentation (completed 2026-02-16)
 
 ## Phase Details
 
@@ -245,8 +245,8 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
 | 1. Foundation & Rename | 5/5 | Complete | 2026-02-15 |
-| 2. Memory & Performance Tuning | 0/2 | Complete    | 2026-02-16 |
-| 3. Code Quality Standardization | 0/3 | Complete    | 2026-02-16 |
-| 4. Architecture Restructuring | 0/6 | Planned | - |
-| 5. Deep Architecture Improvements | 8/10 | Complete    | 2026-02-16 |
-| 6. Polish & Verification | 0/6 | Planned | - |
+| 2. Memory & Performance Tuning | 2/2 | Complete | 2026-02-16 |
+| 3. Code Quality Standardization | 3/3 | Complete | 2026-02-16 |
+| 4. Architecture Restructuring | 6/6 | Complete | 2026-02-16 |
+| 5. Deep Architecture Improvements | 10/10 | Complete | 2026-02-16 |
+| 6. Polish & Verification | 6/6 | Complete | 2026-02-16 |
