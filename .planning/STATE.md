@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 5 of 6 (Deep Architecture Improvements)
-Plan: 1 of 8 complete
+Plan: 2 of 8 complete
 Status: In Progress
-Last activity: 2026-02-16 -- Plan 05-01 (DTO foundation, routes extraction, ErrorHandler) complete
+Last activity: 2026-02-16 -- Plan 05-02 (DTO migration for all domain types) complete
 
-Progress: [█░░░░░░░░░] 13% (1/8 plans)
+Progress: [██░░░░░░░░] 25% (2/8 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: ~8min
-- Total execution time: ~2.1 hours
+- Total execution time: ~2.3 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [█░░░░░░░░░] 13% (1/8 plans)
 | 02-memory-performance-tuning | 2 | ~12min | ~6min |
 | 03-code-quality-standardization | 3 | ~25min | ~8min |
 | 04-architecture-restructuring | 6 | ~55min | ~9min |
-| 05-deep-architecture-improvements | 1 | ~15min | ~15min |
+| 05-deep-architecture-improvements | 2 | ~30min | ~15min |
 
 **Recent Trend:**
-- Last 5 plans: 04-04, 04-05, 04-06, 05-01
-- Trend: Stable ~8-15min per plan
+- Last 5 plans: 04-05, 04-06, 05-01, 05-02
+- Trend: Stable ~10-15min per plan
 
 ## Accumulated Context
 
@@ -82,6 +82,9 @@ Recent decisions affecting current work:
 - [05-01]: Route registration extracted from server.go into routes.go with routeDeps struct
 - [05-01]: Centralized ErrorHandler uses errors.As for AppError + fiber.Error with dto.ErrorResponse format
 
+- [05-02]: All domain-specific request/response types migrated to dto/ package (auth, user, role, project, modul, stat, health, TUS)
+- [05-02]: Repository interfaces keep domain types; controllers and usecases use dto types
+
 ### Pending Todos
 
 None yet.
@@ -94,5 +97,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 05-01-PLAN.md — Wave 1 done
+Stopped at: Completed 05-02-PLAN.md — Wave 2 done
 Resume file: None
