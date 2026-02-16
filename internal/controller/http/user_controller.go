@@ -339,6 +339,18 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 }
 
 // GetUsersForRole handles GET /api/v1/role/:id/users - Get users for a specific role
+// @Summary Get users for a specific role
+// @Description Mendapatkan daftar user yang memiliki role tertentu berdasarkan role ID
+// @Tags Role Management
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Role ID"
+// @Success 200 {object} dto.SuccessResponse "Daftar user untuk role berhasil diambil"
+// @Failure 400 {object} dto.ErrorResponse "ID role tidak valid"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Role tidak ditemukan"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /role/{id}/users [get]
 func (ctrl *UserController) GetUsersForRole(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	id, err := ctrl.ParsePathID(c)
@@ -359,6 +371,21 @@ func (ctrl *UserController) GetUsersForRole(c *fiber.Ctx) error {
 }
 
 // BulkAssignRole handles POST /api/v1/role/:id/users/bulk - Assign role to multiple users
+// @Summary Bulk assign role to users
+// @Description Menetapkan role tertentu ke beberapa user sekaligus berdasarkan daftar user ID
+// @Tags Role Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Role ID"
+// @Param request body dto.BulkAssignRoleRequest true "Daftar user ID"
+// @Success 200 {object} dto.SuccessResponse "Role berhasil ditetapkan ke user"
+// @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Role tidak ditemukan"
+// @Failure 422 {object} dto.ErrorResponse "Validasi gagal"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /role/{id}/users/bulk [post]
 func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	id, err := ctrl.ParsePathID(c)
