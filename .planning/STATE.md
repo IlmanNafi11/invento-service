@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** File storage that is reliable and resource-efficient on a 500MB RAM server -- upload, store, and download student files without failure.
-**Current focus:** Phase 4 in progress — Architecture Restructuring
+**Current focus:** Phase 5 in progress — Deep Architecture Improvements
 
 ## Current Position
 
-Phase: 4 of 6 (Architecture Restructuring)
-Plan: 4 of 6 complete
+Phase: 5 of 6 (Deep Architecture Improvements)
+Plan: 1 of 8 complete
 Status: In Progress
-Last activity: 2026-02-16 -- Plan 04-04 (extract middleware functions) complete
+Last activity: 2026-02-16 -- Plan 05-01 (DTO foundation, routes extraction, ErrorHandler) complete
 
-Progress: [██████░░░░] 67% (4/6 plans)
+Progress: [█░░░░░░░░░] 13% (1/8 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 17
 - Average duration: ~8min
-- Total execution time: ~1.8 hours
+- Total execution time: ~2.1 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [██████░░░░] 67% (4/6 plans)
 | 01-foundation-rename | 5 | ~40min | ~8min |
 | 02-memory-performance-tuning | 2 | ~12min | ~6min |
 | 03-code-quality-standardization | 3 | ~25min | ~8min |
-| 04-architecture-restructuring | 4 | ~45min | ~11min |
+| 04-architecture-restructuring | 6 | ~55min | ~9min |
+| 05-deep-architecture-improvements | 1 | ~15min | ~15min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03, 04-01, 04-02, 04-03, 04-04
+- Last 5 plans: 04-04, 04-05, 04-06, 05-01
 - Trend: Stable ~8-15min per plan
 
 ## Accumulated Context
@@ -74,6 +75,13 @@ Recent decisions affecting current work:
 - [04-04]: rbac_middleware.go filename avoids confusion with internal/rbac/ package
 - [04-04]: server.go keeps helper import for TUS store/queue/manager symbols
 
+- [04-06]: ValidatePolijeEmail inlined as private function in auth_usecase.go (single consumer, no separate package)
+- [04-06]: internal/helper/ fully deleted — god-package decomposition complete
+
+- [05-01]: Response types (BaseResponse, SuccessResponse, ErrorResponse, etc.) migrated from domain/ to dto/ with copier mapper
+- [05-01]: Route registration extracted from server.go into routes.go with routeDeps struct
+- [05-01]: Centralized ErrorHandler uses errors.As for AppError + fiber.Error with dto.ErrorResponse format
+
 ### Pending Todos
 
 None yet.
@@ -86,5 +94,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 04-04-PLAN.md
+Stopped at: Completed 05-01-PLAN.md — Wave 1 done
 Resume file: None
