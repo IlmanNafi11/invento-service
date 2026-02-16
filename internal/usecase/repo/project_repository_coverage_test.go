@@ -3,6 +3,7 @@ package repo_test
 import (
 	"context"
 	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
 	"testing"
@@ -247,4 +248,43 @@ func TestProjectRepository_Delete_Success(t *testing.T) {
 	var deletedProject domain.Project
 	err = db.First(&deletedProject, project.ID).Error
 	assert.Error(t, err)
+}
+
+func TestProjectRepository_GetByID_NotFound(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	projectRepo := repo.NewProjectRepository(db)
+	ctx := context.Background()
+	result, err := projectRepo.GetByID(ctx, 99999)
+	assert.ErrorIs(t, err, apperrors.ErrRecordNotFound)
+	assert.Nil(t, result)
+}
+
+func TestProjectRepository_GetByIDs_Empty(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	projectRepo := repo.NewProjectRepository(db)
+	ctx := context.Background()
+	result, err := projectRepo.GetByIDs(ctx, []uint{}, "user-1")
+	assert.NoError(t, err)
+	assert.Empty(t, result)
+}
+
+func TestProjectRepository_CountByUserID_NoProjects(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	projectRepo := repo.NewProjectRepository(db)
+	ctx := context.Background()
+	count, err := projectRepo.CountByUserID(ctx, "nonexistent-user")
+	assert.NoError(t, err)
+	assert.Equal(t, 0, count)
 }

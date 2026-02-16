@@ -3,6 +3,7 @@ package repo_test
 import (
 	"context"
 	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
 	"testing"
@@ -268,4 +269,42 @@ func TestModulRepository_UpdateMetadata_Success(t *testing.T) {
 	assert.Equal(t, "Updated Deskripsi", updatedModul.Deskripsi)
 	// FilePath should remain unchanged
 	assert.Equal(t, "/test/modul", updatedModul.FilePath)
+}
+
+func TestModulRepository_GetByID_NotFound(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
+	ctx := context.Background()
+	result, err := modulRepo.GetByID(ctx, "nonexistent-id")
+	assert.ErrorIs(t, err, apperrors.ErrRecordNotFound)
+	assert.Nil(t, result)
+}
+
+func TestModulRepository_CountByUserID_NoModuls(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
+	ctx := context.Background()
+	count, err := modulRepo.CountByUserID(ctx, "nonexistent-user")
+	assert.NoError(t, err)
+	assert.Equal(t, 0, count)
+}
+
+func TestModulRepository_Delete_Nonexistent(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
+	ctx := context.Background()
+	err = modulRepo.Delete(ctx, "nonexistent-id")
+	assert.NoError(t, err)
 }

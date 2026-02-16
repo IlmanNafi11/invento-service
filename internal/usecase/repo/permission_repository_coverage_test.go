@@ -131,9 +131,10 @@ func TestPermissionRepository_GetAvailablePermissions_Success(t *testing.T) {
 
 	// Verify structure
 	for _, resourcePerm := range result {
-		if resourcePerm.Name == "users" {
+		switch resourcePerm.Name {
+		case "users":
 			assert.Len(t, resourcePerm.Permissions, 2)
-		} else if resourcePerm.Name == "projects" {
+		case "projects":
 			assert.Len(t, resourcePerm.Permissions, 2)
 		}
 	}
@@ -227,4 +228,30 @@ func TestPermissionRepository_GetAllByResourceActions_NotFound(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Empty(t, result)
+}
+
+func TestPermissionRepository_GetByID_NotFound(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	permissionRepo := repo.NewPermissionRepository(db)
+	ctx := context.Background()
+	result, err := permissionRepo.GetByID(ctx, 99999)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+}
+
+func TestPermissionRepository_GetByResourceAndAction_NotFound(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	permissionRepo := repo.NewPermissionRepository(db)
+	ctx := context.Background()
+	result, err := permissionRepo.GetByResourceAndAction(ctx, "nonexistent", "action")
+	assert.Error(t, err)
+	assert.Nil(t, result)
 }

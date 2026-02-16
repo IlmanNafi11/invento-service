@@ -161,3 +161,29 @@ func TestRoleRepository_GetAll_Success(t *testing.T) {
 	assert.Len(t, result, 2)
 	assert.Equal(t, 3, total)
 }
+
+func TestRoleRepository_GetByID_NotFound(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	roleRepo := repo.NewRoleRepository(db)
+	ctx := context.Background()
+	result, err := roleRepo.GetByID(ctx, 99999)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+}
+
+func TestRoleRepository_GetByName_NotFound(t *testing.T) {
+	t.Parallel()
+	db, err := testhelper.SetupTestDatabase()
+	require.NoError(t, err)
+	defer testhelper.TeardownTestDatabase(db)
+
+	roleRepo := repo.NewRoleRepository(db)
+	ctx := context.Background()
+	result, err := roleRepo.GetByName(ctx, "NonExistentRole")
+	assert.Error(t, err)
+	assert.Nil(t, result)
+}
