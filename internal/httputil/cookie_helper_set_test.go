@@ -11,6 +11,7 @@ import (
 )
 
 func TestNewCookieHelper(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Env: "development",
@@ -23,6 +24,7 @@ func TestNewCookieHelper(t *testing.T) {
 }
 
 func TestCookieHelper_SetRefreshTokenCookie(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		env    string
@@ -90,6 +92,7 @@ func TestCookieHelper_SetRefreshTokenCookie(t *testing.T) {
 }
 
 func TestCookieHelper_SetRefreshTokenCookie_Properties(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Env: "development",
@@ -126,6 +129,7 @@ func TestCookieHelper_SetRefreshTokenCookie_Properties(t *testing.T) {
 }
 
 func TestCookieHelper_ClearRefreshTokenCookie(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		env    string
@@ -205,6 +209,7 @@ func TestCookieHelper_ClearRefreshTokenCookie(t *testing.T) {
 }
 
 func TestCookieHelper_SetAccessTokenCookie(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{App: config.AppConfig{Env: "development"}}
 	cookieHelper := httputil.NewCookieHelper(cfg)
 	app := fiber.New()
@@ -233,6 +238,7 @@ func TestCookieHelper_SetAccessTokenCookie(t *testing.T) {
 }
 
 func TestCookieHelper_MaxAgeCalculation(t *testing.T) {
+	t.Parallel()
 	expectedMaxAge := 0
 
 	cfg := &config.Config{

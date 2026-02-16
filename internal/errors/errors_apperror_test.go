@@ -12,6 +12,7 @@ import (
 
 // TestAppError_Error tests the Error() method implementation.
 func TestAppError_Error(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		appError *AppError
@@ -43,6 +44,7 @@ func TestAppError_Error(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := tt.appError.Error()
 			assert.Equal(t, tt.expected, result)
 		})
@@ -51,6 +53,7 @@ func TestAppError_Error(t *testing.T) {
 
 // TestAppError_Unwrap tests the Unwrap() method implementation.
 func TestAppError_Unwrap(t *testing.T) {
+	t.Parallel()
 	internalErr := fmt.Errorf("internal error")
 	appErr := &AppError{
 		Code:       ErrInternal,
@@ -66,6 +69,7 @@ func TestAppError_Unwrap(t *testing.T) {
 
 // TestAppError_Unwrap_Nil tests Unwrap() when internal error is nil.
 func TestAppError_Unwrap_Nil(t *testing.T) {
+	t.Parallel()
 	appErr := &AppError{
 		Code:       ErrValidation,
 		Message:    "Validation error",
@@ -80,6 +84,7 @@ func TestAppError_Unwrap_Nil(t *testing.T) {
 
 // TestErrorWrapping tests error wrapping and unwrapping with errors.Is and errors.As.
 func TestErrorWrapping(t *testing.T) {
+	t.Parallel()
 	// Create a wrapped error for testing
 	wrappedErr := fmt.Errorf("wrapped error")
 
@@ -110,6 +115,7 @@ func TestErrorWrapping(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Test errors.Is for unwrapping
 			if tt.wrappedErr != nil {
 				isMatch := errors.Is(tt.appError, tt.wrappedErr)
@@ -127,6 +133,7 @@ func TestErrorWrapping(t *testing.T) {
 
 // TestErrorAs tests error type assertion with errors.As.
 func TestErrorAs(t *testing.T) {
+	t.Parallel()
 	appErr := NewValidationError("test message", fmt.Errorf("internal"))
 
 	// Test errors.As can extract AppError
@@ -138,6 +145,7 @@ func TestErrorAs(t *testing.T) {
 
 // TestHTTPStatusCodes verifies all HTTP status codes are correct.
 func TestHTTPStatusCodes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		constructor    func() *AppError
@@ -224,6 +232,7 @@ func TestHTTPStatusCodes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := tt.constructor()
 			assert.Equal(t, tt.expectedStatus, result.HTTPStatus)
 		})
@@ -232,6 +241,7 @@ func TestHTTPStatusCodes(t *testing.T) {
 
 // TestErrorCodes verifies all error codes match constants.
 func TestErrorCodes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		constructor  func() *AppError
@@ -318,6 +328,7 @@ func TestErrorCodes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := tt.constructor()
 			assert.Equal(t, tt.expectedCode, result.Code)
 		})
@@ -326,6 +337,7 @@ func TestErrorCodes(t *testing.T) {
 
 // TestTimestampSet verifies timestamp is set on all errors.
 func TestTimestampSet(t *testing.T) {
+	t.Parallel()
 	before := time.Now()
 
 	// Test all constructors set timestamps

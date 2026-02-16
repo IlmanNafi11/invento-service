@@ -17,6 +17,7 @@ import (
 )
 
 func TestRoleUsecase_UpdateRole_RemovePermissionsError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -48,6 +49,7 @@ func TestRoleUsecase_UpdateRole_RemovePermissionsError(t *testing.T) {
 }
 
 func TestRoleUsecase_UpdateRole_EmptyPermissions(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -68,6 +70,7 @@ func TestRoleUsecase_UpdateRole_EmptyPermissions(t *testing.T) {
 }
 
 func TestRoleUsecase_UpdateRole_SameNameNoConflict(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -112,6 +115,7 @@ func TestRoleUsecase_UpdateRole_SameNameNoConflict(t *testing.T) {
 }
 
 func TestRoleUsecase_DeleteRole_DeleteRepoError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -137,6 +141,7 @@ func TestRoleUsecase_DeleteRole_DeleteRepoError(t *testing.T) {
 }
 
 func TestRoleUsecase_DeleteRole_SavePolicyError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -163,6 +168,7 @@ func TestRoleUsecase_DeleteRole_SavePolicyError(t *testing.T) {
 }
 
 func TestRoleUsecase_GetRoleDetail_PermissionRepoError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -185,6 +191,7 @@ func TestRoleUsecase_GetRoleDetail_PermissionRepoError(t *testing.T) {
 }
 
 func TestRoleUsecase_UpdateRole_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -250,6 +257,7 @@ func TestRoleUsecase_UpdateRole_Success(t *testing.T) {
 }
 
 func TestRoleUsecase_UpdateRole_NotFound(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -276,6 +284,7 @@ func TestRoleUsecase_UpdateRole_NotFound(t *testing.T) {
 }
 
 func TestRoleUsecase_UpdateRole_DuplicateName(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -306,6 +315,7 @@ func TestRoleUsecase_UpdateRole_DuplicateName(t *testing.T) {
 }
 
 func TestRoleUsecase_DeleteRole_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -333,6 +343,7 @@ func TestRoleUsecase_DeleteRole_Success(t *testing.T) {
 }
 
 func TestRoleUsecase_DeleteRole_NotFound(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -351,6 +362,7 @@ func TestRoleUsecase_DeleteRole_NotFound(t *testing.T) {
 }
 
 func TestRoleUsecase_DeleteRole_DBError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -369,6 +381,7 @@ func TestRoleUsecase_DeleteRole_DBError(t *testing.T) {
 }
 
 func TestRoleUsecase_DeleteRole_CasbinDeleteRoleError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)

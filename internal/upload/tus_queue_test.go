@@ -10,6 +10,7 @@ import (
 )
 
 func TestTusQueue_NewTusQueue_InitializesState(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(3)
 
 	require.NotNil(t, queue)
@@ -19,6 +20,7 @@ func TestTusQueue_NewTusQueue_InitializesState(t *testing.T) {
 }
 
 func TestTusQueue_Add_ActiveQueueAndDedupBehavior(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(2)
 
 	queue.Add("u1")
@@ -35,6 +37,7 @@ func TestTusQueue_Add_ActiveQueueAndDedupBehavior(t *testing.T) {
 }
 
 func TestTusQueue_GetActiveUploads_ReturnsAllActiveUploads(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(3)
 	queue.Add("u1")
 	queue.Add("u2")
@@ -43,6 +46,7 @@ func TestTusQueue_GetActiveUploads_ReturnsAllActiveUploads(t *testing.T) {
 }
 
 func TestTusQueue_HasActiveUpload_TrueAndFalseCases(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(1)
 	assert.False(t, queue.HasActiveUpload())
 
@@ -54,6 +58,7 @@ func TestTusQueue_HasActiveUpload_TrueAndFalseCases(t *testing.T) {
 }
 
 func TestTusQueue_GetQueueLength_ReturnsCorrectCount(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(1)
 	queue.Add("u1")
 	queue.Add("u2")
@@ -63,6 +68,7 @@ func TestTusQueue_GetQueueLength_ReturnsCorrectCount(t *testing.T) {
 }
 
 func TestTusQueue_GetQueuePosition_ReturnsActiveQueuedAndMissingPositions(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(1)
 	queue.Add("u1")
 	queue.Add("u2")
@@ -75,6 +81,7 @@ func TestTusQueue_GetQueuePosition_ReturnsActiveQueuedAndMissingPositions(t *tes
 }
 
 func TestTusQueue_Remove_RemovesFromActiveAndQueue(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(1)
 	queue.Add("u1")
 	queue.Add("u2")
@@ -91,6 +98,7 @@ func TestTusQueue_Remove_RemovesFromActiveAndQueue(t *testing.T) {
 }
 
 func TestTusQueue_FinishUpload_PromotesNextUpload(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(1)
 	queue.Add("u1")
 	queue.Add("u2")
@@ -111,6 +119,7 @@ func TestTusQueue_FinishUpload_PromotesNextUpload(t *testing.T) {
 }
 
 func TestTusQueue_CanAcceptUpload_RespectsMaxConcurrent(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(2)
 	assert.True(t, queue.CanAcceptUpload())
 
@@ -122,6 +131,7 @@ func TestTusQueue_CanAcceptUpload_RespectsMaxConcurrent(t *testing.T) {
 }
 
 func TestTusQueue_IsActiveUpload_ChecksActiveMap(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(1)
 	queue.Add("u1")
 
@@ -130,6 +140,7 @@ func TestTusQueue_IsActiveUpload_ChecksActiveMap(t *testing.T) {
 }
 
 func TestTusQueue_GetCurrentQueue_ReturnsCopy(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(1)
 	queue.Add("u1")
 	queue.Add("u2")
@@ -142,6 +153,7 @@ func TestTusQueue_GetCurrentQueue_ReturnsCopy(t *testing.T) {
 }
 
 func TestTusQueue_Clear_ResetsQueueAndActiveUploads(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(1)
 	queue.Add("u1")
 	queue.Add("u2")
@@ -155,6 +167,7 @@ func TestTusQueue_Clear_ResetsQueueAndActiveUploads(t *testing.T) {
 }
 
 func TestTusQueue_LoadFromDB_LoadsActiveThenQueueDeduplicated(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(2)
 	queue.LoadFromDB([]string{"u1", "u1", "u2", "u3", "u4"})
 
@@ -164,6 +177,7 @@ func TestTusQueue_LoadFromDB_LoadsActiveThenQueueDeduplicated(t *testing.T) {
 }
 
 func TestTusQueue_GetActiveCount_ReturnsCorrectCount(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(3)
 	assert.Equal(t, 0, queue.GetActiveCount())
 
@@ -173,6 +187,7 @@ func TestTusQueue_GetActiveCount_ReturnsCorrectCount(t *testing.T) {
 }
 
 func TestTusQueue_ConcurrentAccess_AddRemoveFinishUploadSafely(t *testing.T) {
+	t.Parallel()
 	queue := NewTusQueue(10)
 
 	ids := make([]string, 120)

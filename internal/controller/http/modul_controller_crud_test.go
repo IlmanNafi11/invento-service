@@ -74,6 +74,7 @@ func setAuthenticatedUser(c *fiber.Ctx, userID string, email, role string) {
 
 // TestModulController_GetList_Success tests successful retrieval of module list
 func TestModulController_GetList_Success(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -132,6 +133,7 @@ func TestModulController_GetList_Success(t *testing.T) {
 
 // TestModulController_GetList_WithSearchAndFilters tests with search and filters
 func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -185,6 +187,7 @@ func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 
 // TestModulController_GetList_Unauthorized tests unauthorized access
 func TestModulController_GetList_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -200,6 +203,7 @@ func TestModulController_GetList_Unauthorized(t *testing.T) {
 
 // TestModulController_UpdateMetadata_Success tests successful metadata update
 func TestModulController_UpdateMetadata_Success(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -231,6 +235,7 @@ func TestModulController_UpdateMetadata_Success(t *testing.T) {
 
 // TestModulController_UpdateMetadata_NotFound tests update on non-existent module
 func TestModulController_UpdateMetadata_NotFound(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -259,6 +264,7 @@ func TestModulController_UpdateMetadata_NotFound(t *testing.T) {
 
 // TestModulController_UpdateMetadata_ValidationError tests validation error
 func TestModulController_UpdateMetadata_ValidationError(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -283,6 +289,7 @@ func TestModulController_UpdateMetadata_ValidationError(t *testing.T) {
 
 // TestModulController_Delete_Success tests successful module deletion
 func TestModulController_Delete_Success(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -307,6 +314,7 @@ func TestModulController_Delete_Success(t *testing.T) {
 
 // TestModulController_Delete_NotFound tests deletion of non-existent module
 func TestModulController_Delete_NotFound(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -331,6 +339,7 @@ func TestModulController_Delete_NotFound(t *testing.T) {
 
 // TestModulController_Delete_Forbidden tests deletion of module owned by another user
 func TestModulController_Delete_Forbidden(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -355,6 +364,7 @@ func TestModulController_Delete_Forbidden(t *testing.T) {
 
 // TestModulController_Delete_InvalidID tests deletion with invalid ID
 func TestModulController_Delete_InvalidID(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()

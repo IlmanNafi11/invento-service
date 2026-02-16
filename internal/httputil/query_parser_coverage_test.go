@@ -10,6 +10,7 @@ import (
 
 // TestParsePaginationQuery_Success tests pagination query parsing
 func TestParsePaginationQuery_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	// Test default values
@@ -67,6 +68,7 @@ func TestParsePaginationQuery_Success(t *testing.T) {
 
 // TestParseSearchQuery_Success tests search query parsing
 func TestParseSearchQuery_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	// Test empty search
@@ -96,6 +98,7 @@ func TestParseSearchQuery_Success(t *testing.T) {
 
 // TestParseFilterQuery_Success tests filter query parsing
 func TestParseFilterQuery_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	// Test empty filter
@@ -125,6 +128,7 @@ func TestParseFilterQuery_Success(t *testing.T) {
 
 // TestParseIntQuery_Success tests integer query parsing
 func TestParseIntQuery_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	// Test default value
@@ -166,6 +170,7 @@ func TestParseIntQuery_Success(t *testing.T) {
 
 // TestParseBoolQuery_Success tests boolean query parsing
 func TestParseBoolQuery_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	// Test default value (false)

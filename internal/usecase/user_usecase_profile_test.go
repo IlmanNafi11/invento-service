@@ -15,6 +15,7 @@ import (
 )
 
 func TestUserUsecase_GetUserByID_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -67,6 +68,7 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 
 // TestGetUserByID_NotFound tests user retrieval when user doesn't exist
 func TestUserUsecase_GetUserByID_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -96,6 +98,7 @@ func TestUserUsecase_GetUserByID_NotFound(t *testing.T) {
 
 // TestListUsers_Success tests successful user list retrieval
 func TestUserUsecase_ListUsers_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -148,6 +151,7 @@ func TestUserUsecase_ListUsers_Success(t *testing.T) {
 
 // TestListUsers_WithSearchAndFilter tests user list retrieval with search and role filter
 func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -194,6 +198,7 @@ func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
 
 // TestUpdateUserProfile_Success tests successful user profile update
 func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -244,6 +249,7 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 
 // TestUpdateUserProfile_NotFound tests user profile update when user doesn't exist
 func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -277,6 +283,7 @@ func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
 
 // TestDeleteUser_Success tests successful user deletion
 func TestUserUsecase_DeleteUser_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -313,6 +320,7 @@ func TestUserUsecase_DeleteUser_Success(t *testing.T) {
 
 // TestDeleteUser_NotFound tests user deletion when user doesn't exist
 func TestUserUsecase_DeleteUser_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -341,6 +349,7 @@ func TestUserUsecase_DeleteUser_NotFound(t *testing.T) {
 
 // TestGetUserPermissions_Success tests successful user permissions retrieval
 func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -391,6 +400,7 @@ func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
 
 // TestUserUsecase_UpdateUserRole_Success tests successful role update
 func TestUserUsecase_UpdateUserRole_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -439,6 +449,7 @@ func TestUserUsecase_UpdateUserRole_Success(t *testing.T) {
 
 // TestUserUsecase_UpdateUserRole_UserNotFound tests user not found
 func TestUserUsecase_UpdateUserRole_UserNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)

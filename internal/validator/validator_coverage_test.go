@@ -14,6 +14,7 @@ import (
 
 // TestGetAllowedFileTypes_Success tests getting allowed file types
 func TestGetAllowedFileTypes_Success(t *testing.T) {
+	t.Parallel()
 	types := GetAllowedFileTypes()
 
 	assert.NotEmpty(t, types)
@@ -25,6 +26,7 @@ func TestGetAllowedFileTypes_Success(t *testing.T) {
 
 // TestGetMaxUploadSize_Success tests getting max upload size for different contexts
 func TestGetMaxUploadSize_Success(t *testing.T) {
+	t.Parallel()
 	size := GetMaxUploadSize("avatar")
 	assert.Equal(t, int64(2*1024*1024), size)
 
@@ -40,6 +42,7 @@ func TestGetMaxUploadSize_Success(t *testing.T) {
 
 // TestValidateFile_Success tests successful file validation
 func TestValidateFile_Success(t *testing.T) {
+	t.Parallel()
 	tmpfile, err := os.CreateTemp("", "test")
 	require.NoError(t, err)
 	defer os.Remove(tmpfile.Name())
@@ -59,6 +62,7 @@ func TestValidateFile_Success(t *testing.T) {
 
 // TestValidateFile_InvalidType tests file validation with invalid type
 func TestValidateFile_InvalidType(t *testing.T) {
+	t.Parallel()
 	fileHeader := &multipart.FileHeader{
 		Filename: "test.exe",
 		Size:     1024,
@@ -71,6 +75,7 @@ func TestValidateFile_InvalidType(t *testing.T) {
 
 // TestValidateFile_TooLarge tests file validation with size exceeded
 func TestValidateFile_TooLarge(t *testing.T) {
+	t.Parallel()
 	fileHeader := &multipart.FileHeader{
 		Filename: "test.pdf",
 		Size:     20 * 1024 * 1024,
@@ -83,6 +88,7 @@ func TestValidateFile_TooLarge(t *testing.T) {
 
 // TestValidateFile_NilHeader tests file validation with nil header
 func TestValidateFile_NilHeader(t *testing.T) {
+	t.Parallel()
 	err := ValidateFile(nil, []string{".pdf"}, 10*1024*1024)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "nil")
@@ -90,6 +96,7 @@ func TestValidateFile_NilHeader(t *testing.T) {
 
 // TestValidateFile_NotFileHeader tests validation with wrong type
 func TestValidateFile_NotFileHeader(t *testing.T) {
+	t.Parallel()
 	err := ValidateFile("string", []string{".pdf"}, 10*1024*1024)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not a FileHeader")
@@ -97,6 +104,7 @@ func TestValidateFile_NotFileHeader(t *testing.T) {
 
 // TestParseFormFile_Success tests successful form file parsing
 func TestParseFormFile_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Post("/test", func(c *fiber.Ctx) error {
@@ -115,6 +123,7 @@ func TestParseFormFile_Success(t *testing.T) {
 
 // TestValidateMultipartForm_Success tests successful multipart form validation
 func TestValidateMultipartForm_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Post("/test", func(c *fiber.Ctx) error {
@@ -131,6 +140,7 @@ func TestValidateMultipartForm_Success(t *testing.T) {
 
 // TestValidateMultipartForm_WithActualData tests with actual multipart data
 func TestValidateMultipartForm_WithActualData(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Post("/test", func(c *fiber.Ctx) error {
@@ -154,6 +164,7 @@ func TestValidateMultipartForm_WithActualData(t *testing.T) {
 
 // TestGetFileExtension tests getting file extension
 func TestGetFileExtension(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		filename string
 		expected string
@@ -179,6 +190,7 @@ func TestGetFileExtension(t *testing.T) {
 
 // TestValidateFile_AllowedTypesWildcard tests wildcard allowed types
 func TestValidateFile_AllowedTypesWildcard(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		filename     string
@@ -214,6 +226,7 @@ func TestValidateFile_AllowedTypesWildcard(t *testing.T) {
 
 // TestValidateFile_SizeVariations tests various file sizes
 func TestValidateFile_SizeVariations(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		size       int64
@@ -247,6 +260,7 @@ func TestValidateFile_SizeVariations(t *testing.T) {
 
 // TestValidateFile_MultipleExtensions tests handling multiple extensions
 func TestValidateFile_MultipleExtensions(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		filename     string
@@ -277,6 +291,7 @@ func TestValidateFile_MultipleExtensions(t *testing.T) {
 
 // TestValidateFile_ErrorMessages tests error message formats
 func TestValidateFile_ErrorMessages(t *testing.T) {
+	t.Parallel()
 	t.Run("InvalidTypeError", func(t *testing.T) {
 		fileHeader := &multipart.FileHeader{
 			Filename: "test.exe",
@@ -315,6 +330,7 @@ func TestValidateFile_ErrorMessages(t *testing.T) {
 
 // TestValidateFile_AllExtensions tests all common file extensions
 func TestValidateFile_AllExtensions(t *testing.T) {
+	t.Parallel()
 	extensions := []string{".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".zip", ".rar", ".jpg", ".jpeg", ".png"}
 
 	for _, ext := range extensions {
@@ -332,6 +348,7 @@ func TestValidateFile_AllExtensions(t *testing.T) {
 
 // TestValidateFile_NoDotInExtension tests extension without dot
 func TestValidateFile_NoDotInExtension(t *testing.T) {
+	t.Parallel()
 	fileHeader := &multipart.FileHeader{
 		Filename: "test.pdf",
 		Size:     1024,

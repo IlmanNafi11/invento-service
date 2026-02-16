@@ -162,6 +162,7 @@ func encodeTusMetadata(metadata map[string]string) string {
 // TestInitiateUpload_Success tests successful TUS upload initiation
 
 func TestInitiateUpload_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -213,6 +214,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 
 // TestInitiateUpload_InvalidHeaders tests missing TUS-Resumable header
 func TestInitiateUpload_InvalidHeaders(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -233,6 +235,7 @@ func TestInitiateUpload_InvalidHeaders(t *testing.T) {
 
 // TestInitiateUpload_InvalidTusVersion tests wrong TUS version
 func TestInitiateUpload_InvalidTusVersion(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -255,6 +258,7 @@ func TestInitiateUpload_InvalidTusVersion(t *testing.T) {
 
 // TestInitiateUpload_Unauthorized tests unauthorized access
 func TestInitiateUpload_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -273,6 +277,7 @@ func TestInitiateUpload_Unauthorized(t *testing.T) {
 
 // TestUploadChunk_Success tests successful chunk upload
 func TestUploadChunk_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -306,6 +311,7 @@ func TestUploadChunk_Success(t *testing.T) {
 
 // TestUploadChunk_InvalidOffset tests offset mismatch
 func TestUploadChunk_InvalidOffset(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -336,6 +342,7 @@ func TestUploadChunk_InvalidOffset(t *testing.T) {
 
 // TestUploadChunk_Unauthorized tests unauthorized chunk upload
 func TestUploadChunk_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -356,6 +363,7 @@ func TestUploadChunk_Unauthorized(t *testing.T) {
 
 // TestUploadChunk_InvalidContentType tests invalid content type
 func TestUploadChunk_InvalidContentType(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -380,6 +388,7 @@ func TestUploadChunk_InvalidContentType(t *testing.T) {
 
 // TestGetUploadStatus_Success tests HEAD for upload progress
 func TestGetUploadStatus_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -410,6 +419,7 @@ func TestGetUploadStatus_Success(t *testing.T) {
 
 // TestGetUploadStatus_NotFound tests non-existent upload
 func TestGetUploadStatus_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -435,6 +445,7 @@ func TestGetUploadStatus_NotFound(t *testing.T) {
 
 // TestGetUploadInfo_Success tests GET for upload metadata
 func TestGetUploadInfo_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)

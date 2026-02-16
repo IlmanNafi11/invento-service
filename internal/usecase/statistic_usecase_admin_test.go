@@ -135,6 +135,7 @@ func seedTestDB(db *gorm.DB, userCount, roleCount int) {
 // TestStatisticUsecase_GetStatistics_AllPermissionsGranted tests statistics retrieval when user has all permissions
 
 func TestStatisticUsecase_GetStatistics_AllPermissionsGranted(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -156,8 +157,8 @@ func TestStatisticUsecase_GetStatistics_AllPermissionsGranted(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(true, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(true, nil)
 
-	mockProjectRepo.On("CountByUserID", userID).Return(10, nil)
-	mockModulRepo.On("CountByUserID", userID).Return(25, nil)
+	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(10, nil)
+	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(25, nil)
 
 	result, err := userUC.GetStatistics(userID, userRole)
 
@@ -179,6 +180,7 @@ func TestStatisticUsecase_GetStatistics_AllPermissionsGranted(t *testing.T) {
 
 // TestStatisticUsecase_GetStatistics_OnlyProjectPermission tests statistics with only Project read permission
 func TestStatisticUsecase_GetStatistics_OnlyProjectPermission(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -199,7 +201,7 @@ func TestStatisticUsecase_GetStatistics_OnlyProjectPermission(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(false, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(false, nil)
 
-	mockProjectRepo.On("CountByUserID", userID).Return(5, nil)
+	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(5, nil)
 
 	result, err := userUC.GetStatistics(userID, userRole)
 
@@ -217,6 +219,7 @@ func TestStatisticUsecase_GetStatistics_OnlyProjectPermission(t *testing.T) {
 
 // TestStatisticUsecase_GetStatistics_OnlyModulPermission tests statistics with only Modul read permission
 func TestStatisticUsecase_GetStatistics_OnlyModulPermission(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -236,7 +239,7 @@ func TestStatisticUsecase_GetStatistics_OnlyModulPermission(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(false, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(false, nil)
 
-	mockModulRepo.On("CountByUserID", userID).Return(30, nil)
+	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(30, nil)
 
 	result, err := userUC.GetStatistics(userID, userRole)
 
@@ -254,6 +257,7 @@ func TestStatisticUsecase_GetStatistics_OnlyModulPermission(t *testing.T) {
 
 // TestStatisticUsecase_GetStatistics_OnlyUserPermission tests statistics with only User read permission
 func TestStatisticUsecase_GetStatistics_OnlyUserPermission(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -288,6 +292,7 @@ func TestStatisticUsecase_GetStatistics_OnlyUserPermission(t *testing.T) {
 
 // TestStatisticUsecase_GetStatistics_OnlyRolePermission tests statistics with only Role read permission
 func TestStatisticUsecase_GetStatistics_OnlyRolePermission(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -322,6 +327,7 @@ func TestStatisticUsecase_GetStatistics_OnlyRolePermission(t *testing.T) {
 
 // TestStatisticUsecase_GetStatistics_NoPermissions tests statistics when user has no read permissions
 func TestStatisticUsecase_GetStatistics_NoPermissions(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -356,6 +362,7 @@ func TestStatisticUsecase_GetStatistics_NoPermissions(t *testing.T) {
 
 // TestStatisticUsecase_GetStatistics_ProjectAndModulPermissions tests statistics with Project and Modul permissions
 func TestStatisticUsecase_GetStatistics_ProjectAndModulPermissions(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -375,8 +382,8 @@ func TestStatisticUsecase_GetStatistics_ProjectAndModulPermissions(t *testing.T)
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(false, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(false, nil)
 
-	mockProjectRepo.On("CountByUserID", userID).Return(12, nil)
-	mockModulRepo.On("CountByUserID", userID).Return(45, nil)
+	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(12, nil)
+	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(45, nil)
 
 	result, err := userUC.GetStatistics(userID, userRole)
 
@@ -396,6 +403,7 @@ func TestStatisticUsecase_GetStatistics_ProjectAndModulPermissions(t *testing.T)
 
 // TestStatisticUsecase_GetStatistics_UserAndRolePermissions tests statistics with User and Role permissions
 func TestStatisticUsecase_GetStatistics_UserAndRolePermissions(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -431,6 +439,7 @@ func TestStatisticUsecase_GetStatistics_UserAndRolePermissions(t *testing.T) {
 
 // TestStatisticUsecase_GetStatistics_EmptyDatabase tests statistics with empty database
 func TestStatisticUsecase_GetStatistics_EmptyDatabase(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -449,8 +458,8 @@ func TestStatisticUsecase_GetStatistics_EmptyDatabase(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(true, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(true, nil)
 
-	mockProjectRepo.On("CountByUserID", userID).Return(0, nil)
-	mockModulRepo.On("CountByUserID", userID).Return(0, nil)
+	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
+	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
 
 	result, err := userUC.GetStatistics(userID, userRole)
 

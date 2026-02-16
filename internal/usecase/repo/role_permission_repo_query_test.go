@@ -13,6 +13,7 @@ import (
 
 // TestRolePermissionRepository_GetPermissionsForRole_Success tests successful permission retrieval via JOIN
 func TestRolePermissionRepository_GetPermissionsForRole_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -58,6 +59,7 @@ func TestRolePermissionRepository_GetPermissionsForRole_Success(t *testing.T) {
 
 // TestRolePermissionRepository_GetPermissionsForRole_NoPermissions tests with role that has no permissions
 func TestRolePermissionRepository_GetPermissionsForRole_NoPermissions(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -75,6 +77,7 @@ func TestRolePermissionRepository_GetPermissionsForRole_NoPermissions(t *testing
 
 // TestRolePermissionRepository_GetPermissionsForRole_NonExistentRole tests with non-existent role
 func TestRolePermissionRepository_GetPermissionsForRole_NonExistentRole(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -87,6 +90,7 @@ func TestRolePermissionRepository_GetPermissionsForRole_NonExistentRole(t *testi
 
 // TestRolePermissionRepository_GetPermissionsForRole_MultipleRoles tests permissions are isolated per role
 func TestRolePermissionRepository_GetPermissionsForRole_MultipleRoles(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -155,6 +159,7 @@ func TestRolePermissionRepository_GetPermissionsForRole_MultipleRoles(t *testing
 
 // TestRolePermissionRepository_Integration_FullWorkflow tests complete workflow
 func TestRolePermissionRepository_Integration_FullWorkflow(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -217,6 +222,7 @@ func TestRolePermissionRepository_Integration_FullWorkflow(t *testing.T) {
 }
 
 func TestRolePermissionRepository_BulkCreate_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -247,6 +253,7 @@ func TestRolePermissionRepository_BulkCreate_Success(t *testing.T) {
 }
 
 func TestRolePermissionRepository_BulkCreate_Empty(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -258,6 +265,7 @@ func TestRolePermissionRepository_BulkCreate_Empty(t *testing.T) {
 }
 
 func TestRolePermissionRepository_BulkCreate_DuplicateKey(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)

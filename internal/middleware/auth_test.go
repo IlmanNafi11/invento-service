@@ -125,6 +125,7 @@ func (m *mockUserRepository) BulkUpdateRole(ctx context.Context, userIDs []strin
 var _ repo.UserRepository = (*mockUserRepository)(nil)
 
 func TestJWTAuthMiddleware_Creation(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{}
 	mockUser := &mockUserRepository{}
 	mw := middleware.SupabaseAuthMiddleware(mockAuth, mockUser, testCookieHelper())
@@ -133,6 +134,7 @@ func TestJWTAuthMiddleware_Creation(t *testing.T) {
 }
 
 func TestSupabaseAuthMiddleware_MissingAuthHeader_Returns401(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{}
 	mockUser := &mockUserRepository{}
 
@@ -150,6 +152,7 @@ func TestSupabaseAuthMiddleware_MissingAuthHeader_Returns401(t *testing.T) {
 }
 
 func TestSupabaseAuthMiddleware_InvalidTokenFormat_Returns401(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{}
 	mockUser := &mockUserRepository{}
 
@@ -183,6 +186,7 @@ func TestSupabaseAuthMiddleware_InvalidTokenFormat_Returns401(t *testing.T) {
 }
 
 func TestSupabaseAuthMiddleware_InvalidToken_Returns401(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{
 		verifyJWTFunc: func(accessToken string) (domain.AuthClaims, error) {
 			return nil, errors.New("invalid token")
@@ -205,6 +209,7 @@ func TestSupabaseAuthMiddleware_InvalidToken_Returns401(t *testing.T) {
 }
 
 func TestSupabaseAuthMiddleware_ValidTokenWithUser_SetsContext(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{
 		verifyJWTFunc: func(accessToken string) (domain.AuthClaims, error) {
 			return testSupabaseClaims("user-123"), nil
@@ -249,6 +254,7 @@ func TestSupabaseAuthMiddleware_ValidTokenWithUser_SetsContext(t *testing.T) {
 }
 
 func TestSupabaseAuthMiddleware_UserNotFound_Returns401(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{
 		verifyJWTFunc: func(accessToken string) (domain.AuthClaims, error) {
 			return testSupabaseClaims("user-123"), nil
@@ -273,6 +279,7 @@ func TestSupabaseAuthMiddleware_UserNotFound_Returns401(t *testing.T) {
 }
 
 func TestSupabaseAuthMiddleware_InactiveUser_Returns401(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{
 		verifyJWTFunc: func(accessToken string) (domain.AuthClaims, error) {
 			return testSupabaseClaims("user-123"), nil
@@ -303,6 +310,7 @@ func TestSupabaseAuthMiddleware_InactiveUser_Returns401(t *testing.T) {
 }
 
 func TestSupabaseAuthMiddleware_ValidTokenFromCookie_Fallback(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{verifyJWTFunc: func(token string) (domain.AuthClaims, error) {
 		if token != "cookie-token" {
 			return nil, errors.New("unexpected token")
@@ -328,6 +336,7 @@ func TestSupabaseAuthMiddleware_ValidTokenFromCookie_Fallback(t *testing.T) {
 }
 
 func TestSupabaseAuthMiddleware_HeaderPrecedenceOverCookie(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{verifyJWTFunc: func(token string) (domain.AuthClaims, error) {
 		if token != "header-token" {
 			return nil, errors.New("header should take precedence")
@@ -354,6 +363,7 @@ func TestSupabaseAuthMiddleware_HeaderPrecedenceOverCookie(t *testing.T) {
 }
 
 func TestMiddleware_HandlerCreation(t *testing.T) {
+	t.Parallel()
 	mockAuth := &mockAuthService{}
 	mockUser := &mockUserRepository{}
 	jwtMiddleware := middleware.SupabaseAuthMiddleware(mockAuth, mockUser, testCookieHelper())

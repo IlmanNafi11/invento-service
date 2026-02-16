@@ -18,6 +18,7 @@ import (
 )
 
 func TestCreateModul_Success(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 
 	_ = NewModulUsecase(mockModulRepo)
@@ -47,6 +48,7 @@ func TestCreateModul_Success(t *testing.T) {
 }
 
 func TestGetModulByID_Success(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 
 	_ = NewModulUsecase(mockModulRepo)
@@ -82,6 +84,7 @@ func TestGetModulByID_Success(t *testing.T) {
 }
 
 func TestGetModulByID_NotFound(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 
 	_ = NewModulUsecase(mockModulRepo)
@@ -100,6 +103,7 @@ func TestGetModulByID_NotFound(t *testing.T) {
 }
 
 func TestListModuls_Success(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 
 	_ = NewModulUsecase(mockModulRepo)
@@ -152,6 +156,7 @@ func TestListModuls_Success(t *testing.T) {
 }
 
 func TestListModulsByProject_Success(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 
 	_ = NewModulUsecase(mockModulRepo)
@@ -202,6 +207,7 @@ func TestListModulsByProject_Success(t *testing.T) {
 }
 
 func TestUpdateModul_Success(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 
 	modulUc := NewModulUsecase(mockModulRepo)
@@ -235,6 +241,7 @@ func TestUpdateModul_Success(t *testing.T) {
 }
 
 func TestDeleteModul_Success(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 
 	modulUc := NewModulUsecase(mockModulRepo)
@@ -266,6 +273,7 @@ func TestDeleteModul_Success(t *testing.T) {
 }
 
 func TestCheckUploadSlot_Success(t *testing.T) {
+	t.Parallel()
 	mockTusModulUploadRepo := new(MockTusModulUploadRepository)
 	mockModulRepo := new(MockModulRepository)
 
@@ -296,6 +304,7 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 }
 
 func TestInitiateUpload_Success(t *testing.T) {
+	t.Parallel()
 	mockTusModulUploadRepo := new(MockTusModulUploadRepository)
 	mockModulRepo := new(MockModulRepository)
 
@@ -339,6 +348,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 }
 
 func TestUploadChunk_Success(t *testing.T) {
+	t.Parallel()
 	mockTusModulUploadRepo := new(MockTusModulUploadRepository)
 	mockModulRepo := new(MockModulRepository)
 
@@ -395,6 +405,7 @@ func TestUploadChunk_Success(t *testing.T) {
 
 // TestModulUsecase_GetList_Success tests successful modul list retrieval
 func TestModulUsecase_GetList_Success(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -445,6 +456,7 @@ func TestModulUsecase_GetList_Success(t *testing.T) {
 
 // TestModulUsecase_GetList_Error tests error handling
 func TestModulUsecase_GetList_Error(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 

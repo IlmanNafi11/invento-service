@@ -8,6 +8,7 @@ import (
 
 // TestPaginationRequest_GetOffset_Success tests offset calculation
 func TestPaginationRequest_GetOffset_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		page     int
@@ -22,6 +23,7 @@ func TestPaginationRequest_GetOffset_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			req := PaginationRequest{
 				Page:  tt.page,
 				Limit: tt.limit,
@@ -33,6 +35,7 @@ func TestPaginationRequest_GetOffset_Success(t *testing.T) {
 
 // TestPaginationRequest_Validate_Success tests valid pagination request
 func TestPaginationRequest_Validate_Success(t *testing.T) {
+	t.Parallel()
 	req := PaginationRequest{
 		Page:   1,
 		Limit:  10,
@@ -46,6 +49,7 @@ func TestPaginationRequest_Validate_Success(t *testing.T) {
 
 // TestPaginationRequest_Validate_Failure tests invalid pagination request
 func TestPaginationRequest_Validate_Failure(t *testing.T) {
+	t.Parallel()
 	req := PaginationRequest{
 		Page:   0, // Invalid: min=1
 		Limit:  10,
@@ -59,6 +63,7 @@ func TestPaginationRequest_Validate_Failure(t *testing.T) {
 
 // TestPaginationRequest_Validate_InvalidOrder tests invalid order parameter
 func TestPaginationRequest_Validate_InvalidOrder(t *testing.T) {
+	t.Parallel()
 	req := PaginationRequest{
 		Page:   1,
 		Limit:  10,
@@ -72,6 +77,7 @@ func TestPaginationRequest_Validate_InvalidOrder(t *testing.T) {
 
 // TestPaginationRequest_Validate_LimitTooLarge tests limit exceeding max
 func TestPaginationRequest_Validate_LimitTooLarge(t *testing.T) {
+	t.Parallel()
 	req := PaginationRequest{
 		Page:   1,
 		Limit:  101, // Invalid: max=100
@@ -85,6 +91,7 @@ func TestPaginationRequest_Validate_LimitTooLarge(t *testing.T) {
 
 // TestIDParam_Validate_Success tests valid ID param
 func TestIDParam_Validate_Success(t *testing.T) {
+	t.Parallel()
 	param := IDParam{
 		ID: 123,
 	}
@@ -95,6 +102,7 @@ func TestIDParam_Validate_Success(t *testing.T) {
 
 // TestIDParam_Validate_ZeroID tests zero ID which should fail required validation
 func TestIDParam_Validate_ZeroID(t *testing.T) {
+	t.Parallel()
 	param := IDParam{
 		ID: 0, // Zero value, should fail required validation
 	}

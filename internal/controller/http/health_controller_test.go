@@ -38,6 +38,7 @@ func (m *MockHealthUsecase) GetApplicationStatus() *dto.ApplicationStatus {
 }
 
 func TestHealthController_BasicHealthCheck_Success(t *testing.T) {
+	t.Parallel()
 	mockUsecase := new(MockHealthUsecase)
 	controller := httpcontroller.NewHealthController(mockUsecase)
 
@@ -69,6 +70,7 @@ func TestHealthController_BasicHealthCheck_Success(t *testing.T) {
 }
 
 func TestHealthController_ComprehensiveHealthCheck_Success(t *testing.T) {
+	t.Parallel()
 	mockUsecase := new(MockHealthUsecase)
 	controller := httpcontroller.NewHealthController(mockUsecase)
 
@@ -114,6 +116,7 @@ func TestHealthController_ComprehensiveHealthCheck_Success(t *testing.T) {
 }
 
 func TestHealthController_ComprehensiveHealthCheck_Unhealthy(t *testing.T) {
+	t.Parallel()
 	mockUsecase := new(MockHealthUsecase)
 	controller := httpcontroller.NewHealthController(mockUsecase)
 
@@ -159,6 +162,7 @@ func TestHealthController_ComprehensiveHealthCheck_Unhealthy(t *testing.T) {
 }
 
 func TestHealthController_GetSystemMetrics_Success(t *testing.T) {
+	t.Parallel()
 	mockUsecase := new(MockHealthUsecase)
 	controller := httpcontroller.NewHealthController(mockUsecase)
 
@@ -224,6 +228,7 @@ func TestHealthController_GetSystemMetrics_Success(t *testing.T) {
 }
 
 func TestHealthController_GetApplicationStatus_Success(t *testing.T) {
+	t.Parallel()
 	mockUsecase := new(MockHealthUsecase)
 	controller := httpcontroller.NewHealthController(mockUsecase)
 

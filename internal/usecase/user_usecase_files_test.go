@@ -16,6 +16,7 @@ import (
 )
 
 func TestUserUsecase_BulkAssignRole_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -63,6 +64,7 @@ func TestUserUsecase_BulkAssignRole_Success(t *testing.T) {
 }
 
 func TestUserUsecase_BulkAssignRole_RoleNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -91,6 +93,7 @@ func TestUserUsecase_BulkAssignRole_RoleNotFound(t *testing.T) {
 }
 
 func TestUserUsecase_BulkAssignRole_UserFetchError(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -125,6 +128,7 @@ func TestUserUsecase_BulkAssignRole_UserFetchError(t *testing.T) {
 }
 
 func TestUserUsecase_BulkAssignRole_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -173,6 +177,7 @@ func TestUserUsecase_BulkAssignRole_InternalError(t *testing.T) {
 }
 
 func TestUserUsecase_GetUserPermissions_UserNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -201,6 +206,7 @@ func TestUserUsecase_GetUserPermissions_UserNotFound(t *testing.T) {
 }
 
 func TestUserUsecase_GetProfile_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -229,6 +235,7 @@ func TestUserUsecase_GetProfile_InternalError(t *testing.T) {
 }
 
 func TestUserUsecase_UpdateProfile_RepoUpdateError(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -272,6 +279,7 @@ func TestUserUsecase_UpdateProfile_RepoUpdateError(t *testing.T) {
 }
 
 func TestUserUsecase_DownloadUserFiles_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -329,6 +337,7 @@ func TestUserUsecase_DownloadUserFiles_Success(t *testing.T) {
 }
 
 func TestUserUsecase_UpdateUserRole_RepoUpdateError(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)

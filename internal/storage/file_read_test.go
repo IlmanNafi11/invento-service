@@ -13,6 +13,7 @@ import (
 )
 
 func TestGenerateUniqueIdentifier(t *testing.T) {
+	t.Parallel()
 	id1, err := storage.GenerateUniqueIdentifier(10)
 	assert.NoError(t, err)
 	assert.Equal(t, 20, len(id1)) // hex encoding doubles the length
@@ -23,6 +24,7 @@ func TestGenerateUniqueIdentifier(t *testing.T) {
 }
 
 func TestGenerateRandomString(t *testing.T) {
+	t.Parallel()
 	str1, err := storage.GenerateRandomString(10)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, len(str1))
@@ -38,6 +40,7 @@ func TestGenerateRandomString(t *testing.T) {
 }
 
 func TestGetFileExtension(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		filename    string
 		expectedExt string
@@ -53,6 +56,7 @@ func TestGetFileExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {
+			t.Parallel()
 			ext := storage.GetFileExtension(tt.filename)
 			assert.Equal(t, tt.expectedExt, ext)
 		})
@@ -60,6 +64,7 @@ func TestGetFileExtension(t *testing.T) {
 }
 
 func TestValidateZipFile(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		filename    string
@@ -89,6 +94,7 @@ func TestValidateZipFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Create a mock file header
 			header := &multipart.FileHeader{
 				Filename: tt.filename,
@@ -107,6 +113,7 @@ func TestValidateZipFile(t *testing.T) {
 }
 
 func TestValidateModulFile(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		filename    string
@@ -127,6 +134,7 @@ func TestValidateModulFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			header := &multipart.FileHeader{
 				Filename: tt.filename,
 			}
@@ -143,6 +151,7 @@ func TestValidateModulFile(t *testing.T) {
 }
 
 func TestGetFileType(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		filename     string
 		expectedType string
@@ -161,6 +170,7 @@ func TestGetFileType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {
+			t.Parallel()
 			fileType := storage.GetFileType(tt.filename)
 			assert.Equal(t, tt.expectedType, fileType)
 		})
@@ -168,6 +178,7 @@ func TestGetFileType(t *testing.T) {
 }
 
 func TestGetFileSize(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		size        int64
@@ -181,6 +192,7 @@ func TestGetFileSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			header := &multipart.FileHeader{
 				Size: tt.size,
 			}
@@ -192,6 +204,7 @@ func TestGetFileSize(t *testing.T) {
 }
 
 func TestDetectProjectCategory(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		filename         string
 		expectedCategory string
@@ -212,6 +225,7 @@ func TestDetectProjectCategory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {
+			t.Parallel()
 			category := storage.DetectProjectCategory(tt.filename)
 			assert.Equal(t, tt.expectedCategory, category)
 		})
@@ -219,6 +233,7 @@ func TestDetectProjectCategory(t *testing.T) {
 }
 
 func TestValidateImageFile(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		filename    string
@@ -262,6 +277,7 @@ func TestValidateImageFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			header := &multipart.FileHeader{
 				Filename: tt.filename,
 				Size:     tt.size,
@@ -280,6 +296,7 @@ func TestValidateImageFile(t *testing.T) {
 }
 
 func TestSaveUploadedFile(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	destPath := filepath.Join(tempDir, "test.txt")
 
@@ -315,6 +332,7 @@ func TestSaveUploadedFile(t *testing.T) {
 }
 
 func TestDeleteFile(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	testFile := filepath.Join(tempDir, "test.txt")
 
@@ -336,12 +354,14 @@ func TestDeleteFile(t *testing.T) {
 }
 
 func TestDeleteFile_NonExistent(t *testing.T) {
+	t.Parallel()
 	// Deleting a non-existent file should not return an error
 	err := storage.DeleteFile("/nonexistent/path/to/file.txt")
 	assert.NoError(t, err)
 }
 
 func TestMoveFile(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "source.txt")
 	dstPath := filepath.Join(tempDir, "dest.txt")
@@ -366,6 +386,7 @@ func TestMoveFile(t *testing.T) {
 }
 
 func TestMoveFile_NonExistentSource(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "nonexistent.txt")
 	dstPath := filepath.Join(tempDir, "dest.txt")
@@ -380,6 +401,7 @@ func TestMoveFile_NonExistentSource(t *testing.T) {
 }
 
 func TestMoveFile_SameSourceAndDestination(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "file.txt")
 	dstPath := srcPath
@@ -400,6 +422,7 @@ func TestMoveFile_SameSourceAndDestination(t *testing.T) {
 }
 
 func TestMoveFile_DestinationDirectoryNotExists(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "source.txt")
 	dstPath := filepath.Join(tempDir, "subdir", "dest.txt")
@@ -419,6 +442,7 @@ func TestMoveFile_DestinationDirectoryNotExists(t *testing.T) {
 }
 
 func TestMoveFile_OverwriteExistingDestination(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "source.txt")
 	dstPath := filepath.Join(tempDir, "dest.txt")
@@ -448,6 +472,7 @@ func TestMoveFile_OverwriteExistingDestination(t *testing.T) {
 }
 
 func TestMoveFile_MoveToSubdirectory(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "source.txt")
 	subDir := filepath.Join(tempDir, "subdir")

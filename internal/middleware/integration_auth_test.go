@@ -16,6 +16,7 @@ import (
 
 // TestIntegrationMiddlewareRequestFlow tests complete request flow through middleware stack
 func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
+	t.Parallel()
 	t.Run("FullMiddlewareStackSuccessFlow", func(t *testing.T) {
 		// Create Fiber app with full middleware stack
 		app := fiber.New(fiber.Config{
@@ -138,6 +139,7 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 
 // TestIntegrationMiddlewareErrorScenarios tests various error scenarios
 func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
+	t.Parallel()
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
@@ -312,6 +314,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 
 // TestIntegrationMiddlewareRequestIDInLogs tests that request ID is properly logged
 func TestIntegrationMiddlewareRequestIDInLogs(t *testing.T) {
+	t.Parallel()
 	t.Run("RequestIDIsGeneratedAndLogged", func(t *testing.T) {
 		app := fiber.New()
 		app.Use(RequestID())

@@ -152,6 +152,7 @@ func integrationModulMetadataHeader(judul, deskripsi string) string {
 }
 
 func TestTusProjectUploadFullFlowIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -202,6 +203,7 @@ func TestTusProjectUploadFullFlowIntegration(t *testing.T) {
 }
 
 func TestTusProjectUploadResumeAfterPauseIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -238,6 +240,7 @@ func TestTusProjectUploadResumeAfterPauseIntegration(t *testing.T) {
 }
 
 func TestTusProjectUploadCancelIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -271,6 +274,7 @@ func TestTusProjectUploadCancelIntegration(t *testing.T) {
 }
 
 func TestTusModulUploadFullFlowIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -315,6 +319,7 @@ func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 }
 
 func TestTusModulUploadResumeAfterPauseIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -349,6 +354,7 @@ func TestTusModulUploadResumeAfterPauseIntegration(t *testing.T) {
 }
 
 func TestTusModulUploadCancelIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -378,6 +384,7 @@ func TestTusModulUploadCancelIntegration(t *testing.T) {
 }
 
 func TestTusUploadConcurrentSlotsIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -404,6 +411,7 @@ func TestTusUploadConcurrentSlotsIntegration(t *testing.T) {
 }
 
 func TestTusUploadInvalidFileSizeIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -420,6 +428,7 @@ func TestTusUploadInvalidFileSizeIntegration(t *testing.T) {
 }
 
 func TestTusUploadOffsetMismatchIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 
@@ -442,6 +451,7 @@ func TestTusUploadOffsetMismatchIntegration(t *testing.T) {
 }
 
 func TestTusUploadStatusTransitionsIntegration(t *testing.T) {
+	t.Parallel()
 	env := setupTusIntegrationTest(t)
 	ctx := context.Background()
 

@@ -80,6 +80,7 @@ func decodeBodyMap(t *testing.T, resp *http.Response) map[string]interface{} {
 }
 
 func TestAuthController_Register_Success(t *testing.T) {
+	t.Parallel()
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
 	cookieHelper := httputil.NewCookieHelper(cfg)
@@ -142,6 +143,7 @@ func TestAuthController_Register_Success(t *testing.T) {
 }
 
 func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
+	t.Parallel()
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
 	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
@@ -163,6 +165,7 @@ func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
 }
 
 func TestAuthController_Login_Success(t *testing.T) {
+	t.Parallel()
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
 	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
@@ -195,6 +198,7 @@ func TestAuthController_Login_Success(t *testing.T) {
 }
 
 func TestAuthController_Login_InvalidCredentials(t *testing.T) {
+	t.Parallel()
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
 	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
@@ -216,6 +220,7 @@ func TestAuthController_Login_InvalidCredentials(t *testing.T) {
 }
 
 func TestAuthController_RefreshToken_Success(t *testing.T) {
+	t.Parallel()
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
 	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
@@ -245,6 +250,7 @@ func TestAuthController_RefreshToken_Success(t *testing.T) {
 }
 
 func TestAuthController_RefreshToken_MissingCookie(t *testing.T) {
+	t.Parallel()
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
 	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
@@ -260,6 +266,7 @@ func TestAuthController_RefreshToken_MissingCookie(t *testing.T) {
 }
 
 func TestAuthController_Logout_ClearsCookies(t *testing.T) {
+	t.Parallel()
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
 	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
@@ -294,6 +301,7 @@ func TestAuthController_Logout_ClearsCookies(t *testing.T) {
 }
 
 func TestAuthController_RequestPasswordReset(t *testing.T) {
+	t.Parallel()
 	t.Run("success", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
@@ -346,6 +354,7 @@ func TestAuthController_RequestPasswordReset(t *testing.T) {
 }
 
 func TestAuthController_Register_ValidationError(t *testing.T) {
+	t.Parallel()
 	t.Run("missing required fields", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
@@ -370,6 +379,7 @@ func TestAuthController_Register_ValidationError(t *testing.T) {
 }
 
 func TestAuthController_Login_EmptyBody(t *testing.T) {
+	t.Parallel()
 	t.Run("empty body returns bad request", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
@@ -394,6 +404,7 @@ func TestAuthController_Login_EmptyBody(t *testing.T) {
 }
 
 func TestAuthController_RefreshToken_InvalidToken(t *testing.T) {
+	t.Parallel()
 	t.Run("expired or invalid refresh token", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
@@ -420,6 +431,7 @@ func TestAuthController_RefreshToken_InvalidToken(t *testing.T) {
 }
 
 func TestAuthController_Logout_WithoutAccessToken(t *testing.T) {
+	t.Parallel()
 	t.Run("logout succeeds and clears cookies without token", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()

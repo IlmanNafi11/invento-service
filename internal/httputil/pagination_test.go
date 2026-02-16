@@ -9,6 +9,7 @@ import (
 )
 
 func TestNormalizePaginationParams(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		page          int
@@ -83,6 +84,7 @@ func TestNormalizePaginationParams(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := httputil.NormalizePaginationParams(tt.page, tt.limit)
 
 			assert.Equal(t, tt.expectedPage, result.Page)
@@ -92,6 +94,7 @@ func TestNormalizePaginationParams(t *testing.T) {
 }
 
 func TestCalculatePagination(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name               string
 		page               int
@@ -195,6 +198,7 @@ func TestCalculatePagination(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := httputil.CalculatePagination(tt.page, tt.limit, tt.totalItems)
 
 			assert.Equal(t, tt.expectedPage, result.Page)
@@ -206,6 +210,7 @@ func TestCalculatePagination(t *testing.T) {
 }
 
 func TestCalculatePagination_ReturnsPaginationData(t *testing.T) {
+	t.Parallel()
 	result := httputil.CalculatePagination(2, 20, 100)
 
 	assert.IsType(t, dto.PaginationData{}, result)
@@ -216,6 +221,7 @@ func TestCalculatePagination_ReturnsPaginationData(t *testing.T) {
 }
 
 func TestCalculateOffset(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		page           int
@@ -274,6 +280,7 @@ func TestCalculateOffset(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			offset := httputil.CalculateOffset(tt.page, tt.limit)
 			assert.Equal(t, tt.expectedOffset, offset)
 		})
@@ -281,6 +288,7 @@ func TestCalculateOffset(t *testing.T) {
 }
 
 func TestCalculatePagination_Integration(t *testing.T) {
+	t.Parallel()
 	// Test complete pagination workflow
 	totalItems := 95
 	limit := 10
@@ -290,6 +298,7 @@ func TestCalculatePagination_Integration(t *testing.T) {
 
 	for page := 1; page <= totalPages; page++ {
 		t.Run("page_integration", func(t *testing.T) {
+			t.Parallel()
 			pagination := httputil.CalculatePagination(page, limit, totalItems)
 			offset := httputil.CalculateOffset(page, limit)
 
@@ -310,6 +319,7 @@ func TestCalculatePagination_Integration(t *testing.T) {
 }
 
 func TestNormalizePaginationParams_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		page          int
@@ -342,6 +352,7 @@ func TestNormalizePaginationParams_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := httputil.NormalizePaginationParams(tt.page, tt.limit)
 
 			assert.Equal(t, tt.expectedPage, result.Page)
@@ -351,6 +362,7 @@ func TestNormalizePaginationParams_EdgeCases(t *testing.T) {
 }
 
 func TestCalculatePagination_SingleItem(t *testing.T) {
+	t.Parallel()
 	result := httputil.CalculatePagination(1, 10, 1)
 
 	assert.Equal(t, 1, result.Page)
@@ -360,6 +372,7 @@ func TestCalculatePagination_SingleItem(t *testing.T) {
 }
 
 func TestCalculatePagination_LargeLimit(t *testing.T) {
+	t.Parallel()
 	// When limit is capped at 100
 	result := httputil.CalculatePagination(1, 200, 500)
 
@@ -370,6 +383,7 @@ func TestCalculatePagination_LargeLimit(t *testing.T) {
 }
 
 func TestCalculateOffset_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		page           int
@@ -404,6 +418,7 @@ func TestCalculateOffset_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			offset := httputil.CalculateOffset(tt.page, tt.limit)
 			assert.Equal(t, tt.expectedOffset, offset)
 		})

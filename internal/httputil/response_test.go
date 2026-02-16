@@ -11,6 +11,7 @@ import (
 )
 
 func TestSendSuccessResponse(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		data := map[string]interface{}{
@@ -28,6 +29,7 @@ func TestSendSuccessResponse(t *testing.T) {
 }
 
 func TestSendErrorResponse(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return httputil.SendErrorResponse(c, fiber.StatusBadRequest, "Request tidak valid", nil)
@@ -41,6 +43,7 @@ func TestSendErrorResponse(t *testing.T) {
 }
 
 func TestSendInternalServerErrorResponse(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return httputil.SendInternalServerErrorResponse(c)
@@ -54,6 +57,7 @@ func TestSendInternalServerErrorResponse(t *testing.T) {
 }
 
 func TestSendUnauthorizedResponse(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return httputil.SendUnauthorizedResponse(c)
@@ -67,6 +71,7 @@ func TestSendUnauthorizedResponse(t *testing.T) {
 }
 
 func TestSendForbiddenResponse(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return httputil.SendForbiddenResponse(c)
@@ -80,6 +85,7 @@ func TestSendForbiddenResponse(t *testing.T) {
 }
 
 func TestSendNotFoundResponse(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return httputil.SendNotFoundResponse(c, "Data tidak ditemukan")
@@ -93,6 +99,7 @@ func TestSendNotFoundResponse(t *testing.T) {
 }
 
 func TestSendListResponse(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		items := []map[string]interface{}{
@@ -116,6 +123,7 @@ func TestSendListResponse(t *testing.T) {
 }
 
 func TestSendValidationErrorResponse(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		errors := []dto.ValidationError{

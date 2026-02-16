@@ -16,6 +16,7 @@ import (
 // =============================================================================
 
 func TestGetRolesForUser_Success(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-123", "admin")
@@ -32,6 +33,7 @@ func TestGetRolesForUser_Success(t *testing.T) {
 }
 
 func TestGetRolesForUser_NoRoles(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	roles, err := enforcer.GetRolesForUser("user-without-roles")
@@ -41,6 +43,7 @@ func TestGetRolesForUser_NoRoles(t *testing.T) {
 }
 
 func TestGetRolesForUser_MultipleUsers(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-1", "admin")
@@ -66,6 +69,7 @@ func TestGetRolesForUser_MultipleUsers(t *testing.T) {
 // =============================================================================
 
 func TestAddRoleForUser_Success(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-456", "developer")
@@ -77,6 +81,7 @@ func TestAddRoleForUser_Success(t *testing.T) {
 }
 
 func TestAddRoleForUser_DuplicateRole(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err1 := enforcer.AddRoleForUser("user-789", "admin")
@@ -94,6 +99,7 @@ func TestAddRoleForUser_DuplicateRole(t *testing.T) {
 // =============================================================================
 
 func TestRemoveRoleForUser_Success(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-abc", "admin")
@@ -107,6 +113,7 @@ func TestRemoveRoleForUser_Success(t *testing.T) {
 }
 
 func TestRemoveRoleForUser_KeepsOtherRoles(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-def", "admin")
@@ -127,6 +134,7 @@ func TestRemoveRoleForUser_KeepsOtherRoles(t *testing.T) {
 // =============================================================================
 
 func TestGetUsersForRole_Success(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-1", "admin")
@@ -145,6 +153,7 @@ func TestGetUsersForRole_Success(t *testing.T) {
 }
 
 func TestGetUsersForRole_NoUsers(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	users, err := enforcer.GetUsersForRole("empty-role")
@@ -158,6 +167,7 @@ func TestGetUsersForRole_NoUsers(t *testing.T) {
 // =============================================================================
 
 func TestDeleteAllRolesForUser_Success(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-xyz", "admin")
@@ -175,6 +185,7 @@ func TestDeleteAllRolesForUser_Success(t *testing.T) {
 }
 
 func TestDeleteAllRolesForUser_DoesNotAffectOtherUsers(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-1", "admin")
@@ -194,6 +205,7 @@ func TestDeleteAllRolesForUser_DoesNotAffectOtherUsers(t *testing.T) {
 // =============================================================================
 
 func TestDeleteRole_Success(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	// Add role with permissions and users
@@ -215,6 +227,7 @@ func TestDeleteRole_Success(t *testing.T) {
 // =============================================================================
 
 func TestGetAllRoles_WithGroupingPolicies(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddRoleForUser("user-1", "admin")
@@ -234,6 +247,7 @@ func TestGetAllRoles_WithGroupingPolicies(t *testing.T) {
 }
 
 func TestGetAllRoles_Empty(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	roles, err := enforcer.GetAllRoles()
@@ -247,6 +261,7 @@ func TestGetAllRoles_Empty(t *testing.T) {
 // =============================================================================
 
 func TestGetAllPolicies_Success(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddPermissionForRole("admin", "users", "create")
@@ -263,6 +278,7 @@ func TestGetAllPolicies_Success(t *testing.T) {
 }
 
 func TestGetAllPolicies_Empty(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	policies, err := enforcer.GetAllPolicies()
@@ -276,6 +292,7 @@ func TestGetAllPolicies_Empty(t *testing.T) {
 // =============================================================================
 
 func TestHasPolicy_Exists(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	err := enforcer.AddPermissionForRole("admin", "users", "read")
@@ -288,6 +305,7 @@ func TestHasPolicy_Exists(t *testing.T) {
 }
 
 func TestHasPolicy_NotExists(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	hasPolicy, err := enforcer.HasPolicy("nonexistent", "resource", "action")
@@ -301,6 +319,7 @@ func TestHasPolicy_NotExists(t *testing.T) {
 // =============================================================================
 
 func TestSavePolicy_Success(t *testing.T) {
+	t.Parallel()
 	// Use shared cache for persistent in-memory database
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
@@ -318,6 +337,7 @@ func TestSavePolicy_Success(t *testing.T) {
 }
 
 func TestLoadPolicy_Success(t *testing.T) {
+	t.Parallel()
 	// Use shared cache for persistent in-memory database
 	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
@@ -344,6 +364,7 @@ func TestLoadPolicy_Success(t *testing.T) {
 // =============================================================================
 
 func TestGetEnforcer_ReturnsValidEnforcer(t *testing.T) {
+	t.Parallel()
 	casbinEnforcer := setupTestCasbinEnforcer(t)
 
 	enforcer := casbinEnforcer.GetEnforcer()
@@ -356,6 +377,7 @@ func TestGetEnforcer_ReturnsValidEnforcer(t *testing.T) {
 // =============================================================================
 
 func TestCheckPermission_UserInheritsRolePermissions(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	// Add permission to role
@@ -374,6 +396,7 @@ func TestCheckPermission_UserInheritsRolePermissions(t *testing.T) {
 }
 
 func TestCheckPermission_UserWithoutRoleDenied(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	// Add permission to role
@@ -388,6 +411,7 @@ func TestCheckPermission_UserWithoutRoleDenied(t *testing.T) {
 }
 
 func TestCheckPermission_UserMultipleRoles(t *testing.T) {
+	t.Parallel()
 	enforcer := setupTestCasbinEnforcer(t)
 
 	// Add permissions to different roles

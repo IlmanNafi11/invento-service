@@ -95,6 +95,7 @@ func (m *MockTusModulUploadRepository) GetActiveUploadIDs(ctx context.Context) (
 // TusModulUploadRepository Tests
 
 func TestTusModulUploadRepository_Create_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	upload := &domain.TusModulUpload{
@@ -126,6 +127,7 @@ func TestTusModulUploadRepository_Create_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	uploadID := "test-modul-upload-id"
@@ -161,6 +163,7 @@ func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	userID := "user-1"
@@ -212,6 +215,7 @@ func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_Update_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	uploadID := "test-modul-upload-id"
@@ -227,6 +231,7 @@ func TestTusModulUploadRepository_Update_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_UpdateStatus_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	uploadID := "test-modul-upload-id"
@@ -241,6 +246,7 @@ func TestTusModulUploadRepository_UpdateStatus_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_Delete_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	uploadID := "test-modul-upload-id"
@@ -254,6 +260,7 @@ func TestTusModulUploadRepository_Delete_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	userID := "user-1"
@@ -305,6 +312,7 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 	before := time.Now()
 
@@ -340,6 +348,7 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_CountActiveByUserID_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	userID := "user-1"
@@ -355,6 +364,7 @@ func TestTusModulUploadRepository_CountActiveByUserID_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_Complete_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	uploadID := "test-upload-id"
@@ -370,6 +380,7 @@ func TestTusModulUploadRepository_Complete_Success(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusModulUploadRepository)
 
 	timeout := 30 * time.Minute

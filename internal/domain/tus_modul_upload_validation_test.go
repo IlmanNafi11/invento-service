@@ -7,7 +7,9 @@ import (
 )
 
 func TestTusModulUploadEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Nil ModulID for new modul creation", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:         "modul-upload-nil",
 			UserID:     "user-1",
@@ -25,6 +27,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Non-nil ModulID for modul update", func(t *testing.T) {
+		t.Parallel()
 		modulID := "550e8400-e29b-41d4-a716-446655440200"
 		upload := TusModulUpload{
 			ID:         "modul-upload-update",
@@ -45,6 +48,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero progress for pending upload", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:       "modul-upload-zero-progress",
 			UserID:   "user-1",
@@ -59,6 +63,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Full progress for completed upload", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:       "modul-upload-full-progress",
 			UserID:   "user-1",
@@ -73,6 +78,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Partial progress during upload", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:            "modul-upload-partial",
 			UserID:        "user-1",
@@ -91,6 +97,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty upload URL before initialization", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:        "modul-upload-no-url",
 			UserID:    "user-1",
@@ -104,6 +111,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Populated upload URL after initialization", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:        "modul-upload-with-url",
 			UserID:    "user-1",
@@ -117,6 +125,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Nil CompletedAt for in-progress upload", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:          "modul-upload-in-progress",
 			UserID:      "user-1",
@@ -131,6 +140,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Non-nil CompletedAt for completed upload", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		upload := TusModulUpload{
 			ID:          "modul-upload-done",
@@ -146,6 +156,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero file size edge case", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:       "modul-upload-zero-size",
 			UserID:   "user-1",
@@ -159,6 +170,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Large file size", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:       "modul-upload-large",
 			UserID:   "user-1",
@@ -173,7 +185,9 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 }
 
 func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Minimum valid Judul length", func(t *testing.T) {
+		t.Parallel()
 		req := TusModulUploadMetadata{
 			Judul:     "ABC",
 			Deskripsi: "A description",
@@ -185,6 +199,7 @@ func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Long valid Judul", func(t *testing.T) {
+		t.Parallel()
 		longName := "A" + " very long module name that describes the content in detail " + "B"
 		req := TusModulUploadMetadata{
 			Judul:     longName,
@@ -197,6 +212,7 @@ func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty deskripsi allowed", func(t *testing.T) {
+		t.Parallel()
 		req := TusModulUploadMetadata{
 			Judul:     "Module Without Description",
 			Deskripsi: "",
@@ -209,7 +225,9 @@ func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
 }
 
 func TestTusModulUploadResponseEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Zero offset for new upload", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadResponse{
 			UploadID:  "new-upload",
 			UploadURL: "https://example.com/tus/new-upload",
@@ -223,6 +241,7 @@ func TestTusModulUploadResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Offset equals length for completed upload", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadResponse{
 			UploadID:  "completed-upload",
 			UploadURL: "https://example.com/tus/completed-upload",
@@ -236,6 +255,7 @@ func TestTusModulUploadResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero length upload", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadResponse{
 			UploadID:  "zero-length",
 			UploadURL: "https://example.com/tus/zero-length",
@@ -250,7 +270,9 @@ func TestTusModulUploadResponseEdgeCases(t *testing.T) {
 }
 
 func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Empty ModulID for new modul", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "new-modul-upload",
 			ModulID:   "",
@@ -266,6 +288,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Non-empty ModulID for existing modul update", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "update-modul-upload",
 			ModulID:   "550e8400-e29b-41d4-a716-446655440300",
@@ -281,6 +304,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero progress for pending status", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadInfoResponse{
 			UploadID: "pending-upload",
 			Status:   UploadStatusPending,
@@ -293,6 +317,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Full progress for completed status", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadInfoResponse{
 			UploadID: "completed-upload",
 			Status:   UploadStatusCompleted,
@@ -305,6 +330,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Timestamp fields present", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "timestamp-test",
@@ -322,7 +348,9 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 }
 
 func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Zero queue length when empty", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadSlotResponse{
 			Available:   true,
 			Message:     "Queue is empty",
@@ -336,6 +364,7 @@ func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Queue length equals max queue when full", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadSlotResponse{
 			Available:   false,
 			Message:     "Queue is full",
@@ -352,6 +381,7 @@ func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("One below max queue", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadSlotResponse{
 			Available:   true,
 			Message:     "One slot remaining",
@@ -368,6 +398,7 @@ func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Max queue zero for unlimited queue", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadSlotResponse{
 			Available:   true,
 			Message:     "Unlimited queue",
@@ -382,7 +413,9 @@ func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
 }
 
 func TestTusModulUploadInvalidProgress(t *testing.T) {
+	t.Parallel()
 	t.Run("Negative progress is invalid", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:       "negative-progress",
 			UserID:   "user-1",
@@ -396,6 +429,7 @@ func TestTusModulUploadInvalidProgress(t *testing.T) {
 	})
 
 	t.Run("Progress over 100 is invalid", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:       "over-100-progress",
 			UserID:   "user-1",

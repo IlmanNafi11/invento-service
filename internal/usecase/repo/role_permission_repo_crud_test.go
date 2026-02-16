@@ -13,6 +13,7 @@ import (
 
 // TestRolePermissionRepository_NewRolePermissionRepository tests constructor
 func TestRolePermissionRepository_NewRolePermissionRepository(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -23,6 +24,7 @@ func TestRolePermissionRepository_NewRolePermissionRepository(t *testing.T) {
 
 // TestRolePermissionRepository_Create_Success tests successful role-permission creation
 func TestRolePermissionRepository_Create_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -61,6 +63,7 @@ func TestRolePermissionRepository_Create_Success(t *testing.T) {
 
 // TestRolePermissionRepository_Create_Duplicate tests duplicate creation behavior
 func TestRolePermissionRepository_Create_Duplicate(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -102,6 +105,7 @@ func TestRolePermissionRepository_Create_Duplicate(t *testing.T) {
 
 // TestRolePermissionRepository_Create_InvalidRoleID tests with non-existent role
 func TestRolePermissionRepository_Create_InvalidRoleID(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -131,6 +135,7 @@ func TestRolePermissionRepository_Create_InvalidRoleID(t *testing.T) {
 
 // TestRolePermissionRepository_GetByRoleID_Success tests successful retrieval by role ID
 func TestRolePermissionRepository_GetByRoleID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -173,6 +178,7 @@ func TestRolePermissionRepository_GetByRoleID_Success(t *testing.T) {
 
 // TestRolePermissionRepository_GetByRoleID_NotFound tests with non-existent role
 func TestRolePermissionRepository_GetByRoleID_NotFound(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -186,6 +192,7 @@ func TestRolePermissionRepository_GetByRoleID_NotFound(t *testing.T) {
 
 // TestRolePermissionRepository_GetByRoleID_WithPreload tests Permission preloading
 func TestRolePermissionRepository_GetByRoleID_WithPreload(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -224,6 +231,7 @@ func TestRolePermissionRepository_GetByRoleID_WithPreload(t *testing.T) {
 
 // TestRolePermissionRepository_DeleteByRoleID_Success tests successful deletion by role ID
 func TestRolePermissionRepository_DeleteByRoleID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -268,6 +276,7 @@ func TestRolePermissionRepository_DeleteByRoleID_Success(t *testing.T) {
 
 // TestRolePermissionRepository_DeleteByRoleID_NoAssociations tests deletion with no associations
 func TestRolePermissionRepository_DeleteByRoleID_NoAssociations(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -284,6 +293,7 @@ func TestRolePermissionRepository_DeleteByRoleID_NoAssociations(t *testing.T) {
 
 // TestRolePermissionRepository_DeleteByRoleID_NonExistentRole tests deletion with non-existent role
 func TestRolePermissionRepository_DeleteByRoleID_NonExistentRole(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)

@@ -17,6 +17,7 @@ import (
 
 // TestIntegrationMiddlewareValidationIntegration tests validation middleware integration
 func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
+	t.Parallel()
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
@@ -161,6 +162,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 
 // TestIntegrationMiddlewareWithRealWorldScenarios tests realistic API scenarios
 func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
+	t.Parallel()
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {

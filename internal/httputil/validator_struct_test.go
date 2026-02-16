@@ -8,6 +8,7 @@ import (
 )
 
 func TestValidateStruct_ValidData(t *testing.T) {
+	t.Parallel()
 	req := dto.RegisterRequest{
 		Name:     "Test User",
 		Email:    "test@example.com",
@@ -20,6 +21,7 @@ func TestValidateStruct_ValidData(t *testing.T) {
 }
 
 func TestValidateStruct_InvalidData(t *testing.T) {
+	t.Parallel()
 	req := dto.RegisterRequest{
 		Name:     "",
 		Email:    "invalid-email",
@@ -38,6 +40,7 @@ func TestValidateStruct_InvalidData(t *testing.T) {
 }
 
 func TestValidateStruct_EmptyEmail(t *testing.T) {
+	t.Parallel()
 	req := dto.AuthRequest{
 		Email:    "",
 		Password: "password123",
@@ -50,6 +53,7 @@ func TestValidateStruct_EmptyEmail(t *testing.T) {
 }
 
 func TestValidateStruct_ShortPassword(t *testing.T) {
+	t.Parallel()
 	req := dto.AuthRequest{
 		Email:    "test@example.com",
 		Password: "123",
@@ -62,6 +66,7 @@ func TestValidateStruct_ShortPassword(t *testing.T) {
 }
 
 func TestValidateStruct_ResetPasswordRequest(t *testing.T) {
+	t.Parallel()
 	validReq := dto.ResetPasswordRequest{
 		Email: "test@example.com",
 	}
@@ -78,6 +83,7 @@ func TestValidateStruct_ResetPasswordRequest(t *testing.T) {
 }
 
 func TestValidateStruct_RefreshTokenRequest(t *testing.T) {
+	t.Parallel()
 	validReq := dto.RefreshTokenRequest{
 		RefreshToken: "valid_token_123",
 	}
@@ -254,12 +260,14 @@ type TestDatetime struct {
 // Tests for ValidateStruct with various validation tags
 
 func TestValidateStruct_Required_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestRequired{Field: "value"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Required_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestRequired{Field: ""}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -268,12 +276,14 @@ func TestValidateStruct_Required_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Email_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestEmail{Email: "test@example.com"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Email_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestEmail{Email: "invalid-email"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -281,12 +291,14 @@ func TestValidateStruct_Email_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Min_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestMin{Field: "abcdefgh"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Min_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestMin{Field: "abc"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -295,12 +307,14 @@ func TestValidateStruct_Min_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Max_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestMax{Field: "abc"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Max_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestMax{Field: "abcdefghijk"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -309,12 +323,14 @@ func TestValidateStruct_Max_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Len_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestLen{Field: "abcde"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Len_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestLen{Field: "abc"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -323,12 +339,14 @@ func TestValidateStruct_Len_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Eq_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestEq{Field: "exact"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Eq_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestEq{Field: "other"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -337,12 +355,14 @@ func TestValidateStruct_Eq_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Ne_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestNe{Field: "allowed"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Ne_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestNe{Field: "forbidden"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -351,12 +371,14 @@ func TestValidateStruct_Ne_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Lt_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestLt{Field: 5}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Lt_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestLt{Field: 15}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -365,12 +387,14 @@ func TestValidateStruct_Lt_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Lte_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestLte{Field: 10}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Lte_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestLte{Field: 15}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -378,12 +402,14 @@ func TestValidateStruct_Lte_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Gt_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestGt{Field: 10}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Gt_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestGt{Field: 3}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -392,12 +418,14 @@ func TestValidateStruct_Gt_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Gte_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestGte{Field: 5}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Gte_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestGte{Field: 3}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -405,12 +433,14 @@ func TestValidateStruct_Gte_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Oneof_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestOneof{Field: "red"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Oneof_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestOneof{Field: "yellow"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -419,12 +449,14 @@ func TestValidateStruct_Oneof_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_URL_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestURL{URL: "https://example.com"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_URL_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestURL{URL: "not-a-url"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -432,12 +464,14 @@ func TestValidateStruct_URL_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_URI_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestURI{URI: "http://example.com/path"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_URI_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestURI{URI: "not a uri"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -445,12 +479,14 @@ func TestValidateStruct_URI_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Alpha_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestAlpha{Field: "abc"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Alpha_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestAlpha{Field: "abc123"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -458,12 +494,14 @@ func TestValidateStruct_Alpha_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Alphanum_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestAlphanum{Field: "abc123"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)
 }
 
 func TestValidateStruct_Alphanum_Invalid(t *testing.T) {
+	t.Parallel()
 	req := TestAlphanum{Field: "abc-123"}
 	errors := httputil.ValidateStruct(req)
 	assert.NotEmpty(t, errors)
@@ -471,6 +509,7 @@ func TestValidateStruct_Alphanum_Invalid(t *testing.T) {
 }
 
 func TestValidateStruct_Numeric_Valid(t *testing.T) {
+	t.Parallel()
 	req := TestNumeric{Field: "123"}
 	errors := httputil.ValidateStruct(req)
 	assert.Empty(t, errors)

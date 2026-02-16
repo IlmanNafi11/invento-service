@@ -19,6 +19,7 @@ import (
 )
 
 func TestUserController_GetProfile_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -59,6 +60,7 @@ func TestUserController_GetProfile_Success(t *testing.T) {
 
 // Test 9: UpdateProfile_Success
 func TestUserController_UpdateProfile_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -106,6 +108,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 
 // Test 10: UpdateProfile_WithPhoto
 func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -155,6 +158,7 @@ func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 
 // Test 11: GetUserPermissions_Success
 func TestUserController_GetUserPermissions_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -199,6 +203,7 @@ func TestUserController_GetUserPermissions_Success(t *testing.T) {
 
 // Test 12: GetUserPermissions_EmptyPermissions
 func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -229,6 +234,7 @@ func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 
 // Test 13: DownloadUserFiles_Success
 func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -260,6 +266,7 @@ func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
 
 // Test 20: UpdateProfile_ValidationError
 func TestUserController_UpdateProfile_ValidationError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -285,6 +292,7 @@ func TestUserController_UpdateProfile_ValidationError(t *testing.T) {
 
 // Test 21: UpdateProfile_InvalidJenisKelamin
 func TestUserController_UpdateProfile_InvalidJenisKelamin(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -311,6 +319,7 @@ func TestUserController_UpdateProfile_InvalidJenisKelamin(t *testing.T) {
 
 // Test 22: UpdateUserRole_Forbidden
 func TestUserController_GetProfile_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -333,6 +342,7 @@ func TestUserController_GetProfile_InternalError(t *testing.T) {
 }
 
 func TestUserController_GetProfile_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -356,6 +366,7 @@ func TestUserController_GetProfile_NotFound(t *testing.T) {
 }
 
 func TestUserController_GetUserPermissions_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -378,6 +389,7 @@ func TestUserController_GetUserPermissions_InternalError(t *testing.T) {
 }
 
 func TestUserController_GetUserPermissions_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -401,6 +413,7 @@ func TestUserController_GetUserPermissions_NotFound(t *testing.T) {
 }
 
 func TestUserController_UpdateProfile_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 

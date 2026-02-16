@@ -10,6 +10,7 @@ import (
 )
 
 func TestGetTusHeaders_Basic(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 	defer app.ReleaseCtx(c)
@@ -34,6 +35,7 @@ func TestGetTusHeaders_Basic(t *testing.T) {
 }
 
 func TestGetTusHeaders_EmptyHeaders_Direct(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 	defer app.ReleaseCtx(c)
@@ -50,6 +52,7 @@ func TestGetTusHeaders_EmptyHeaders_Direct(t *testing.T) {
 }
 
 func TestGetTusHeaders_InvalidNumbers(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 	defer app.ReleaseCtx(c)
@@ -64,6 +67,7 @@ func TestGetTusHeaders_InvalidNumbers(t *testing.T) {
 }
 
 func TestTusHeaders_Constants(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "Tus-Resumable", upload.HeaderTusResumable)
 	assert.Equal(t, "Upload-Offset", upload.HeaderUploadOffset)
 	assert.Equal(t, "Upload-Length", upload.HeaderUploadLength)
@@ -82,6 +86,7 @@ func TestTusHeaders_Constants(t *testing.T) {
 }
 
 func TestSetTusResponseHeaders(t *testing.T) {
+	t.Parallel()
 	// Just verify no panic - actual header testing requires full HTTP request/response
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
@@ -95,6 +100,7 @@ func TestSetTusResponseHeaders(t *testing.T) {
 }
 
 func TestSetTusResponseHeaders_ZeroLength_Direct(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 
@@ -107,6 +113,7 @@ func TestSetTusResponseHeaders_ZeroLength_Direct(t *testing.T) {
 }
 
 func TestSetTusLocationHeader(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 
@@ -120,6 +127,7 @@ func TestSetTusLocationHeader(t *testing.T) {
 }
 
 func TestSetTusOffsetHeader(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 
@@ -132,6 +140,7 @@ func TestSetTusOffsetHeader(t *testing.T) {
 }
 
 func TestValidateChunkSize_ValidSizes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		size int64
@@ -154,6 +163,7 @@ func TestValidateChunkSize_ValidSizes(t *testing.T) {
 }
 
 func TestValidateChunkSize_InvalidSizes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		size        int64
@@ -175,6 +185,7 @@ func TestValidateChunkSize_InvalidSizes(t *testing.T) {
 }
 
 func TestBuildTusErrorResponse_Conflict(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 
@@ -189,6 +200,7 @@ func TestBuildTusErrorResponse_Conflict(t *testing.T) {
 }
 
 func TestBuildTusErrorResponse_OtherStatus_Direct(t *testing.T) {
+	t.Parallel()
 	// Note: BuildTusErrorResponse calls c.SendStatus() which returns early
 	// The important thing is that no error is returned and status code is set
 	t.Run("Bad Request", func(t *testing.T) {
@@ -241,6 +253,7 @@ func TestBuildTusErrorResponse_OtherStatus_Direct(t *testing.T) {
 }
 
 func TestBuildTusErrorResponse_NegativeOffset(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 
@@ -255,6 +268,7 @@ func TestBuildTusErrorResponse_NegativeOffset(t *testing.T) {
 }
 
 func TestGetTusHeaders_PartialHeaders(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	c := app.AcquireCtx(&fasthttp.RequestCtx{})
 	defer app.ReleaseCtx(c)
@@ -275,6 +289,7 @@ func TestGetTusHeaders_PartialHeaders(t *testing.T) {
 }
 
 func TestValidateChunkSize_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		size        int64

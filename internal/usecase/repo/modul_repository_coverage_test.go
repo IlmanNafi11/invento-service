@@ -14,6 +14,7 @@ import (
 
 // TestModulRepository_Create_Success tests successful modul creation
 func TestModulRepository_Create_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -38,6 +39,7 @@ func TestModulRepository_Create_Success(t *testing.T) {
 
 // TestModulRepository_GetByID_Success tests successful modul retrieval by ID
 func TestModulRepository_GetByID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -66,6 +68,7 @@ func TestModulRepository_GetByID_Success(t *testing.T) {
 
 // TestModulRepository_GetByIDs_Success tests successful modul retrieval by IDs
 func TestModulRepository_GetByIDs_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -92,6 +95,7 @@ func TestModulRepository_GetByIDs_Success(t *testing.T) {
 
 // TestModulRepository_GetByUserID_Success tests successful modul retrieval by user ID
 func TestModulRepository_GetByUserID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -139,6 +143,7 @@ func TestModulRepository_GetByUserID_Success(t *testing.T) {
 
 // TestModulRepository_CountByUserID_Success tests successful count
 func TestModulRepository_CountByUserID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -164,6 +169,7 @@ func TestModulRepository_CountByUserID_Success(t *testing.T) {
 
 // TestModulRepository_Update_Success tests successful modul update
 func TestModulRepository_Update_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -198,6 +204,7 @@ func TestModulRepository_Update_Success(t *testing.T) {
 
 // TestModulRepository_Delete_Success tests successful modul deletion
 func TestModulRepository_Delete_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -228,6 +235,7 @@ func TestModulRepository_Delete_Success(t *testing.T) {
 
 // TestModulRepository_UpdateMetadata_Success tests successful metadata update
 func TestModulRepository_UpdateMetadata_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)

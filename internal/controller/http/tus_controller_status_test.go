@@ -21,6 +21,7 @@ import (
 )
 
 func TestGetProjectUpdateUploadInfo_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -53,6 +54,7 @@ func TestGetProjectUpdateUploadInfo_Success(t *testing.T) {
 
 // TestGetProjectUpdateUploadInfo_Unauthorized tests GET without authentication
 func TestGetProjectUpdateUploadInfo_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -70,6 +72,7 @@ func TestGetProjectUpdateUploadInfo_Unauthorized(t *testing.T) {
 
 // TestGetProjectUpdateUploadInfo_NotFound tests GET with non-existent upload
 func TestGetProjectUpdateUploadInfo_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -92,6 +95,7 @@ func TestGetProjectUpdateUploadInfo_NotFound(t *testing.T) {
 
 // TestCancelProjectUpdateUpload_Success tests DELETE for project update upload cancellation
 func TestCancelProjectUpdateUpload_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -117,6 +121,7 @@ func TestCancelProjectUpdateUpload_Success(t *testing.T) {
 
 // TestCancelProjectUpdateUpload_Unauthorized tests DELETE without authentication
 func TestCancelProjectUpdateUpload_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -136,6 +141,7 @@ func TestCancelProjectUpdateUpload_Unauthorized(t *testing.T) {
 
 // TestCancelProjectUpdateUpload_NotFound tests DELETE with non-existent upload
 func TestCancelProjectUpdateUpload_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -234,6 +240,7 @@ func (m *MockTusModulControllerUsecase) CancelModulUpdateUpload(ctx context.Cont
 }
 
 func TestTusModulController_InitiateUpload_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusModulControllerUsecase)
 	baseCtrl := getTusBaseController()
 	cfg := getTusTestConfig()
@@ -272,6 +279,7 @@ func TestTusModulController_InitiateUpload_Success(t *testing.T) {
 }
 
 func TestTusModulController_UploadChunk_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusModulControllerUsecase)
 	baseCtrl := getTusBaseController()
 	cfg := getTusTestConfig()
@@ -302,6 +310,7 @@ func TestTusModulController_UploadChunk_Success(t *testing.T) {
 }
 
 func TestTusModulController_GetUploadStatus_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusModulControllerUsecase)
 	baseCtrl := getTusBaseController()
 	cfg := getTusTestConfig()

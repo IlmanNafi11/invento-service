@@ -110,6 +110,7 @@ func parseAppError(t *testing.T, err error) *apperrors.AppError {
 }
 
 func TestNewAuthService(t *testing.T) {
+	t.Parallel()
 	jwks := newAuthTestJWKS(t)
 	authURL := jwks.server.URL + "/auth/v1"
 
@@ -126,6 +127,7 @@ func TestNewAuthService(t *testing.T) {
 }
 
 func TestAuthService_VerifyJWT(t *testing.T) {
+	t.Parallel()
 	jwks := newAuthTestJWKS(t)
 	verifier, err := NewJWTVerifier(jwks.jwksURL)
 	require.NoError(t, err)
@@ -134,6 +136,7 @@ func TestAuthService_VerifyJWT(t *testing.T) {
 	svc := &AuthService{jwtVerifier: verifier}
 
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
 		token := newTestToken(t, jwks.privateKey, jwks.keyID)
 
 		claims, err := svc.VerifyJWT(token)
@@ -143,13 +146,16 @@ func TestAuthService_VerifyJWT(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
+		t.Parallel()
 		_, err := svc.VerifyJWT("invalid-jwt")
 		require.Error(t, err)
 	})
 }
 
 func TestAuthService_Register(t *testing.T) {
+	t.Parallel()
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
 		var gotAPIKey, gotContentType string
 		var gotBody map[string]interface{}
 
@@ -196,6 +202,7 @@ func TestAuthService_Register(t *testing.T) {
 	})
 
 	t.Run("error response returns app error", func(t *testing.T) {
+		t.Parallel()
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			_, _ = w.Write([]byte(`{"msg":"User already registered","error_code":"user_already_exists"}`))
@@ -215,6 +222,7 @@ func TestAuthService_Register(t *testing.T) {
 	})
 
 	t.Run("request creation error", func(t *testing.T) {
+		t.Parallel()
 		svc := newTestAuthService(t, "://bad-url")
 
 		resp, err := svc.Register(context.Background(), domain.AuthServiceRegisterRequest{
@@ -230,7 +238,9 @@ func TestAuthService_Register(t *testing.T) {
 }
 
 func TestAuthService_Login(t *testing.T) {
+	t.Parallel()
 	t.Run("success with user metadata name", func(t *testing.T) {
+		t.Parallel()
 		var gotPath, gotQuery, gotAPIKey, gotContentType string
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -258,6 +268,7 @@ func TestAuthService_Login(t *testing.T) {
 	})
 
 	t.Run("success without user metadata name", func(t *testing.T) {
+		t.Parallel()
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"access_token":"acc","refresh_token":"ref","token_type":"bearer","expires_in":3600,"user":{"id":"uid-3","email":"user@example.com"}}`))
@@ -274,6 +285,7 @@ func TestAuthService_Login(t *testing.T) {
 	})
 
 	t.Run("error response returns app error", func(t *testing.T) {
+		t.Parallel()
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = w.Write([]byte(`{"error":"invalid_grant","error_description":"Invalid login credentials"}`))
@@ -290,7 +302,9 @@ func TestAuthService_Login(t *testing.T) {
 }
 
 func TestAuthService_RefreshToken(t *testing.T) {
+	t.Parallel()
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
 		var gotAPIKey, gotContentType string
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -317,6 +331,7 @@ func TestAuthService_RefreshToken(t *testing.T) {
 	})
 
 	t.Run("error response returns app error", func(t *testing.T) {
+		t.Parallel()
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = w.Write([]byte(`{"msg":"refresh token expired","error_code":"refresh_token_expired"}`))
@@ -333,7 +348,9 @@ func TestAuthService_RefreshToken(t *testing.T) {
 }
 
 func TestAuthService_RequestPasswordReset(t *testing.T) {
+	t.Parallel()
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
 		var gotAPIKey, gotContentType string
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -354,6 +371,7 @@ func TestAuthService_RequestPasswordReset(t *testing.T) {
 	})
 
 	t.Run("error response returns formatted error", func(t *testing.T) {
+		t.Parallel()
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			_, _ = w.Write([]byte(`{"msg":"invalid email"}`))
@@ -372,7 +390,9 @@ func TestAuthService_RequestPasswordReset(t *testing.T) {
 }
 
 func TestAuthService_Logout(t *testing.T) {
+	t.Parallel()
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
 		var gotAuthorization, gotAPIKey string
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -393,6 +413,7 @@ func TestAuthService_Logout(t *testing.T) {
 	})
 
 	t.Run("error response returns app error", func(t *testing.T) {
+		t.Parallel()
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = w.Write([]byte(`{"msg":"invalid token","error_code":"invalid_token"}`))
@@ -408,7 +429,9 @@ func TestAuthService_Logout(t *testing.T) {
 }
 
 func TestAuthService_DeleteUser(t *testing.T) {
+	t.Parallel()
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
 		var gotAuthorization, gotAPIKey, gotPath string
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -430,6 +453,7 @@ func TestAuthService_DeleteUser(t *testing.T) {
 	})
 
 	t.Run("error response returns app error", func(t *testing.T) {
+		t.Parallel()
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			_, _ = w.Write([]byte(`{"msg":"user not found","error_code":"user_not_found"}`))

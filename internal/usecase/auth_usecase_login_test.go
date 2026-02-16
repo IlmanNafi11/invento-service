@@ -197,6 +197,7 @@ func newTestConfig() *config.Config {
 
 
 func TestRegister_Success(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -243,6 +244,7 @@ func TestRegister_Success(t *testing.T) {
 }
 
 func TestRegister_SupabaseFails(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -273,6 +275,7 @@ func TestRegister_SupabaseFails(t *testing.T) {
 }
 
 func TestRegister_LocalDBFails_RollbackSupabaseUser(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -313,6 +316,7 @@ func TestRegister_LocalDBFails_RollbackSupabaseUser(t *testing.T) {
 }
 
 func TestRegister_EmailAlreadyExists(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -340,6 +344,7 @@ func TestRegister_EmailAlreadyExists(t *testing.T) {
 }
 
 func TestRegister_InvalidEmail(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -364,6 +369,7 @@ func TestRegister_InvalidEmail(t *testing.T) {
 }
 
 func TestLogin_Success_ExistingUser(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -409,6 +415,7 @@ func TestLogin_Success_ExistingUser(t *testing.T) {
 }
 
 func TestLogin_Success_NewUserSync(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -450,6 +457,7 @@ func TestLogin_Success_NewUserSync(t *testing.T) {
 }
 
 func TestLogin_SupabaseFails(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)

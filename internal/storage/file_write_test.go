@@ -10,6 +10,7 @@ import (
 )
 
 func TestMoveFile_CopyFallbackPath(t *testing.T) {
+	t.Parallel()
 	// This test exercises the fallback path when os.Rename fails
 	// (e.g., cross-device move). We simulate this by making the destination
 	// a directory first, which causes rename to fail with a specific error.
@@ -49,6 +50,7 @@ func TestMoveFile_CopyFallbackPath(t *testing.T) {
 }
 
 func TestMoveFile_EmptyFile(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "empty.txt")
 	dstPath := filepath.Join(tempDir, "dest_empty.txt")
@@ -72,6 +74,7 @@ func TestMoveFile_EmptyFile(t *testing.T) {
 }
 
 func TestMoveFile_LargeFile(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "large.txt")
 	dstPath := filepath.Join(tempDir, "dest_large.txt")
@@ -99,6 +102,7 @@ func TestMoveFile_LargeFile(t *testing.T) {
 }
 
 func TestMoveFile_WithRelativePath(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 
 	// Change to temp directory to test relative paths
@@ -132,6 +136,7 @@ func TestMoveFile_WithRelativePath(t *testing.T) {
 }
 
 func TestMoveFile_SpecialCharactersInFilename(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	srcPath := filepath.Join(tempDir, "file with spaces & special-chars_123.txt")
 	dstPath := filepath.Join(tempDir, "dest file (1).txt")
@@ -156,6 +161,7 @@ func TestMoveFile_SpecialCharactersInFilename(t *testing.T) {
 }
 
 func TestFormatFileSize(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		size        int64
@@ -169,6 +175,7 @@ func TestFormatFileSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			sizeStr := storage.FormatFileSize(tt.size)
 			assert.Equal(t, tt.expectedStr, sizeStr)
 		})
@@ -176,6 +183,7 @@ func TestFormatFileSize(t *testing.T) {
 }
 
 func TestGetFileSizeFromPath(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 
 	// Create a test file
@@ -191,11 +199,13 @@ func TestGetFileSizeFromPath(t *testing.T) {
 }
 
 func TestGetFileSizeFromPath_NonExistent(t *testing.T) {
+	t.Parallel()
 	sizeStr := storage.GetFileSizeFromPath("/nonexistent/file.txt")
 	assert.Equal(t, "0B", sizeStr)
 }
 
 func TestCreateZipArchive(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 
 	// Create test files
@@ -222,6 +232,7 @@ func TestCreateZipArchive(t *testing.T) {
 }
 
 func TestCreateZipArchive_NonExistentFile(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	zipPath := filepath.Join(tempDir, "archive.zip")
 
@@ -230,6 +241,7 @@ func TestCreateZipArchive_NonExistentFile(t *testing.T) {
 }
 
 func TestCreateUserDirectory(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		email       string
@@ -258,6 +270,7 @@ func TestCreateUserDirectory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dir, err := storage.CreateUserDirectory(tt.email, tt.role)
 
 			if tt.expectError {
@@ -280,6 +293,7 @@ func TestCreateUserDirectory(t *testing.T) {
 }
 
 func TestCreateModulDirectory(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		email       string
@@ -305,6 +319,7 @@ func TestCreateModulDirectory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dir, err := storage.CreateModulDirectory(tt.email, tt.role, tt.fileType)
 
 			if tt.expectError {
@@ -328,6 +343,7 @@ func TestCreateModulDirectory(t *testing.T) {
 }
 
 func TestCreateProfilDirectory(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		email       string
@@ -350,6 +366,7 @@ func TestCreateProfilDirectory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			dir, err := storage.CreateProfilDirectory(tt.email, tt.role)
 
 			if tt.expectError {
@@ -372,6 +389,7 @@ func TestCreateProfilDirectory(t *testing.T) {
 }
 
 func TestFileOperations_Integration(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 
 	// Test complete file workflow

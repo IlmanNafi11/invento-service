@@ -11,6 +11,7 @@ import (
 )
 
 func TestGetRefreshTokenFromCookie(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{App: config.AppConfig{Env: "development"}}
 	cookieHelper := httputil.NewCookieHelper(cfg)
 	app := fiber.New()
@@ -59,6 +60,7 @@ func TestGetRefreshTokenFromCookie(t *testing.T) {
 }
 
 func TestCookieHelper_GetAccessTokenFromCookie(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{App: config.AppConfig{Env: "development"}}
 	cookieHelper := httputil.NewCookieHelper(cfg)
 	app := fiber.New()
@@ -79,6 +81,7 @@ func TestCookieHelper_GetAccessTokenFromCookie(t *testing.T) {
 }
 
 func TestCookieHelper_ClearAllAuthCookies(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{App: config.AppConfig{Env: "development"}}
 	cookieHelper := httputil.NewCookieHelper(cfg)
 	app := fiber.New()
@@ -109,6 +112,7 @@ func TestCookieHelper_ClearAllAuthCookies(t *testing.T) {
 }
 
 func TestCookieHelper_SecurityProperties(t *testing.T) {
+	t.Parallel()
 	t.Run("Production cookie has secure properties", func(t *testing.T) {
 		cfg := &config.Config{
 			App: config.AppConfig{
@@ -179,6 +183,7 @@ func TestCookieHelper_SecurityProperties(t *testing.T) {
 }
 
 func TestCookieHelper_EdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Special characters in token", func(t *testing.T) {
 		cfg := &config.Config{
 			App: config.AppConfig{
@@ -280,6 +285,7 @@ func TestCookieHelper_EdgeCases(t *testing.T) {
 }
 
 func TestCookieHelper_Integration(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}

@@ -50,6 +50,7 @@ func setupTestAppWithAuthForStatistic(controller *httpcontroller.StatisticContro
 
 // TestStatisticController_GetStatistics_AdminUser_Success tests successful statistics retrieval for admin user
 func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
+	t.Parallel()
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
@@ -96,6 +97,7 @@ func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 
 // TestStatisticController_GetStatistics_RegularUser_PartialData tests statistics retrieval for regular user with limited permissions
 func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T) {
+	t.Parallel()
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
@@ -140,6 +142,7 @@ func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T)
 
 // TestStatisticController_GetStatistics_EmptyData tests statistics retrieval when user has no data
 func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
+	t.Parallel()
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
@@ -182,6 +185,7 @@ func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 
 // TestStatisticController_GetStatistics_Unauthorized tests statistics retrieval without authentication
 func TestStatisticController_GetStatistics_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
@@ -203,6 +207,7 @@ func TestStatisticController_GetStatistics_Unauthorized(t *testing.T) {
 
 // TestStatisticController_GetStatistics_InternalError tests statistics retrieval with internal server error
 func TestStatisticController_GetStatistics_InternalError(t *testing.T) {
+	t.Parallel()
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
@@ -225,6 +230,7 @@ func TestStatisticController_GetStatistics_InternalError(t *testing.T) {
 
 // TestStatisticController_GetStatistics_AppError tests statistics retrieval with AppError
 func TestStatisticController_GetStatistics_AppError(t *testing.T) {
+	t.Parallel()
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
@@ -253,6 +259,7 @@ func TestStatisticController_GetStatistics_AppError(t *testing.T) {
 
 // TestStatisticController_GetStatistics_ResponseHeaders tests that response includes required headers
 func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
+	t.Parallel()
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
@@ -287,6 +294,7 @@ func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
 
 // TestStatisticController_GetStatistics_ResponseStructure tests that response has correct structure
 func TestStatisticController_GetStatistics_ResponseStructure(t *testing.T) {
+	t.Parallel()
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 

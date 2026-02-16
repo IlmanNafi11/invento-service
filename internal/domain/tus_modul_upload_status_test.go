@@ -7,7 +7,9 @@ import (
 )
 
 func TestTusModulUploadStruct(t *testing.T) {
+	t.Parallel()
 	t.Run("TusModulUpload struct initialization", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		modulID := "550e8400-e29b-41d4-a716-446655440050"
 
@@ -44,6 +46,7 @@ func TestTusModulUploadStruct(t *testing.T) {
 	})
 
 	t.Run("TusModulUpload without ModulID", func(t *testing.T) {
+		t.Parallel()
 		upload := TusModulUpload{
 			ID:         "modul-upload-456",
 			UserID:     "user-2",
@@ -62,6 +65,7 @@ func TestTusModulUploadStruct(t *testing.T) {
 	})
 
 	t.Run("TusModulUpload with completed status", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		completedAt := now
 
@@ -88,7 +92,9 @@ func TestTusModulUploadStruct(t *testing.T) {
 }
 
 func TestModulUploadStatusConstants(t *testing.T) {
+	t.Parallel()
 	t.Run("All modul upload status constants are defined", func(t *testing.T) {
+		t.Parallel()
 		statuses := []string{
 			UploadStatusQueued,
 			UploadStatusPending,
@@ -118,7 +124,9 @@ func TestModulUploadStatusConstants(t *testing.T) {
 }
 
 func TestModulUploadTypeConstants(t *testing.T) {
+	t.Parallel()
 	t.Run("All modul upload type constants are defined", func(t *testing.T) {
+		t.Parallel()
 		types := []string{
 			UploadTypeModulCreate,
 			UploadTypeModulUpdate,
@@ -138,7 +146,9 @@ func TestModulUploadTypeConstants(t *testing.T) {
 }
 
 func TestTusModulUploadInitRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("TusModulUploadMetadata with valid data", func(t *testing.T) {
+		t.Parallel()
 		req := TusModulUploadMetadata{
 			Judul:     "Introduction to Algorithms",
 			Deskripsi: "A comprehensive guide to algorithms",
@@ -153,6 +163,7 @@ func TestTusModulUploadInitRequest(t *testing.T) {
 	})
 
 	t.Run("TusModulUploadMetadata with empty deskripsi", func(t *testing.T) {
+		t.Parallel()
 		req := TusModulUploadMetadata{
 			Judul:     "Test Module",
 			Deskripsi: "",
@@ -168,7 +179,9 @@ func TestTusModulUploadInitRequest(t *testing.T) {
 }
 
 func TestTusModulUploadResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.TusModulUploadResponse struct", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadResponse{
 			UploadID:  "modul-upload-123",
 			UploadURL: "https://example.com/tus/modul-upload-123",
@@ -188,6 +201,7 @@ func TestTusModulUploadResponse(t *testing.T) {
 	})
 
 	t.Run("dto.TusModulUploadResponse with progress", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadResponse{
 			UploadID:  "modul-upload-456",
 			UploadURL: "https://example.com/tus/modul-upload-456",
@@ -206,7 +220,9 @@ func TestTusModulUploadResponse(t *testing.T) {
 }
 
 func TestTusModulUploadInfoResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.TusModulUploadInfoResponse struct", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 
 		resp := dto.TusModulUploadInfoResponse{
@@ -243,6 +259,7 @@ func TestTusModulUploadInfoResponse(t *testing.T) {
 	})
 
 	t.Run("dto.TusModulUploadInfoResponse with empty ModulID", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "modul-upload-456",
 			ModulID:   "",
@@ -262,7 +279,9 @@ func TestTusModulUploadInfoResponse(t *testing.T) {
 }
 
 func TestTusModulUploadSlotResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.TusModulUploadSlotResponse available", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadSlotResponse{
 			Available:   true,
 			Message:     "Upload slot available",
@@ -285,6 +304,7 @@ func TestTusModulUploadSlotResponse(t *testing.T) {
 	})
 
 	t.Run("dto.TusModulUploadSlotResponse not available", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusModulUploadSlotResponse{
 			Available:   false,
 			Message:     "Queue is full",
@@ -302,7 +322,9 @@ func TestTusModulUploadSlotResponse(t *testing.T) {
 }
 
 func TestTusModulUploadProgressCalculation(t *testing.T) {
+	t.Parallel()
 	t.Run("Calculate progress percentage", func(t *testing.T) {
+		t.Parallel()
 		testCases := []struct {
 			offset      int64
 			length      int64
@@ -324,7 +346,9 @@ func TestTusModulUploadProgressCalculation(t *testing.T) {
 }
 
 func TestTusModulUploadStatusTransitions(t *testing.T) {
+	t.Parallel()
 	t.Run("Valid status transitions", func(t *testing.T) {
+		t.Parallel()
 		transitions := map[string][]string{
 			UploadStatusQueued:    {UploadStatusPending},
 			UploadStatusPending:   {UploadStatusUploading, UploadStatusCancelled, UploadStatusExpired},
@@ -349,7 +373,9 @@ func TestTusModulUploadStatusTransitions(t *testing.T) {
 }
 
 func TestTusModulUploadMetadata(t *testing.T) {
+	t.Parallel()
 	t.Run("TusModulUpload with metadata", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		metadata := TusModulUploadMetadata{
 			Judul:     "Machine Learning Basics",

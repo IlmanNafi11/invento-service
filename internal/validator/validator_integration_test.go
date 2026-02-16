@@ -10,6 +10,7 @@ import (
 
 // TestPasswordStrengthValidation tests password strength validation through validator
 func TestPasswordStrengthValidation(t *testing.T) {
+	t.Parallel()
 	validate := validator.New()
 	validate.RegisterValidation("password_strength", ValidatePasswordStrength)
 
@@ -36,6 +37,7 @@ func TestPasswordStrengthValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := TestStruct{Password: tt.password}
 			err := validate.Struct(s)
 			if tt.shouldErr {
@@ -49,6 +51,7 @@ func TestPasswordStrengthValidation(t *testing.T) {
 
 // TestIndonesiaPhoneNumberValidation tests Indonesian phone validation
 func TestIndonesiaPhoneNumberValidation(t *testing.T) {
+	t.Parallel()
 	validate := validator.New()
 	validate.RegisterValidation("id_phone", ValidateIndonesiaPhoneNumber)
 
@@ -75,6 +78,7 @@ func TestIndonesiaPhoneNumberValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := TestStruct{Phone: tt.phone}
 			err := validate.Struct(s)
 			if tt.shouldErr {
@@ -88,6 +92,7 @@ func TestIndonesiaPhoneNumberValidation(t *testing.T) {
 
 // TestIndonesiaMobileNumberValidation tests Indonesian mobile validation
 func TestIndonesiaMobileNumberValidation(t *testing.T) {
+	t.Parallel()
 	validate := validator.New()
 	validate.RegisterValidation("id_mobile", ValidateIndonesiaMobileNumber)
 
@@ -115,6 +120,7 @@ func TestIndonesiaMobileNumberValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := TestStruct{Mobile: tt.mobile}
 			err := validate.Struct(s)
 			if tt.shouldErr {
@@ -128,6 +134,7 @@ func TestIndonesiaMobileNumberValidation(t *testing.T) {
 
 // TestNIKValidation tests NIK validation
 func TestNIKValidation(t *testing.T) {
+	t.Parallel()
 	validate := validator.New()
 	validate.RegisterValidation("nik", ValidateNIK)
 
@@ -156,6 +163,7 @@ func TestNIKValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := TestStruct{NIK: tt.nik}
 			err := validate.Struct(s)
 			if tt.shouldErr {
@@ -169,6 +177,7 @@ func TestNIKValidation(t *testing.T) {
 
 // TestNPWPValidation tests NPWP validation
 func TestNPWPValidation(t *testing.T) {
+	t.Parallel()
 	validate := validator.New()
 	validate.RegisterValidation("npwp", ValidateNPWP)
 
@@ -192,6 +201,7 @@ func TestNPWPValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := TestStruct{NPWP: tt.npwp}
 			err := validate.Struct(s)
 			if tt.shouldErr {
@@ -205,6 +215,7 @@ func TestNPWPValidation(t *testing.T) {
 
 // TestIndonesiaPostalCodeValidation tests postal code validation
 func TestIndonesiaPostalCodeValidation(t *testing.T) {
+	t.Parallel()
 	validate := validator.New()
 	validate.RegisterValidation("id_postal_code", ValidateIndonesiaPostalCode)
 
@@ -231,6 +242,7 @@ func TestIndonesiaPostalCodeValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := TestStruct{PostalCode: tt.code}
 			err := validate.Struct(s)
 			if tt.shouldErr {
@@ -244,6 +256,7 @@ func TestIndonesiaPostalCodeValidation(t *testing.T) {
 
 // TestMultipleValidations tests multiple validations together
 func TestMultipleValidations(t *testing.T) {
+	t.Parallel()
 	validate := validator.New()
 	validate.RegisterValidation("password_strength", ValidatePasswordStrength)
 	validate.RegisterValidation("id_phone", ValidateIndonesiaPhoneNumber)

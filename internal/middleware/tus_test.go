@@ -12,12 +12,14 @@ import (
 )
 
 func TestTusProtocolMiddleware_Creation(t *testing.T) {
+	t.Parallel()
 	mw := middleware.TusProtocolMiddleware("1.0.0", 524288000)
 
 	assert.NotNil(t, mw)
 }
 
 func TestTusProtocolMiddleware_DifferentVersions(t *testing.T) {
+	t.Parallel()
 	versions := []string{
 		"1.0.0",
 		"0.2.0",
@@ -33,6 +35,7 @@ func TestTusProtocolMiddleware_DifferentVersions(t *testing.T) {
 }
 
 func TestMiddleware_OptionsRequest(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Use(middleware.TusProtocolMiddleware("1.0.0", 524288000))
@@ -49,6 +52,7 @@ func TestMiddleware_OptionsRequest(t *testing.T) {
 }
 
 func TestTusProtocolMiddleware_MissingTusResumableOnPatch_Returns412(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(middleware.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Patch("/test", func(c *fiber.Ctx) error {
@@ -64,6 +68,7 @@ func TestTusProtocolMiddleware_MissingTusResumableOnPatch_Returns412(t *testing.
 }
 
 func TestTusProtocolMiddleware_WrongTusVersion_Returns412(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(middleware.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Patch("/test", func(c *fiber.Ctx) error {
@@ -80,6 +85,7 @@ func TestTusProtocolMiddleware_WrongTusVersion_Returns412(t *testing.T) {
 }
 
 func TestTusProtocolMiddleware_GetRequestWithoutTusHeader_Passes(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(middleware.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -94,6 +100,7 @@ func TestTusProtocolMiddleware_GetRequestWithoutTusHeader_Passes(t *testing.T) {
 }
 
 func TestTusProtocolMiddleware_PostRequestWithoutTusHeader_Passes(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(middleware.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Post("/test", func(c *fiber.Ctx) error {
@@ -108,6 +115,7 @@ func TestTusProtocolMiddleware_PostRequestWithoutTusHeader_Passes(t *testing.T) 
 }
 
 func TestTusProtocolMiddleware_ValidTusVersion_Passes(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(middleware.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Patch("/test", func(c *fiber.Ctx) error {
@@ -123,6 +131,7 @@ func TestTusProtocolMiddleware_ValidTusVersion_Passes(t *testing.T) {
 }
 
 func TestTusProtocolMiddleware_HeadRequestWithTusHeader_Passes(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(middleware.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Head("/test", func(c *fiber.Ctx) error {
@@ -138,6 +147,7 @@ func TestTusProtocolMiddleware_HeadRequestWithTusHeader_Passes(t *testing.T) {
 }
 
 func TestTusProtocolMiddleware_DeleteRequestWithTusHeader_Passes(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(middleware.TusProtocolMiddleware("1.0.0", 524288000))
 	app.Delete("/test", func(c *fiber.Ctx) error {
@@ -153,6 +163,7 @@ func TestTusProtocolMiddleware_DeleteRequestWithTusHeader_Passes(t *testing.T) {
 }
 
 func TestTusProtocolMiddleware_HandlerType(t *testing.T) {
+	t.Parallel()
 	mw := middleware.TusProtocolMiddleware("1.0.0", 524288000)
 
 	app := fiber.New()

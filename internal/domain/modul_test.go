@@ -7,7 +7,9 @@ import (
 )
 
 func TestModulStruct(t *testing.T) {
+	t.Parallel()
 	t.Run("Modul struct initialization", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		modul := Modul{
 			ID:        "550e8400-e29b-41d4-a716-446655440000",
@@ -38,6 +40,7 @@ func TestModulStruct(t *testing.T) {
 	})
 
 	t.Run("Modul with User relation", func(t *testing.T) {
+		t.Parallel()
 		user := User{
 			ID:    "user-100",
 			Email: "user@example.com",
@@ -63,7 +66,9 @@ func TestModulStruct(t *testing.T) {
 }
 
 func TestModulRequestStructs(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UpdateModulRequest", func(t *testing.T) {
+		t.Parallel()
 		req := dto.UpdateModulRequest{
 			Judul:     "updated_module.pdf",
 			Deskripsi: "Updated description",
@@ -78,6 +83,7 @@ func TestModulRequestStructs(t *testing.T) {
 	})
 
 	t.Run("dto.UpdateModulRequest with partial data", func(t *testing.T) {
+		t.Parallel()
 		req := dto.UpdateModulRequest{
 			Deskripsi: "Only description updated",
 		}
@@ -92,7 +98,9 @@ func TestModulRequestStructs(t *testing.T) {
 }
 
 func TestModulListQueryParams(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ModulListQueryParams with all fields", func(t *testing.T) {
+		t.Parallel()
 		params := dto.ModulListQueryParams{
 			Search:       "test",
 			FilterType:   "application/pdf",
@@ -119,6 +127,7 @@ func TestModulListQueryParams(t *testing.T) {
 	})
 
 	t.Run("dto.ModulListQueryParams with default values", func(t *testing.T) {
+		t.Parallel()
 		params := dto.ModulListQueryParams{}
 
 		if params.Search != "" {
@@ -131,7 +140,9 @@ func TestModulListQueryParams(t *testing.T) {
 }
 
 func TestModulResponseStructs(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ModulListItem", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		item := dto.ModulListItem{
 			ID:                 "550e8400-e29b-41d4-a716-446655440002",
@@ -153,6 +164,7 @@ func TestModulResponseStructs(t *testing.T) {
 	})
 
 	t.Run("dto.ModulListData with pagination", func(t *testing.T) {
+		t.Parallel()
 		items := []dto.ModulListItem{
 			{ID: "550e8400-e29b-41d4-a716-446655440003", Judul: "test1.pdf", MimeType: "application/pdf", Status: "completed"},
 			{ID: "550e8400-e29b-41d4-a716-446655440004", Judul: "test2.pdf", MimeType: "application/pdf", Status: "completed"},
@@ -176,6 +188,7 @@ func TestModulResponseStructs(t *testing.T) {
 	})
 
 	t.Run("dto.ModulResponse", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		resp := dto.ModulResponse{
 			ID:        "550e8400-e29b-41d4-a716-446655440005",
@@ -197,7 +210,9 @@ func TestModulResponseStructs(t *testing.T) {
 }
 
 func TestModulDownloadRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ModulDownloadRequest with multiple IDs", func(t *testing.T) {
+		t.Parallel()
 		req := dto.ModulDownloadRequest{
 			IDs: []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440002", "550e8400-e29b-41d4-a716-446655440003"},
 		}
@@ -211,6 +226,7 @@ func TestModulDownloadRequest(t *testing.T) {
 	})
 
 	t.Run("dto.ModulDownloadRequest with single ID", func(t *testing.T) {
+		t.Parallel()
 		req := dto.ModulDownloadRequest{
 			IDs: []string{"550e8400-e29b-41d4-a716-446655440100"},
 		}
@@ -222,6 +238,7 @@ func TestModulDownloadRequest(t *testing.T) {
 }
 
 func TestModulStatus(t *testing.T) {
+	t.Parallel()
 	validStatuses := []string{"pending", "completed", "failed"}
 
 	for _, status := range validStatuses {

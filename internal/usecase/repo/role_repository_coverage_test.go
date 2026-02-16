@@ -13,6 +13,7 @@ import (
 
 // TestRoleRepository_Create_Success tests successful role creation
 func TestRoleRepository_Create_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -36,6 +37,7 @@ func TestRoleRepository_Create_Success(t *testing.T) {
 
 // TestRoleRepository_GetByID_Success tests successful role retrieval by ID
 func TestRoleRepository_GetByID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -57,6 +59,7 @@ func TestRoleRepository_GetByID_Success(t *testing.T) {
 
 // TestRoleRepository_GetByName_Success tests successful role retrieval by name
 func TestRoleRepository_GetByName_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -77,6 +80,7 @@ func TestRoleRepository_GetByName_Success(t *testing.T) {
 
 // TestRoleRepository_Update_Success tests successful role update
 func TestRoleRepository_Update_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -102,6 +106,7 @@ func TestRoleRepository_Update_Success(t *testing.T) {
 
 // TestRoleRepository_Delete_Success tests successful role deletion
 func TestRoleRepository_Delete_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -125,6 +130,7 @@ func TestRoleRepository_Delete_Success(t *testing.T) {
 
 // TestRoleRepository_GetAll_Success tests successful role list retrieval
 func TestRoleRepository_GetAll_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)

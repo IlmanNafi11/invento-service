@@ -18,6 +18,7 @@ import (
 )
 
 func TestTusModulController_GetUploadInfo_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusModulControllerUsecase)
 	baseCtrl := getTusBaseController()
 	cfg := getTusTestConfig()
@@ -49,6 +50,7 @@ func TestTusModulController_GetUploadInfo_Success(t *testing.T) {
 }
 
 func TestTusModulController_CancelUpload_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusModulControllerUsecase)
 	baseCtrl := getTusBaseController()
 	cfg := getTusTestConfig()
@@ -74,6 +76,7 @@ func TestTusModulController_CancelUpload_Success(t *testing.T) {
 }
 
 func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusModulControllerUsecase)
 	baseCtrl := getTusBaseController()
 	cfg := getTusTestConfig()

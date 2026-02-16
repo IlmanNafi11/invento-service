@@ -81,6 +81,7 @@ func newTestTusCleanup(t *testing.T) (*TusCleanup, *TusStore, *mockTusUploadRepo
 }
 
 func TestTusCleanup_NewTusCleanup_InitializesConfig(t *testing.T) {
+	t.Parallel()
 	cleanup, _, _, _ := newTestTusCleanup(t)
 
 	require.NotNil(t, cleanup)
@@ -92,6 +93,7 @@ func TestTusCleanup_NewTusCleanup_InitializesConfig(t *testing.T) {
 }
 
 func TestTusCleanup_StartStop_ManagesGoroutineLifecycle(t *testing.T) {
+	t.Parallel()
 	cleanup, _, projectRepo, modulRepo := newTestTusCleanup(t)
 
 	projectRepo.On("GetExpiredUploads", mock.Anything, mock.Anything).Return([]domain.TusUpload{}, nil)
@@ -113,6 +115,7 @@ func TestTusCleanup_StartStop_ManagesGoroutineLifecycle(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupExpiredProjects_UpdatesExpiredStatuses(t *testing.T) {
+	t.Parallel()
 	cleanup, _, projectRepo, _ := newTestTusCleanup(t)
 
 	expired := []domain.TusUpload{{ID: "p1"}, {ID: "p2"}}
@@ -126,6 +129,7 @@ func TestTusCleanup_CleanupExpiredProjects_UpdatesExpiredStatuses(t *testing.T) 
 }
 
 func TestTusCleanup_CleanupAbandonedProjects_UpdatesFailedForIdleUploads(t *testing.T) {
+	t.Parallel()
 	cleanup, _, projectRepo, _ := newTestTusCleanup(t)
 
 	projectRepo.On("GetAbandonedUploads", mock.Anything, cleanup.idleTimeout).Return([]domain.TusUpload{{ID: "old"}}, nil).Once()
@@ -138,6 +142,7 @@ func TestTusCleanup_CleanupAbandonedProjects_UpdatesFailedForIdleUploads(t *test
 }
 
 func TestTusCleanup_CleanupExpiredModuls_UpdatesExpiredStatuses(t *testing.T) {
+	t.Parallel()
 	cleanup, _, _, modulRepo := newTestTusCleanup(t)
 
 	expired := []domain.TusModulUpload{{ID: "m1"}, {ID: "m2"}}
@@ -151,6 +156,7 @@ func TestTusCleanup_CleanupExpiredModuls_UpdatesExpiredStatuses(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupAbandonedModuls_UpdatesFailedStatuses(t *testing.T) {
+	t.Parallel()
 	cleanup, _, _, modulRepo := newTestTusCleanup(t)
 
 	abandoned := []domain.TusModulUpload{{ID: "m1"}}
@@ -163,6 +169,7 @@ func TestTusCleanup_CleanupAbandonedModuls_UpdatesFailedStatuses(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupUpload_TerminatesStoreAndDeletesRecord(t *testing.T) {
+	t.Parallel()
 	cleanup, store, projectRepo, _ := newTestTusCleanup(t)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "p-clean", Size: 10, Metadata: map[string]string{}}))
 
@@ -177,6 +184,7 @@ func TestTusCleanup_CleanupUpload_TerminatesStoreAndDeletesRecord(t *testing.T) 
 }
 
 func TestTusCleanup_CleanupModulUpload_TerminatesStoreAndDeletesRecord(t *testing.T) {
+	t.Parallel()
 	cleanup, store, _, modulRepo := newTestTusCleanup(t)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "m-clean", Size: 10, Metadata: map[string]string{}}))
 
@@ -191,6 +199,7 @@ func TestTusCleanup_CleanupModulUpload_TerminatesStoreAndDeletesRecord(t *testin
 }
 
 func TestTusCleanup_CleanupModulUpload_NilModulRepoNoError(t *testing.T) {
+	t.Parallel()
 	cleanup, _, _, _ := newTestTusCleanup(t)
 	cleanup.modulRepo = nil
 
@@ -199,6 +208,7 @@ func TestTusCleanup_CleanupModulUpload_NilModulRepoNoError(t *testing.T) {
 }
 
 func TestTusCleanup_PerformCleanup_ExecutesCycleAndCleansStaleLocks(t *testing.T) {
+	t.Parallel()
 	cleanup, store, projectRepo, modulRepo := newTestTusCleanup(t)
 
 	projectRepo.On("GetExpiredUploads", mock.Anything, mock.Anything).Return([]domain.TusUpload{}, nil).Once()
@@ -219,6 +229,7 @@ func TestTusCleanup_PerformCleanup_ExecutesCycleAndCleansStaleLocks(t *testing.T
 }
 
 func TestTusCleanup_CleanupExpiredModuls_NilRepoReturnsNil(t *testing.T) {
+	t.Parallel()
 	cleanup, _, _, _ := newTestTusCleanup(t)
 	cleanup.modulRepo = nil
 
@@ -227,6 +238,7 @@ func TestTusCleanup_CleanupExpiredModuls_NilRepoReturnsNil(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupAbandonedModuls_NilRepoReturnsNil(t *testing.T) {
+	t.Parallel()
 	cleanup, _, _, _ := newTestTusCleanup(t)
 	cleanup.modulRepo = nil
 

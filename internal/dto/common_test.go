@@ -10,6 +10,7 @@ import (
 
 // TestNewErrorDetail_Success tests creating ErrorDetail without code
 func TestNewErrorDetail_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		field   string
@@ -56,6 +57,7 @@ func TestNewErrorDetail_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := NewErrorDetail(tt.field, tt.message)
 			assert.Equal(t, tt.want, got)
 			assert.Empty(t, got.Code, "Code should be empty")
@@ -65,6 +67,7 @@ func TestNewErrorDetail_Success(t *testing.T) {
 
 // TestNewErrorDetailWithCode_Success tests creating ErrorDetail with code
 func TestNewErrorDetailWithCode_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		field   string
@@ -118,6 +121,7 @@ func TestNewErrorDetailWithCode_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := NewErrorDetailWithCode(tt.field, tt.message, tt.code)
 			assert.Equal(t, tt.want, got)
 		})
@@ -126,6 +130,7 @@ func TestNewErrorDetailWithCode_Success(t *testing.T) {
 
 // TestFormatISO8601_Success tests formatting time to ISO 8601
 func TestFormatISO8601_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		time time.Time
@@ -175,6 +180,7 @@ func TestFormatISO8601_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got := FormatISO8601(tt.time)
 			assert.Equal(t, tt.want, got)
 		})
@@ -183,6 +189,7 @@ func TestFormatISO8601_Success(t *testing.T) {
 
 // TestNowISO8601_Format tests that NowISO8601 returns valid ISO 8601 format
 func TestNowISO8601_Format(t *testing.T) {
+	t.Parallel()
 	got := NowISO8601()
 
 	// Parse the result to verify it's valid ISO 8601
@@ -201,6 +208,7 @@ func TestNowISO8601_Format(t *testing.T) {
 
 // TestParseISO8601_Success tests parsing valid ISO 8601 strings
 func TestParseISO8601_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		input   string
@@ -253,6 +261,7 @@ func TestParseISO8601_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := ParseISO8601(tt.input)
 			assert.NoError(t, err)
 			assert.True(t, got.Equal(tt.want), "Expected %v, got %v", tt.want, got)
@@ -267,6 +276,7 @@ func TestParseISO8601_Success(t *testing.T) {
 
 // TestParseISO8601_Failure tests parsing invalid ISO 8601 strings
 func TestParseISO8601_Failure(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		input string
@@ -335,6 +345,7 @@ func TestParseISO8601_Failure(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			_, err := ParseISO8601(tt.input)
 			assert.Error(t, err, "ParseISO8601 should return error for invalid input")
 		})
@@ -343,6 +354,7 @@ func TestParseISO8601_Failure(t *testing.T) {
 
 // TestFormatParseRoundTrip tests that formatting and parsing are inverse operations
 func TestFormatParseRoundTrip(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		time time.Time
@@ -371,6 +383,7 @@ func TestFormatParseRoundTrip(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Format then parse should give equivalent time
 			formatted := FormatISO8601(tt.time)
 			parsed, err := ParseISO8601(formatted)
@@ -384,7 +397,9 @@ func TestFormatParseRoundTrip(t *testing.T) {
 
 // TestConstants validates that constant values are correct
 func TestConstants(t *testing.T) {
+	t.Parallel()
 	t.Run("TimeFormat constant", func(t *testing.T) {
+		t.Parallel()
 		// TimeFormat should be valid Go reference time
 		assert.Equal(t, "2006-01-02T15:04:05Z07:00", TimeFormat)
 
@@ -395,6 +410,7 @@ func TestConstants(t *testing.T) {
 	})
 
 	t.Run("pagination constants", func(t *testing.T) {
+		t.Parallel()
 		assert.Equal(t, 1, DefaultPage)
 		assert.Equal(t, 10, DefaultLimit)
 		assert.Equal(t, 100, MaxLimit)
@@ -403,6 +419,7 @@ func TestConstants(t *testing.T) {
 	})
 
 	t.Run("validation message constants", func(t *testing.T) {
+		t.Parallel()
 		tests := []struct {
 			constant string
 			want     string
@@ -443,7 +460,9 @@ func TestConstants(t *testing.T) {
 
 // TestErrorDetail_JSONTags tests JSON serialization of ErrorDetail
 func TestErrorDetail_JSONTags(t *testing.T) {
+	t.Parallel()
 	t.Run("without code - omitempty", func(t *testing.T) {
+		t.Parallel()
 		ed := NewErrorDetail("email", "required")
 		// Code should not be present in JSON when empty due to omitempty
 		// This is implicitly tested through the struct tag
@@ -453,6 +472,7 @@ func TestErrorDetail_JSONTags(t *testing.T) {
 	})
 
 	t.Run("with code", func(t *testing.T) {
+		t.Parallel()
 		ed := NewErrorDetailWithCode("email", "required", "ERR_001")
 		assert.Equal(t, "email", ed.Field)
 		assert.Equal(t, "required", ed.Message)
@@ -462,7 +482,9 @@ func TestErrorDetail_JSONTags(t *testing.T) {
 
 // TestTimeBoundaries tests time functions at boundary conditions
 func TestTimeBoundaries(t *testing.T) {
+	t.Parallel()
 	t.Run("minimum year", func(t *testing.T) {
+		t.Parallel()
 		minTime := time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
 		formatted := FormatISO8601(minTime)
 		parsed, err := ParseISO8601(formatted)
@@ -471,6 +493,7 @@ func TestTimeBoundaries(t *testing.T) {
 	})
 
 	t.Run("far future year", func(t *testing.T) {
+		t.Parallel()
 		futureTime := time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC)
 		formatted := FormatISO8601(futureTime)
 		parsed, err := ParseISO8601(formatted)

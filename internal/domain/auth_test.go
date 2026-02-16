@@ -17,6 +17,7 @@ func (c testAuthClaims) GetUserID() string {
 }
 
 func TestUser_Creation(t *testing.T) {
+	t.Parallel()
 	user := User{
 		ID:        "user-123",
 		Email:     "test@example.com",
@@ -35,6 +36,7 @@ func TestUser_Creation(t *testing.T) {
 }
 
 func TestAuthRequest_Validation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		request dto.AuthRequest
@@ -68,6 +70,7 @@ func TestAuthRequest_Validation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if tt.valid {
 				assert.NotEmpty(t, tt.request.Email)
 				assert.NotEmpty(t, tt.request.Password)
@@ -84,6 +87,7 @@ func TestAuthRequest_Validation(t *testing.T) {
 }
 
 func TestRegisterRequest_Validation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		request dto.RegisterRequest
@@ -129,6 +133,7 @@ func TestRegisterRequest_Validation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if tt.valid {
 				assert.NotEmpty(t, tt.request.Name)
 				assert.NotEmpty(t, tt.request.Email)
@@ -142,6 +147,7 @@ func TestRegisterRequest_Validation(t *testing.T) {
 }
 
 func TestAuthResponse_Structure(t *testing.T) {
+	t.Parallel()
 	user := dto.AuthUserResponse{
 		ID:        "user-123",
 		Email:     "test@example.com",
@@ -167,6 +173,7 @@ func TestAuthResponse_Structure(t *testing.T) {
 }
 
 func TestRefreshTokenResponse_Structure(t *testing.T) {
+	t.Parallel()
 	response := dto.RefreshTokenResponse{
 		AccessToken: "new_access_token",
 		TokenType:   "Bearer",
@@ -181,6 +188,7 @@ func TestRefreshTokenResponse_Structure(t *testing.T) {
 }
 
 func TestAuthClaims_Interface(t *testing.T) {
+	t.Parallel()
 	claims := testAuthClaims{userID: "user-claims-123"}
 
 	var authClaims AuthClaims = claims

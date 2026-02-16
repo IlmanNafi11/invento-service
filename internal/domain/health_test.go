@@ -9,12 +9,14 @@ import (
 )
 
 func TestHealthStatus_Constants(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, dto.HealthStatus("healthy"), dto.HealthStatusHealthy)
 	assert.Equal(t, dto.HealthStatus("unhealthy"), dto.HealthStatusUnhealthy)
 	assert.Equal(t, dto.HealthStatus("degraded"), dto.HealthStatusDegraded)
 }
 
 func TestServiceStatus_Constants(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, dto.ServiceStatus("healthy"), dto.ServiceStatusHealthy)
 	assert.Equal(t, dto.ServiceStatus("unhealthy"), dto.ServiceStatusUnhealthy)
 	assert.Equal(t, dto.ServiceStatus("connected"), dto.ServiceStatusConnected)
@@ -25,6 +27,7 @@ func TestServiceStatus_Constants(t *testing.T) {
 }
 
 func TestBasicHealthCheck_Structure(t *testing.T) {
+	t.Parallel()
 	timestamp := time.Now()
 	health := dto.BasicHealthCheck{
 		Status:    dto.HealthStatusHealthy,
@@ -38,6 +41,7 @@ func TestBasicHealthCheck_Structure(t *testing.T) {
 }
 
 func TestAppInfo_Structure(t *testing.T) {
+	t.Parallel()
 	startTime := time.Now()
 	appInfo := dto.AppInfo{
 		Name:        "invento-service",
@@ -57,6 +61,7 @@ func TestAppInfo_Structure(t *testing.T) {
 }
 
 func TestDatabaseStatus_Structure(t *testing.T) {
+	t.Parallel()
 	dbStatus := dto.DatabaseStatus{
 		Status:          dto.ServiceStatusConnected,
 		PingTime:        "2ms",
@@ -79,6 +84,7 @@ func TestDatabaseStatus_Structure(t *testing.T) {
 }
 
 func TestSystemInfo_Structure(t *testing.T) {
+	t.Parallel()
 	systemInfo := dto.SystemInfo{
 		MemoryUsage: "45.2MB",
 		CPUCores:    4,
@@ -91,6 +97,7 @@ func TestSystemInfo_Structure(t *testing.T) {
 }
 
 func TestDetailedSystemInfo_Structure(t *testing.T) {
+	t.Parallel()
 	systemInfo := dto.DetailedSystemInfo{
 		Memory: dto.MemoryInfo{
 			Allocated:      "45.2MB",
@@ -123,6 +130,7 @@ func TestDetailedSystemInfo_Structure(t *testing.T) {
 }
 
 func TestHttpMetrics_Structure(t *testing.T) {
+	t.Parallel()
 	httpMetrics := dto.HttpMetrics{
 		TotalRequests:  5420,
 		ActiveRequests: 3,
@@ -141,6 +149,7 @@ func TestHttpMetrics_Structure(t *testing.T) {
 }
 
 func TestDependency_Structure(t *testing.T) {
+	t.Parallel()
 	dependency := dto.Dependency{
 		Name:    "fiber",
 		Version: "v2.50.0",
@@ -153,6 +162,7 @@ func TestDependency_Structure(t *testing.T) {
 }
 
 func TestComprehensiveHealthCheck_Structure(t *testing.T) {
+	t.Parallel()
 	timestamp := time.Now()
 	healthCheck := dto.ComprehensiveHealthCheck{
 		Status: dto.HealthStatusHealthy,

@@ -147,5 +147,6 @@ func (suite *RoleRepositoryTestSuite) TestGetAll_Success() {
 }
 
 func TestRoleRepositorySuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(RoleRepositoryTestSuite))
 }

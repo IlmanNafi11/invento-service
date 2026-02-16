@@ -6,7 +6,9 @@ import (
 )
 
 func TestStatisticData(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.StatisticData with all fields", func(t *testing.T) {
+		t.Parallel()
 		totalProject := 100
 		totalModul := 500
 		totalUser := 25
@@ -34,6 +36,7 @@ func TestStatisticData(t *testing.T) {
 	})
 
 	t.Run("dto.StatisticData with partial fields", func(t *testing.T) {
+		t.Parallel()
 		totalProject := 50
 
 		data := dto.StatisticData{
@@ -55,6 +58,7 @@ func TestStatisticData(t *testing.T) {
 	})
 
 	t.Run("dto.StatisticData with zero values", func(t *testing.T) {
+		t.Parallel()
 		totalProject := 0
 		totalModul := 0
 		totalUser := 0
@@ -82,6 +86,7 @@ func TestStatisticData(t *testing.T) {
 	})
 
 	t.Run("dto.StatisticData all nil", func(t *testing.T) {
+		t.Parallel()
 		data := dto.StatisticData{}
 
 		if data.TotalProject != nil {
@@ -100,7 +105,9 @@ func TestStatisticData(t *testing.T) {
 }
 
 func TestStatisticResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.StatisticResponse with complete data", func(t *testing.T) {
+		t.Parallel()
 		totalProject := 150
 		totalModul := 750
 		totalUser := 30
@@ -130,6 +137,7 @@ func TestStatisticResponse(t *testing.T) {
 	})
 
 	t.Run("dto.StatisticResponse with partial data", func(t *testing.T) {
+		t.Parallel()
 		totalProject := 200
 
 		resp := dto.StatisticResponse{
@@ -147,6 +155,7 @@ func TestStatisticResponse(t *testing.T) {
 	})
 
 	t.Run("dto.StatisticResponse with empty data", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.StatisticResponse{
 			Data: dto.StatisticData{},
 		}
@@ -167,7 +176,9 @@ func TestStatisticResponse(t *testing.T) {
 }
 
 func TestStatisticDataMutability(t *testing.T) {
+	t.Parallel()
 	t.Run("Modify dto.StatisticData pointers", func(t *testing.T) {
+		t.Parallel()
 		totalProject := 100
 		totalModul := 200
 
@@ -193,7 +204,9 @@ func TestStatisticDataMutability(t *testing.T) {
 }
 
 func TestStatisticDataEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Large numbers", func(t *testing.T) {
+		t.Parallel()
 		totalProject := 999999
 		totalModul := 1000000
 		totalUser := 50000
@@ -221,6 +234,7 @@ func TestStatisticDataEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Single field set", func(t *testing.T) {
+		t.Parallel()
 		testCases := []struct {
 			name   string
 			field  string
@@ -251,6 +265,7 @@ func TestStatisticDataEdgeCases(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
 				value := tc.value
 				data := &dto.StatisticData{}
 				tc.setter(data, &value)

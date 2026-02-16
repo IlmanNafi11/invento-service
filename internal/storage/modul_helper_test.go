@@ -10,6 +10,7 @@ import (
 )
 
 func TestNewModulHelper(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 		Upload: config.UploadConfig{
@@ -23,6 +24,7 @@ func TestNewModulHelper(t *testing.T) {
 }
 
 func TestModulHelper_GenerateModulIdentifier(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
@@ -38,6 +40,7 @@ func TestModulHelper_GenerateModulIdentifier(t *testing.T) {
 }
 
 func TestModulHelper_GenerateModulIdentifier_Uniqueness(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
@@ -53,6 +56,7 @@ func TestModulHelper_GenerateModulIdentifier_Uniqueness(t *testing.T) {
 }
 
 func TestModulHelper_BuildModulPath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		env        string
@@ -78,6 +82,7 @@ func TestModulHelper_BuildModulPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cfg := &config.Config{
 				App: config.AppConfig{Env: tt.env},
 				Upload: config.UploadConfig{
@@ -97,6 +102,7 @@ func TestModulHelper_BuildModulPath(t *testing.T) {
 }
 
 func TestModulHelper_BuildModulDirectory(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 		Upload: config.UploadConfig{
@@ -116,6 +122,7 @@ func TestModulHelper_BuildModulDirectory(t *testing.T) {
 }
 
 func TestModulHelper_ValidateModulFile(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
@@ -179,6 +186,7 @@ func TestModulHelper_ValidateModulFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			fileHeader := &multipart.FileHeader{
 				Filename: tt.filename,
 				Size:     tt.size,
@@ -196,6 +204,7 @@ func TestModulHelper_ValidateModulFile(t *testing.T) {
 }
 
 func TestModulHelper_ValidateModulFileSize(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
@@ -215,6 +224,7 @@ func TestModulHelper_ValidateModulFileSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := modulHelper.ValidateModulFileSize(tt.size)
 
 			if tt.shouldError {
@@ -227,6 +237,7 @@ func TestModulHelper_ValidateModulFileSize(t *testing.T) {
 }
 
 func TestValidateModulFileExtension(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		tipe        string
@@ -244,6 +255,7 @@ func TestValidateModulFileExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := storage.ValidateModulFileExtension(tt.tipe)
 
 			if tt.shouldError {
@@ -256,6 +268,7 @@ func TestValidateModulFileExtension(t *testing.T) {
 }
 
 func TestGetModulFileExtension(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		tipe     string
@@ -272,6 +285,7 @@ func TestGetModulFileExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := storage.GetModulFileExtension(tt.tipe)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -279,6 +293,7 @@ func TestGetModulFileExtension(t *testing.T) {
 }
 
 func TestModulHelper_GetBasePath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		env      string
@@ -298,6 +313,7 @@ func TestModulHelper_GetBasePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cfg := &config.Config{
 				App: config.AppConfig{Env: tt.env},
 				Upload: config.UploadConfig{
@@ -314,6 +330,7 @@ func TestModulHelper_GetBasePath(t *testing.T) {
 }
 
 func TestModulHelper_EdgeCases(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 		Upload: config.UploadConfig{
@@ -323,22 +340,26 @@ func TestModulHelper_EdgeCases(t *testing.T) {
 	modulHelper := storage.NewModulHelper(cfg)
 
 	t.Run("BuildModulPath with empty filename", func(t *testing.T) {
+		t.Parallel()
 		path := modulHelper.BuildModulPath("123", "id", "")
 		assert.NotEmpty(t, path)
 	})
 
 	t.Run("BuildModulDirectory with zero userID", func(t *testing.T) {
+		t.Parallel()
 		dir := modulHelper.BuildModulDirectory("0", "test-id")
 		assert.Contains(t, dir, "0")
 	})
 
 	t.Run("BuildModulDirectory with empty identifier", func(t *testing.T) {
+		t.Parallel()
 		dir := modulHelper.BuildModulDirectory("123", "")
 		assert.Contains(t, dir, "123")
 	})
 }
 
 func TestModulHelper_FileSizeBoundary(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
@@ -359,6 +380,7 @@ func TestModulHelper_FileSizeBoundary(t *testing.T) {
 }
 
 func TestModulHelper_CaseInsensitiveExtension(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
@@ -377,6 +399,7 @@ func TestModulHelper_CaseInsensitiveExtension(t *testing.T) {
 
 	for _, filename := range tests {
 		t.Run(filename, func(t *testing.T) {
+			t.Parallel()
 			fileHeader := &multipart.FileHeader{
 				Filename: filename,
 				Size:     1024,

@@ -18,6 +18,7 @@ import (
 )
 
 func TestUserController_GetUserList_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -74,6 +75,7 @@ func TestUserController_GetUserList_Success(t *testing.T) {
 
 // Test 2: GetUserList_WithSearchAndFilter
 func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -127,6 +129,7 @@ func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 
 // Test 3: UpdateUserRole_Success
 func TestUserController_GetUserFiles_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -183,6 +186,7 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 
 // Test 7: GetUserFiles_WithSearch
 func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -234,6 +238,7 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 
 // Test 8: GetProfile_Success
 func TestUserController_DownloadUserFiles_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -270,6 +275,7 @@ func TestUserController_DownloadUserFiles_Success(t *testing.T) {
 
 // Test 14: DownloadUserFiles_EmptyIDs
 func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -299,6 +305,7 @@ func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
 
 // Test 15: DownloadUserFiles_UserNotFound
 func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -327,6 +334,7 @@ func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
 
 // Test 16: GetUserList_InternalError
 func TestUserController_GetUserList_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -354,6 +362,7 @@ func TestUserController_GetUserList_InternalError(t *testing.T) {
 
 // Test 17: UpdateUserRole_InvalidRole
 func TestUserController_GetUserFiles_UserNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -382,6 +391,7 @@ func TestUserController_GetUserFiles_UserNotFound(t *testing.T) {
 
 // Test 19: UpdateProfile_UserNotFound
 func TestUserController_GetUserFiles_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -409,6 +419,7 @@ func TestUserController_GetUserFiles_InternalError(t *testing.T) {
 
 // Test 27: UpdateUserRole_InternalError
 func TestUserController_DownloadUserFiles_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 

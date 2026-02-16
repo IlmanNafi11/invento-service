@@ -11,6 +11,7 @@ import (
 )
 
 func TestLogin_UserInactive(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -48,6 +49,7 @@ func TestLogin_UserInactive(t *testing.T) {
 }
 
 func TestRequestPasswordReset_Success(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -68,6 +70,7 @@ func TestRequestPasswordReset_Success(t *testing.T) {
 }
 
 func TestRefreshToken_Success(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -92,6 +95,7 @@ func TestRefreshToken_Success(t *testing.T) {
 }
 
 func TestRefreshToken_ServiceFails(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)
@@ -108,6 +112,7 @@ func TestRefreshToken_ServiceFails(t *testing.T) {
 }
 
 func TestLogout_Success(t *testing.T) {
+	t.Parallel()
 	mockAuth := new(MockAuthService)
 	mockUser := new(authTestUserRepo)
 	mockRole := new(authTestRoleRepo)

@@ -44,6 +44,7 @@ func (m *MockDB) Where(query interface{}, args ...interface{}) *gorm.DB {
 }
 
 func TestHealthUsecase_GetBasicHealth_Success(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Name: "test-app",
@@ -61,6 +62,7 @@ func TestHealthUsecase_GetBasicHealth_Success(t *testing.T) {
 }
 
 func TestHealthUsecase_GetComprehensiveHealth_Success(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Name: "test-app",
@@ -83,6 +85,7 @@ func TestHealthUsecase_GetComprehensiveHealth_Success(t *testing.T) {
 }
 
 func TestHealthUsecase_GetSystemMetrics_Success(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Name: "test-app",
@@ -108,6 +111,7 @@ func TestHealthUsecase_GetSystemMetrics_Success(t *testing.T) {
 }
 
 func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Name: "test-app",
@@ -138,6 +142,7 @@ func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
 }
 
 func TestHealthUsecase_FormatDuration(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Name: "test-app",

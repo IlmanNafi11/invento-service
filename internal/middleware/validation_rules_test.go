@@ -15,6 +15,7 @@ import (
 
 // TestGetAllowedFileTypes tests retrieval of allowed file types
 func TestGetAllowedFileTypes(t *testing.T) {
+	t.Parallel()
 	fileTypes := GetAllowedFileTypes()
 	require.NotNil(t, fileTypes, "File types should not be nil")
 	require.NotEmpty(t, fileTypes, "File types should not be empty")
@@ -28,6 +29,7 @@ func TestGetAllowedFileTypes(t *testing.T) {
 
 // TestGetMaxUploadSize tests retrieval of max upload sizes
 func TestGetMaxUploadSize(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		context string
 		minSize int64
@@ -61,6 +63,7 @@ func TestGetMaxUploadSize(t *testing.T) {
 
 // TestValidateFile tests file validation
 func TestValidateFile(t *testing.T) {
+	t.Parallel()
 	// Create a test file
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -123,6 +126,7 @@ func TestValidateFile(t *testing.T) {
 
 // TestValidateRequest_CustomValidators tests custom validators
 func TestValidateRequest_CustomValidators(t *testing.T) {
+	t.Parallel()
 	// Note: Custom validators like password_strength, id_phone, nik, npwp
 	// are defined in the internal/validator package
 	// These would require request structs that use those tags
@@ -189,6 +193,7 @@ func TestValidateRequest_CustomValidators(t *testing.T) {
 
 // TestValidateRequest_EdgeCases tests edge cases
 func TestValidateRequest_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		requestBody  string
@@ -243,6 +248,7 @@ func TestValidateRequest_EdgeCases(t *testing.T) {
 
 // TestValidateRequest_MultipleEndpoints tests validation on different endpoints
 func TestValidateRequest_MultipleEndpoints(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Post("/login", ValidateRequest(&dto.AuthRequest{}), func(c *fiber.Ctx) error {
@@ -297,6 +303,7 @@ func TestValidateRequest_MultipleEndpoints(t *testing.T) {
 
 // TestParseValidationErrorMessage tests custom validation messages
 func TestParseValidationErrorMessage(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		requestBody  string

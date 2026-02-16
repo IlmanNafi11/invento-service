@@ -52,6 +52,7 @@ func newTusUpload(id, userID, status string, expiresAt time.Time) domain.TusUplo
 }
 
 func TestTusUploadRepository_Create(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -66,6 +67,7 @@ func TestTusUploadRepository_Create(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetByID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -83,6 +85,7 @@ func TestTusUploadRepository_GetByID(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetByUserID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -104,6 +107,7 @@ func TestTusUploadRepository_GetByUserID(t *testing.T) {
 }
 
 func TestTusUploadRepository_UpdateOffset(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -120,6 +124,7 @@ func TestTusUploadRepository_UpdateOffset(t *testing.T) {
 }
 
 func TestTusUploadRepository_UpdateStatus(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -136,6 +141,7 @@ func TestTusUploadRepository_UpdateStatus(t *testing.T) {
 }
 
 func TestTusUploadRepository_Complete(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -157,6 +163,7 @@ func TestTusUploadRepository_Complete(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetExpiredUploads(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -187,6 +194,7 @@ func TestTusUploadRepository_GetExpiredUploads(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetAbandonedUploads(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -222,6 +230,7 @@ func TestTusUploadRepository_GetAbandonedUploads(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetActiveByUserID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -254,6 +263,7 @@ func TestTusUploadRepository_GetActiveByUserID(t *testing.T) {
 }
 
 func TestTusUploadRepository_Delete(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -267,6 +277,7 @@ func TestTusUploadRepository_Delete(t *testing.T) {
 }
 
 func TestTusUploadRepository_ListActive(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -292,6 +303,7 @@ func TestTusUploadRepository_ListActive(t *testing.T) {
 }
 
 func TestTusUploadRepository_CountActiveByUserID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -317,6 +329,7 @@ func TestTusUploadRepository_CountActiveByUserID(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetActiveUploadIDs(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 
@@ -337,6 +350,7 @@ func TestTusUploadRepository_GetActiveUploadIDs(t *testing.T) {
 }
 
 func TestTusUploadRepository_ConcurrentGetByID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	repository := NewTusUploadRepository(db)
 

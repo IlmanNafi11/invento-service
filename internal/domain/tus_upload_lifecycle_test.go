@@ -6,7 +6,9 @@ import (
 )
 
 func TestTusUpload_Timestamps(t *testing.T) {
+	t.Parallel()
 	t.Run("Valid timestamps", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		past := now.Add(-1 * time.Hour)
 		future := now.Add(24 * time.Hour)
@@ -33,6 +35,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 	})
 
 	t.Run("Zero CreatedAt", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:        "upload-zero-created",
 			UserID: "user-1",
@@ -47,6 +50,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 	})
 
 	t.Run("Zero UpdatedAt", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:        "upload-zero-updated",
 			UserID: "user-1",
@@ -61,6 +65,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 	})
 
 	t.Run("Zero ExpiresAt", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:        "upload-zero-expires",
 			UserID: "user-1",
@@ -75,6 +80,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 	})
 
 	t.Run("Expired timestamp", func(t *testing.T) {
+		t.Parallel()
 		past := time.Now().Add(-1 * time.Hour)
 
 		upload := TusUpload{
@@ -91,6 +97,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 	})
 
 	t.Run("Future expiration", func(t *testing.T) {
+		t.Parallel()
 		future := time.Now().Add(24 * time.Hour)
 
 		upload := TusUpload{

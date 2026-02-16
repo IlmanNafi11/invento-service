@@ -28,6 +28,7 @@ func setupFileManagerTest(t *testing.T) (*storage.FileManager, string) {
 }
 
 func TestNewFileManager(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Env: "development",
@@ -43,6 +44,7 @@ func TestNewFileManager(t *testing.T) {
 }
 
 func TestFileManager_GenerateRandomDirectory(t *testing.T) {
+	t.Parallel()
 	fm, _ := setupFileManagerTest(t)
 
 	dir1, err := fm.GenerateRandomDirectory()
@@ -58,6 +60,7 @@ func TestFileManager_GenerateRandomDirectory(t *testing.T) {
 }
 
 func TestFileManager_GetUserUploadPath(t *testing.T) {
+	t.Parallel()
 	fm, tempDir := setupFileManagerTest(t)
 	userID := "123"
 
@@ -74,6 +77,7 @@ func TestFileManager_GetUserUploadPath(t *testing.T) {
 }
 
 func TestFileManager_GetUserUploadPath_Production(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
@@ -100,6 +104,7 @@ func TestFileManager_GetUserUploadPath_Production(t *testing.T) {
 }
 
 func TestFileManager_CreateProjectUploadDirectory(t *testing.T) {
+	t.Parallel()
 	fm, tempDir := setupFileManagerTest(t)
 	userID := "789"
 
@@ -119,6 +124,7 @@ func TestFileManager_CreateProjectUploadDirectory(t *testing.T) {
 }
 
 func TestFileManager_GetProjectFilePath(t *testing.T) {
+	t.Parallel()
 	fm, tempDir := setupFileManagerTest(t)
 	userID := "100"
 	randomDir := "abc123"
@@ -131,6 +137,7 @@ func TestFileManager_GetProjectFilePath(t *testing.T) {
 }
 
 func TestFileManager_DeleteUserDirectory(t *testing.T) {
+	t.Parallel()
 	fm, _ := setupFileManagerTest(t)
 	userID := "200"
 
@@ -152,6 +159,7 @@ func TestFileManager_DeleteUserDirectory(t *testing.T) {
 }
 
 func TestFileManager_DeleteProjectDirectory(t *testing.T) {
+	t.Parallel()
 	fm, _ := setupFileManagerTest(t)
 	userID := "300"
 
@@ -178,6 +186,7 @@ func TestFileManager_DeleteProjectDirectory(t *testing.T) {
 }
 
 func TestFileManager_GetUploadFilePath(t *testing.T) {
+	t.Parallel()
 	fm, _ := setupFileManagerTest(t)
 	uploadID := "upload-123"
 
@@ -189,6 +198,7 @@ func TestFileManager_GetUploadFilePath(t *testing.T) {
 }
 
 func TestFileManager_GetUploadFilePath_Production(t *testing.T) {
+	t.Parallel()
 	_ = t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
@@ -208,6 +218,7 @@ func TestFileManager_GetUploadFilePath_Production(t *testing.T) {
 }
 
 func TestFileManager_GetModulBasePath(t *testing.T) {
+	t.Parallel()
 	fm, tempDir := setupFileManagerTest(t)
 
 	path := fm.GetModulBasePath()
@@ -215,6 +226,7 @@ func TestFileManager_GetModulBasePath(t *testing.T) {
 }
 
 func TestFileManager_GetModulBasePath_Production(t *testing.T) {
+	t.Parallel()
 	_ = t.TempDir() // needed for test isolation
 	cfg := &config.Config{
 		App: config.AppConfig{
@@ -231,6 +243,7 @@ func TestFileManager_GetModulBasePath_Production(t *testing.T) {
 }
 
 func TestFileManager_GetUserModulPath(t *testing.T) {
+	t.Parallel()
 	fm, tempDir := setupFileManagerTest(t)
 	userID := "500"
 
@@ -247,6 +260,7 @@ func TestFileManager_GetUserModulPath(t *testing.T) {
 }
 
 func TestFileManager_CreateModulUploadDirectory(t *testing.T) {
+	t.Parallel()
 	fm, tempDir := setupFileManagerTest(t)
 	userID := "600"
 
@@ -266,6 +280,7 @@ func TestFileManager_CreateModulUploadDirectory(t *testing.T) {
 }
 
 func TestFileManager_GetModulFilePath(t *testing.T) {
+	t.Parallel()
 	fm, tempDir := setupFileManagerTest(t)
 	userID := "700"
 	randomDir := "xyz789"
@@ -278,6 +293,7 @@ func TestFileManager_GetModulFilePath(t *testing.T) {
 }
 
 func TestFileManager_DeleteModulDirectory(t *testing.T) {
+	t.Parallel()
 	fm, _ := setupFileManagerTest(t)
 	userID := "800"
 
@@ -304,6 +320,7 @@ func TestFileManager_DeleteModulDirectory(t *testing.T) {
 }
 
 func TestFileManager_DeleteUserModulDirectory(t *testing.T) {
+	t.Parallel()
 	fm, _ := setupFileManagerTest(t)
 	userID := "900"
 
@@ -333,6 +350,7 @@ func TestFileManager_DeleteUserModulDirectory(t *testing.T) {
 }
 
 func TestFileManager_MultipleUsers(t *testing.T) {
+	t.Parallel()
 	fm, _ := setupFileManagerTest(t)
 
 	// Create directories for multiple users

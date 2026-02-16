@@ -17,6 +17,7 @@ import (
 
 // TestIntegrationDTOMiddleware tests DTO validation integration with middleware
 func TestIntegrationDTOMiddleware(t *testing.T) {
+	t.Parallel()
 	// Create test request type
 	type TestRequest struct {
 		Name  string `json:"name" validate:"required"`
@@ -104,6 +105,7 @@ func TestIntegrationDTOMiddleware(t *testing.T) {
 
 // TestIntegrationPaginationWithMiddleware tests pagination DTO integration
 func TestIntegrationPaginationWithMiddleware(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/items", func(c *fiber.Ctx) error {
@@ -207,6 +209,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 
 // TestIntegrationCompleteRequestCycle tests a complete request/response cycle
 func TestIntegrationCompleteRequestCycle(t *testing.T) {
+	t.Parallel()
 	// Setup complete application stack
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {

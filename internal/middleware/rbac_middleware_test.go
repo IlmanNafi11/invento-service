@@ -20,12 +20,14 @@ func (m *mockErrorEnforcer) CheckPermission(roleName, resource, action string) (
 }
 
 func TestRBACMiddleware_Creation(t *testing.T) {
+	t.Parallel()
 	mw := middleware.RBACMiddleware(nil, "resource", "action")
 
 	assert.NotNil(t, mw)
 }
 
 func TestRBACMiddleware_ValidRoleWithPermission_Returns200(t *testing.T) {
+	t.Parallel()
 	enforcer, err := testutil.NewTestCasbinEnforcerWithPolicies([][]string{
 		{"admin", "projects", "read"},
 	})
@@ -49,6 +51,7 @@ func TestRBACMiddleware_ValidRoleWithPermission_Returns200(t *testing.T) {
 }
 
 func TestRBACMiddleware_ValidRoleWithoutPermission_Returns403(t *testing.T) {
+	t.Parallel()
 	enforcer, err := testutil.NewTestCasbinEnforcerWithPolicies([][]string{
 		{"admin", "projects", "read"},
 	})
@@ -77,6 +80,7 @@ func TestRBACMiddleware_ValidRoleWithoutPermission_Returns403(t *testing.T) {
 }
 
 func TestRBACMiddleware_InvalidRole_Returns403(t *testing.T) {
+	t.Parallel()
 	enforcer, err := testutil.NewTestCasbinEnforcerWithPolicies([][]string{
 		{"admin", "projects", "read"},
 	})
@@ -100,6 +104,7 @@ func TestRBACMiddleware_InvalidRole_Returns403(t *testing.T) {
 }
 
 func TestRBACMiddleware_MissingRoleInContext_Returns403(t *testing.T) {
+	t.Parallel()
 	enforcer, err := testutil.NewTestCasbinEnforcer()
 	require.NoError(t, err)
 
@@ -117,6 +122,7 @@ func TestRBACMiddleware_MissingRoleInContext_Returns403(t *testing.T) {
 }
 
 func TestRBACMiddleware_EmptyRoleInContext_Returns403(t *testing.T) {
+	t.Parallel()
 	enforcer, err := testutil.NewTestCasbinEnforcer()
 	require.NoError(t, err)
 
@@ -138,6 +144,7 @@ func TestRBACMiddleware_EmptyRoleInContext_Returns403(t *testing.T) {
 }
 
 func TestRBACMiddleware_InvalidRoleType_Returns403(t *testing.T) {
+	t.Parallel()
 	enforcer, err := testutil.NewTestCasbinEnforcer()
 	require.NoError(t, err)
 
@@ -159,6 +166,7 @@ func TestRBACMiddleware_InvalidRoleType_Returns403(t *testing.T) {
 }
 
 func TestRBACMiddleware_CasbinError_Returns500(t *testing.T) {
+	t.Parallel()
 	enforcer := &mockErrorEnforcer{}
 
 	app := fiber.New()
@@ -179,6 +187,7 @@ func TestRBACMiddleware_CasbinError_Returns500(t *testing.T) {
 }
 
 func TestRBACMiddleware_MultiplePermissions(t *testing.T) {
+	t.Parallel()
 	enforcer, err := testutil.NewTestCasbinEnforcerWithPolicies([][]string{
 		{"admin", "projects", "create"},
 		{"admin", "projects", "read"},
@@ -227,6 +236,7 @@ func TestRBACMiddleware_MultiplePermissions(t *testing.T) {
 }
 
 func TestRBACMiddleware_DifferentResources(t *testing.T) {
+	t.Parallel()
 	enforcer, err := testutil.NewTestCasbinEnforcerWithPolicies([][]string{
 		{"admin", "projects", "read"},
 		{"admin", "users", "read"},
@@ -269,6 +279,7 @@ func TestRBACMiddleware_DifferentResources(t *testing.T) {
 }
 
 func TestRBACMiddleware_DifferentParameters(t *testing.T) {
+	t.Parallel()
 	resources := []string{"projects", "users", "moduls"}
 	actions := []string{"create", "read", "update", "delete"}
 

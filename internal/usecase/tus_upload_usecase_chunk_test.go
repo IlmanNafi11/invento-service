@@ -18,8 +18,11 @@ import (
 )
 
 func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
+	t.Parallel()
 	t.Run("HandleChunk", func(t *testing.T) {
+		t.Parallel()
 		t.Run("happy path updates offset", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 			uploadID := "upload-happy"
 			chunk := []byte("abcd")
@@ -43,6 +46,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("pending transitions to uploading", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 			uploadID := "upload-pending"
 
@@ -64,6 +68,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("auto completion when offset reaches file size", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, projectRepo, manager := newTusUploadTestDeps(t)
 			uploadID := "upload-complete"
 
@@ -89,6 +94,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("upload not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -99,6 +105,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("wrong user forbidden", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "u").Return(&domain.TusUpload{ID: "u", UserID: "owner", FileSize: 10, Status: domain.UploadStatusUploading}, nil).Once()
 
@@ -108,6 +115,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("already completed", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "u").Return(&domain.TusUpload{ID: "u", UserID: "u1", FileSize: 10, Status: domain.UploadStatusCompleted}, nil).Once()
 
@@ -118,6 +126,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("inactive status", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "u").Return(&domain.TusUpload{ID: "u", UserID: "u1", FileSize: 10, Status: domain.UploadStatusCancelled}, nil).Once()
 
@@ -128,7 +137,9 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 	})
 
 	t.Run("CancelUpload", func(t *testing.T) {
+		t.Parallel()
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 			seedTusUploadStore(t, manager, "cancel-id", 8, map[string]string{"user_id": "u1"})
 			manager.AddToQueue("cancel-id")
@@ -142,6 +153,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -151,6 +163,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("wrong user", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
@@ -160,6 +173,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("already completed", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "u1", Status: domain.UploadStatusCompleted}, nil).Once()
 
@@ -170,9 +184,11 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 	})
 
 	t.Run("InitiateProjectUpdateUpload", func(t *testing.T) {
+		t.Parallel()
 		metadata := dto.TusUploadInitRequest{NamaProject: "Update", Kategori: "mobile", Semester: 5}
 
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, projectRepo, _ := newTusUploadTestDeps(t)
 			projectRepo.On("GetByID", mock.Anything, uint(9)).Return(&domain.Project{ID: 9, UserID: "u1", NamaProject: "Old", Kategori: "website", Semester: 1}, nil).Once()
 			tusRepo.On("GetActiveByUserID", mock.Anything, "u1").Return([]domain.TusUpload{}, nil).Once()
@@ -185,6 +201,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("project not found", func(t *testing.T) {
+			t.Parallel()
 			uc, _, projectRepo, _ := newTusUploadTestDeps(t)
 			projectRepo.On("GetByID", mock.Anything, uint(9)).Return(nil, apperrors.ErrRecordNotFound).Once()
 
@@ -195,6 +212,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("wrong user", func(t *testing.T) {
+			t.Parallel()
 			uc, _, projectRepo, _ := newTusUploadTestDeps(t)
 			projectRepo.On("GetByID", mock.Anything, uint(9)).Return(&domain.Project{ID: 9, UserID: "owner"}, nil).Once()
 
@@ -205,6 +223,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("uses existing project metadata when request metadata empty", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, projectRepo, _ := newTusUploadTestDeps(t)
 			projectRepo.On("GetByID", mock.Anything, uint(9)).Return(&domain.Project{
 				ID:          9,
@@ -230,7 +249,9 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 	})
 
 	t.Run("HandleProjectUpdateChunk", func(t *testing.T) {
+		t.Parallel()
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 			projectID := uint(1)
 			uploadID := "proj-chunk"
@@ -253,6 +274,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("auto completion", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, projectRepo, manager := newTusUploadTestDeps(t)
 			projectID := uint(2)
 			uploadID := "proj-complete"
@@ -278,6 +300,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("upload not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -287,6 +310,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("wrong user", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "owner", ProjectID: &projectID, FileSize: 8, Status: domain.UploadStatusUploading}, nil).Once()
@@ -297,6 +321,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("already completed", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "u1", ProjectID: &projectID, FileSize: 8, Status: domain.UploadStatusCompleted}, nil).Once()
@@ -308,6 +333,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("not active", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "u1", ProjectID: &projectID, FileSize: 8, Status: domain.UploadStatusCancelled}, nil).Once()
@@ -319,7 +345,9 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 	})
 
 	t.Run("CancelProjectUpdateUpload", func(t *testing.T) {
+		t.Parallel()
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 			projectID := uint(10)
 			seedTusUploadStore(t, manager, "cancel-proj", 8, map[string]string{"user_id": "u1", "project_id": fmt.Sprintf("%d", projectID)})
@@ -333,6 +361,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -342,6 +371,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("wrong user", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "owner", ProjectID: &projectID, Status: domain.UploadStatusUploading}, nil).Once()
@@ -352,6 +382,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("already completed", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "u1", ProjectID: &projectID, Status: domain.UploadStatusCompleted}, nil).Once()
@@ -363,7 +394,9 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 	})
 
 	t.Run("Project update wrapper methods", func(t *testing.T) {
+		t.Parallel()
 		t.Run("GetProjectUpdateUploadInfo found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			projectID := uint(11)
 			now := time.Now()
@@ -388,6 +421,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("GetProjectUpdateUploadInfo not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -398,6 +432,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("GetProjectUpdateUploadStatus found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			projectID := uint(12)
 			tusRepo.On("GetByID", mock.Anything, "project-status-id").Return(&domain.TusUpload{
@@ -415,6 +450,7 @@ func TestTusUploadUsecase_ChunkAndCancel(t *testing.T) {
 		})
 
 		t.Run("GetProjectUpdateUploadStatus not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 

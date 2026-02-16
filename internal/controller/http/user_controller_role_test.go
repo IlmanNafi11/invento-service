@@ -17,6 +17,7 @@ import (
 )
 
 func TestUserController_UpdateUserRole_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -49,6 +50,7 @@ func TestUserController_UpdateUserRole_Success(t *testing.T) {
 
 // Test 4: UpdateUserRole_UserNotFound
 func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -76,6 +78,7 @@ func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
 
 // Test 5: DeleteUser_Success
 func TestUserController_DeleteUser_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -102,6 +105,7 @@ func TestUserController_DeleteUser_Success(t *testing.T) {
 
 // Test 6: GetUserFiles_Success
 func TestUserController_UpdateUserRole_InvalidRole(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -124,6 +128,7 @@ func TestUserController_UpdateUserRole_InvalidRole(t *testing.T) {
 
 // Test 18: GetUserFiles_UserNotFound
 func TestUserController_UpdateUserRole_Forbidden(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -151,6 +156,7 @@ func TestUserController_UpdateUserRole_Forbidden(t *testing.T) {
 
 // Test 24: DeleteUser_Forbidden
 func TestUserController_DeleteUser_Forbidden(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -172,6 +178,7 @@ func TestUserController_DeleteUser_Forbidden(t *testing.T) {
 
 // Test 25: DeleteUser_InternalError
 func TestUserController_DeleteUser_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -192,6 +199,7 @@ func TestUserController_DeleteUser_InternalError(t *testing.T) {
 
 // Test 26: GetUserFiles_InternalError
 func TestUserController_UpdateUserRole_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -218,6 +226,7 @@ func TestUserController_UpdateUserRole_InternalError(t *testing.T) {
 
 // Test 28: DownloadUserFiles_InternalError
 func TestUserController_GetUsersForRole_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -249,6 +258,7 @@ func TestUserController_GetUsersForRole_Success(t *testing.T) {
 }
 
 func TestUserController_GetUsersForRole_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -266,6 +276,7 @@ func TestUserController_GetUsersForRole_NotFound(t *testing.T) {
 }
 
 func TestUserController_GetUsersForRole_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -282,6 +293,7 @@ func TestUserController_GetUsersForRole_InternalError(t *testing.T) {
 }
 
 func TestUserController_BulkAssignRole_Success(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -313,6 +325,7 @@ func TestUserController_BulkAssignRole_Success(t *testing.T) {
 }
 
 func TestUserController_BulkAssignRole_NotFound(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -339,6 +352,7 @@ func TestUserController_BulkAssignRole_NotFound(t *testing.T) {
 }
 
 func TestUserController_BulkAssignRole_ValidationError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
@@ -360,6 +374,7 @@ func TestUserController_BulkAssignRole_ValidationError(t *testing.T) {
 }
 
 func TestUserController_BulkAssignRole_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 

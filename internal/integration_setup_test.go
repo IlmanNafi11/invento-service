@@ -17,6 +17,7 @@ import (
 
 // TestIntegrationMiddlewareChain tests that all middleware work together correctly
 func TestIntegrationMiddlewareChain(t *testing.T) {
+	t.Parallel()
 	// Create Fiber app with middleware chain
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
@@ -68,6 +69,7 @@ func TestIntegrationMiddlewareChain(t *testing.T) {
 
 // TestIntegrationErrorHandling tests error handling integration with AppError
 func TestIntegrationErrorHandling(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	// Error handler that returns AppError
@@ -188,6 +190,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 
 // TestIntegrationRequestIDPropagation tests that request ID is propagated through the entire request
 func TestIntegrationRequestIDPropagation(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(middleware.RequestID())
 

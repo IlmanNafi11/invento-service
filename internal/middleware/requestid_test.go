@@ -13,6 +13,7 @@ import (
 // TestRequestID_GeneratesNewUUID tests that the middleware generates a new UUID
 // when no request ID header is present
 func TestRequestID_GeneratesNewUUID(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -41,6 +42,7 @@ func TestRequestID_GeneratesNewUUID(t *testing.T) {
 // TestRequestID_UsesExistingHeader tests that the middleware uses an existing
 // request ID from the header instead of generating a new one
 func TestRequestID_UsesExistingHeader(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -69,6 +71,7 @@ func TestRequestID_UsesExistingHeader(t *testing.T) {
 // TestRequestID_ValidatesUUIDFormat tests that the generated request ID
 // matches the UUID format (8-4-4-4-12 hex digits)
 func TestRequestID_ValidatesUUIDFormat(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -108,6 +111,7 @@ func TestRequestID_ValidatesUUIDFormat(t *testing.T) {
 // TestRequestID_RetrievesFromContext tests that GetRequestID correctly
 // retrieves the request ID stored in the Fiber context
 func TestRequestID_RetrievesFromContext(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -132,6 +136,7 @@ func TestRequestID_RetrievesFromContext(t *testing.T) {
 // TestRequestID_ContextStoresString tests that the request ID is stored
 // as a string in the context locals
 func TestRequestID_ContextStoresString(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -157,6 +162,7 @@ func TestRequestID_ContextStoresString(t *testing.T) {
 // TestRequestID_EmptyStringWhenNotSet tests that GetRequestID returns
 // an empty string when the request ID middleware hasn't been applied
 func TestRequestID_EmptyStringWhenNotSet(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	var retrievedRequestID string
@@ -179,6 +185,7 @@ func TestRequestID_EmptyStringWhenNotSet(t *testing.T) {
 // TestRequestID_PreservesThroughMiddlewareChain tests that the request ID
 // is preserved through multiple middleware in the chain
 func TestRequestID_PreservesThroughMiddlewareChain(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -214,6 +221,7 @@ func TestRequestID_PreservesThroughMiddlewareChain(t *testing.T) {
 // TestRequestID_DifferentForEachRequest tests that each request gets
 // a unique request ID
 func TestRequestID_DifferentForEachRequest(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -246,6 +254,7 @@ func TestRequestID_DifferentForEachRequest(t *testing.T) {
 // TestRequestID_MultipleEndpoints tests that request ID middleware
 // works correctly for multiple endpoints
 func TestRequestID_MultipleEndpoints(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -294,6 +303,7 @@ func TestRequestID_MultipleEndpoints(t *testing.T) {
 // TestRequestID_WithExistingUUID tests that the middleware accepts
 // a valid UUID format from the header
 func TestRequestID_WithExistingUUID(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -319,6 +329,7 @@ func TestRequestID_WithExistingUUID(t *testing.T) {
 // TestRequestID_WithCustomHeader tests that the middleware can work
 // with custom header values (not just UUIDs)
 func TestRequestID_WithCustomHeader(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -344,6 +355,7 @@ func TestRequestID_WithCustomHeader(t *testing.T) {
 // TestRequestID_NilContext tests that GetRequestID handles nil
 // context values gracefully
 func TestRequestID_NilContext(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(RequestID())
 
@@ -373,6 +385,7 @@ func TestRequestID_NilContext(t *testing.T) {
 // TestRequestID_ConstantKeys tests that the constant keys are
 // correctly defined
 func TestRequestID_ConstantKeys(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, "X-Request-ID", RequestIDHeader)
 	require.Equal(t, "request_id", RequestIDContextKey)
 }

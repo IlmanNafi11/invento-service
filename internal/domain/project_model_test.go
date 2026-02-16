@@ -7,7 +7,9 @@ import (
 )
 
 func TestProjectStruct(t *testing.T) {
+	t.Parallel()
 	t.Run("Project struct initialization", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		project := Project{
 			ID:          1,
@@ -39,6 +41,7 @@ func TestProjectStruct(t *testing.T) {
 	})
 
 	t.Run("Project with User relation", func(t *testing.T) {
+		t.Parallel()
 		user := User{
 			ID:    "user-100",
 			Email: "user@example.com",
@@ -62,7 +65,9 @@ func TestProjectStruct(t *testing.T) {
 }
 
 func TestProjectCreateRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.CreateProjectRequest with valid data", func(t *testing.T) {
+		t.Parallel()
 		req := dto.CreateProjectRequest{
 			NamaProject: "AI Chatbot",
 			Semester:    7,
@@ -77,6 +82,7 @@ func TestProjectCreateRequest(t *testing.T) {
 	})
 
 	t.Run("dto.CreateProjectRequest with minimum semester", func(t *testing.T) {
+		t.Parallel()
 		req := dto.CreateProjectRequest{
 			NamaProject: "IoT Dashboard",
 			Semester:    1,
@@ -88,6 +94,7 @@ func TestProjectCreateRequest(t *testing.T) {
 	})
 
 	t.Run("dto.CreateProjectRequest with maximum semester", func(t *testing.T) {
+		t.Parallel()
 		req := dto.CreateProjectRequest{
 			NamaProject: "Deep Learning Model",
 			Semester:    8,
@@ -100,7 +107,9 @@ func TestProjectCreateRequest(t *testing.T) {
 }
 
 func TestProjectUpdateRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UpdateProjectRequest with all fields", func(t *testing.T) {
+		t.Parallel()
 		req := dto.UpdateProjectRequest{
 			NamaProject: "Updated Project Name",
 			Kategori:    "machine_learning",
@@ -119,6 +128,7 @@ func TestProjectUpdateRequest(t *testing.T) {
 	})
 
 	t.Run("dto.UpdateProjectRequest with partial data", func(t *testing.T) {
+		t.Parallel()
 		req := dto.UpdateProjectRequest{
 			Semester: 4,
 		}
@@ -135,6 +145,7 @@ func TestProjectUpdateRequest(t *testing.T) {
 	})
 
 	t.Run("dto.UpdateProjectRequest with valid kategori values", func(t *testing.T) {
+		t.Parallel()
 		validKategories := []string{"website", "mobile", "iot", "machine_learning", "deep_learning"}
 
 		for _, kategori := range validKategories {
@@ -150,7 +161,9 @@ func TestProjectUpdateRequest(t *testing.T) {
 }
 
 func TestProjectListQueryParams(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ProjectListQueryParams with all fields", func(t *testing.T) {
+		t.Parallel()
 		params := dto.ProjectListQueryParams{
 			Search:         "ecommerce",
 			FilterSemester: 3,
@@ -177,6 +190,7 @@ func TestProjectListQueryParams(t *testing.T) {
 	})
 
 	t.Run("dto.ProjectListQueryParams with default values", func(t *testing.T) {
+		t.Parallel()
 		params := dto.ProjectListQueryParams{}
 
 		if params.Search != "" {
@@ -192,7 +206,9 @@ func TestProjectListQueryParams(t *testing.T) {
 }
 
 func TestProjectListItem(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ProjectListItem struct", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		item := dto.ProjectListItem{
 			ID:                 1,
@@ -220,7 +236,9 @@ func TestProjectListItem(t *testing.T) {
 }
 
 func TestProjectListData(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ProjectListData with pagination", func(t *testing.T) {
+		t.Parallel()
 		items := []dto.ProjectListItem{
 			{ID: 1, NamaProject: "Project A", Kategori: "website", Semester: 1},
 			{ID: 2, NamaProject: "Project B", Kategori: "mobile", Semester: 2},
@@ -246,6 +264,7 @@ func TestProjectListData(t *testing.T) {
 	})
 
 	t.Run("dto.ProjectListData empty", func(t *testing.T) {
+		t.Parallel()
 		data := dto.ProjectListData{
 			Items: []dto.ProjectListItem{},
 			Pagination: dto.PaginationData{
@@ -263,7 +282,9 @@ func TestProjectListData(t *testing.T) {
 }
 
 func TestProjectResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ProjectResponse struct", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		resp := dto.ProjectResponse{
 			ID:          1,
@@ -289,7 +310,9 @@ func TestProjectResponse(t *testing.T) {
 }
 
 func TestProjectDownloadRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ProjectDownloadRequest with multiple IDs", func(t *testing.T) {
+		t.Parallel()
 		req := dto.ProjectDownloadRequest{
 			IDs: []uint{1, 2, 3, 4, 5},
 		}
@@ -306,6 +329,7 @@ func TestProjectDownloadRequest(t *testing.T) {
 	})
 
 	t.Run("dto.ProjectDownloadRequest with single ID", func(t *testing.T) {
+		t.Parallel()
 		req := dto.ProjectDownloadRequest{
 			IDs: []uint{100},
 		}
@@ -320,7 +344,9 @@ func TestProjectDownloadRequest(t *testing.T) {
 }
 
 func TestProjectUpdateMetadataRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UpdateProjectRequest struct", func(t *testing.T) {
+		t.Parallel()
 		req := dto.UpdateProjectRequest{
 			NamaProject: "Updated Metadata Project",
 			Kategori:    "deep_learning",

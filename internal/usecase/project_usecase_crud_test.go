@@ -14,12 +14,14 @@ import (
 )
 
 func TestProjectUsecase_CreateProject_Success(t *testing.T) {
+	t.Parallel()
 	// This test would require file upload handling which is complex
 	// For now, we'll test the GetByID and List operations
 }
 
 // TestGetProjectByID_Success tests successful project retrieval by ID
 func TestProjectUsecase_GetProjectByID_Success(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -53,6 +55,7 @@ func TestProjectUsecase_GetProjectByID_Success(t *testing.T) {
 
 // TestGetProjectByID_AccessDenied tests project retrieval when user doesn't have access
 func TestProjectUsecase_GetProjectByID_AccessDenied(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -86,6 +89,7 @@ func TestProjectUsecase_GetProjectByID_AccessDenied(t *testing.T) {
 
 // TestListProjects_Success tests successful project list retrieval
 func TestProjectUsecase_ListProjects_Success(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -136,6 +140,7 @@ func TestProjectUsecase_ListProjects_Success(t *testing.T) {
 
 // TestListProjects_Empty tests project list retrieval with no results
 func TestProjectUsecase_ListProjects_Empty(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -163,6 +168,7 @@ func TestProjectUsecase_ListProjects_Empty(t *testing.T) {
 
 // TestListProjects_Pagination tests pagination in project list
 func TestProjectUsecase_ListProjects_Pagination(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -203,6 +209,7 @@ func TestProjectUsecase_ListProjects_Pagination(t *testing.T) {
 }
 
 func TestProjectUsecase_ListProjects_RepoError(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -227,6 +234,7 @@ func TestProjectUsecase_ListProjects_RepoError(t *testing.T) {
 }
 
 func TestProjectUsecase_ListProjects_EmptyWithDefaultPagination(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -252,6 +260,7 @@ func TestProjectUsecase_ListProjects_EmptyWithDefaultPagination(t *testing.T) {
 
 // TestUpdateProject_Success tests successful project update
 func TestProjectUsecase_UpdateProject_Success(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -288,6 +297,7 @@ func TestProjectUsecase_UpdateProject_Success(t *testing.T) {
 
 // TestUpdateProject_NotFound tests project update when project doesn't exist
 func TestProjectUsecase_UpdateProject_NotFound(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -312,6 +322,7 @@ func TestProjectUsecase_UpdateProject_NotFound(t *testing.T) {
 
 // TestUpdateProject_AccessDenied tests project update when user doesn't have access
 func TestProjectUsecase_UpdateProject_AccessDenied(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -348,6 +359,7 @@ func TestProjectUsecase_UpdateProject_AccessDenied(t *testing.T) {
 
 // TestDeleteProject_Success tests successful project deletion
 func TestProjectUsecase_DeleteProject_Success(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -378,6 +390,7 @@ func TestProjectUsecase_DeleteProject_Success(t *testing.T) {
 
 // TestDeleteProject_NotFound tests project deletion when project doesn't exist
 func TestProjectUsecase_DeleteProject_NotFound(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 
@@ -398,6 +411,7 @@ func TestProjectUsecase_DeleteProject_NotFound(t *testing.T) {
 
 // TestDeleteProject_AccessDenied tests project deletion when user doesn't have access
 func TestProjectUsecase_DeleteProject_AccessDenied(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 	projectUC := NewProjectUsecase(mockProjectRepo, nil)
 

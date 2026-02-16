@@ -90,7 +90,7 @@ func validClaims() *SupabaseClaims {
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   "test-user-id",
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			IssuedAt:  jwt.NewNumericDate(time.Now().Add(-time.Second)), // slight past to avoid clock skew in parallel tests
 			Issuer:    "https://test.supabase.co/auth/v1",
 		},
 		Email: "test@student.polije.ac.id",
@@ -103,6 +103,7 @@ func validClaims() *SupabaseClaims {
 }
 
 func TestVerify_ValidToken(t *testing.T) {
+	t.Parallel()
 	setup := newTestJWKSVerifier(t)
 	token := setup.generateES256Token(t, validClaims())
 
@@ -114,6 +115,7 @@ func TestVerify_ValidToken(t *testing.T) {
 }
 
 func TestVerify_ExpiredToken(t *testing.T) {
+	t.Parallel()
 	claims := validClaims()
 	claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(-time.Hour))
 
@@ -126,6 +128,7 @@ func TestVerify_ExpiredToken(t *testing.T) {
 }
 
 func TestVerify_InvalidSignature(t *testing.T) {
+	t.Parallel()
 	setup := newTestJWKSVerifier(t)
 
 	wrongPrivateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -142,6 +145,7 @@ func TestVerify_InvalidSignature(t *testing.T) {
 }
 
 func TestVerify_WrongAlgorithm(t *testing.T) {
+	t.Parallel()
 	setup := newTestJWKSVerifier(t)
 	hs256Token := generateHS256Token(t, validClaims(), "hs256-secret-for-wrong-alg-test")
 
@@ -151,6 +155,7 @@ func TestVerify_WrongAlgorithm(t *testing.T) {
 }
 
 func TestVerify_MalformedToken(t *testing.T) {
+	t.Parallel()
 	setup := newTestJWKSVerifier(t)
 	_, err := setup.verifier.Verify("this-is-not-a-jwt")
 	require.Error(t, err)
@@ -158,6 +163,7 @@ func TestVerify_MalformedToken(t *testing.T) {
 }
 
 func TestVerify_ClockSkewTolerance(t *testing.T) {
+	// NOT parallel: modifies global jwt.TimeFunc
 	claims := validClaims()
 	claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(-3 * time.Second))
 	claims.IssuedAt = jwt.NewNumericDate(time.Now().Add(-time.Minute))
@@ -177,17 +183,20 @@ func TestVerify_ClockSkewTolerance(t *testing.T) {
 }
 
 func TestGetAppRole(t *testing.T) {
+	t.Parallel()
 	claims := validClaims()
 	assert.Equal(t, "Mahasiswa", claims.GetAppRole())
 }
 
 func TestGetAppRole_NilMetadata(t *testing.T) {
+	t.Parallel()
 	claims := validClaims()
 	claims.AppMetadata = nil
 	assert.Equal(t, "", claims.GetAppRole())
 }
 
 func TestGetUserID(t *testing.T) {
+	t.Parallel()
 	claims := validClaims()
 	assert.Equal(t, "test-user-id", claims.GetUserID())
 }

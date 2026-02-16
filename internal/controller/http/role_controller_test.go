@@ -71,6 +71,7 @@ func (m *MockRoleUsecase) DeleteRole(ctx context.Context, id uint) error {
 
 // TestRoleController_GetAvailablePermissions_Success tests successful retrieval
 func TestRoleController_GetAvailablePermissions_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -97,6 +98,7 @@ func TestRoleController_GetAvailablePermissions_Success(t *testing.T) {
 
 // TestRoleController_GetRoleList_Success tests successful role list retrieval
 func TestRoleController_GetRoleList_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -120,6 +122,7 @@ func TestRoleController_GetRoleList_Success(t *testing.T) {
 
 // TestRoleController_CreateRole_Success tests successful role creation
 func TestRoleController_CreateRole_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -151,6 +154,7 @@ func TestRoleController_CreateRole_Success(t *testing.T) {
 
 // TestRoleController_GetRoleDetail_Success tests successful role detail retrieval
 func TestRoleController_GetRoleDetail_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -175,6 +179,7 @@ func TestRoleController_GetRoleDetail_Success(t *testing.T) {
 
 // TestRoleController_UpdateRole_Success tests successful role update
 func TestRoleController_UpdateRole_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -206,6 +211,7 @@ func TestRoleController_UpdateRole_Success(t *testing.T) {
 
 // TestRoleController_DeleteRole_Success tests successful role deletion
 func TestRoleController_DeleteRole_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -223,6 +229,7 @@ func TestRoleController_DeleteRole_Success(t *testing.T) {
 
 // TestRoleController_ErrorCases tests error handling
 func TestRoleController_ErrorCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		testFunc       func(*MockRoleUsecase, *fiber.App) (*http.Response, error)
@@ -279,6 +286,7 @@ func TestRoleController_ErrorCases(t *testing.T) {
 
 // TestRoleController_UpdateRole_NotFound tests update of non-existent role
 func TestRoleController_UpdateRole_NotFound(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -305,6 +313,7 @@ func TestRoleController_UpdateRole_NotFound(t *testing.T) {
 
 // TestRoleController_UpdateRole_ValidationError tests update with invalid data
 func TestRoleController_UpdateRole_ValidationError(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -326,6 +335,7 @@ func TestRoleController_UpdateRole_ValidationError(t *testing.T) {
 
 // TestRoleController_UpdateRole_DuplicateName tests update with existing role name
 func TestRoleController_UpdateRole_DuplicateName(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -352,6 +362,7 @@ func TestRoleController_UpdateRole_DuplicateName(t *testing.T) {
 
 // TestRoleController_DeleteRole_NotFound tests deletion of non-existent role
 func TestRoleController_DeleteRole_NotFound(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -371,6 +382,7 @@ func TestRoleController_DeleteRole_NotFound(t *testing.T) {
 
 // TestRoleController_DeleteRole_Forbidden tests deletion of role that's in use
 func TestRoleController_DeleteRole_Forbidden(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -390,6 +402,7 @@ func TestRoleController_DeleteRole_Forbidden(t *testing.T) {
 
 // TestRoleController_GetRoleList_InternalError tests internal server error
 func TestRoleController_GetRoleList_InternalError(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -408,6 +421,7 @@ func TestRoleController_GetRoleList_InternalError(t *testing.T) {
 
 // TestRoleController_CreateRole_ValidationError tests creation with invalid data
 func TestRoleController_CreateRole_ValidationError(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()
@@ -429,6 +443,7 @@ func TestRoleController_CreateRole_ValidationError(t *testing.T) {
 
 // TestRoleController_GetRoleDetail_InvalidID tests detail with invalid ID format
 func TestRoleController_GetRoleDetail_InvalidID(t *testing.T) {
+	t.Parallel()
 	mockRoleUC := new(MockRoleUsecase)
 	controller := httpcontroller.NewRoleController(mockRoleUC, nil)
 	app := fiber.New()

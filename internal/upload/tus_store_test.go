@@ -32,6 +32,7 @@ func newTestTusStore(t *testing.T, maxSize int64) *TusStore {
 }
 
 func TestTusStore_NewTusStore_InitializesConfigAndLocks(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 
 	require.NotNil(t, store)
@@ -42,6 +43,7 @@ func TestTusStore_NewTusStore_InitializesConfigAndLocks(t *testing.T) {
 }
 
 func TestTusStore_NewUpload_CreatesDirectoryFileAndInfo(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	info := TusFileInfo{ID: "up1", Size: 128, Offset: 0, Metadata: map[string]string{"name": "a.zip"}}
 
@@ -63,6 +65,7 @@ func TestTusStore_NewUpload_CreatesDirectoryFileAndInfo(t *testing.T) {
 }
 
 func TestTusStore_NewUpload_RejectsOversizedFile(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 100)
 
 	err := store.NewUpload(TusFileInfo{ID: "big", Size: 101, Metadata: map[string]string{}})
@@ -71,6 +74,7 @@ func TestTusStore_NewUpload_RejectsOversizedFile(t *testing.T) {
 }
 
 func TestTusStore_WriteChunk_WritesAtOffsetAndUpdatesInfo(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "up2", Size: 32, Metadata: map[string]string{}}))
 
@@ -88,6 +92,7 @@ func TestTusStore_WriteChunk_WritesAtOffsetAndUpdatesInfo(t *testing.T) {
 }
 
 func TestTusStore_WriteChunk_ConcurrentWritesLockingWorks(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "up3", Size: 64, Metadata: map[string]string{}}))
 
@@ -123,6 +128,7 @@ func TestTusStore_WriteChunk_ConcurrentWritesLockingWorks(t *testing.T) {
 }
 
 func TestTusStore_WriteChunk_InvalidUploadIDReturnsError(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 
 	_, err := store.WriteChunk("missing", 0, bytes.NewBufferString("x"))
@@ -131,6 +137,7 @@ func TestTusStore_WriteChunk_InvalidUploadIDReturnsError(t *testing.T) {
 }
 
 func TestTusStore_GetInfo_ReturnsInfoAndErrors(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "up4", Size: 16, Metadata: map[string]string{}}))
 
@@ -144,6 +151,7 @@ func TestTusStore_GetInfo_ReturnsInfoAndErrors(t *testing.T) {
 }
 
 func TestTusStore_GetInfo_CorruptInfoFileReturnsError(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "badinfo", Size: 16, Metadata: map[string]string{}}))
 
@@ -156,6 +164,7 @@ func TestTusStore_GetInfo_CorruptInfoFileReturnsError(t *testing.T) {
 }
 
 func TestTusStore_FinalizeUpload_MovesToDestinationAndCleansTemp(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "up5", Size: 8, Metadata: map[string]string{}}))
 	_, err := store.WriteChunk("up5", 0, bytes.NewBufferString("12345678"))
@@ -173,6 +182,7 @@ func TestTusStore_FinalizeUpload_MovesToDestinationAndCleansTemp(t *testing.T) {
 }
 
 func TestTusStore_FinalizeUpload_MissingTemporaryFileReturnsError(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 
 	err := store.FinalizeUpload("missing", filepath.Join(t.TempDir(), "a.zip"))
@@ -181,6 +191,7 @@ func TestTusStore_FinalizeUpload_MissingTemporaryFileReturnsError(t *testing.T) 
 }
 
 func TestTusStore_Terminate_RemovesUploadDirectory(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "up6", Size: 8, Metadata: map[string]string{}}))
 
@@ -193,6 +204,7 @@ func TestTusStore_Terminate_RemovesUploadDirectory(t *testing.T) {
 }
 
 func TestTusStore_GetProgressGetOffsetAndIsComplete_ReturnExpectedValues(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "up7", Size: 10, Metadata: map[string]string{}}))
 
@@ -221,6 +233,7 @@ func TestTusStore_GetProgressGetOffsetAndIsComplete_ReturnExpectedValues(t *test
 }
 
 func TestTusStore_UpdateMetadata_UpdatesAndPersists(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "up8", Size: 10, Metadata: map[string]string{"a": "1"}}))
 
@@ -234,6 +247,7 @@ func TestTusStore_UpdateMetadata_UpdatesAndPersists(t *testing.T) {
 }
 
 func TestTusStore_UpdateMetadata_InvalidUploadIDReturnsError(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 
 	err := store.UpdateMetadata("missing", map[string]string{"a": "b"})
@@ -242,6 +256,7 @@ func TestTusStore_UpdateMetadata_InvalidUploadIDReturnsError(t *testing.T) {
 }
 
 func TestTusStore_CleanupStaleLocks_RemovesOnlyOldLocks(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 
 	_ = store.getLock("old")
@@ -258,6 +273,7 @@ func TestTusStore_CleanupStaleLocks_RemovesOnlyOldLocks(t *testing.T) {
 }
 
 func TestTusStore_GetLockCount_ReturnsCurrentCount(t *testing.T) {
+	t.Parallel()
 	store := newTestTusStore(t, 1024)
 	assert.Equal(t, 0, store.GetLockCount())
 

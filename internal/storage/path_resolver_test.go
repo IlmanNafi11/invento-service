@@ -28,6 +28,7 @@ func setupPathResolverTest(t *testing.T) (*storage.PathResolver, string) {
 }
 
 func TestNewPathResolver(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
@@ -46,6 +47,7 @@ func TestNewPathResolver(t *testing.T) {
 }
 
 func TestPathResolver_GetBasePath_Development(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 
 	basePath := pr.GetBasePath()
@@ -53,6 +55,7 @@ func TestPathResolver_GetBasePath_Development(t *testing.T) {
 }
 
 func TestPathResolver_GetBasePath_Production(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
@@ -69,6 +72,7 @@ func TestPathResolver_GetBasePath_Production(t *testing.T) {
 }
 
 func TestPathResolver_GetTempPath_Development(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 
 	tempPath := pr.GetTempPath()
@@ -76,6 +80,7 @@ func TestPathResolver_GetTempPath_Development(t *testing.T) {
 }
 
 func TestPathResolver_GetTempPath_Production(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
@@ -92,6 +97,7 @@ func TestPathResolver_GetTempPath_Production(t *testing.T) {
 }
 
 func TestPathResolver_GetProjectPath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	userID := "123"
 
@@ -102,6 +108,7 @@ func TestPathResolver_GetProjectPath(t *testing.T) {
 }
 
 func TestPathResolver_GetProjectFilePath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	userID := "456"
 	identifier := "abc123"
@@ -114,6 +121,7 @@ func TestPathResolver_GetProjectFilePath(t *testing.T) {
 }
 
 func TestPathResolver_GetProjectDirectory(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	userID := "789"
 	identifier := "xyz789"
@@ -125,6 +133,7 @@ func TestPathResolver_GetProjectDirectory(t *testing.T) {
 }
 
 func TestPathResolver_GetUploadPath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	uploadID := "upload-123"
 
@@ -135,6 +144,7 @@ func TestPathResolver_GetUploadPath(t *testing.T) {
 }
 
 func TestPathResolver_GetUploadFilePath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	uploadID := "upload-456"
 
@@ -145,6 +155,7 @@ func TestPathResolver_GetUploadFilePath(t *testing.T) {
 }
 
 func TestPathResolver_GetUploadInfoPath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	uploadID := "upload-789"
 
@@ -155,6 +166,7 @@ func TestPathResolver_GetUploadInfoPath(t *testing.T) {
 }
 
 func TestPathResolver_EnsureDirectoryExists(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 
 	// Create a new directory
@@ -169,6 +181,7 @@ func TestPathResolver_EnsureDirectoryExists(t *testing.T) {
 }
 
 func TestPathResolver_DirectoryExists(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 
 	// Test non-existent directory
@@ -185,6 +198,7 @@ func TestPathResolver_DirectoryExists(t *testing.T) {
 }
 
 func TestPathResolver_FileExists(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 
 	// Test non-existent file
@@ -204,6 +218,7 @@ func TestPathResolver_FileExists(t *testing.T) {
 }
 
 func TestPathResolver_GetProfilPath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	userID := "100"
 
@@ -214,6 +229,7 @@ func TestPathResolver_GetProfilPath(t *testing.T) {
 }
 
 func TestPathResolver_GetProfilFilePath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	userID := "200"
 	filename := "avatar.jpg"
@@ -225,6 +241,7 @@ func TestPathResolver_GetProfilFilePath(t *testing.T) {
 }
 
 func TestPathResolver_GetProfilDirectory(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	userID := "300"
 
@@ -235,6 +252,7 @@ func TestPathResolver_GetProfilDirectory(t *testing.T) {
 }
 
 func TestPathResolver_GetModulPath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	userID := uint(400)
 	identifier := "mod123"
@@ -246,6 +264,7 @@ func TestPathResolver_GetModulPath(t *testing.T) {
 }
 
 func TestPathResolver_GetModulFilePath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 	userID := uint(500)
 	identifier := "mod456"
@@ -258,6 +277,7 @@ func TestPathResolver_GetModulFilePath(t *testing.T) {
 }
 
 func TestPathResolver_ConvertToAPIPath(t *testing.T) {
+	t.Parallel()
 	pr, tempDir := setupPathResolverTest(t)
 
 	tests := []struct {
@@ -294,6 +314,7 @@ func TestPathResolver_ConvertToAPIPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if tt.name == "nil pointer" {
 				result := pr.ConvertToAPIPath(nil)
 				assert.Nil(t, result)
@@ -307,6 +328,7 @@ func TestPathResolver_ConvertToAPIPath(t *testing.T) {
 }
 
 func TestPathResolver_ConvertToAPIPath_OutsideBase(t *testing.T) {
+	t.Parallel()
 	pr, _ := setupPathResolverTest(t)
 
 	// Path outside base path should be returned unchanged
@@ -318,6 +340,7 @@ func TestPathResolver_ConvertToAPIPath_OutsideBase(t *testing.T) {
 }
 
 func TestPathResolver_ConvertToAPIPath_RelativePath(t *testing.T) {
+	t.Parallel()
 	pr, _ := setupPathResolverTest(t)
 
 	// Relative path should be handled correctly

@@ -18,6 +18,7 @@ import (
 )
 
 func TestGetUploadInfo_Forbidden(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -40,6 +41,7 @@ func TestGetUploadInfo_Forbidden(t *testing.T) {
 
 // TestCancelUpload_Success tests DELETE for cancellation
 func TestCancelUpload_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -65,6 +67,7 @@ func TestCancelUpload_Success(t *testing.T) {
 
 // TestCancelUpload_AlreadyCompleted tests cancellation of completed upload
 func TestCancelUpload_AlreadyCompleted(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -94,6 +97,7 @@ func TestCancelUpload_AlreadyCompleted(t *testing.T) {
 
 // TestInitiateProjectUpdateUpload_Success tests project update upload initiation
 func TestInitiateProjectUpdateUpload_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -144,6 +148,7 @@ func TestInitiateProjectUpdateUpload_Success(t *testing.T) {
 
 // TestInitiateProjectUpdateUpload_ProjectNotFound tests non-existent project
 func TestInitiateProjectUpdateUpload_ProjectNotFound(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -171,6 +176,7 @@ func TestInitiateProjectUpdateUpload_ProjectNotFound(t *testing.T) {
 
 // TestUploadProjectUpdateChunk_Success tests project chunk upload
 func TestUploadProjectUpdateChunk_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -203,6 +209,7 @@ func TestUploadProjectUpdateChunk_Success(t *testing.T) {
 
 // TestUploadProjectUpdateChunk_ProjectMismatch tests project ID mismatch
 func TestUploadProjectUpdateChunk_ProjectMismatch(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -232,6 +239,7 @@ func TestUploadProjectUpdateChunk_ProjectMismatch(t *testing.T) {
 
 // TestGetProjectUpdateUploadStatus_Success tests project update upload status
 func TestGetProjectUpdateUploadStatus_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -266,6 +274,7 @@ func TestGetProjectUpdateUploadStatus_Success(t *testing.T) {
 
 // TestCheckUploadSlot_Success tests upload slot availability check
 func TestCheckUploadSlot_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)
@@ -297,6 +306,7 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 
 // TestResetUploadQueue_Success tests queue reset
 func TestResetUploadQueue_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockTusUploadUsecase)
 	cfg := getTusTestConfig()
 	controller := httpcontroller.NewTusController(mockUC, cfg)

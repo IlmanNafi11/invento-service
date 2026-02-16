@@ -7,7 +7,9 @@ import (
 )
 
 func TestProjectSemesterRange(t *testing.T) {
+	t.Parallel()
 	t.Run("Valid semester range", func(t *testing.T) {
+		t.Parallel()
 		validSemesters := []int{1, 2, 3, 4, 5, 6, 7, 8}
 
 		for _, sem := range validSemesters {
@@ -19,6 +21,7 @@ func TestProjectSemesterRange(t *testing.T) {
 	})
 
 	t.Run("Invalid semester values", func(t *testing.T) {
+		t.Parallel()
 		invalidSemesters := []int{0, -1, 9, 10, 100}
 
 		for _, sem := range invalidSemesters {
@@ -31,7 +34,9 @@ func TestProjectSemesterRange(t *testing.T) {
 }
 
 func TestProjectKategoriValidation(t *testing.T) {
+	t.Parallel()
 	t.Run("Valid kategori values", func(t *testing.T) {
+		t.Parallel()
 		validKategories := []string{
 			"website",
 			"mobile",
@@ -50,7 +55,9 @@ func TestProjectKategoriValidation(t *testing.T) {
 }
 
 func TestProjectEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Empty project name", func(t *testing.T) {
+		t.Parallel()
 		project := Project{
 			NamaProject: "",
 			Semester:    1,
@@ -62,6 +69,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero ID value", func(t *testing.T) {
+		t.Parallel()
 		project := Project{
 			ID: 0,
 		}
@@ -72,6 +80,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Non-zero ID value", func(t *testing.T) {
+		t.Parallel()
 		project := Project{
 			ID: 12345,
 		}
@@ -82,6 +91,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Invalid semester less than 1", func(t *testing.T) {
+		t.Parallel()
 		invalidSemesters := []int{0, -1, -10, -100}
 
 		for _, sem := range invalidSemesters {
@@ -93,6 +103,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty filter strings", func(t *testing.T) {
+		t.Parallel()
 		params := dto.ProjectListQueryParams{
 			Search:         "",
 			FilterKategori: "",
@@ -107,6 +118,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Invalid pagination values", func(t *testing.T) {
+		t.Parallel()
 		testCases := []struct {
 			name  string
 			page  int
@@ -122,6 +134,7 @@ func TestProjectEdgeCases(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
 				params := dto.ProjectListQueryParams{
 					Page:  tc.page,
 					Limit: tc.limit,
@@ -138,6 +151,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Nil project list", func(t *testing.T) {
+		t.Parallel()
 		data := dto.ProjectListData{
 			Items: nil,
 			Pagination: dto.PaginationData{
@@ -154,6 +168,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty project list", func(t *testing.T) {
+		t.Parallel()
 		data := dto.ProjectListData{
 			Items: []dto.ProjectListItem{},
 			Pagination: dto.PaginationData{
@@ -171,7 +186,9 @@ func TestProjectEdgeCases(t *testing.T) {
 }
 
 func TestProjectUserRelationship(t *testing.T) {
+	t.Parallel()
 	t.Run("Project with zero UserID", func(t *testing.T) {
+		t.Parallel()
 		project := Project{
 			UserID: "",
 		}
@@ -182,6 +199,7 @@ func TestProjectUserRelationship(t *testing.T) {
 	})
 
 	t.Run("Project without User relation", func(t *testing.T) {
+		t.Parallel()
 		project := Project{
 			ID:     1,
 			UserID: "user-100",
@@ -193,6 +211,7 @@ func TestProjectUserRelationship(t *testing.T) {
 	})
 
 	t.Run("Project with matching User relation", func(t *testing.T) {
+		t.Parallel()
 		user := User{
 			ID:    "user-200",
 			Email: "test@example.com",
@@ -211,6 +230,7 @@ func TestProjectUserRelationship(t *testing.T) {
 	})
 
 	t.Run("Project with mismatched User relation", func(t *testing.T) {
+		t.Parallel()
 		user := User{
 			ID:    "user-300",
 			Email: "other@example.com",
@@ -231,7 +251,9 @@ func TestProjectUserRelationship(t *testing.T) {
 }
 
 func TestProjectTimestampFields(t *testing.T) {
+	t.Parallel()
 	t.Run("Project with zero timestamps", func(t *testing.T) {
+		t.Parallel()
 		project := Project{
 			CreatedAt: time.Time{},
 			UpdatedAt: time.Time{},
@@ -246,6 +268,7 @@ func TestProjectTimestampFields(t *testing.T) {
 	})
 
 	t.Run("Project with valid timestamps", func(t *testing.T) {
+		t.Parallel()
 		created := time.Now().Add(-24 * time.Hour)
 		updated := time.Now()
 
@@ -267,6 +290,7 @@ func TestProjectTimestampFields(t *testing.T) {
 	})
 
 	t.Run("dto.ProjectListItem timestamp", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		item := dto.ProjectListItem{
 			TerakhirDiperbarui: now,
@@ -278,6 +302,7 @@ func TestProjectTimestampFields(t *testing.T) {
 	})
 
 	t.Run("dto.ProjectResponse timestamps", func(t *testing.T) {
+		t.Parallel()
 		created := time.Now().Add(-7 * 24 * time.Hour)
 		updated := time.Now()
 
@@ -296,7 +321,9 @@ func TestProjectTimestampFields(t *testing.T) {
 }
 
 func TestProjectPaginationData(t *testing.T) {
+	t.Parallel()
 	t.Run("Single page pagination", func(t *testing.T) {
+		t.Parallel()
 		pagination := dto.PaginationData{
 			Page:       1,
 			Limit:      10,
@@ -313,6 +340,7 @@ func TestProjectPaginationData(t *testing.T) {
 	})
 
 	t.Run("Multiple page pagination", func(t *testing.T) {
+		t.Parallel()
 		pagination := dto.PaginationData{
 			Page:       2,
 			Limit:      10,
@@ -329,6 +357,7 @@ func TestProjectPaginationData(t *testing.T) {
 	})
 
 	t.Run("Empty pagination", func(t *testing.T) {
+		t.Parallel()
 		pagination := dto.PaginationData{
 			Page:       1,
 			Limit:      10,
@@ -346,7 +375,9 @@ func TestProjectPaginationData(t *testing.T) {
 }
 
 func TestProjectDownloadRequestEdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Empty IDs array", func(t *testing.T) {
+		t.Parallel()
 		req := dto.ProjectDownloadRequest{
 			IDs: []uint{},
 		}
@@ -357,6 +388,7 @@ func TestProjectDownloadRequestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Nil IDs", func(t *testing.T) {
+		t.Parallel()
 		req := dto.ProjectDownloadRequest{
 			IDs: nil,
 		}
@@ -367,6 +399,7 @@ func TestProjectDownloadRequestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Large number of IDs", func(t *testing.T) {
+		t.Parallel()
 		ids := make([]uint, 1000)
 		for i := range ids {
 			ids[i] = uint(i + 1)
@@ -388,6 +421,7 @@ func TestProjectDownloadRequestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Duplicate IDs", func(t *testing.T) {
+		t.Parallel()
 		req := dto.ProjectDownloadRequest{
 			IDs: []uint{1, 2, 2, 3, 3, 3},
 		}

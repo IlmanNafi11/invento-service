@@ -5,6 +5,7 @@ import (
 )
 
 func TestStatusConstants(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		constant int
@@ -24,6 +25,7 @@ func TestStatusConstants(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if tt.constant != tt.expected {
 				t.Errorf("%s = %d, want %d", tt.name, tt.constant, tt.expected)
 			}
@@ -32,6 +34,7 @@ func TestStatusConstants(t *testing.T) {
 }
 
 func TestStatusText(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		code     int
 		expected string
@@ -50,6 +53,7 @@ func TestStatusText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
+			t.Parallel()
 			if text, ok := StatusText[tt.code]; !ok {
 				t.Errorf("StatusText missing entry for %d", tt.code)
 			} else if text != tt.expected {
@@ -60,6 +64,7 @@ func TestStatusText(t *testing.T) {
 }
 
 func TestDefaultMessages(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		code     int
 		expected string
@@ -75,6 +80,7 @@ func TestDefaultMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run("", func(t *testing.T) {
+			t.Parallel()
 			if msg, ok := DefaultMessages[tt.code]; !ok {
 				t.Errorf("DefaultMessages missing entry for %d", tt.code)
 			} else if msg != tt.expected {
@@ -85,6 +91,7 @@ func TestDefaultMessages(t *testing.T) {
 }
 
 func TestGetDefaultMessage(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		code     int
@@ -139,6 +146,7 @@ func TestGetDefaultMessage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := GetDefaultMessage(tt.code)
 			if result != tt.expected {
 				t.Errorf("GetDefaultMessage(%d) = %s, want %s", tt.code, result, tt.expected)
@@ -148,6 +156,7 @@ func TestGetDefaultMessage(t *testing.T) {
 }
 
 func TestGetDefaultMessage_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		code int
@@ -162,6 +171,7 @@ func TestGetDefaultMessage_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := GetDefaultMessage(tt.code)
 			if result == "" {
 				t.Errorf("GetDefaultMessage(%d) returned empty string", tt.code)
@@ -185,6 +195,7 @@ func TestGetDefaultMessage_EdgeCases(t *testing.T) {
 }
 
 func TestStatusTextCompleteness(t *testing.T) {
+	t.Parallel()
 	// Ensure all status constants have corresponding text entries
 	statusConstants := []int{
 		StatusOK, StatusCreated, StatusNoContent, StatusBadRequest,
@@ -200,6 +211,7 @@ func TestStatusTextCompleteness(t *testing.T) {
 }
 
 func TestDefaultMessagesCompleteness(t *testing.T) {
+	t.Parallel()
 	// Ensure error status codes have default messages
 	errorCodes := []int{
 		StatusBadRequest, StatusUnauthorized, StatusForbidden,

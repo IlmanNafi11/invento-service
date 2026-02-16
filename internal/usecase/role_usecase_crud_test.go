@@ -17,6 +17,7 @@ import (
 )
 
 func TestRoleUsecase_GetAvailablePermissions_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -47,6 +48,7 @@ func TestRoleUsecase_GetAvailablePermissions_Success(t *testing.T) {
 }
 
 func TestRoleUsecase_GetAvailablePermissions_Error(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -64,6 +66,7 @@ func TestRoleUsecase_GetAvailablePermissions_Error(t *testing.T) {
 }
 
 func TestRoleUsecase_GetRoleList_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -105,6 +108,7 @@ func TestRoleUsecase_GetRoleList_Success(t *testing.T) {
 }
 
 func TestRoleUsecase_GetRoleList_WithError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -127,6 +131,7 @@ func TestRoleUsecase_GetRoleList_WithError(t *testing.T) {
 }
 
 func TestRoleUsecase_GetRoleList_WithSearch(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -161,6 +166,7 @@ func TestRoleUsecase_GetRoleList_WithSearch(t *testing.T) {
 }
 
 func TestRoleUsecase_GetRoleDetail_NotFound(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -180,6 +186,7 @@ func TestRoleUsecase_GetRoleDetail_NotFound(t *testing.T) {
 }
 
 func TestRoleUsecase_GetRoleDetail_DBError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -199,6 +206,7 @@ func TestRoleUsecase_GetRoleDetail_DBError(t *testing.T) {
 }
 
 func TestRoleUsecase_GetRoleDetail_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -233,6 +241,7 @@ func TestRoleUsecase_GetRoleDetail_Success(t *testing.T) {
 }
 
 func TestRoleUsecase_CreateRole_Success(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -250,7 +259,7 @@ func TestRoleUsecase_CreateRole_Success(t *testing.T) {
 	mockRoleRepo.On("GetByName", mock.Anything, "editor").Return(nil, gorm.ErrRecordNotFound)
 
 	mockRoleRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
-		role := args.Get(0).(*domain.Role)
+		role := args.Get(1).(*domain.Role)
 		role.ID = 1
 		role.CreatedAt = time.Now()
 		role.UpdatedAt = time.Now()
@@ -292,6 +301,7 @@ func TestRoleUsecase_CreateRole_Success(t *testing.T) {
 }
 
 func TestRoleUsecase_CreateRole_DuplicateName(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -318,6 +328,7 @@ func TestRoleUsecase_CreateRole_DuplicateName(t *testing.T) {
 }
 
 func TestRoleUsecase_CreateRole_EmptyPermissions(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -337,6 +348,7 @@ func TestRoleUsecase_CreateRole_EmptyPermissions(t *testing.T) {
 }
 
 func TestRoleUsecase_CreateRole_CreateRepoError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -363,6 +375,7 @@ func TestRoleUsecase_CreateRole_CreateRepoError(t *testing.T) {
 }
 
 func TestRoleUsecase_CreateRole_SetPermissionsError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -379,7 +392,7 @@ func TestRoleUsecase_CreateRole_SetPermissionsError(t *testing.T) {
 
 	mockRoleRepo.On("GetByName", mock.Anything, "editor").Return(nil, gorm.ErrRecordNotFound)
 	mockRoleRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
-		role := args.Get(0).(*domain.Role)
+		role := args.Get(1).(*domain.Role)
 		role.ID = 1
 	}).Return(nil)
 
@@ -395,6 +408,7 @@ func TestRoleUsecase_CreateRole_SetPermissionsError(t *testing.T) {
 }
 
 func TestRoleUsecase_CreateRole_SavePolicyError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)
@@ -411,7 +425,7 @@ func TestRoleUsecase_CreateRole_SavePolicyError(t *testing.T) {
 
 	mockRoleRepo.On("GetByName", mock.Anything, "editor").Return(nil, gorm.ErrRecordNotFound)
 	mockRoleRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Role")).Run(func(args mock.Arguments) {
-		role := args.Get(0).(*domain.Role)
+		role := args.Get(1).(*domain.Role)
 		role.ID = 1
 		role.CreatedAt = time.Now()
 		role.UpdatedAt = time.Now()
@@ -434,6 +448,7 @@ func TestRoleUsecase_CreateRole_SavePolicyError(t *testing.T) {
 }
 
 func TestRoleUsecase_UpdateRole_UpdateRepoError(t *testing.T) {
+	t.Parallel()
 	mockRoleRepo := new(MockRoleRepository)
 	mockPermissionRepo := new(MockPermissionRepository)
 	mockRolePermissionRepo := new(MockRolePermissionRepository)

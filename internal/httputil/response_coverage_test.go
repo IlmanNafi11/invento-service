@@ -11,6 +11,7 @@ import (
 
 // TestSendSuccessResponse_Success tests successful success response
 func TestSendSuccessResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -25,6 +26,7 @@ func TestSendSuccessResponse_Success(t *testing.T) {
 
 // TestSendErrorResponse_Success tests error response
 func TestSendErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -39,6 +41,7 @@ func TestSendErrorResponse_Success(t *testing.T) {
 
 // TestSendListResponse_Success tests list response
 func TestSendListResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -60,6 +63,7 @@ func TestSendListResponse_Success(t *testing.T) {
 
 // TestSendValidationErrorResponse_Success tests validation error response
 func TestSendValidationErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -77,6 +81,7 @@ func TestSendValidationErrorResponse_Success(t *testing.T) {
 
 // TestSendBadRequestResponse_Success tests bad request response
 func TestSendBadRequestResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -91,6 +96,7 @@ func TestSendBadRequestResponse_Success(t *testing.T) {
 
 // TestSendBadRequestResponse_DefaultMessage tests bad request with default message
 func TestSendBadRequestResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -105,6 +111,7 @@ func TestSendBadRequestResponse_DefaultMessage(t *testing.T) {
 
 // TestSendUnauthorizedResponse_Success tests unauthorized response
 func TestSendUnauthorizedResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -119,6 +126,7 @@ func TestSendUnauthorizedResponse_Success(t *testing.T) {
 
 // TestSendForbiddenResponse_Success tests forbidden response
 func TestSendForbiddenResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -133,6 +141,7 @@ func TestSendForbiddenResponse_Success(t *testing.T) {
 
 // TestSendNotFoundResponse_Success tests not found response
 func TestSendNotFoundResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -147,6 +156,7 @@ func TestSendNotFoundResponse_Success(t *testing.T) {
 
 // TestSendNotFoundResponse_DefaultMessage tests not found with default message
 func TestSendNotFoundResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -161,6 +171,7 @@ func TestSendNotFoundResponse_DefaultMessage(t *testing.T) {
 
 // TestSendConflictResponse_Success tests conflict response
 func TestSendConflictResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -175,6 +186,7 @@ func TestSendConflictResponse_Success(t *testing.T) {
 
 // TestSendConflictResponse_DefaultMessage tests conflict with default message
 func TestSendConflictResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -189,6 +201,7 @@ func TestSendConflictResponse_DefaultMessage(t *testing.T) {
 
 // TestSendPayloadTooLargeResponse_Success tests payload too large response
 func TestSendPayloadTooLargeResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -203,6 +216,7 @@ func TestSendPayloadTooLargeResponse_Success(t *testing.T) {
 
 // TestSendPayloadTooLargeResponse_DefaultMessage tests payload too large with default
 func TestSendPayloadTooLargeResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -217,6 +231,7 @@ func TestSendPayloadTooLargeResponse_DefaultMessage(t *testing.T) {
 
 // TestSendTooManyRequestsResponse_Success tests too many requests response
 func TestSendTooManyRequestsResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -231,6 +246,7 @@ func TestSendTooManyRequestsResponse_Success(t *testing.T) {
 
 // TestSendTooManyRequestsResponse_DefaultMessage tests too many requests with default
 func TestSendTooManyRequestsResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -245,6 +261,7 @@ func TestSendTooManyRequestsResponse_DefaultMessage(t *testing.T) {
 
 // TestSendInternalServerErrorResponse_Success tests internal server error response
 func TestSendInternalServerErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {

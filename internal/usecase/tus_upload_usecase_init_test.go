@@ -48,8 +48,11 @@ func seedTusUploadStore(t *testing.T, manager *upload.TusManager, uploadID strin
 
 
 func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
+	t.Parallel()
 	t.Run("CheckUploadSlot available and not available", func(t *testing.T) {
+		t.Parallel()
 		t.Run("available", func(t *testing.T) {
+			t.Parallel()
 			uc, _, _, _ := newTusUploadTestDeps(t)
 
 			res, err := uc.CheckUploadSlot(context.Background(), "u1")
@@ -60,6 +63,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("not available", func(t *testing.T) {
+			t.Parallel()
 			uc, _, _, manager := newTusUploadTestDeps(t)
 			manager.AddToQueue("busy-upload")
 
@@ -71,6 +75,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 	})
 
 	t.Run("ResetUploadQueue clears active upload", func(t *testing.T) {
+		t.Parallel()
 		uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 		seedTusUploadStore(t, manager, "active-id", 16, map[string]string{"user_id": "u1"})
 		manager.AddToQueue("active-id")
@@ -95,9 +100,11 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 	})
 
 	t.Run("InitiateUpload", func(t *testing.T) {
+		t.Parallel()
 		metadata := dto.TusUploadInitRequest{NamaProject: "Project Alpha", Kategori: "website", Semester: 2}
 
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 			tusRepo.On("GetActiveByUserID", mock.Anything, "u1").Return([]domain.TusUpload{}, nil).Once()
 			tusRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.TusUpload")).Return(nil).Once()
@@ -114,6 +121,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("file too large", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetActiveByUserID", mock.Anything, "u1").Return([]domain.TusUpload{}, nil)
 
@@ -125,6 +133,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("no upload slot", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
 			tusRepo.On("GetActiveByUserID", mock.Anything, "u1").Return([]domain.TusUpload{}, nil)
 			manager.AddToQueue("active")
@@ -138,7 +147,9 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 	})
 
 	t.Run("GetUploadInfo and GetUploadStatus", func(t *testing.T) {
+		t.Parallel()
 		t.Run("GetUploadInfo found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			projectID := uint(7)
 			now := time.Now()
@@ -163,6 +174,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("GetUploadInfo not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -173,6 +185,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("GetUploadStatus found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "status-id").Return(&domain.TusUpload{ID: "status-id", UserID: "u1", CurrentOffset: 8, FileSize: 16}, nil).Once()
 
@@ -183,6 +196,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("GetUploadStatus not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -195,13 +209,16 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 }
 
 func TestUsecaseTestMocksHelpers(t *testing.T) {
+	t.Parallel()
 	t.Run("uintPtr returns pointer value", func(t *testing.T) {
+		t.Parallel()
 		ptr := uintPtr(42)
 		require.NotNil(t, ptr)
 		assert.Equal(t, uint(42), *ptr)
 	})
 
 	t.Run("MockTusUploadRepository uncovered list methods", func(t *testing.T) {
+		t.Parallel()
 		repo := new(MockTusUploadRepository)
 		uploads := []domain.TusUpload{{ID: "u1"}}
 		ctx := context.Background()
@@ -230,6 +247,7 @@ func TestUsecaseTestMocksHelpers(t *testing.T) {
 	})
 
 	t.Run("MockTusUploadRepository nil list branches", func(t *testing.T) {
+		t.Parallel()
 		repo := new(MockTusUploadRepository)
 		ctx := context.Background()
 

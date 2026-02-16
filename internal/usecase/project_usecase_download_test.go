@@ -18,6 +18,7 @@ import (
 
 // TestProjectUsecase_Download_SingleFile tests single project download
 func TestProjectUsecase_Download_SingleFile(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -45,6 +46,7 @@ func TestProjectUsecase_Download_SingleFile(t *testing.T) {
 
 // TestProjectUsecase_Download_EmptyIDs tests empty project IDs
 func TestProjectUsecase_Download_EmptyIDs(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -65,6 +67,7 @@ func TestProjectUsecase_Download_EmptyIDs(t *testing.T) {
 
 // TestProjectUsecase_Download_NotFound tests project not found
 func TestProjectUsecase_Download_NotFound(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -89,6 +92,7 @@ func TestProjectUsecase_Download_NotFound(t *testing.T) {
 
 // TestProjectUsecase_Download_Error tests error during download
 func TestProjectUsecase_Download_Error(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -112,6 +116,7 @@ func TestProjectUsecase_Download_Error(t *testing.T) {
 }
 
 func TestProjectUsecase_Download_SingleFile_GetOwnedProjectError(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -135,6 +140,7 @@ func TestProjectUsecase_Download_SingleFile_GetOwnedProjectError(t *testing.T) {
 }
 
 func TestProjectUsecase_Download_SingleFile_Forbidden(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -164,6 +170,7 @@ func TestProjectUsecase_Download_SingleFile_Forbidden(t *testing.T) {
 }
 
 func TestProjectUsecase_Download_SingleFile_PathTraversal(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -193,6 +200,7 @@ func TestProjectUsecase_Download_SingleFile_PathTraversal(t *testing.T) {
 }
 
 func TestProjectUsecase_Download_MultipleFiles_Success(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -225,6 +233,7 @@ func TestProjectUsecase_Download_MultipleFiles_Success(t *testing.T) {
 }
 
 func TestProjectUsecase_Download_MultipleFiles_PartialFound(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
@@ -254,6 +263,7 @@ func TestProjectUsecase_Download_MultipleFiles_PartialFound(t *testing.T) {
 }
 
 func TestProjectUsecase_Download_MultipleFiles_NonexistentFile(t *testing.T) {
+	t.Parallel()
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}

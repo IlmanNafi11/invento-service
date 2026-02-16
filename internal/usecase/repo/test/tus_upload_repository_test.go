@@ -95,6 +95,7 @@ func (m *MockTusUploadRepository) ListActive(ctx context.Context) ([]domain.TusU
 // TusUploadRepository Tests
 
 func TestTusUploadRepository_Create_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	upload := &domain.TusUpload{
@@ -126,6 +127,7 @@ func TestTusUploadRepository_Create_Success(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetByID_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	uploadID := "test-upload-id"
@@ -161,6 +163,7 @@ func TestTusUploadRepository_GetByID_Success(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetByUploadID_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	userID := "user-1"
@@ -223,6 +226,7 @@ func TestTusUploadRepository_GetByUploadID_Success(t *testing.T) {
 }
 
 func TestTusUploadRepository_Update_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	upload := &domain.TusUpload{
@@ -250,6 +254,7 @@ func TestTusUploadRepository_Update_Success(t *testing.T) {
 }
 
 func TestTusUploadRepository_UpdateOffset_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	uploadID := "test-upload-id"
@@ -265,6 +270,7 @@ func TestTusUploadRepository_UpdateOffset_Success(t *testing.T) {
 }
 
 func TestTusUploadRepository_UpdateStatus_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	uploadID := "test-upload-id"
@@ -279,6 +285,7 @@ func TestTusUploadRepository_UpdateStatus_Success(t *testing.T) {
 }
 
 func TestTusUploadRepository_Delete_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	uploadID := "test-upload-id"
@@ -292,6 +299,7 @@ func TestTusUploadRepository_Delete_Success(t *testing.T) {
 }
 
 func TestTusUploadRepository_ListActiveUploads_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	expectedUploads := []domain.TusUpload{
@@ -332,6 +340,7 @@ func TestTusUploadRepository_ListActiveUploads_Success(t *testing.T) {
 }
 
 func TestTusUploadRepository_GetExpiredUploads_Success(t *testing.T) {
+	t.Parallel()
 	mockRepo := new(MockTusUploadRepository)
 
 	before := time.Now()

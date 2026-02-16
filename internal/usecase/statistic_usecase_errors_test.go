@@ -4,11 +4,13 @@ import (
 	"invento-service/internal/rbac"
 	"testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func TestStatisticUsecase_ActualGetStatistics_NoPermissions(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -45,6 +47,7 @@ func TestStatisticUsecase_ActualGetStatistics_NoPermissions(t *testing.T) {
 
 // TestStatisticUsecase_ActualGetStatistics_PartialPermissions tests with partial permissions
 func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)
@@ -73,7 +76,7 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 	casbinEnforcer.AddPermissionForRole(userRole, "User", "read")
 	casbinEnforcer.SavePolicy()
 
-	mockProjectRepo.On("CountByUserID", userID).Return(8, nil)
+	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(8, nil)
 
 	result, err := usecase.GetStatistics(userID, userRole)
 
@@ -91,6 +94,7 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 
 // TestNewStatisticUsecase_RealConstructor tests the actual NewStatisticUsecase constructor
 func TestNewStatisticUsecase_RealConstructor(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockProjectRepo := new(MockProjectRepository)
 	mockModulRepo := new(MockModulRepository)

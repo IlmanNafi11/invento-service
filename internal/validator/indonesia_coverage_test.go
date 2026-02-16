@@ -8,6 +8,7 @@ import (
 
 // TestFormatPhoneNumber_Success tests phone number formatting
 func TestFormatPhoneNumber_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -25,6 +26,7 @@ func TestFormatPhoneNumber_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := FormatPhoneNumber(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -33,18 +35,21 @@ func TestFormatPhoneNumber_Success(t *testing.T) {
 
 // TestFormatPhoneNumber_Empty tests empty string
 func TestFormatPhoneNumber_Empty(t *testing.T) {
+	t.Parallel()
 	result := FormatPhoneNumber("")
 	assert.Equal(t, "", result)
 }
 
 // TestFormatPhoneNumber_OnlySpaces tests only spaces
 func TestFormatPhoneNumber_OnlySpaces(t *testing.T) {
+	t.Parallel()
 	result := FormatPhoneNumber("     ")
 	assert.Equal(t, "", result)
 }
 
 // TestFormatNIK_Success tests NIK formatting
 func TestFormatNIK_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -58,6 +63,7 @@ func TestFormatNIK_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := FormatNIK(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -66,6 +72,7 @@ func TestFormatNIK_Success(t *testing.T) {
 
 // TestFormatNIK_Short returns input as-is when not 16 digits
 func TestFormatNIK_Short(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -78,6 +85,7 @@ func TestFormatNIK_Short(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := FormatNIK(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -86,6 +94,7 @@ func TestFormatNIK_Short(t *testing.T) {
 
 // TestFormatNPWP_Success tests NPWP formatting
 func TestFormatNPWP_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -98,6 +107,7 @@ func TestFormatNPWP_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := FormatNPWP(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -106,6 +116,7 @@ func TestFormatNPWP_Success(t *testing.T) {
 
 // TestFormatNPWP_Short returns input as-is when not 15 digits
 func TestFormatNPWP_Short(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -118,6 +129,7 @@ func TestFormatNPWP_Short(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := FormatNPWP(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -126,6 +138,7 @@ func TestFormatNPWP_Short(t *testing.T) {
 
 // TestValidateNIKChecksum_Success tests valid NIK checksums
 func TestValidateNIKChecksum_Success(t *testing.T) {
+	t.Parallel()
 	validNIKs := []string{
 		"3201012345678901",
 		"3201012345678902",
@@ -137,6 +150,7 @@ func TestValidateNIKChecksum_Success(t *testing.T) {
 
 	for _, nik := range validNIKs {
 		t.Run(nik, func(t *testing.T) {
+			t.Parallel()
 			result := ValidateNIKChecksum(nik)
 			assert.True(t, result, "NIK should be valid: "+nik)
 		})
@@ -145,6 +159,7 @@ func TestValidateNIKChecksum_Success(t *testing.T) {
 
 // TestValidateNIKChecksum_Failure tests invalid NIKs
 func TestValidateNIKChecksum_Failure(t *testing.T) {
+	t.Parallel()
 	invalidNIKs := []string{
 		"",
 		"12345",
@@ -156,6 +171,7 @@ func TestValidateNIKChecksum_Failure(t *testing.T) {
 
 	for _, nik := range invalidNIKs {
 		t.Run(nik, func(t *testing.T) {
+			t.Parallel()
 			result := ValidateNIKChecksum(nik)
 			assert.False(t, result, "NIK should be invalid: "+nik)
 		})
@@ -164,6 +180,7 @@ func TestValidateNIKChecksum_Failure(t *testing.T) {
 
 // TestGetProvinceName_Success tests province name lookup
 func TestGetProvinceName_Success(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		code     string
 		expected string
@@ -186,6 +203,7 @@ func TestGetProvinceName_Success(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.code, func(t *testing.T) {
+			t.Parallel()
 			province := GetProvinceName(tt.code)
 			assert.Equal(t, tt.expected, province)
 		})
@@ -194,6 +212,7 @@ func TestGetProvinceName_Success(t *testing.T) {
 
 // TestGetProvinceName_UnknownCode tests unknown area code
 func TestGetProvinceName_UnknownCode(t *testing.T) {
+	t.Parallel()
 	unknownCodes := []string{
 		"00",
 		"99",
@@ -204,6 +223,7 @@ func TestGetProvinceName_UnknownCode(t *testing.T) {
 
 	for _, code := range unknownCodes {
 		t.Run(code, func(t *testing.T) {
+			t.Parallel()
 			province := GetProvinceName(code)
 			assert.Equal(t, "Provinsi Tidak Diketahui", province)
 		})
@@ -212,6 +232,7 @@ func TestGetProvinceName_UnknownCode(t *testing.T) {
 
 // TestGetProvinceName_AllProvinces tests all province codes
 func TestGetProvinceName_AllProvinces(t *testing.T) {
+	t.Parallel()
 	provinces := []struct {
 		code  string
 		name  string
@@ -254,6 +275,7 @@ func TestGetProvinceName_AllProvinces(t *testing.T) {
 
 	for _, p := range provinces {
 		t.Run(p.code, func(t *testing.T) {
+			t.Parallel()
 			province := GetProvinceName(p.code)
 			assert.Equal(t, p.name, province)
 		})
@@ -262,6 +284,7 @@ func TestGetProvinceName_AllProvinces(t *testing.T) {
 
 // TestFormatPhoneNumber_VariousFormats tests various phone number formats
 func TestFormatPhoneNumber_VariousFormats(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -277,6 +300,7 @@ func TestFormatPhoneNumber_VariousFormats(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := FormatPhoneNumber(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -285,6 +309,7 @@ func TestFormatPhoneNumber_VariousFormats(t *testing.T) {
 
 // TestFormatNIK_WithSeparators tests NIK formatting with various separators
 func TestFormatNIK_WithSeparators(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -297,6 +322,7 @@ func TestFormatNIK_WithSeparators(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := FormatNIK(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -305,6 +331,7 @@ func TestFormatNIK_WithSeparators(t *testing.T) {
 
 // TestFormatNPWP_WithSeparators tests NPWP formatting with various separators
 func TestFormatNPWP_WithSeparators(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input    string
 		expected string
@@ -316,6 +343,7 @@ func TestFormatNPWP_WithSeparators(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
+			t.Parallel()
 			result := FormatNPWP(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -324,6 +352,7 @@ func TestFormatNPWP_WithSeparators(t *testing.T) {
 
 // TestValidateNIKChecksum_EdgeCases tests edge cases for NIK checksum
 func TestValidateNIKChecksum_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		nik       string
 		shouldPass bool
@@ -339,6 +368,7 @@ func TestValidateNIKChecksum_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.nik, func(t *testing.T) {
+			t.Parallel()
 			result := ValidateNIKChecksum(tt.nik)
 			assert.Equal(t, tt.shouldPass, result)
 		})
@@ -347,6 +377,7 @@ func TestValidateNIKChecksum_EdgeCases(t *testing.T) {
 
 // TestGetProvinceName_CaseSensitivity tests case sensitivity
 func TestGetProvinceName_CaseSensitivity(t *testing.T) {
+	t.Parallel()
 	// Lowercase should not match (exact key lookup)
 	province := GetProvinceName("32")
 	assert.Equal(t, "Jawa Barat", province)

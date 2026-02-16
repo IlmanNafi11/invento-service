@@ -15,6 +15,7 @@ import (
 )
 
 func TestModulUsecase_GetList_WithFilters(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -45,6 +46,7 @@ func TestModulUsecase_GetList_WithFilters(t *testing.T) {
 
 // TestModulUsecase_GetByID_Success tests successful modul retrieval
 func TestModulUsecase_GetByID_Success(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -79,6 +81,7 @@ func TestModulUsecase_GetByID_Success(t *testing.T) {
 
 // TestModulUsecase_GetByID_NotFound tests modul retrieval when not found
 func TestModulUsecase_GetByID_NotFound(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -100,6 +103,7 @@ func TestModulUsecase_GetByID_NotFound(t *testing.T) {
 
 // TestModulUsecase_GetByID_Unauthorized tests access denial for different user
 func TestModulUsecase_GetByID_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -135,6 +139,7 @@ func TestModulUsecase_GetByID_Unauthorized(t *testing.T) {
 
 // TestModulUsecase_Download_SingleFile tests single file download
 func TestModulUsecase_Download_SingleFile(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -168,6 +173,7 @@ func TestModulUsecase_Download_SingleFile(t *testing.T) {
 
 // TestModulUsecase_Download_EmptyIDs tests empty modul IDs
 func TestModulUsecase_Download_EmptyIDs(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -185,6 +191,7 @@ func TestModulUsecase_Download_EmptyIDs(t *testing.T) {
 
 // TestModulUsecase_Download_NotFound tests download when moduls not found
 func TestModulUsecase_Download_NotFound(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -205,6 +212,7 @@ func TestModulUsecase_Download_NotFound(t *testing.T) {
 }
 
 func TestModulUsecase_UpdateMetadata_NotFound(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -224,6 +232,7 @@ func TestModulUsecase_UpdateMetadata_NotFound(t *testing.T) {
 }
 
 func TestModulUsecase_UpdateMetadata_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -243,6 +252,7 @@ func TestModulUsecase_UpdateMetadata_Unauthorized(t *testing.T) {
 }
 
 func TestModulUsecase_Delete_NotFound(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -259,6 +269,7 @@ func TestModulUsecase_Delete_NotFound(t *testing.T) {
 }
 
 func TestModulUsecase_Delete_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -276,6 +287,7 @@ func TestModulUsecase_Delete_Unauthorized(t *testing.T) {
 }
 
 func TestModulUsecase_Download_RepositoryError(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -293,6 +305,7 @@ func TestModulUsecase_Download_RepositoryError(t *testing.T) {
 }
 
 func TestModulUsecase_GetList_InvalidPagination(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
@@ -309,6 +322,7 @@ func TestModulUsecase_GetList_InvalidPagination(t *testing.T) {
 }
 
 func TestModulUsecase_GetByID_RepositoryError(t *testing.T) {
+	t.Parallel()
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 

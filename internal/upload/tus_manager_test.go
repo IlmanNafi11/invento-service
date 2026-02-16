@@ -38,6 +38,7 @@ func newTestTusManager(t *testing.T) (*TusManager, *TusStore, *TusQueue) {
 }
 
 func TestTusManager_CheckUploadSlot_ReturnsCorrectAvailability(t *testing.T) {
+	t.Parallel()
 	manager, _, queue := newTestTusManager(t)
 
 	resp := manager.CheckUploadSlot()
@@ -58,6 +59,7 @@ func TestTusManager_CheckUploadSlot_ReturnsCorrectAvailability(t *testing.T) {
 }
 
 func TestTusManager_ResetUploadQueue_TerminatesActiveAndClearsQueue(t *testing.T) {
+	t.Parallel()
 	manager, store, queue := newTestTusManager(t)
 
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "u1", Size: 10, Metadata: map[string]string{}}))
@@ -77,6 +79,7 @@ func TestTusManager_ResetUploadQueue_TerminatesActiveAndClearsQueue(t *testing.T
 }
 
 func TestTusManager_ParseMetadata_DecodesBase64Pairs(t *testing.T) {
+	t.Parallel()
 	name := base64.StdEncoding.EncodeToString([]byte("doc.zip"))
 	typev := base64.StdEncoding.EncodeToString([]byte("application/zip"))
 
@@ -86,12 +89,14 @@ func TestTusManager_ParseMetadata_DecodesBase64Pairs(t *testing.T) {
 }
 
 func TestTusManager_ParseMetadata_InvalidBase64DefaultsEmptyValue(t *testing.T) {
+	t.Parallel()
 	data := ParseTusMetadata("filename !!!")
 	assert.Contains(t, data, "filename")
 	assert.Equal(t, "", data["filename"])
 }
 
 func TestTusManager_ValidateModulMetadata_ValidatesFields(t *testing.T) {
+	t.Parallel()
 	manager, _, _ := newTestTusManager(t)
 
 	err := manager.ValidateModulMetadata(map[string]string{"tipe": "pdf"})
@@ -115,6 +120,7 @@ func TestTusManager_ValidateModulMetadata_ValidatesFields(t *testing.T) {
 }
 
 func TestTusManager_InitiateUpload_ValidatesSizeAndCreatesUpload(t *testing.T) {
+	t.Parallel()
 	manager, store, _ := newTestTusManager(t)
 
 	err := manager.InitiateUpload("too-big", manager.config.Upload.MaxSize+1, map[string]string{})
@@ -135,6 +141,7 @@ func TestTusManager_InitiateUpload_ValidatesSizeAndCreatesUpload(t *testing.T) {
 }
 
 func TestTusManager_HandleChunk_DelegatesToStoreWriteChunk(t *testing.T) {
+	t.Parallel()
 	manager, store, _ := newTestTusManager(t)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "u3", Size: 20, Metadata: map[string]string{}}))
 

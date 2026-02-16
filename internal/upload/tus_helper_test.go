@@ -102,6 +102,7 @@ func setupTestTusStore(t *testing.T) (*upload.TusStore, string) {
 // ==================== TusManager Tests ====================
 
 func TestNewTusManager_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -114,6 +115,7 @@ func TestNewTusManager_Success(t *testing.T) {
 }
 
 func TestTusManager_CheckUploadSlot_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -131,6 +133,7 @@ func TestTusManager_CheckUploadSlot_Success(t *testing.T) {
 }
 
 func TestTusManager_CheckUploadSlot_WithActiveUpload(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -147,6 +150,7 @@ func TestTusManager_CheckUploadSlot_WithActiveUpload(t *testing.T) {
 }
 
 func TestTusManager_ResetUploadQueue_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -163,6 +167,7 @@ func TestTusManager_ResetUploadQueue_Success(t *testing.T) {
 }
 
 func TestTusManager_ParseMetadata_Success(t *testing.T) {
+	t.Parallel()
 	// Valid base64 encoded metadata
 	metadata := "filename dGVzdC56aXA=,content-type YXBwbGljYXRpb24vemlw"
 
@@ -172,11 +177,13 @@ func TestTusManager_ParseMetadata_Success(t *testing.T) {
 }
 
 func TestTusManager_ParseMetadata_Empty(t *testing.T) {
+	t.Parallel()
 	parsed := upload.ParseTusMetadata("")
 	assert.Empty(t, parsed)
 }
 
 func TestTusManager_ParseMetadata_InvalidBase64(t *testing.T) {
+	t.Parallel()
 	metadata := "filename invalid_base64!!!"
 
 	parsed := upload.ParseTusMetadata(metadata)
@@ -184,6 +191,7 @@ func TestTusManager_ParseMetadata_InvalidBase64(t *testing.T) {
 }
 
 func TestTusManager_ValidateModulMetadata_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -251,6 +259,7 @@ func TestTusManager_ValidateModulMetadata_Success(t *testing.T) {
 // ==================== TusStore Tests ====================
 
 func TestNewTusStore_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 
@@ -260,6 +269,7 @@ func TestNewTusStore_Success(t *testing.T) {
 }
 
 func TestTusStore_InitiateUpload_Success(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -278,6 +288,7 @@ func TestTusStore_InitiateUpload_Success(t *testing.T) {
 }
 
 func TestTusStore_InitiateUpload_FileTooLarge(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -290,6 +301,7 @@ func TestTusStore_InitiateUpload_FileTooLarge(t *testing.T) {
 }
 
 func TestTusStore_InitiateUpload_InvalidSize(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	tests := []struct {
@@ -315,6 +327,7 @@ func TestTusStore_InitiateUpload_InvalidSize(t *testing.T) {
 }
 
 func TestTusStore_WriteChunk_Success(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -335,6 +348,7 @@ func TestTusStore_WriteChunk_Success(t *testing.T) {
 }
 
 func TestTusStore_WriteChunk_UploadNotFound(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	chunk := []byte("test content")
@@ -344,6 +358,7 @@ func TestTusStore_WriteChunk_UploadNotFound(t *testing.T) {
 }
 
 func TestTusStore_GetInfo_Success(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -360,6 +375,7 @@ func TestTusStore_GetInfo_Success(t *testing.T) {
 }
 
 func TestTusStore_GetInfo_NotFound(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	_, err := store.GetInfo("nonexistent")
@@ -369,6 +385,7 @@ func TestTusStore_GetInfo_NotFound(t *testing.T) {
 }
 
 func TestTusStore_IsComplete_True(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -388,6 +405,7 @@ func TestTusStore_IsComplete_True(t *testing.T) {
 }
 
 func TestTusStore_IsComplete_False(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -403,6 +421,7 @@ func TestTusStore_IsComplete_False(t *testing.T) {
 }
 
 func TestTusStore_GetProgress_Success(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -418,6 +437,7 @@ func TestTusStore_GetProgress_Success(t *testing.T) {
 }
 
 func TestTusStore_GetProgress_HalfComplete(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -437,6 +457,7 @@ func TestTusStore_GetProgress_HalfComplete(t *testing.T) {
 }
 
 func TestTusStore_GetOffset_Success(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -452,6 +473,7 @@ func TestTusStore_GetOffset_Success(t *testing.T) {
 }
 
 func TestTusStore_Terminate_Success(t *testing.T) {
+	t.Parallel()
 	store, tempDir := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -471,6 +493,7 @@ func TestTusStore_Terminate_Success(t *testing.T) {
 }
 
 func TestTusStore_UpdateMetadata_Success(t *testing.T) {
+	t.Parallel()
 	store, _ := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -494,6 +517,7 @@ func TestTusStore_UpdateMetadata_Success(t *testing.T) {
 }
 
 func TestTusStore_FinalizeUpload_Success(t *testing.T) {
+	t.Parallel()
 	store, tempDir := setupTestTusStore(t)
 
 	uploadID := "test-upload-123"
@@ -519,6 +543,7 @@ func TestTusStore_FinalizeUpload_Success(t *testing.T) {
 // ==================== TusQueue Tests ====================
 
 func TestNewTusQueue_Success(t *testing.T) {
+	t.Parallel()
 	maxConcurrent := 3
 	queue := upload.NewTusQueue(maxConcurrent)
 
@@ -528,6 +553,7 @@ func TestNewTusQueue_Success(t *testing.T) {
 }
 
 func TestTusQueue_Add_Success(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
@@ -539,6 +565,7 @@ func TestTusQueue_Add_Success(t *testing.T) {
 }
 
 func TestTusQueue_Add_Queued(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
 
 	queue.Add("upload-1")
@@ -550,6 +577,7 @@ func TestTusQueue_Add_Queued(t *testing.T) {
 }
 
 func TestTusQueue_Add_Duplicate(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(1) // maxConcurrent=1 so uploads go to queue
 
 	queue.Add("upload-1")
@@ -565,6 +593,7 @@ func TestTusQueue_Add_Duplicate(t *testing.T) {
 }
 
 func TestTusQueue_Remove_ActiveUpload(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
@@ -575,6 +604,7 @@ func TestTusQueue_Remove_ActiveUpload(t *testing.T) {
 }
 
 func TestTusQueue_Remove_QueuedUpload(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
 
 	queue.Add("upload-1")
@@ -586,6 +616,7 @@ func TestTusQueue_Remove_QueuedUpload(t *testing.T) {
 }
 
 func TestTusQueue_Remove_NotFound(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	err := queue.Remove("nonexistent")
@@ -595,6 +626,7 @@ func TestTusQueue_Remove_NotFound(t *testing.T) {
 }
 
 func TestTusQueue_GetQueuePosition_Active(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
@@ -604,6 +636,7 @@ func TestTusQueue_GetQueuePosition_Active(t *testing.T) {
 }
 
 func TestTusQueue_GetQueuePosition_Queued(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
 
 	queue.Add("upload-1")
@@ -614,6 +647,7 @@ func TestTusQueue_GetQueuePosition_Queued(t *testing.T) {
 }
 
 func TestTusQueue_GetQueuePosition_NotFound(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	position := queue.GetQueuePosition("nonexistent")
@@ -621,6 +655,7 @@ func TestTusQueue_GetQueuePosition_NotFound(t *testing.T) {
 }
 
 func TestTusQueue_FinishUpload_Success(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
@@ -632,6 +667,7 @@ func TestTusQueue_FinishUpload_Success(t *testing.T) {
 }
 
 func TestTusQueue_Clear_Success(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
@@ -643,12 +679,14 @@ func TestTusQueue_Clear_Success(t *testing.T) {
 }
 
 func TestTusQueue_CanAcceptUpload_True(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	assert.True(t, queue.CanAcceptUpload())
 }
 
 func TestTusQueue_CanAcceptUpload_False(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(1) // maxConcurrent=1 so it fills up with one upload
 
 	queue.Add("upload-1")
@@ -657,6 +695,7 @@ func TestTusQueue_CanAcceptUpload_False(t *testing.T) {
 }
 
 func TestTusQueue_IsActiveUpload_True(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
@@ -665,6 +704,7 @@ func TestTusQueue_IsActiveUpload_True(t *testing.T) {
 }
 
 func TestTusQueue_IsActiveUpload_False(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
@@ -673,6 +713,7 @@ func TestTusQueue_IsActiveUpload_False(t *testing.T) {
 }
 
 func TestTusQueue_GetCurrentQueue_Success(t *testing.T) {
+	t.Parallel()
 	queue := upload.NewTusQueue(1) // maxConcurrent=1 so uploads go to queue
 
 	queue.Add("upload-1")
@@ -688,6 +729,7 @@ func TestTusQueue_GetCurrentQueue_Success(t *testing.T) {
 // ==================== TusResponse Tests ====================
 
 func TestSendTusInitiateResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusInitiateResponse(c, "upload-123", "/uploads/upload-123", 1024)
@@ -702,6 +744,7 @@ func TestSendTusInitiateResponse_Success(t *testing.T) {
 }
 
 func TestSendTusChunkResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Patch("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusChunkResponse(c, 512)
@@ -716,6 +759,7 @@ func TestSendTusChunkResponse_Success(t *testing.T) {
 }
 
 func TestSendTusHeadResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Head("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusHeadResponse(c, 512, 1024)
@@ -731,6 +775,7 @@ func TestSendTusHeadResponse_Success(t *testing.T) {
 }
 
 func TestSendTusDeleteResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Delete("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusDeleteResponse(c)
@@ -744,6 +789,7 @@ func TestSendTusDeleteResponse_Success(t *testing.T) {
 }
 
 func TestSendTusSlotResponse_Available(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 3)
@@ -761,6 +807,7 @@ func TestSendTusSlotResponse_Available(t *testing.T) {
 }
 
 func TestSendTusModulSlotResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 10)
@@ -778,6 +825,7 @@ func TestSendTusModulSlotResponse_Success(t *testing.T) {
 }
 
 func TestSendTusErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusErrorResponse(c, fiber.StatusBadRequest, "1.0.0")
@@ -792,6 +840,7 @@ func TestSendTusErrorResponse_Success(t *testing.T) {
 }
 
 func TestSendTusErrorResponseWithOffset_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusErrorResponseWithOffset(c, fiber.StatusConflict, "1.0.0", 512)
@@ -806,6 +855,7 @@ func TestSendTusErrorResponseWithOffset_Success(t *testing.T) {
 }
 
 func TestSendTusErrorResponseWithLength_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusErrorResponseWithLength(c, fiber.StatusRequestEntityTooLarge, "1.0.0", 1024)
@@ -820,6 +870,7 @@ func TestSendTusErrorResponseWithLength_Success(t *testing.T) {
 }
 
 func TestSendTusValidationErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusValidationErrorResponse(c, "Metadata tidak valid")
@@ -833,6 +884,7 @@ func TestSendTusValidationErrorResponse_Success(t *testing.T) {
 }
 
 func TestSendTusNotFoundErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusNotFoundErrorResponse(c, "Upload tidak ditemukan")
@@ -846,6 +898,7 @@ func TestSendTusNotFoundErrorResponse_Success(t *testing.T) {
 }
 
 func TestSendTusNotFoundErrorResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusNotFoundErrorResponse(c, "")
@@ -859,6 +912,7 @@ func TestSendTusNotFoundErrorResponse_DefaultMessage(t *testing.T) {
 }
 
 func TestSendTusForbiddenErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusForbiddenErrorResponse(c)
@@ -872,6 +926,7 @@ func TestSendTusForbiddenErrorResponse_Success(t *testing.T) {
 }
 
 func TestSendTusConflictErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusConflictErrorResponse(c, "Upload sudah selesai")
@@ -885,6 +940,7 @@ func TestSendTusConflictErrorResponse_Success(t *testing.T) {
 }
 
 func TestSendTusConflictErrorResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusConflictErrorResponse(c, "")
@@ -898,6 +954,7 @@ func TestSendTusConflictErrorResponse_DefaultMessage(t *testing.T) {
 }
 
 func TestSendTusPayloadTooLargeErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusPayloadTooLargeErrorResponse(c, "File terlalu besar")
@@ -911,6 +968,7 @@ func TestSendTusPayloadTooLargeErrorResponse_Success(t *testing.T) {
 }
 
 func TestSendTusPayloadTooLargeErrorResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusPayloadTooLargeErrorResponse(c, "")
@@ -924,6 +982,7 @@ func TestSendTusPayloadTooLargeErrorResponse_DefaultMessage(t *testing.T) {
 }
 
 func TestSendTusTooManyRequestsErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusTooManyRequestsErrorResponse(c, "Terlalu banyak request")
@@ -937,6 +996,7 @@ func TestSendTusTooManyRequestsErrorResponse_Success(t *testing.T) {
 }
 
 func TestSendTusTooManyRequestsErrorResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusTooManyRequestsErrorResponse(c, "")
@@ -950,6 +1010,7 @@ func TestSendTusTooManyRequestsErrorResponse_DefaultMessage(t *testing.T) {
 }
 
 func TestSendTusInternalErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.SendTusInternalErrorResponse(c)
@@ -965,6 +1026,7 @@ func TestSendTusInternalErrorResponse_Success(t *testing.T) {
 // ==================== TusHeaders Tests ====================
 
 func TestGetTusHeaders_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		c.Set("Tus-Resumable", "1.0.0")
@@ -990,6 +1052,7 @@ func TestGetTusHeaders_Success(t *testing.T) {
 }
 
 func TestGetTusHeaders_EmptyHeaders(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		headers, err := upload.GetTusHeaders(c)
@@ -1008,6 +1071,7 @@ func TestGetTusHeaders_EmptyHeaders(t *testing.T) {
 }
 
 func TestSetTusResponseHeaders_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		upload.SetTusResponseHeaders(c, 100, 1000)
@@ -1024,6 +1088,7 @@ func TestSetTusResponseHeaders_Success(t *testing.T) {
 }
 
 func TestSetTusResponseHeaders_ZeroLength(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		upload.SetTusResponseHeaders(c, 0, 0)
@@ -1039,6 +1104,7 @@ func TestSetTusResponseHeaders_ZeroLength(t *testing.T) {
 }
 
 func TestSetTusLocationHeader_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
 		upload.SetTusLocationHeader(c, "/uploads/upload-123")
@@ -1053,6 +1119,7 @@ func TestSetTusLocationHeader_Success(t *testing.T) {
 }
 
 func TestSetTusOffsetHeader_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Patch("/test", func(c *fiber.Ctx) error {
 		upload.SetTusOffsetHeader(c, 500)
@@ -1067,6 +1134,7 @@ func TestSetTusOffsetHeader_Success(t *testing.T) {
 }
 
 func TestValidateChunkSize_Valid(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		size    int64
@@ -1093,6 +1161,7 @@ func TestValidateChunkSize_Valid(t *testing.T) {
 }
 
 func TestBuildTusErrorResponse_ConflictWithOffset(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.BuildTusErrorResponse(c, fiber.StatusConflict, 100)
@@ -1107,6 +1176,7 @@ func TestBuildTusErrorResponse_ConflictWithOffset(t *testing.T) {
 }
 
 func TestBuildTusErrorResponse_OtherStatus(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return upload.BuildTusErrorResponse(c, fiber.StatusBadRequest, 100)
@@ -1123,6 +1193,7 @@ func TestBuildTusErrorResponse_OtherStatus(t *testing.T) {
 // ==================== TusCleanup Tests ====================
 
 func TestNewTusCleanup_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
@@ -1136,6 +1207,7 @@ func TestNewTusCleanup_Success(t *testing.T) {
 }
 
 func TestTusCleanup_Start_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
@@ -1154,6 +1226,7 @@ func TestTusCleanup_Start_Success(t *testing.T) {
 }
 
 func TestTusCleanup_Start_AlreadyRunning(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
@@ -1169,6 +1242,7 @@ func TestTusCleanup_Start_AlreadyRunning(t *testing.T) {
 }
 
 func TestTusCleanup_Stop_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
@@ -1185,6 +1259,7 @@ func TestTusCleanup_Stop_Success(t *testing.T) {
 }
 
 func TestTusCleanup_Stop_NotRunning(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
@@ -1199,6 +1274,7 @@ func TestTusCleanup_Stop_NotRunning(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupExpired_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
@@ -1222,6 +1298,7 @@ func TestTusCleanup_CleanupExpired_Success(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupExpired_NoExpired(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
@@ -1236,6 +1313,7 @@ func TestTusCleanup_CleanupExpired_NoExpired(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupExpired_RepositoryError(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads:  make(map[string]domain.TusUpload),
@@ -1251,6 +1329,7 @@ func TestTusCleanup_CleanupExpired_RepositoryError(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupAbandoned_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	oldTime := time.Now().Add(-1 * time.Hour)
 	repo := &MockTusUploadRepository{
@@ -1276,6 +1355,7 @@ func TestTusCleanup_CleanupAbandoned_Success(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupAbandoned_NoActive(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
@@ -1290,6 +1370,7 @@ func TestTusCleanup_CleanupAbandoned_NoActive(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupAbandoned_RepositoryError(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads:  make(map[string]domain.TusUpload),
@@ -1305,6 +1386,7 @@ func TestTusCleanup_CleanupAbandoned_RepositoryError(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupUpload_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads: map[string]domain.TusUpload{
@@ -1331,6 +1413,7 @@ func TestTusCleanup_CleanupUpload_Success(t *testing.T) {
 }
 
 func TestTusCleanup_CleanupUpload_NotFound(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	repo := &MockTusUploadRepository{
 		uploads:     map[string]domain.TusUpload{},
@@ -1347,6 +1430,7 @@ func TestTusCleanup_CleanupUpload_NotFound(t *testing.T) {
 // ==================== TusManager Additional Tests ====================
 
 func TestTusManager_InitiateUpload_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1370,6 +1454,7 @@ func TestTusManager_InitiateUpload_Success(t *testing.T) {
 }
 
 func TestTusManager_InitiateUpload_FileTooLarge(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1388,6 +1473,7 @@ func TestTusManager_InitiateUpload_FileTooLarge(t *testing.T) {
 }
 
 func TestTusManager_InitiateUpload_InvalidSize(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1417,6 +1503,7 @@ func TestTusManager_InitiateUpload_InvalidSize(t *testing.T) {
 }
 
 func TestTusManager_HandleChunk_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1445,6 +1532,7 @@ func TestTusManager_HandleChunk_Success(t *testing.T) {
 }
 
 func TestTusManager_HandleChunk_UploadNotFound(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1459,6 +1547,7 @@ func TestTusManager_HandleChunk_UploadNotFound(t *testing.T) {
 }
 
 func TestTusManager_GetUploadStatus_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1480,6 +1569,7 @@ func TestTusManager_GetUploadStatus_Success(t *testing.T) {
 }
 
 func TestTusManager_GetUploadStatus_NotFound(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1493,6 +1583,7 @@ func TestTusManager_GetUploadStatus_NotFound(t *testing.T) {
 }
 
 func TestTusManager_GetUploadInfo_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1515,6 +1606,7 @@ func TestTusManager_GetUploadInfo_Success(t *testing.T) {
 }
 
 func TestTusManager_GetUploadInfo_NotFound(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1528,6 +1620,7 @@ func TestTusManager_GetUploadInfo_NotFound(t *testing.T) {
 }
 
 func TestTusManager_CancelUpload_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1551,6 +1644,7 @@ func TestTusManager_CancelUpload_Success(t *testing.T) {
 }
 
 func TestTusManager_CancelUpload_NotFound(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1565,6 +1659,7 @@ func TestTusManager_CancelUpload_NotFound(t *testing.T) {
 }
 
 func TestTusManager_FinalizeUpload_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	tempDir := t.TempDir()
 	pathResolver := storage.NewPathResolver(cfg)
@@ -1596,6 +1691,7 @@ func TestTusManager_FinalizeUpload_Success(t *testing.T) {
 }
 
 func TestTusManager_FinalizeUpload_NotComplete(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	tempDir := t.TempDir()
 	pathResolver := storage.NewPathResolver(cfg)
@@ -1626,6 +1722,7 @@ func TestTusManager_FinalizeUpload_NotComplete(t *testing.T) {
 }
 
 func TestTusManager_IsUploadComplete_True(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1650,6 +1747,7 @@ func TestTusManager_IsUploadComplete_True(t *testing.T) {
 }
 
 func TestTusManager_IsUploadComplete_False(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1670,6 +1768,7 @@ func TestTusManager_IsUploadComplete_False(t *testing.T) {
 }
 
 func TestTusManager_GetUploadProgress_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1690,6 +1789,7 @@ func TestTusManager_GetUploadProgress_Success(t *testing.T) {
 }
 
 func TestTusManager_GetUploadProgress_HalfComplete(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1714,6 +1814,7 @@ func TestTusManager_GetUploadProgress_HalfComplete(t *testing.T) {
 }
 
 func TestTusManager_AddToQueue_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1729,6 +1830,7 @@ func TestTusManager_AddToQueue_Success(t *testing.T) {
 }
 
 func TestTusManager_AddToQueue_Multiple(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1746,6 +1848,7 @@ func TestTusManager_AddToQueue_Multiple(t *testing.T) {
 }
 
 func TestTusManager_RemoveFromQueue_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1761,6 +1864,7 @@ func TestTusManager_RemoveFromQueue_Success(t *testing.T) {
 }
 
 func TestTusManager_RemoveFromQueue_NotFound(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1774,6 +1878,7 @@ func TestTusManager_RemoveFromQueue_NotFound(t *testing.T) {
 }
 
 func TestTusManager_CanAcceptUpload_True(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1785,6 +1890,7 @@ func TestTusManager_CanAcceptUpload_True(t *testing.T) {
 }
 
 func TestTusManager_CanAcceptUpload_False(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1798,6 +1904,7 @@ func TestTusManager_CanAcceptUpload_False(t *testing.T) {
 }
 
 func TestTusManager_IsActiveUpload_True(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1811,6 +1918,7 @@ func TestTusManager_IsActiveUpload_True(t *testing.T) {
 }
 
 func TestTusManager_IsActiveUpload_False(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1824,6 +1932,7 @@ func TestTusManager_IsActiveUpload_False(t *testing.T) {
 }
 
 func TestTusManager_GetDefaultTusHeaders_Success(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1838,6 +1947,7 @@ func TestTusManager_GetDefaultTusHeaders_Success(t *testing.T) {
 }
 
 func TestTusManager_ResetUploadQueue_WithActiveUpload(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	tempDir := t.TempDir()
 	pathResolver := storage.NewPathResolver(cfg)
@@ -1868,6 +1978,7 @@ func TestTusManager_ResetUploadQueue_WithActiveUpload(t *testing.T) {
 }
 
 func TestTusManager_ParseMetadata_WithSpaces(t *testing.T) {
+	t.Parallel()
 	// Metadata with extra spaces between key and value (spaces around the comma are trimmed)
 	metadata := "filename dGVzdC56aXA=, content-type YXBwbGljYXRpb24vemlw"
 
@@ -1877,6 +1988,7 @@ func TestTusManager_ParseMetadata_WithSpaces(t *testing.T) {
 }
 
 func TestTusManager_ParseMetadata_InvalidPair(t *testing.T) {
+	t.Parallel()
 	// Invalid pair format (missing value)
 	metadata := "filename dGVzdC56aXA=,invalid-key"
 
@@ -1885,6 +1997,7 @@ func TestTusManager_ParseMetadata_InvalidPair(t *testing.T) {
 }
 
 func TestTusManager_ValidateModulMetadata_TooLong(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1910,6 +2023,7 @@ func TestTusManager_ValidateModulMetadata_TooLong(t *testing.T) {
 }
 
 func TestTusManager_ValidateModulMetadata_AllTypes(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1931,6 +2045,7 @@ func TestTusManager_ValidateModulMetadata_AllTypes(t *testing.T) {
 }
 
 func TestTusManager_HandleChunk_MultipleChunks(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1963,6 +2078,7 @@ func TestTusManager_HandleChunk_MultipleChunks(t *testing.T) {
 }
 
 func TestTusManager_CheckUploadSlot_QueueFull(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
@@ -1985,6 +2101,7 @@ func TestTusManager_CheckUploadSlot_QueueFull(t *testing.T) {
 }
 
 func TestTusManager_GetUploadStatus_AfterChunk(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)

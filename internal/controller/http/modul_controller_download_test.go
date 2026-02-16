@@ -17,6 +17,7 @@ import (
 )
 
 func TestModulController_Download_Success(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -48,6 +49,7 @@ func TestModulController_Download_Success(t *testing.T) {
 
 // TestModulController_Download_EmptyIDs tests download with empty ID list
 func TestModulController_Download_EmptyIDs(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -71,6 +73,7 @@ func TestModulController_Download_EmptyIDs(t *testing.T) {
 
 // TestModulController_Download_NotFound tests download with non-existent module
 func TestModulController_Download_NotFound(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -99,6 +102,7 @@ func TestModulController_Download_NotFound(t *testing.T) {
 
 // TestModulController_Download_Unauthorized tests unauthorized download
 func TestModulController_Download_Unauthorized(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()
@@ -118,6 +122,7 @@ func TestModulController_Download_Unauthorized(t *testing.T) {
 
 // TestModulController_Download_InternalError tests internal server error during download
 func TestModulController_Download_InternalError(t *testing.T) {
+	t.Parallel()
 	mockModulUC := new(MockModulUsecase)
 	baseCtrl := getTestBaseController()
 	cfg := getTestConfig()

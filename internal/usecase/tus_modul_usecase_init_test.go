@@ -56,8 +56,11 @@ func seedTusModulStore(t *testing.T, manager *upload.TusManager, uploadID string
 }
 
 func TestTusModulUsecase_InitAndStatus(t *testing.T) {
+	t.Parallel()
 	t.Run("CheckModulUploadSlot available and exceeded", func(t *testing.T) {
+		t.Parallel()
 		t.Run("available", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(2), nil).Once()
 
@@ -68,6 +71,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("exceeded", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(5), nil).Once()
 
@@ -79,9 +83,11 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 	})
 
 	t.Run("InitiateModulUpload", func(t *testing.T) {
+		t.Parallel()
 		validMeta := modulMetadataHeader("modul-a", "deskripsi modul")
 
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusModulTestDeps(t)
 			tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(0), nil).Once()
 			tusRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.TusModulUpload")).Return(nil).Once()
@@ -96,6 +102,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("no slot available", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(5), nil).Once()
 
@@ -106,6 +113,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("invalid file size", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(0), nil).Once()
 
@@ -116,6 +124,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("invalid metadata bad base64", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(0), nil).Once()
 
@@ -126,6 +135,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("invalid metadata missing fields", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(0), nil).Once()
 
@@ -137,7 +147,9 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 	})
 
 	t.Run("GetModulUploadInfo and GetModulUploadStatus", func(t *testing.T) {
+		t.Parallel()
 		t.Run("GetModulUploadInfo found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			modulID := "550e8400-e29b-41d4-a716-446655440005"
 			now := time.Now()
@@ -162,6 +174,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("GetModulUploadInfo not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -172,6 +185,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("GetModulUploadStatus found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "status-id").Return(&domain.TusModulUpload{ID: "status-id", UserID: "u1", CurrentOffset: 4, FileSize: 12}, nil).Once()
 
@@ -182,6 +196,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("GetModulUploadStatus not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -193,7 +208,9 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 	})
 
 	t.Run("CancelModulUpload", func(t *testing.T) {
+		t.Parallel()
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusModulTestDeps(t)
 			seedTusModulStore(t, manager, "cancel-id", 8, map[string]string{"user_id": "u1"})
 
@@ -205,6 +222,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -214,6 +232,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("wrong user", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
@@ -223,6 +242,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("already completed", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.UploadStatusCompleted}, nil).Once()
 
@@ -233,10 +253,12 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 	})
 
 	t.Run("InitiateModulUpdateUpload", func(t *testing.T) {
+		t.Parallel()
 		meta := modulMetadataHeader("new-name", "new deskripsi")
 		modulID := "550e8400-e29b-41d4-a716-446655440008"
 
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, modulRepo, _ := newTusModulTestDeps(t)
 			modulRepo.On("GetByID", mock.Anything, modulID).Return(&domain.Modul{ID: modulID, UserID: "u1"}, nil).Once()
 			tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(0), nil).Once()
@@ -249,6 +271,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("modul not found", func(t *testing.T) {
+			t.Parallel()
 			uc, _, modulRepo, _ := newTusModulTestDeps(t)
 			modulRepo.On("GetByID", mock.Anything, modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
 
@@ -259,6 +282,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 		})
 
 		t.Run("wrong user", func(t *testing.T) {
+			t.Parallel()
 			uc, _, modulRepo, _ := newTusModulTestDeps(t)
 			modulRepo.On("GetByID", mock.Anything, modulID).Return(&domain.Modul{ID: modulID, UserID: "owner"}, nil).Once()
 
@@ -271,6 +295,7 @@ func TestTusModulUsecase_InitAndStatus(t *testing.T) {
 }
 
 func TestTusModulUsecase_InitiateModulUpload_RepoCreateError(t *testing.T) {
+	t.Parallel()
 	uc, tusRepo, _, _ := newTusModulTestDeps(t)
 	meta := modulMetadataHeader("modul-a", "deskripsi")
 
@@ -286,6 +311,7 @@ func TestTusModulUsecase_InitiateModulUpload_RepoCreateError(t *testing.T) {
 }
 
 func TestTusModulUsecase_CheckModulUploadSlot_RepoError(t *testing.T) {
+	t.Parallel()
 	uc, tusRepo, _, _ := newTusModulTestDeps(t)
 
 	tusRepo.On("CountActiveByUserID", mock.Anything, "u1").Return(int64(0), assert.AnError).Once()

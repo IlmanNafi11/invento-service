@@ -15,6 +15,7 @@ import (
 )
 
 func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -57,6 +58,7 @@ func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
 
 // TestUserUsecase_UpdateUserRole_SameRole tests no update when role is same
 func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -104,6 +106,7 @@ func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
 
 // TestUserUsecase_DownloadUserFiles_EmptyIDs tests empty IDs
 func TestUserUsecase_DownloadUserFiles_EmptyIDs(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -131,6 +134,7 @@ func TestUserUsecase_DownloadUserFiles_EmptyIDs(t *testing.T) {
 
 // TestUserUsecase_DownloadUserFiles_UserNotFound tests user not found
 func TestUserUsecase_DownloadUserFiles_UserNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -162,6 +166,7 @@ func TestUserUsecase_DownloadUserFiles_UserNotFound(t *testing.T) {
 
 // TestUserUsecase_DownloadUserFiles_NoFilesFound tests no files found
 func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -205,6 +210,7 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 }
 
 func TestUserUsecase_GetUserFiles_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -266,6 +272,7 @@ func TestUserUsecase_GetUserFiles_Success(t *testing.T) {
 }
 
 func TestUserUsecase_GetUserFiles_UserNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -298,6 +305,7 @@ func TestUserUsecase_GetUserFiles_UserNotFound(t *testing.T) {
 }
 
 func TestUserUsecase_GetUserFiles_RepoError(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -341,6 +349,7 @@ func TestUserUsecase_GetUserFiles_RepoError(t *testing.T) {
 }
 
 func TestUserUsecase_GetUsersForRole_Success(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -385,6 +394,7 @@ func TestUserUsecase_GetUsersForRole_Success(t *testing.T) {
 }
 
 func TestUserUsecase_GetUsersForRole_RoleNotFound(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)
@@ -413,6 +423,7 @@ func TestUserUsecase_GetUsersForRole_RoleNotFound(t *testing.T) {
 }
 
 func TestUserUsecase_GetUsersForRole_InternalError(t *testing.T) {
+	t.Parallel()
 	mockUserRepo := new(MockUserRepository)
 	mockRoleRepo := new(MockRoleRepository)
 	mockProjectRepo := new(MockProjectRepository)

@@ -10,6 +10,7 @@ import (
 
 // TestNewValidationError tests the ValidationError constructor.
 func TestNewValidationError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		message        string
@@ -35,6 +36,7 @@ func TestNewValidationError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewValidationError(tt.message, tt.internalErr)
 
 			assert.NotNil(t, result)
@@ -49,6 +51,7 @@ func TestNewValidationError(t *testing.T) {
 
 // TestNewUnauthorizedError tests the UnauthorizedError constructor.
 func TestNewUnauthorizedError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		message        string
@@ -71,6 +74,7 @@ func TestNewUnauthorizedError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewUnauthorizedError(tt.message)
 
 			assert.NotNil(t, result)
@@ -85,6 +89,7 @@ func TestNewUnauthorizedError(t *testing.T) {
 
 // TestNewForbiddenError tests the ForbiddenError constructor.
 func TestNewForbiddenError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		message        string
@@ -107,6 +112,7 @@ func TestNewForbiddenError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewForbiddenError(tt.message)
 
 			assert.NotNil(t, result)
@@ -121,6 +127,7 @@ func TestNewForbiddenError(t *testing.T) {
 
 // TestNewNotFoundError tests the NotFoundError constructor.
 func TestNewNotFoundError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		resource       string
@@ -153,6 +160,7 @@ func TestNewNotFoundError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewNotFoundError(tt.resource)
 
 			assert.NotNil(t, result)
@@ -167,6 +175,7 @@ func TestNewNotFoundError(t *testing.T) {
 
 // TestNewConflictError tests the ConflictError constructor.
 func TestNewConflictError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		message        string
@@ -189,6 +198,7 @@ func TestNewConflictError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewConflictError(tt.message)
 
 			assert.NotNil(t, result)
@@ -203,6 +213,7 @@ func TestNewConflictError(t *testing.T) {
 
 // TestNewInternalError tests the InternalError constructor.
 func TestNewInternalError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		internalErr    error
@@ -228,6 +239,7 @@ func TestNewInternalError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewInternalError(tt.internalErr)
 
 			assert.NotNil(t, result)
@@ -242,6 +254,7 @@ func TestNewInternalError(t *testing.T) {
 
 // TestNewTusVersionError tests the TusVersionError constructor.
 func TestNewTusVersionError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name             string
 		supportedVersion string
@@ -267,6 +280,7 @@ func TestNewTusVersionError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewTusVersionError(tt.supportedVersion)
 
 			assert.NotNil(t, result)
@@ -281,6 +295,7 @@ func TestNewTusVersionError(t *testing.T) {
 
 // TestNewTusOffsetError tests the TusOffsetError constructor.
 func TestNewTusOffsetError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		expectedOffset int64
@@ -317,6 +332,7 @@ func TestNewTusOffsetError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewTusOffsetError(tt.expectedOffset, tt.actualOffset)
 
 			assert.NotNil(t, result)
@@ -331,6 +347,7 @@ func TestNewTusOffsetError(t *testing.T) {
 
 // TestNewTusInactiveError tests the TusInactiveError constructor.
 func TestNewTusInactiveError(t *testing.T) {
+	t.Parallel()
 	result := NewTusInactiveError()
 
 	assert.NotNil(t, result)
@@ -343,6 +360,7 @@ func TestNewTusInactiveError(t *testing.T) {
 
 // TestNewTusCompletedError tests the TusCompletedError constructor.
 func TestNewTusCompletedError(t *testing.T) {
+	t.Parallel()
 	result := NewTusCompletedError()
 
 	assert.NotNil(t, result)
@@ -355,6 +373,7 @@ func TestNewTusCompletedError(t *testing.T) {
 
 // TestNewPayloadTooLargeError tests the PayloadTooLargeError constructor.
 func TestNewPayloadTooLargeError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		message        string
@@ -387,6 +406,7 @@ func TestNewPayloadTooLargeError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := NewPayloadTooLargeError(tt.message)
 
 			assert.NotNil(t, result)

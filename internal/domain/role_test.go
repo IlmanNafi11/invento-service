@@ -7,7 +7,9 @@ import (
 )
 
 func TestRoleStruct(t *testing.T) {
+	t.Parallel()
 	t.Run("Role struct initialization", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		role := Role{
 			ID:        1,
@@ -26,7 +28,9 @@ func TestRoleStruct(t *testing.T) {
 }
 
 func TestPermissionStruct(t *testing.T) {
+	t.Parallel()
 	t.Run("Permission struct initialization", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		perm := Permission{
 			ID:        1,
@@ -50,7 +54,9 @@ func TestPermissionStruct(t *testing.T) {
 }
 
 func TestRolePermissionStruct(t *testing.T) {
+	t.Parallel()
 	t.Run("RolePermission struct with relations", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		role := Role{ID: 1, NamaRole: "Admin"}
 		perm := Permission{ID: 1, Resource: "users", Action: "delete"}
@@ -80,7 +86,9 @@ func TestRolePermissionStruct(t *testing.T) {
 }
 
 func TestRoleCreateRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.RoleCreateRequest with permissions", func(t *testing.T) {
+		t.Parallel()
 		req := dto.RoleCreateRequest{
 			NamaRole: "Editor",
 			Permissions: map[string][]string{
@@ -101,6 +109,7 @@ func TestRoleCreateRequest(t *testing.T) {
 	})
 
 	t.Run("dto.RoleCreateRequest empty permissions", func(t *testing.T) {
+		t.Parallel()
 		req := dto.RoleCreateRequest{
 			NamaRole:    "Viewer",
 			Permissions: map[string][]string{},
@@ -116,7 +125,9 @@ func TestRoleCreateRequest(t *testing.T) {
 }
 
 func TestRoleUpdateRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.RoleUpdateRequest with updated permissions", func(t *testing.T) {
+		t.Parallel()
 		req := dto.RoleUpdateRequest{
 			NamaRole: "SuperAdmin",
 			Permissions: map[string][]string{
@@ -136,7 +147,9 @@ func TestRoleUpdateRequest(t *testing.T) {
 }
 
 func TestRoleListQueryParams(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.RoleListQueryParams with all fields", func(t *testing.T) {
+		t.Parallel()
 		params := dto.RoleListQueryParams{
 			Search: "admin",
 			Page:   1,
@@ -155,6 +168,7 @@ func TestRoleListQueryParams(t *testing.T) {
 	})
 
 	t.Run("dto.RoleListQueryParams default values", func(t *testing.T) {
+		t.Parallel()
 		params := dto.RoleListQueryParams{}
 
 		if params.Search != "" {
@@ -167,7 +181,9 @@ func TestRoleListQueryParams(t *testing.T) {
 }
 
 func TestRoleListItem(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.RoleListItem struct", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		item := dto.RoleListItem{
 			ID:                1,
@@ -189,7 +205,9 @@ func TestRoleListItem(t *testing.T) {
 }
 
 func TestRolePermissionDetail(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.RolePermissionDetail struct", func(t *testing.T) {
+		t.Parallel()
 		detail := dto.RolePermissionDetail{
 			Resource: "projects",
 			Actions:  []string{"create", "read", "update", "delete"},
@@ -205,7 +223,9 @@ func TestRolePermissionDetail(t *testing.T) {
 }
 
 func TestRoleDetailResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.RoleDetailResponse with permissions", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		permissions := []dto.RolePermissionDetail{
 			{Resource: "projects", Actions: []string{"create", "read"}},
@@ -234,7 +254,9 @@ func TestRoleDetailResponse(t *testing.T) {
 }
 
 func TestPermissionItem(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.PermissionItem struct", func(t *testing.T) {
+		t.Parallel()
 		item := dto.PermissionItem{
 			Action: "delete",
 			Label:  "Delete resource",
@@ -250,7 +272,9 @@ func TestPermissionItem(t *testing.T) {
 }
 
 func TestResourcePermissions(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ResourcePermissions struct", func(t *testing.T) {
+		t.Parallel()
 		perms := []dto.PermissionItem{
 			{Action: "create", Label: "Create"},
 			{Action: "read", Label: "Read"},
@@ -272,7 +296,9 @@ func TestResourcePermissions(t *testing.T) {
 }
 
 func TestRoleListData(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.RoleListData with pagination", func(t *testing.T) {
+		t.Parallel()
 		items := []dto.RoleListItem{
 			{ID: 1, NamaRole: "Admin", JumlahPermission: 10},
 			{ID: 2, NamaRole: "Editor", JumlahPermission: 5},

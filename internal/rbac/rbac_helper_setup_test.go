@@ -149,6 +149,7 @@ func (m *MockRolePermissionRepoForRBAC) DeleteByRoleID(ctx context.Context, role
 }
 
 func TestNewRBACHelper(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -157,6 +158,7 @@ func TestNewRBACHelper(t *testing.T) {
 }
 
 func TestNewRBACHelper_NilEnforcer(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	assert.NotNil(t, rh)
@@ -164,6 +166,7 @@ func TestNewRBACHelper_NilEnforcer(t *testing.T) {
 }
 
 func TestRBACHelper_ValidatePermissionFormat_EmptyPermissions(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	err := rh.ValidatePermissionFormat(map[string][]string{})
@@ -173,6 +176,7 @@ func TestRBACHelper_ValidatePermissionFormat_EmptyPermissions(t *testing.T) {
 }
 
 func TestRBACHelper_ValidatePermissionFormat_NilPermissions(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	err := rh.ValidatePermissionFormat(nil)
@@ -182,6 +186,7 @@ func TestRBACHelper_ValidatePermissionFormat_NilPermissions(t *testing.T) {
 }
 
 func TestRBACHelper_ValidatePermissionFormat_EmptyResourceName(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	permissions := map[string][]string{
@@ -195,6 +200,7 @@ func TestRBACHelper_ValidatePermissionFormat_EmptyResourceName(t *testing.T) {
 }
 
 func TestRBACHelper_ValidatePermissionFormat_EmptyActionsForResource(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	permissions := map[string][]string{
@@ -208,6 +214,7 @@ func TestRBACHelper_ValidatePermissionFormat_EmptyActionsForResource(t *testing.
 }
 
 func TestRBACHelper_ValidatePermissionFormat_EmptyActionString(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	permissions := map[string][]string{
@@ -221,6 +228,7 @@ func TestRBACHelper_ValidatePermissionFormat_EmptyActionString(t *testing.T) {
 }
 
 func TestRBACHelper_ValidatePermissionFormat_ValidPermissions(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	permissions := map[string][]string{
@@ -234,6 +242,7 @@ func TestRBACHelper_ValidatePermissionFormat_ValidPermissions(t *testing.T) {
 }
 
 func TestRBACHelper_ValidatePermissionFormat_SingleResourceSingleAction(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	permissions := map[string][]string{
@@ -246,6 +255,7 @@ func TestRBACHelper_ValidatePermissionFormat_SingleResourceSingleAction(t *testi
 }
 
 func TestRBACHelper_SetRolePermissions_Success(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -286,6 +296,7 @@ func TestRBACHelper_SetRolePermissions_Success(t *testing.T) {
 }
 
 func TestRBACHelper_SetRolePermissions_PermissionRepoError(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -306,6 +317,7 @@ func TestRBACHelper_SetRolePermissions_PermissionRepoError(t *testing.T) {
 }
 
 func TestRBACHelper_SetRolePermissions_BulkCreateError(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -333,6 +345,7 @@ func TestRBACHelper_SetRolePermissions_BulkCreateError(t *testing.T) {
 }
 
 func TestRBACHelper_SetRolePermissions_EmptyPermissions(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -357,6 +370,7 @@ func TestRBACHelper_SetRolePermissions_EmptyPermissions(t *testing.T) {
 }
 
 func TestRBACHelper_SetRolePermissions_MultipleResourcesMultipleActions(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -397,6 +411,7 @@ func TestRBACHelper_SetRolePermissions_MultipleResourcesMultipleActions(t *testi
 }
 
 func TestRBACHelper_SetRolePermissions_PermissionsNotFoundInDBAreSkipped(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -433,6 +448,7 @@ func TestRBACHelper_SetRolePermissions_PermissionsNotFoundInDBAreSkipped(t *test
 }
 
 func TestRBACHelper_RemoveAllRolePermissions_DeleteByRoleIDError(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -450,6 +466,7 @@ func TestRBACHelper_RemoveAllRolePermissions_DeleteByRoleIDError(t *testing.T) {
 }
 
 func TestRBACHelper_RemoveAllRolePermissions_CasbinRemoveError(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -468,6 +485,7 @@ func TestRBACHelper_RemoveAllRolePermissions_CasbinRemoveError(t *testing.T) {
 }
 
 func TestRBACHelper_RemoveAllRolePermissions_Success(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 

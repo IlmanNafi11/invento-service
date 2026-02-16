@@ -10,6 +10,7 @@ import (
 
 // TestSendTusInitiateResponse_Success tests TUS initiate response
 func TestSendTusInitiateResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Post("/test", func(c *fiber.Ctx) error {
@@ -27,6 +28,7 @@ func TestSendTusInitiateResponse_Success(t *testing.T) {
 
 // TestSendTusChunkResponse_Success tests TUS chunk response
 func TestSendTusChunkResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Patch("/test", func(c *fiber.Ctx) error {
@@ -42,6 +44,7 @@ func TestSendTusChunkResponse_Success(t *testing.T) {
 
 // TestSendTusHeadResponse_Success tests TUS HEAD response
 func TestSendTusHeadResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Head("/test", func(c *fiber.Ctx) error {
@@ -58,6 +61,7 @@ func TestSendTusHeadResponse_Success(t *testing.T) {
 
 // TestSendTusDeleteResponse_Success tests TUS delete response
 func TestSendTusDeleteResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Delete("/test", func(c *fiber.Ctx) error {
@@ -72,6 +76,7 @@ func TestSendTusDeleteResponse_Success(t *testing.T) {
 
 // TestSendTusSlotResponse_Success tests TUS slot response
 func TestSendTusSlotResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -86,6 +91,7 @@ func TestSendTusSlotResponse_Success(t *testing.T) {
 
 // TestSendTusSlotResponse_Unavailable tests TUS slot unavailable
 func TestSendTusSlotResponse_Unavailable(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -99,6 +105,7 @@ func TestSendTusSlotResponse_Unavailable(t *testing.T) {
 }
 
 func TestSendTusSlotResponse_ModulShape(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -113,6 +120,7 @@ func TestSendTusSlotResponse_ModulShape(t *testing.T) {
 
 // TestSendTusErrorResponse_Success tests TUS error response
 func TestSendTusErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -128,6 +136,7 @@ func TestSendTusErrorResponse_Success(t *testing.T) {
 
 // TestSendTusErrorResponseWithOffset_Success tests TUS error response with offset
 func TestSendTusErrorResponseWithOffset_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -143,6 +152,7 @@ func TestSendTusErrorResponseWithOffset_Success(t *testing.T) {
 
 // TestSendTusErrorResponseWithLength_Success tests TUS error response with length
 func TestSendTusErrorResponseWithLength_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -158,6 +168,7 @@ func TestSendTusErrorResponseWithLength_Success(t *testing.T) {
 
 // TestSendTusValidationErrorResponse_Success tests TUS validation error
 func TestSendTusValidationErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -172,6 +183,7 @@ func TestSendTusValidationErrorResponse_Success(t *testing.T) {
 
 // TestSendTusNotFoundErrorResponse_Success tests TUS not found error
 func TestSendTusNotFoundErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -186,6 +198,7 @@ func TestSendTusNotFoundErrorResponse_Success(t *testing.T) {
 
 // TestSendTusNotFoundErrorResponse_DefaultMessage tests TUS not found with default
 func TestSendTusNotFoundErrorResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -200,6 +213,7 @@ func TestSendTusNotFoundErrorResponse_DefaultMessage(t *testing.T) {
 
 // TestSendTusForbiddenErrorResponse_Success tests TUS forbidden error
 func TestSendTusForbiddenErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -214,6 +228,7 @@ func TestSendTusForbiddenErrorResponse_Success(t *testing.T) {
 
 // TestSendTusConflictErrorResponse_Success tests TUS conflict error
 func TestSendTusConflictErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -228,6 +243,7 @@ func TestSendTusConflictErrorResponse_Success(t *testing.T) {
 
 // TestSendTusConflictErrorResponse_DefaultMessage tests TUS conflict with default
 func TestSendTusConflictErrorResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -242,6 +258,7 @@ func TestSendTusConflictErrorResponse_DefaultMessage(t *testing.T) {
 
 // TestSendTusPayloadTooLargeErrorResponse_Success tests TUS payload too large
 func TestSendTusPayloadTooLargeErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -256,6 +273,7 @@ func TestSendTusPayloadTooLargeErrorResponse_Success(t *testing.T) {
 
 // TestSendTusPayloadTooLargeErrorResponse_DefaultMessage tests default payload error
 func TestSendTusPayloadTooLargeErrorResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -270,6 +288,7 @@ func TestSendTusPayloadTooLargeErrorResponse_DefaultMessage(t *testing.T) {
 
 // TestSendTusTooManyRequestsErrorResponse_Success tests TUS too many requests
 func TestSendTusTooManyRequestsErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -284,6 +303,7 @@ func TestSendTusTooManyRequestsErrorResponse_Success(t *testing.T) {
 
 // TestSendTusTooManyRequestsErrorResponse_DefaultMessage tests default too many requests
 func TestSendTusTooManyRequestsErrorResponse_DefaultMessage(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -298,6 +318,7 @@ func TestSendTusTooManyRequestsErrorResponse_DefaultMessage(t *testing.T) {
 
 // TestSendTusInternalErrorResponse_Success tests TUS internal error
 func TestSendTusInternalErrorResponse_Success(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 
 	app.Get("/test", func(c *fiber.Ctx) error {

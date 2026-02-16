@@ -14,6 +14,7 @@ import (
 
 // TestValidateRequest_ValidJSON tests successful validation with valid JSON
 func TestValidateRequest_ValidJSON(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(ValidateRequest(&dto.AuthRequest{}))
 
@@ -38,6 +39,7 @@ func TestValidateRequest_ValidJSON(t *testing.T) {
 
 // TestValidateRequest_InvalidJSONFormat tests that invalid JSON returns 400 error
 func TestValidateRequest_InvalidJSONFormat(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(ValidateRequest(&dto.AuthRequest{}))
 
@@ -58,6 +60,7 @@ func TestValidateRequest_InvalidJSONFormat(t *testing.T) {
 
 // TestValidateRequest_ValidationFailures tests that validation errors return 422
 func TestValidateRequest_ValidationFailures(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(ValidateRequest(&dto.AuthRequest{}))
 
@@ -112,6 +115,7 @@ func TestValidateRequest_ValidationFailures(t *testing.T) {
 
 // TestValidateRequest_RequiredFieldValidation tests required field validation
 func TestValidateRequest_RequiredFieldValidation(t *testing.T) {
+	t.Parallel()
 	app := fiber.New()
 	app.Use(ValidateRequest(&dto.RegisterRequest{}))
 
@@ -161,6 +165,7 @@ func TestValidateRequest_RequiredFieldValidation(t *testing.T) {
 
 // TestValidateRequest_EmailValidation tests email format validation
 func TestValidateRequest_EmailValidation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		email       string
@@ -232,6 +237,7 @@ func TestValidateRequest_EmailValidation(t *testing.T) {
 
 // TestValidateRequest_MinMaxValidation tests min and max length validation
 func TestValidateRequest_MinMaxValidation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		nameField    string
@@ -291,6 +297,7 @@ func TestValidateRequest_MinMaxValidation(t *testing.T) {
 
 // TestValidateStruct tests direct struct validation
 func TestValidateStruct(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		data      interface{}
@@ -354,6 +361,7 @@ func TestValidateStruct(t *testing.T) {
 
 // TestGetValidator tests that the validator instance is accessible
 func TestGetValidator(t *testing.T) {
+	t.Parallel()
 	validator := GetValidator()
 	require.NotNil(t, validator, "Validator should not be nil")
 

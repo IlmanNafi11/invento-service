@@ -15,8 +15,11 @@ import (
 )
 
 func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
+	t.Parallel()
 	t.Run("HandleModulChunk", func(t *testing.T) {
+		t.Parallel()
 		t.Run("happy path + status transition pending to uploading", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusModulTestDeps(t)
 			uploadID := "modul-chunk"
 			chunk := []byte("abcd")
@@ -40,6 +43,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("auto completion", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, modulRepo, manager := newTusModulTestDeps(t)
 			uploadID := "modul-complete"
 			fileSize := int64(4)
@@ -69,6 +73,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -78,6 +83,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("wrong user", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
@@ -87,6 +93,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("already completed becomes inactive error", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", Status: domain.UploadStatusCompleted}, nil).Once()
 
@@ -97,7 +104,9 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 	})
 
 	t.Run("HandleModulUpdateChunk", func(t *testing.T) {
+		t.Parallel()
 		t.Run("happy path", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusModulTestDeps(t)
 			modulID := "550e8400-e29b-41d4-a716-446655440009"
 			uploadID := "update-chunk"
@@ -122,6 +131,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("auto completion", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, modulRepo, manager := newTusModulTestDeps(t)
 			modulID := "550e8400-e29b-41d4-a716-446655440011"
 			uploadID := "update-complete"
@@ -150,6 +160,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -159,6 +170,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("wrong user", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusModulUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
@@ -168,6 +180,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("already completed becomes inactive error", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			modulID := "550e8400-e29b-41d4-a716-446655440099"
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusModulUpload{ID: "id", UserID: "u1", ModulID: &modulID, Status: domain.UploadStatusCompleted}, nil).Once()
@@ -179,7 +192,9 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 	})
 
 	t.Run("Modul update wrapper methods", func(t *testing.T) {
+		t.Parallel()
 		t.Run("GetModulUpdateUploadInfo found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			modulID := "550e8400-e29b-41d4-a716-446655440031"
 			now := time.Now()
@@ -204,6 +219,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("GetModulUpdateUploadInfo not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -214,6 +230,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("GetModulUpdateUploadStatus found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			modulID := "550e8400-e29b-41d4-a716-446655440032"
 			tusRepo.On("GetByID", mock.Anything, "update-status-id").Return(&domain.TusModulUpload{
@@ -231,6 +248,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("GetModulUpdateUploadStatus not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -241,6 +259,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("CancelModulUpdateUpload success", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, manager := newTusModulTestDeps(t)
 			modulID := "550e8400-e29b-41d4-a716-446655440033"
 			seedTusModulStore(t, manager, "cancel-update-id", 8, map[string]string{"user_id": "u1", "modul_id": modulID})
@@ -258,6 +277,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 		})
 
 		t.Run("CancelModulUpdateUpload not found", func(t *testing.T) {
+			t.Parallel()
 			uc, tusRepo, _, _ := newTusModulTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -269,6 +289,7 @@ func TestTusModulUsecase_ChunkAndUpdate(t *testing.T) {
 }
 
 func TestTusModulUsecase_HandleModulChunk_OffsetMismatch(t *testing.T) {
+	t.Parallel()
 	uc, tusRepo, _, manager := newTusModulTestDeps(t)
 	uploadID := "offset-mismatch"
 

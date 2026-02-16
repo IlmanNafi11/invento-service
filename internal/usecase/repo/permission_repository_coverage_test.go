@@ -13,6 +13,7 @@ import (
 
 // TestPermissionRepository_Create_Success tests successful permission creation
 func TestPermissionRepository_Create_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -32,6 +33,7 @@ func TestPermissionRepository_Create_Success(t *testing.T) {
 
 // TestPermissionRepository_GetByID_Success tests successful permission retrieval by ID
 func TestPermissionRepository_GetByID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -55,6 +57,7 @@ func TestPermissionRepository_GetByID_Success(t *testing.T) {
 
 // TestPermissionRepository_GetByResourceAndAction_Success tests successful permission retrieval
 func TestPermissionRepository_GetByResourceAndAction_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -78,6 +81,7 @@ func TestPermissionRepository_GetByResourceAndAction_Success(t *testing.T) {
 
 // TestPermissionRepository_GetAll_Success tests successful retrieval of all permissions
 func TestPermissionRepository_GetAll_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -102,6 +106,7 @@ func TestPermissionRepository_GetAll_Success(t *testing.T) {
 
 // TestPermissionRepository_GetAvailablePermissions_Success tests successful retrieval of available permissions
 func TestPermissionRepository_GetAvailablePermissions_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -136,6 +141,7 @@ func TestPermissionRepository_GetAvailablePermissions_Success(t *testing.T) {
 
 // TestPermissionRepository_BulkCreate_Success tests successful bulk creation
 func TestPermissionRepository_BulkCreate_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -158,6 +164,7 @@ func TestPermissionRepository_BulkCreate_Success(t *testing.T) {
 }
 
 func TestPermissionRepository_GetAllByResourceActions_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -190,6 +197,7 @@ func TestPermissionRepository_GetAllByResourceActions_Success(t *testing.T) {
 }
 
 func TestPermissionRepository_GetAllByResourceActions_Empty(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -203,6 +211,7 @@ func TestPermissionRepository_GetAllByResourceActions_Empty(t *testing.T) {
 }
 
 func TestPermissionRepository_GetAllByResourceActions_NotFound(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)

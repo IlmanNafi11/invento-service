@@ -13,6 +13,7 @@ import (
 
 // TestProjectRepository_Create_Success tests successful project creation
 func TestProjectRepository_Create_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -35,6 +36,7 @@ func TestProjectRepository_Create_Success(t *testing.T) {
 
 // TestProjectRepository_GetByID_Success tests successful project retrieval by ID
 func TestProjectRepository_GetByID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -60,6 +62,7 @@ func TestProjectRepository_GetByID_Success(t *testing.T) {
 }
 
 func TestProjectRepository_GetByIDs_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -85,6 +88,7 @@ func TestProjectRepository_GetByIDs_Success(t *testing.T) {
 }
 
 func TestProjectRepository_GetByIDsForUser_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -111,6 +115,7 @@ func TestProjectRepository_GetByIDsForUser_Success(t *testing.T) {
 
 // TestProjectRepository_GetByUserID_Success tests successful project retrieval by user ID
 func TestProjectRepository_GetByUserID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -158,6 +163,7 @@ func TestProjectRepository_GetByUserID_Success(t *testing.T) {
 
 // TestProjectRepository_CountByUserID_Success tests successful count
 func TestProjectRepository_CountByUserID_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -183,6 +189,7 @@ func TestProjectRepository_CountByUserID_Success(t *testing.T) {
 
 // TestProjectRepository_Update_Success tests successful project update
 func TestProjectRepository_Update_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)
@@ -215,6 +222,7 @@ func TestProjectRepository_Update_Success(t *testing.T) {
 
 // TestProjectRepository_Delete_Success tests successful project deletion
 func TestProjectRepository_Delete_Success(t *testing.T) {
+	t.Parallel()
 	db, err := testhelper.SetupTestDatabase()
 	require.NoError(t, err)
 	defer testhelper.TeardownTestDatabase(db)

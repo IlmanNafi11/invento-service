@@ -14,6 +14,7 @@ import (
 )
 
 func TestNewUserHelper(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
 			PathDevelopment: "/tmp/uploads",
@@ -29,6 +30,7 @@ func TestNewUserHelper(t *testing.T) {
 }
 
 func TestUserHelper_BuildProfileData(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
 			PathDevelopment: "/tmp/uploads",
@@ -98,6 +100,7 @@ func TestUserHelper_BuildProfileData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := userHelper.BuildProfileData(tt.user, tt.jumlahProject, tt.jumlahModul)
 
 			assert.Equal(t, tt.expectedName, result.Name)
@@ -112,6 +115,7 @@ func TestUserHelper_BuildProfileData(t *testing.T) {
 }
 
 func TestUserHelper_AggregateUserPermissions(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{}
 	pathResolver := storage.NewPathResolver(cfg)
 	userHelper := storage.NewUserHelper(pathResolver, cfg)
@@ -170,6 +174,7 @@ func TestUserHelper_AggregateUserPermissions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := userHelper.AggregateUserPermissions(tt.permissions)
 
 			if tt.expectedResource != "" {
@@ -188,6 +193,7 @@ func TestUserHelper_AggregateUserPermissions(t *testing.T) {
 }
 
 func TestUserHelper_AggregateUserPermissions_Deduplication(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{}
 	pathResolver := storage.NewPathResolver(cfg)
 	userHelper := storage.NewUserHelper(pathResolver, cfg)
@@ -207,6 +213,7 @@ func TestUserHelper_AggregateUserPermissions_Deduplication(t *testing.T) {
 }
 
 func TestUserHelper_SaveProfilePhoto(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
@@ -217,12 +224,14 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 	userHelper := storage.NewUserHelper(pathResolver, cfg)
 
 	t.Run("Nil fotoProfil returns nil", func(t *testing.T) {
+		t.Parallel()
 		result, err := userHelper.SaveProfilePhoto(nil, "1", nil)
 		assert.NoError(t, err)
 		assert.Nil(t, result)
 	})
 
 	t.Run("Valid image file saves successfully", func(t *testing.T) {
+		t.Parallel()
 		pr, pw := io.Pipe()
 		writer := multipart.NewWriter(pw)
 
@@ -252,6 +261,7 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 	})
 
 	t.Run("Invalid file extension returns error", func(t *testing.T) {
+		t.Parallel()
 		fileHeader := &multipart.FileHeader{
 			Filename: "test.txt",
 			Size:     100,
@@ -265,6 +275,7 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 	})
 
 	t.Run("File too large returns error", func(t *testing.T) {
+		t.Parallel()
 		fileHeader := &multipart.FileHeader{
 			Filename: "large.jpg",
 			Size:     3 * 1024 * 1024,
@@ -279,6 +290,7 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 }
 
 func TestUserHelper_Integration(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
@@ -293,6 +305,7 @@ func TestUserHelper_Integration(t *testing.T) {
 	userHelper := storage.NewUserHelper(pathResolver, cfg)
 
 	t.Run("Build complete user profile", func(t *testing.T) {
+		t.Parallel()
 		user := &domain.User{
 			Name:         "Test User",
 			Email:        "test@example.com",

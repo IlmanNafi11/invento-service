@@ -6,7 +6,9 @@ import (
 )
 
 func TestTusUploadResponse_EdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Zero offset and length", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadResponse{
 			UploadID:  "upload-zero",
 			UploadURL: "https://example.com/tus/upload-zero",
@@ -23,6 +25,7 @@ func TestTusUploadResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty upload ID", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadResponse{
 			UploadID:  "",
 			UploadURL: "https://example.com/tus/",
@@ -36,6 +39,7 @@ func TestTusUploadResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty upload URL", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadResponse{
 			UploadID:  "upload-123",
 			UploadURL: "",
@@ -49,6 +53,7 @@ func TestTusUploadResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Large file size", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadResponse{
 			UploadID:  "upload-large",
 			UploadURL: "https://example.com/tus/upload-large",
@@ -64,7 +69,9 @@ func TestTusUploadResponse_EdgeCases(t *testing.T) {
 }
 
 func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Zero ProjectID", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-zero-project",
 			ProjectID:   0,
@@ -81,6 +88,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Invalid progress - negative value", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-negative-progress",
 			ProjectID:   1,
@@ -97,6 +105,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Invalid progress - exceeds 100", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-excess-progress",
 			ProjectID:   1,
@@ -113,6 +122,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero progress", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-zero-progress",
 			ProjectID:   1,
@@ -129,6 +139,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Exact 100 percent progress", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-complete-progress",
 			ProjectID:   1,
@@ -145,6 +156,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero offset and length", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-zero-offset",
 			ProjectID:   1,
@@ -167,7 +179,9 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 }
 
 func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Zero queue length", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadSlotResponse{
 			Available:     true,
 			Message:       "No uploads in queue",
@@ -182,6 +196,7 @@ func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero max concurrent", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadSlotResponse{
 			Available:     false,
 			Message:       "Uploads disabled",
@@ -196,6 +211,7 @@ func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty message", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadSlotResponse{
 			Available:     true,
 			Message:       "",
@@ -210,6 +226,7 @@ func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Large queue length", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadSlotResponse{
 			Available:     false,
 			Message:       "Very long queue",
@@ -225,7 +242,9 @@ func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
 }
 
 func TestTusUpload_EdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Nil ProjectID", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-no-project",
 			UserID: "user-1",
@@ -241,6 +260,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero file size", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-zero-size",
 			UserID: "user-1",
@@ -255,6 +275,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Negative file size", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-negative-size",
 			UserID: "user-1",
@@ -269,6 +290,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty upload ID", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "",
 			UserID: "user-1",
@@ -283,6 +305,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero UserID", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-zero-user",
 			UserID:     "",
@@ -297,6 +320,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty upload URL", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-empty-url",
 			UserID: "user-1",
@@ -312,6 +336,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty file path", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-empty-path",
 			UserID: "user-1",
@@ -327,6 +352,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero current offset", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:            "upload-zero-offset",
 			UserID: "user-1",
@@ -342,6 +368,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Negative current offset", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:            "upload-negative-offset",
 			UserID: "user-1",
@@ -357,6 +384,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero progress", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-zero-progress",
 			UserID: "user-1",
@@ -372,6 +400,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Negative progress", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-negative-progress",
 			UserID: "user-1",
@@ -387,6 +416,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Progress exceeds 100", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-excess-progress",
 			UserID: "user-1",
@@ -402,6 +432,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Nil CompletedAt", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:          "upload-no-completed",
 			UserID: "user-1",
@@ -417,6 +448,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty upload type", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-empty-type",
 			UserID: "user-1",
@@ -431,6 +463,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty status", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-empty-status",
 			UserID: "user-1",

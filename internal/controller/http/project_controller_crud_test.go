@@ -58,6 +58,7 @@ func (m *MockProjectUsecase) Download(ctx context.Context, userID string, projec
 // Test 1: GetByID_Success
 
 func TestProjectController_GetByID_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -107,6 +108,7 @@ func TestProjectController_GetByID_Success(t *testing.T) {
 
 // Test 2: GetByID_ProjectNotFound
 func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -143,6 +145,7 @@ func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 
 // Test 5: GetList_WithFilters
 func TestProjectController_GetList_WithFilters(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -195,6 +198,7 @@ func TestProjectController_GetList_WithFilters(t *testing.T) {
 
 // Test 6: UpdateMetadata_Success
 func TestProjectController_UpdateMetadata_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -236,6 +240,7 @@ func TestProjectController_UpdateMetadata_Success(t *testing.T) {
 
 // Test 7: Delete_Success
 func TestProjectController_Delete_Success(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -269,6 +274,7 @@ func TestProjectController_Delete_Success(t *testing.T) {
 
 // Test 8: Download_SingleFile
 func TestProjectController_Download_SingleFile(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -302,6 +308,7 @@ func TestProjectController_Download_SingleFile(t *testing.T) {
 
 // Test 9: UpdateMetadata_AccessDenied
 func TestProjectController_UpdateMetadata_AccessDenied(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -341,6 +348,7 @@ func TestProjectController_UpdateMetadata_AccessDenied(t *testing.T) {
 
 // Test 10: GetList_PaginationEdgeCases
 func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		queryParams   string
@@ -413,6 +421,7 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 
 // Test 11: UpdateMetadata_InvalidRequestBody
 func TestProjectController_UpdateMetadata_InvalidRequestBody(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -440,6 +449,7 @@ func TestProjectController_UpdateMetadata_InvalidRequestBody(t *testing.T) {
 
 // Test 12: UpdateMetadata_ValidationFailure
 func TestProjectController_UpdateMetadata_ValidationFailure(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 

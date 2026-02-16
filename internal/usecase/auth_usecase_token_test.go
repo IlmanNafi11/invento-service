@@ -13,7 +13,9 @@ import (
 )
 
 func TestAuth_EdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("NewAuthUsecase_Constructor", func(t *testing.T) {
+		t.Parallel()
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
 		cfg := newTestConfig()
@@ -26,6 +28,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Register_RoleNotFound", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -51,6 +54,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Register_RoleLookupGenericError", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -76,6 +80,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Register_SupabaseUserAlreadyRegistered", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -102,6 +107,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Register_LocalCreateFailsWithNonAuthError", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -137,6 +143,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Login_GetByEmailReturnsGenericDBError", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -167,6 +174,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Login_AutoSyncInvalidEmailDomain", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -197,6 +205,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Login_AutoSyncNameFallbackToEmail", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -231,6 +240,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Login_AutoSyncRoleLookupFails", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -262,6 +272,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Login_AutoSyncCreateUserFails", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -294,6 +305,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Logout_AuthServiceFails", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -310,6 +322,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("RequestPasswordReset_AuthServiceFails", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)
@@ -327,6 +340,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("RequestPasswordReset_ProductionRedirect", func(t *testing.T) {
+		t.Parallel()
 		mockAuth := new(AuthUsecaseMockAuthService)
 		mockUser := new(authTestUserRepo)
 		mockRole := new(authTestRoleRepo)

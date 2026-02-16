@@ -18,6 +18,7 @@ import (
 )
 
 func TestProjectController_Delete_ProjectNotFound(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -52,6 +53,7 @@ func TestProjectController_Delete_ProjectNotFound(t *testing.T) {
 
 // Test 14: Download_EmptyIDs
 func TestProjectController_Download_EmptyIDs(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -80,6 +82,7 @@ func TestProjectController_Download_EmptyIDs(t *testing.T) {
 
 // Test 15: Download_InvalidRequestBody
 func TestProjectController_Download_InvalidRequestBody(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -107,6 +110,7 @@ func TestProjectController_Download_InvalidRequestBody(t *testing.T) {
 
 // Test 16: Download_ProjectNotFound
 func TestProjectController_Download_ProjectNotFound(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -147,6 +151,7 @@ func TestProjectController_Download_ProjectNotFound(t *testing.T) {
 
 // Test 17: GetList_UseCaseError
 func TestProjectController_GetList_UseCaseError(t *testing.T) {
+	t.Parallel()
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
@@ -180,6 +185,7 @@ func TestProjectController_GetList_UseCaseError(t *testing.T) {
 
 // Test 18: GetList_FilterSemesterBoundaryCases
 func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		filterSemester int
@@ -262,6 +268,7 @@ func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
 
 // Test 19: GetList_FilterKategoriBoundaryCases
 func TestProjectController_GetList_FilterKategoriBoundaryCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name           string
 		filterKategori string

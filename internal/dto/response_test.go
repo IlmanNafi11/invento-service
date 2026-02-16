@@ -8,6 +8,7 @@ import (
 )
 
 func TestBaseResponse_Structure(t *testing.T) {
+	t.Parallel()
 	response := BaseResponse{
 		Status:  "success",
 		Message: "Operasi berhasil",
@@ -20,6 +21,7 @@ func TestBaseResponse_Structure(t *testing.T) {
 }
 
 func TestSuccessResponse_Structure(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 	data := map[string]interface{}{
 		"id":   1,
@@ -44,6 +46,7 @@ func TestSuccessResponse_Structure(t *testing.T) {
 }
 
 func TestErrorResponse_Structure(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 	errors := []string{"Email wajib diisi", "Password minimal 8 karakter"}
 
@@ -65,6 +68,7 @@ func TestErrorResponse_Structure(t *testing.T) {
 }
 
 func TestPaginationData_Structure(t *testing.T) {
+	t.Parallel()
 	pagination := PaginationData{
 		Page:       1,
 		Limit:      10,
@@ -79,6 +83,7 @@ func TestPaginationData_Structure(t *testing.T) {
 }
 
 func TestListData_Structure(t *testing.T) {
+	t.Parallel()
 	items := []map[string]interface{}{
 		{"id": 1, "name": "Item 1"},
 		{"id": 2, "name": "Item 2"},
@@ -105,6 +110,7 @@ func TestListData_Structure(t *testing.T) {
 }
 
 func TestValidationError_Structure(t *testing.T) {
+	t.Parallel()
 	validationError := ValidationError{
 		Field:   "email",
 		Message: "Email tidak valid",
@@ -115,6 +121,7 @@ func TestValidationError_Structure(t *testing.T) {
 }
 
 func TestValidationError_MultipleErrors(t *testing.T) {
+	t.Parallel()
 	errors := []ValidationError{
 		{Field: "email", Message: "Email wajib diisi"},
 		{Field: "password", Message: "Password minimal 8 karakter"},

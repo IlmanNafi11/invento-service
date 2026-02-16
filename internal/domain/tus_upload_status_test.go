@@ -7,7 +7,9 @@ import (
 )
 
 func TestTusUploadStruct(t *testing.T) {
+	t.Parallel()
 	t.Run("TusUpload struct initialization", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		projectID := uint(100)
 
@@ -44,6 +46,7 @@ func TestTusUploadStruct(t *testing.T) {
 	})
 
 	t.Run("TusUpload without ProjectID", func(t *testing.T) {
+		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-456",
 			UserID: "user-2",
@@ -62,6 +65,7 @@ func TestTusUploadStruct(t *testing.T) {
 	})
 
 	t.Run("TusUpload with completed status", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		completedAt := now
 
@@ -88,7 +92,9 @@ func TestTusUploadStruct(t *testing.T) {
 }
 
 func TestUploadStatusConstants(t *testing.T) {
+	t.Parallel()
 	t.Run("All upload status constants are defined", func(t *testing.T) {
+		t.Parallel()
 		statuses := []string{
 			UploadStatusQueued,
 			UploadStatusPending,
@@ -118,7 +124,9 @@ func TestUploadStatusConstants(t *testing.T) {
 }
 
 func TestUploadTypeConstants(t *testing.T) {
+	t.Parallel()
 	t.Run("All upload type constants are defined", func(t *testing.T) {
+		t.Parallel()
 		types := []string{
 			UploadTypeProjectCreate,
 			UploadTypeProjectUpdate,
@@ -138,7 +146,9 @@ func TestUploadTypeConstants(t *testing.T) {
 }
 
 func TestTusUploadInitRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("TusUploadMetadata with valid data", func(t *testing.T) {
+		t.Parallel()
 		req := TusUploadMetadata{
 			NamaProject: "My Awesome Project",
 			Kategori:    "website",
@@ -157,6 +167,7 @@ func TestTusUploadInitRequest(t *testing.T) {
 	})
 
 	t.Run("TusUploadMetadata with different kategori", func(t *testing.T) {
+		t.Parallel()
 		validKategories := []string{"website", "mobile", "iot", "machine_learning", "deep_learning"}
 
 		for _, kategori := range validKategories {
@@ -174,7 +185,9 @@ func TestTusUploadInitRequest(t *testing.T) {
 }
 
 func TestTusUploadResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.TusUploadResponse struct", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadResponse{
 			UploadID:  "upload-123",
 			UploadURL: "https://example.com/tus/upload-123",
@@ -194,6 +207,7 @@ func TestTusUploadResponse(t *testing.T) {
 	})
 
 	t.Run("dto.TusUploadResponse with progress", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadResponse{
 			UploadID:  "upload-456",
 			UploadURL: "https://example.com/tus/upload-456",
@@ -212,7 +226,9 @@ func TestTusUploadResponse(t *testing.T) {
 }
 
 func TestTusUploadInfoResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.TusUploadInfoResponse struct", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		projectID := uint(100)
 
@@ -245,6 +261,7 @@ func TestTusUploadInfoResponse(t *testing.T) {
 	})
 
 	t.Run("dto.TusUploadInfoResponse without ProjectID", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-456",
 			NamaProject: "New Project",
@@ -261,7 +278,9 @@ func TestTusUploadInfoResponse(t *testing.T) {
 }
 
 func TestTusUploadSlotResponse(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.TusUploadSlotResponse available", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadSlotResponse{
 			Available:     true,
 			Message:       "Upload slot available",
@@ -288,6 +307,7 @@ func TestTusUploadSlotResponse(t *testing.T) {
 	})
 
 	t.Run("dto.TusUploadSlotResponse not available", func(t *testing.T) {
+		t.Parallel()
 		resp := dto.TusUploadSlotResponse{
 			Available:     false,
 			Message:       "No upload slots available",
@@ -306,7 +326,9 @@ func TestTusUploadSlotResponse(t *testing.T) {
 }
 
 func TestTusUploadProgressCalculation(t *testing.T) {
+	t.Parallel()
 	t.Run("Calculate progress percentage", func(t *testing.T) {
+		t.Parallel()
 		testCases := []struct {
 			offset      int64
 			length      int64
@@ -328,7 +350,9 @@ func TestTusUploadProgressCalculation(t *testing.T) {
 }
 
 func TestTusUploadStatusTransitions(t *testing.T) {
+	t.Parallel()
 	t.Run("Valid status transitions", func(t *testing.T) {
+		t.Parallel()
 		transitions := map[string][]string{
 			UploadStatusQueued:    {UploadStatusPending},
 			UploadStatusPending:   {UploadStatusUploading, UploadStatusCancelled, UploadStatusExpired},
@@ -353,7 +377,9 @@ func TestTusUploadStatusTransitions(t *testing.T) {
 }
 
 func TestTusUploadMetadata(t *testing.T) {
+	t.Parallel()
 	t.Run("TusUpload with metadata", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		metadata := TusUploadMetadata{
 			NamaProject: "Test Project",
@@ -386,7 +412,9 @@ func TestTusUploadMetadata(t *testing.T) {
 }
 
 func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
+	t.Parallel()
 	t.Run("Minimum valid NamaProject length", func(t *testing.T) {
+		t.Parallel()
 		req := TusUploadMetadata{
 			NamaProject: "ABC", // min=3
 			Kategori:    "website",
@@ -399,6 +427,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Maximum valid NamaProject length", func(t *testing.T) {
+		t.Parallel()
 		// Create a 255 character string
 		longName := string(make([]byte, 255))
 		for i := range longName {
@@ -417,6 +446,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Minimum valid Semester", func(t *testing.T) {
+		t.Parallel()
 		req := TusUploadMetadata{
 			NamaProject: "Test Project",
 			Kategori:    "iot",
@@ -429,6 +459,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Maximum valid Semester", func(t *testing.T) {
+		t.Parallel()
 		req := TusUploadMetadata{
 			NamaProject: "Test Project",
 			Kategori:    "deep_learning",
@@ -441,6 +472,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("All valid kategori values", func(t *testing.T) {
+		t.Parallel()
 		validCategories := []string{
 			"website",
 			"mobile",

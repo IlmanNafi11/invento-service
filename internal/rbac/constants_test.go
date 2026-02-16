@@ -9,6 +9,7 @@ import (
 )
 
 func TestRBACResourceConstants(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "Permission", rbac.ResourcePermission)
 	assert.Equal(t, "Role", rbac.ResourceRole)
 	assert.Equal(t, "User", rbac.ResourceUser)
@@ -17,6 +18,7 @@ func TestRBACResourceConstants(t *testing.T) {
 }
 
 func TestRBACActionConstants(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "read", rbac.ActionRead)
 	assert.Equal(t, "create", rbac.ActionCreate)
 	assert.Equal(t, "update", rbac.ActionUpdate)

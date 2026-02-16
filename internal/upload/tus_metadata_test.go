@@ -8,11 +8,13 @@ import (
 )
 
 func TestParseTusMetadata_EmptyHeader_ReturnsEmptyMap(t *testing.T) {
+	t.Parallel()
 	parsed := ParseTusMetadata("")
 	assert.Empty(t, parsed)
 }
 
 func TestParseTusMetadata_SinglePair_ParsesValue(t *testing.T) {
+	t.Parallel()
 	value := base64.StdEncoding.EncodeToString([]byte("project.zip"))
 	parsed := ParseTusMetadata("filename " + value)
 
@@ -20,6 +22,7 @@ func TestParseTusMetadata_SinglePair_ParsesValue(t *testing.T) {
 }
 
 func TestParseTusMetadata_MultiplePairs_ParsesAll(t *testing.T) {
+	t.Parallel()
 	name := base64.StdEncoding.EncodeToString([]byte("doc.zip"))
 	typev := base64.StdEncoding.EncodeToString([]byte("application/zip"))
 	user := base64.StdEncoding.EncodeToString([]byte("123"))
@@ -32,16 +35,19 @@ func TestParseTusMetadata_MultiplePairs_ParsesAll(t *testing.T) {
 }
 
 func TestParseTusMetadata_KeyWithoutValue_SetsEmptyValue(t *testing.T) {
+	t.Parallel()
 	parsed := ParseTusMetadata("filename")
 	assert.Equal(t, "", parsed["filename"])
 }
 
 func TestParseTusMetadata_InvalidBase64_SkipsGracefullyWithEmptyValue(t *testing.T) {
+	t.Parallel()
 	parsed := ParseTusMetadata("filename !!!")
 	assert.Equal(t, "", parsed["filename"])
 }
 
 func TestParseTusMetadata_ExtraWhitespace_StillParses(t *testing.T) {
+	t.Parallel()
 	value := base64.StdEncoding.EncodeToString([]byte(" spaced name.zip "))
 	parsed := ParseTusMetadata("   filename   " + value + "   ")
 
@@ -49,6 +55,7 @@ func TestParseTusMetadata_ExtraWhitespace_StillParses(t *testing.T) {
 }
 
 func TestParseTusMetadata_CommaSeparatedPairs_HandlesMixedEntries(t *testing.T) {
+	t.Parallel()
 	a := base64.StdEncoding.EncodeToString([]byte("A"))
 	b := base64.StdEncoding.EncodeToString([]byte("B"))
 

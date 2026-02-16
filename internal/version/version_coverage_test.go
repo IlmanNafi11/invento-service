@@ -8,6 +8,7 @@ import (
 
 // TestIsSupported_Success tests version support checking
 func TestIsSupported_Success(t *testing.T) {
+	t.Parallel()
 	v1 := APIVersion(V1)
 	assert.True(t, v1.IsSupported())
 
@@ -20,6 +21,7 @@ func TestIsSupported_Success(t *testing.T) {
 
 // TestIsDeprecated_Success tests version deprecation checking
 func TestIsDeprecated_Success(t *testing.T) {
+	t.Parallel()
 	v1 := APIVersion(V1)
 	assert.False(t, v1.IsDeprecated())
 
@@ -29,6 +31,7 @@ func TestIsDeprecated_Success(t *testing.T) {
 
 // TestGetSupportedVersions_Success tests getting supported versions
 func TestGetSupportedVersions_Success(t *testing.T) {
+	t.Parallel()
 	versions := GetSupportedVersions()
 
 	assert.NotEmpty(t, versions)
@@ -38,6 +41,7 @@ func TestGetSupportedVersions_Success(t *testing.T) {
 
 // TestGetDeprecationWarning_Success tests deprecation warning
 func TestGetDeprecationWarning_Success(t *testing.T) {
+	t.Parallel()
 	v1 := APIVersion(V1)
 	warning := v1.GetDeprecationWarning()
 	assert.Empty(t, warning)
@@ -50,10 +54,12 @@ func TestGetDeprecationWarning_Success(t *testing.T) {
 
 // TestCurrentAPIVersion_Constant tests current API version constant
 func TestCurrentAPIVersion_Constant(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "v1", CurrentAPIVersion)
 }
 
 // TestV1_Constant tests v1 version constant
 func TestV1_Constant(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "v1", V1)
 }

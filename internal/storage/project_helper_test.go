@@ -14,6 +14,7 @@ import (
 )
 
 func TestNewProjectHelper(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
 			PathDevelopment: "/tmp/uploads",
@@ -27,10 +28,12 @@ func TestNewProjectHelper(t *testing.T) {
 }
 
 func TestProjectHelper_GenerateProjectIdentifier(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{}
 	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Generate unique identifiers", func(t *testing.T) {
+		t.Parallel()
 		identifiers := make(map[string]bool)
 
 		for i := 0; i < 100; i++ {
@@ -43,6 +46,7 @@ func TestProjectHelper_GenerateProjectIdentifier(t *testing.T) {
 	})
 
 	t.Run("Identifier format", func(t *testing.T) {
+		t.Parallel()
 		id, err := projectHelper.GenerateProjectIdentifier()
 		assert.NoError(t, err)
 		assert.Len(t, id, 10)
@@ -54,6 +58,7 @@ func TestProjectHelper_GenerateProjectIdentifier(t *testing.T) {
 }
 
 func TestProjectHelper_BuildProjectPath(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Env: "development",
@@ -90,6 +95,7 @@ func TestProjectHelper_BuildProjectPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := projectHelper.BuildProjectPath(tt.userID, tt.identifier, tt.filename)
 
 			assert.Contains(t, result, tt.wantPrefix)
@@ -102,6 +108,7 @@ func TestProjectHelper_BuildProjectPath(t *testing.T) {
 }
 
 func TestProjectHelper_BuildProjectDirectory(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
 			PathDevelopment: "/tmp/uploads",
@@ -119,6 +126,7 @@ func TestProjectHelper_BuildProjectDirectory(t *testing.T) {
 }
 
 func TestProjectHelper_ValidateProjectFile(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
 			MaxSize: 10 * 1024 * 1024,
@@ -127,6 +135,7 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Valid ZIP file", func(t *testing.T) {
+		t.Parallel()
 		fileHeader := &multipart.FileHeader{
 			Filename: "project.zip",
 			Size:     1024 * 1024,
@@ -137,6 +146,7 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 	})
 
 	t.Run("Invalid extension - not ZIP", func(t *testing.T) {
+		t.Parallel()
 		fileHeader := &multipart.FileHeader{
 			Filename: "project.pdf",
 			Size:     1024,
@@ -148,6 +158,7 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 	})
 
 	t.Run("File too large", func(t *testing.T) {
+		t.Parallel()
 		fileHeader := &multipart.FileHeader{
 			Filename: "large.zip",
 			Size:     15 * 1024 * 1024,
@@ -159,6 +170,7 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 	})
 
 	t.Run("Uppercase extension", func(t *testing.T) {
+		t.Parallel()
 		fileHeader := &multipart.FileHeader{
 			Filename: "PROJECT.ZIP",
 			Size:     1024,
@@ -170,6 +182,7 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 }
 
 func TestProjectHelper_ValidateProjectFileSize(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
 			MaxSize: 50 * 1024 * 1024,
@@ -221,6 +234,7 @@ func TestProjectHelper_ValidateProjectFileSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := projectHelper.ValidateProjectFileSize(tt.fileSize)
 
 			if tt.wantErr {
@@ -236,6 +250,7 @@ func TestProjectHelper_ValidateProjectFileSize(t *testing.T) {
 }
 
 func TestValidateProjectZipExtension(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		filename string
@@ -280,6 +295,7 @@ func TestValidateProjectZipExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := storage.ValidateProjectZipExtension(tt.filename)
 
 			if tt.wantErr {
@@ -293,7 +309,9 @@ func TestValidateProjectZipExtension(t *testing.T) {
 }
 
 func TestProjectHelper_ProductionVsDevelopment(t *testing.T) {
+	t.Parallel()
 	t.Run("Development environment", func(t *testing.T) {
+		t.Parallel()
 		cfg := &config.Config{
 			App: config.AppConfig{
 				Env: "development",
@@ -311,6 +329,7 @@ func TestProjectHelper_ProductionVsDevelopment(t *testing.T) {
 	})
 
 	t.Run("Production environment", func(t *testing.T) {
+		t.Parallel()
 		cfg := &config.Config{
 			App: config.AppConfig{
 				Env: "production",
@@ -329,6 +348,7 @@ func TestProjectHelper_ProductionVsDevelopment(t *testing.T) {
 }
 
 func TestProjectHelper_Integration(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
@@ -347,6 +367,7 @@ func TestProjectHelper_Integration(t *testing.T) {
 	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Complete project workflow", func(t *testing.T) {
+		t.Parallel()
 		identifier, err := projectHelper.GenerateProjectIdentifier()
 		assert.NoError(t, err)
 		assert.Len(t, identifier, 10)
@@ -375,6 +396,7 @@ func TestProjectHelper_Integration(t *testing.T) {
 	})
 
 	t.Run("Multiple project directories", func(t *testing.T) {
+		t.Parallel()
 		userID := uint(456)
 
 		for i := 0; i < 5; i++ {
@@ -391,6 +413,7 @@ func TestProjectHelper_Integration(t *testing.T) {
 }
 
 func TestProjectHelper_EdgeCases(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
 			PathDevelopment: "/tmp/uploads",
@@ -400,6 +423,7 @@ func TestProjectHelper_EdgeCases(t *testing.T) {
 	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Special characters in filename", func(t *testing.T) {
+		t.Parallel()
 		filename := "project (2024) [v1.0].zip"
 		userID := uint(1)
 		identifier := "abc123"
@@ -411,6 +435,7 @@ func TestProjectHelper_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Very long filename", func(t *testing.T) {
+		t.Parallel()
 		longFilename := "this_is_a_very_long_project_name_with_many_characters_and_numbers_123456789.zip"
 		userID := uint(999)
 		identifier := "xyz789"
@@ -421,6 +446,7 @@ func TestProjectHelper_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("User ID zero", func(t *testing.T) {
+		t.Parallel()
 		userID := uint(0)
 		identifier := "test123"
 		filename := "project.zip"
@@ -431,6 +457,7 @@ func TestProjectHelper_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Maximum file size validation", func(t *testing.T) {
+		t.Parallel()
 		maxSize := int64(100 * 1024 * 1024)
 
 		err := projectHelper.ValidateProjectFileSize(maxSize)
@@ -442,6 +469,7 @@ func TestProjectHelper_EdgeCases(t *testing.T) {
 }
 
 func TestProjectHelper_FileOperations(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 
 	cfg := &config.Config{
@@ -456,6 +484,7 @@ func TestProjectHelper_FileOperations(t *testing.T) {
 	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Create and validate project file", func(t *testing.T) {
+		t.Parallel()
 		userID := uint(123)
 		identifier, err := projectHelper.GenerateProjectIdentifier()
 		require.NoError(t, err)

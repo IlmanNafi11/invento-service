@@ -13,6 +13,7 @@ import (
 
 // TestNewDownloadHierarchy_Success tests creating a new download helper
 func TestNewDownloadHelper_Success(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -21,6 +22,7 @@ func TestNewDownloadHelper_Success(t *testing.T) {
 
 // TestValidateDownloadRequest_EmptyArrays tests validation with empty arrays
 func TestValidateDownloadRequest_EmptyArrays(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -31,6 +33,7 @@ func TestValidateDownloadRequest_EmptyArrays(t *testing.T) {
 
 // TestValidateDownloadRequest_WithProjects tests validation with project IDs
 func TestValidateDownloadRequest_WithProjects(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -40,6 +43,7 @@ func TestValidateDownloadRequest_WithProjects(t *testing.T) {
 
 // TestValidateDownloadRequest_WithModuls tests validation with modul IDs
 func TestValidateDownloadRequest_WithModuls(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -49,6 +53,7 @@ func TestValidateDownloadRequest_WithModuls(t *testing.T) {
 
 // TestValidateDownloadRequest_WithBoth tests validation with both project and modul IDs
 func TestValidateDownloadRequest_WithBoth(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -58,6 +63,7 @@ func TestValidateDownloadRequest_WithBoth(t *testing.T) {
 
 // TestGetFilesByIDs_SelectsCorrectProjects tests selecting projects by ID
 func TestGetFilesByIDs_SelectsCorrectProjects(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -82,6 +88,7 @@ func TestGetFilesByIDs_SelectsCorrectProjects(t *testing.T) {
 
 // TestGetFilesByIDs_EmptySelections tests with empty ID arrays
 func TestGetFilesByIDs_EmptySelections(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -100,6 +107,7 @@ func TestGetFilesByIDs_EmptySelections(t *testing.T) {
 
 // TestGetFilesByIDs_NonExistentIDs tests filtering out non-existent IDs
 func TestGetFilesByIDs_NonExistentIDs(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -119,6 +127,7 @@ func TestGetFilesByIDs_NonExistentIDs(t *testing.T) {
 
 // TestGetFilesByIDs_DoesNotModifyOriginals tests that original slices are not modified
 func TestGetFilesByIDs_DoesNotModifyOriginals(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -142,6 +151,7 @@ func TestGetFilesByIDs_DoesNotModifyOriginals(t *testing.T) {
 
 // TestCreateDownloadZip_SingleFile returns single file path
 func TestCreateDownloadZip_SingleFile(t *testing.T) {
+	t.Parallel()
 	// Create temp file
 	tmpFile, err := os.CreateTemp("", "test*.txt")
 	require.NoError(t, err)
@@ -158,6 +168,7 @@ func TestCreateDownloadZip_SingleFile(t *testing.T) {
 
 // TestCreateDownloadZip_EmptyArray tests error with empty file array
 func TestCreateDownloadZip_EmptyArray(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -169,6 +180,7 @@ func TestCreateDownloadZip_EmptyArray(t *testing.T) {
 
 // TestCreateDownloadZip_MultipleFiles tests creating zip with multiple files
 func TestCreateDownloadZip_MultipleFiles(t *testing.T) {
+	t.Parallel()
 	// Create temp files
 	tmpFile1, err := os.CreateTemp("", "test1*.txt")
 	require.NoError(t, err)
@@ -191,6 +203,7 @@ func TestCreateDownloadZip_MultipleFiles(t *testing.T) {
 
 // TestPrepareFilesForDownload_AllFilesFound tests when all files exist
 func TestPrepareFilesForDownload_AllFilesFound(t *testing.T) {
+	t.Parallel()
 	// Create temp directory and files
 	tmpDir, err := os.MkdirTemp("", "test")
 	require.NoError(t, err)
@@ -220,6 +233,7 @@ func TestPrepareFilesForDownload_AllFilesFound(t *testing.T) {
 
 // TestPrepareFilesForDownload_SomeFilesNotFound tests when some files are missing
 func TestPrepareFilesForDownload_SomeFilesNotFound(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -239,6 +253,7 @@ func TestPrepareFilesForDownload_SomeFilesNotFound(t *testing.T) {
 
 // TestPrepareFilesForDownloads_EmptyArrays tests with empty project/modul arrays
 func TestPrepareFilesForDownloads_EmptyArrays(t *testing.T) {
+	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)
 
@@ -252,6 +267,7 @@ func TestPrepareFilesForDownloads_EmptyArrays(t *testing.T) {
 
 // TestResolvePath_AbsolutePath returns absolute path as-is
 func TestResolvePath_AbsolutePath(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{}
 	cfg.Upload.PathProduction = "/test/uploads"
 	pathResolver := NewPathResolver(cfg)
@@ -264,6 +280,7 @@ func TestResolvePath_AbsolutePath(t *testing.T) {
 
 // TestResolvePath_RelativePath tests relative path resolution
 func TestResolvePath_RelativePath(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{}
 	cfg.Upload.PathProduction = "/test/uploads"
 	pathResolver := NewPathResolver(cfg)
@@ -279,6 +296,7 @@ func TestResolvePath_RelativePath(t *testing.T) {
 
 // TestResolvePath_WithUploadsPrefix tests removing uploads prefix
 func TestResolvePath_WithUploadsPrefix(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{}
 	cfg.Upload.PathProduction = "/base/uploads"
 	pathResolver := NewPathResolver(cfg)
@@ -293,6 +311,7 @@ func TestResolvePath_WithUploadsPrefix(t *testing.T) {
 
 // TestResolvePath_WithTempPrefix tests removing temp prefix
 func TestResolvePath_WithTempPrefix(t *testing.T) {
+	t.Parallel()
 	cfg := &config.Config{}
 	cfg.Upload.PathProduction = "/base/uploads"
 	pathResolver := NewPathResolver(cfg)

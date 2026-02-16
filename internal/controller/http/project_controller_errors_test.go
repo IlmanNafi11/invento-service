@@ -16,6 +16,7 @@ import (
 )
 
 func TestProjectController_GetList_PaginationBoundaries(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		page          int

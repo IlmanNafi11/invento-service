@@ -10,6 +10,7 @@ import (
 )
 
 func TestRBACHelper_CheckUserPermission_Allowed(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -23,6 +24,7 @@ func TestRBACHelper_CheckUserPermission_Allowed(t *testing.T) {
 }
 
 func TestRBACHelper_CheckUserPermission_NotAllowed(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -36,6 +38,7 @@ func TestRBACHelper_CheckUserPermission_NotAllowed(t *testing.T) {
 }
 
 func TestRBACHelper_CheckUserPermission_Error(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -49,6 +52,7 @@ func TestRBACHelper_CheckUserPermission_Error(t *testing.T) {
 }
 
 func TestRBACHelper_SavePolicy_Success(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -61,6 +65,7 @@ func TestRBACHelper_SavePolicy_Success(t *testing.T) {
 }
 
 func TestRBACHelper_SavePolicy_Error(t *testing.T) {
+	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
 
@@ -74,6 +79,7 @@ func TestRBACHelper_SavePolicy_Error(t *testing.T) {
 }
 
 func TestRBACHelper_BuildRoleDetailResponse_WithPermissions(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	role := &domain.Role{
@@ -100,6 +106,7 @@ func TestRBACHelper_BuildRoleDetailResponse_WithPermissions(t *testing.T) {
 }
 
 func TestRBACHelper_BuildRoleDetailResponse_EmptyPermissions(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	role := &domain.Role{
@@ -120,6 +127,7 @@ func TestRBACHelper_BuildRoleDetailResponse_EmptyPermissions(t *testing.T) {
 }
 
 func TestRBACHelper_BuildRoleDetailResponse_SingleResource(t *testing.T) {
+	t.Parallel()
 	rh := NewRBACHelper(nil)
 
 	role := &domain.Role{

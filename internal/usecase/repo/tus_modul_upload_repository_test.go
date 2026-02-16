@@ -30,6 +30,7 @@ func newTusModulUpload(id, userID, status string, expiresAt time.Time) domain.Tu
 }
 
 func TestTusModulUploadRepository_Create(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 
@@ -44,6 +45,7 @@ func TestTusModulUploadRepository_Create(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetByID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -62,6 +64,7 @@ func TestTusModulUploadRepository_GetByID(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetByUserID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -84,6 +87,7 @@ func TestTusModulUploadRepository_GetByUserID(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_UpdateOffset(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -101,6 +105,7 @@ func TestTusModulUploadRepository_UpdateOffset(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_UpdateStatus(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -118,6 +123,7 @@ func TestTusModulUploadRepository_UpdateStatus(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_Complete(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -140,6 +146,7 @@ func TestTusModulUploadRepository_Complete(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_Delete(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -154,6 +161,7 @@ func TestTusModulUploadRepository_Delete(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetExpiredUploads(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -185,6 +193,7 @@ func TestTusModulUploadRepository_GetExpiredUploads(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetAbandonedUploads(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -219,6 +228,7 @@ func TestTusModulUploadRepository_GetAbandonedUploads(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_CountActiveByUserID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -245,6 +255,7 @@ func TestTusModulUploadRepository_CountActiveByUserID(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetActiveByUserID(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)
@@ -275,6 +286,7 @@ func TestTusModulUploadRepository_GetActiveByUserID(t *testing.T) {
 }
 
 func TestTusModulUploadRepository_GetActiveUploadIDs(t *testing.T) {
+	t.Parallel()
 	db := setupTestDB(t)
 	require.NoError(t, db.AutoMigrate(&domain.TusModulUpload{}))
 	repository := NewTusModulUploadRepository(db)

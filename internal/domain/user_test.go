@@ -7,7 +7,9 @@ import (
 )
 
 func TestUserListQueryParams(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UserListQueryParams with all fields", func(t *testing.T) {
+		t.Parallel()
 		params := dto.UserListQueryParams{
 			Search:     "john",
 			FilterRole: "admin",
@@ -30,6 +32,7 @@ func TestUserListQueryParams(t *testing.T) {
 	})
 
 	t.Run("dto.UserListQueryParams with default values", func(t *testing.T) {
+		t.Parallel()
 		params := dto.UserListQueryParams{}
 
 		if params.Search != "" {
@@ -45,7 +48,9 @@ func TestUserListQueryParams(t *testing.T) {
 }
 
 func TestUserListItem(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UserListItem struct", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		item := dto.UserListItem{
 			ID:         "user-1",
@@ -67,7 +72,9 @@ func TestUserListItem(t *testing.T) {
 }
 
 func TestUserListData(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UserListData with pagination", func(t *testing.T) {
+		t.Parallel()
 		items := []dto.UserListItem{
 			{ID: "user-1", Email: "user1@example.com", Role: "Admin"},
 			{ID: "user-2", Email: "user2@example.com", Role: "User"},
@@ -92,6 +99,7 @@ func TestUserListData(t *testing.T) {
 	})
 
 	t.Run("dto.UserListData empty", func(t *testing.T) {
+		t.Parallel()
 		data := dto.UserListData{
 			Items: []dto.UserListItem{},
 			Pagination: dto.PaginationData{
@@ -109,7 +117,9 @@ func TestUserListData(t *testing.T) {
 }
 
 func TestUpdateUserRoleRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UpdateUserRoleRequest struct", func(t *testing.T) {
+		t.Parallel()
 		req := dto.UpdateUserRoleRequest{
 			Role: "editor",
 		}
@@ -120,6 +130,7 @@ func TestUpdateUserRoleRequest(t *testing.T) {
 	})
 
 	t.Run("dto.UpdateUserRoleRequest with different roles", func(t *testing.T) {
+		t.Parallel()
 		roles := []string{"admin", "editor", "viewer", "moderator"}
 
 		for _, role := range roles {
@@ -132,7 +143,9 @@ func TestUpdateUserRoleRequest(t *testing.T) {
 }
 
 func TestProfileData(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.ProfileData with all fields", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		jenisKelamin := "Laki-laki"
 		fotoProfil := "https://example.com/photo.jpg"
@@ -172,6 +185,7 @@ func TestProfileData(t *testing.T) {
 	})
 
 	t.Run("dto.ProfileData without optional fields", func(t *testing.T) {
+		t.Parallel()
 		now := time.Now()
 		profile := dto.ProfileData{
 			Name:          "Jane Doe",
@@ -194,7 +208,9 @@ func TestProfileData(t *testing.T) {
 }
 
 func TestUpdateProfileRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UpdateProfileRequest with all fields", func(t *testing.T) {
+		t.Parallel()
 		req := dto.UpdateProfileRequest{
 			Name:         "Updated Name",
 			JenisKelamin: "Laki-laki",
@@ -209,6 +225,7 @@ func TestUpdateProfileRequest(t *testing.T) {
 	})
 
 	t.Run("dto.UpdateProfileRequest with different jenis kelamin", func(t *testing.T) {
+		t.Parallel()
 		validValues := []string{"Laki-laki", "Perempuan"}
 
 		for _, jk := range validValues {
@@ -224,6 +241,7 @@ func TestUpdateProfileRequest(t *testing.T) {
 	})
 
 	t.Run("dto.UpdateProfileRequest with only name", func(t *testing.T) {
+		t.Parallel()
 		req := dto.UpdateProfileRequest{
 			Name:         "Only Name",
 			JenisKelamin: "",
@@ -239,7 +257,9 @@ func TestUpdateProfileRequest(t *testing.T) {
 }
 
 func TestUserFileItem(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UserFileItem struct", func(t *testing.T) {
+		t.Parallel()
 		item := dto.UserFileItem{
 			ID:          "user-1",
 			NamaFile:    "project_report.pdf",
@@ -262,6 +282,7 @@ func TestUserFileItem(t *testing.T) {
 	})
 
 	t.Run("dto.UserFileItem with different kategori", func(t *testing.T) {
+		t.Parallel()
 		kategories := []string{"project", "modul"}
 
 		for _, kategori := range kategories {
@@ -280,7 +301,9 @@ func TestUserFileItem(t *testing.T) {
 }
 
 func TestUserFilesQueryParams(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UserFilesQueryParams with all fields", func(t *testing.T) {
+		t.Parallel()
 		params := dto.UserFilesQueryParams{
 			Search: "report",
 			Page:   2,
@@ -299,6 +322,7 @@ func TestUserFilesQueryParams(t *testing.T) {
 	})
 
 	t.Run("dto.UserFilesQueryParams with default values", func(t *testing.T) {
+		t.Parallel()
 		params := dto.UserFilesQueryParams{}
 
 		if params.Search != "" {
@@ -311,7 +335,9 @@ func TestUserFilesQueryParams(t *testing.T) {
 }
 
 func TestUserFilesData(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UserFilesData with pagination", func(t *testing.T) {
+		t.Parallel()
 		items := []dto.UserFileItem{
 			{ID: "user-1", NamaFile: "project1.pdf", Kategori: "project", DownloadURL: "url1"},
 			{ID: "user-2", NamaFile: "modul1.pdf", Kategori: "modul", DownloadURL: "url2"},
@@ -337,7 +363,9 @@ func TestUserFilesData(t *testing.T) {
 }
 
 func TestUserPermissionItem(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.UserPermissionItem struct", func(t *testing.T) {
+		t.Parallel()
 		item := dto.UserPermissionItem{
 			Resource: "projects",
 			Actions:  []string{"create", "read", "update", "delete"},
@@ -352,6 +380,7 @@ func TestUserPermissionItem(t *testing.T) {
 	})
 
 	t.Run("dto.UserPermissionItem with different resources", func(t *testing.T) {
+		t.Parallel()
 		resources := []string{"projects", "users", "roles", "moduls"}
 
 		for _, resource := range resources {
@@ -368,7 +397,9 @@ func TestUserPermissionItem(t *testing.T) {
 }
 
 func TestDownloadUserFilesRequest(t *testing.T) {
+	t.Parallel()
 	t.Run("dto.DownloadUserFilesRequest with project IDs", func(t *testing.T) {
+		t.Parallel()
 		req := dto.DownloadUserFilesRequest{
 			ProjectIDs: []uint{1, 2, 3},
 			ModulIDs:   []uint{4, 5},
@@ -383,6 +414,7 @@ func TestDownloadUserFilesRequest(t *testing.T) {
 	})
 
 	t.Run("dto.DownloadUserFilesRequest with only project IDs", func(t *testing.T) {
+		t.Parallel()
 		req := dto.DownloadUserFilesRequest{
 			ProjectIDs: []uint{1, 2, 3, 4, 5},
 			ModulIDs:   []uint{},
@@ -397,6 +429,7 @@ func TestDownloadUserFilesRequest(t *testing.T) {
 	})
 
 	t.Run("dto.DownloadUserFilesRequest with only modul IDs", func(t *testing.T) {
+		t.Parallel()
 		req := dto.DownloadUserFilesRequest{
 			ProjectIDs: []uint{},
 			ModulIDs:   []uint{10, 20, 30},
@@ -411,6 +444,7 @@ func TestDownloadUserFilesRequest(t *testing.T) {
 	})
 
 	t.Run("dto.DownloadUserFilesRequest empty", func(t *testing.T) {
+		t.Parallel()
 		req := dto.DownloadUserFilesRequest{
 			ProjectIDs: []uint{},
 			ModulIDs:   []uint{},
