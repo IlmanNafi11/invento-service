@@ -1,8 +1,8 @@
-package helper
+package storage
 
 import (
-	"invento-service/config"
 	"fmt"
+	"invento-service/config"
 	"os"
 	"path/filepath"
 )

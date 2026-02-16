@@ -1,10 +1,10 @@
-package helper
+package storage
 
 import (
 	"errors"
+	"fmt"
 	"invento-service/config"
 	"invento-service/internal/domain"
-	"fmt"
 	"mime/multipart"
 )
 

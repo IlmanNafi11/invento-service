@@ -1,8 +1,8 @@
-package helper_test
+package storage_test
 
 import (
 	"invento-service/config"
-	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"mime/multipart"
 	"testing"
 
@@ -17,7 +17,7 @@ func TestNewModulHelper(t *testing.T) {
 		},
 	}
 
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
 	assert.NotNil(t, modulHelper)
 }
@@ -26,13 +26,12 @@ func TestModulHelper_GenerateModulIdentifier(t *testing.T) {
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
 	identifier, err := modulHelper.GenerateModulIdentifier()
 
 	assert.NoError(t, err)
 	assert.Len(t, identifier, 10)
-	// Should only contain lowercase letters and numbers
 	for _, c := range identifier {
 		assert.True(t, (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
 	}
@@ -42,9 +41,8 @@ func TestModulHelper_GenerateModulIdentifier_Uniqueness(t *testing.T) {
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
-	// Generate multiple identifiers and check they're different
 	identifiers := make(map[string]bool)
 	for i := 0; i < 100; i++ {
 		identifier, err := modulHelper.GenerateModulIdentifier()
@@ -87,7 +85,7 @@ func TestModulHelper_BuildModulPath(t *testing.T) {
 					PathProduction:  "/prod/uploads",
 				},
 			}
-			modulHelper := helper.NewModulHelper(cfg)
+			modulHelper := storage.NewModulHelper(cfg)
 
 			path := modulHelper.BuildModulPath(tt.userID, tt.identifier, tt.filename)
 
@@ -105,7 +103,7 @@ func TestModulHelper_BuildModulDirectory(t *testing.T) {
 			PathDevelopment: "/uploads",
 		},
 	}
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
 	userID := "123"
 	identifier := "test-id"
@@ -121,7 +119,7 @@ func TestModulHelper_ValidateModulFile(t *testing.T) {
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
 	tests := []struct {
 		name        string
@@ -181,7 +179,6 @@ func TestModulHelper_ValidateModulFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a mock file header
 			fileHeader := &multipart.FileHeader{
 				Filename: tt.filename,
 				Size:     tt.size,
@@ -202,7 +199,7 @@ func TestModulHelper_ValidateModulFileSize(t *testing.T) {
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
 	tests := []struct {
 		name        string
@@ -247,7 +244,7 @@ func TestValidateModulFileExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := helper.ValidateModulFileExtension(tt.tipe)
+			err := storage.ValidateModulFileExtension(tt.tipe)
 
 			if tt.shouldError {
 				assert.Error(t, err)
@@ -275,7 +272,7 @@ func TestGetModulFileExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := helper.GetModulFileExtension(tt.tipe)
+			result := storage.GetModulFileExtension(tt.tipe)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -308,10 +305,8 @@ func TestModulHelper_GetBasePath(t *testing.T) {
 					PathProduction:  "/prod/path",
 				},
 			}
-			modulHelper := helper.NewModulHelper(cfg)
+			modulHelper := storage.NewModulHelper(cfg)
 
-			// We can't directly test getBasePath as it's private,
-			// but we can verify the behavior through BuildModulPath
 			path := modulHelper.BuildModulPath("1", "id", "file.pdf")
 			assert.Contains(t, path, tt.expected)
 		})
@@ -325,7 +320,7 @@ func TestModulHelper_EdgeCases(t *testing.T) {
 			PathDevelopment: "/uploads",
 		},
 	}
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
 	t.Run("BuildModulPath with empty filename", func(t *testing.T) {
 		path := modulHelper.BuildModulPath("123", "id", "")
@@ -347,9 +342,8 @@ func TestModulHelper_FileSizeBoundary(t *testing.T) {
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
-	// Test exact boundary: 50MB
 	exactMaxSize := int64(50 * 1024 * 1024)
 	fileHeader := &multipart.FileHeader{
 		Filename: "test.pdf",
@@ -358,7 +352,6 @@ func TestModulHelper_FileSizeBoundary(t *testing.T) {
 	err := modulHelper.ValidateModulFile(fileHeader)
 	assert.NoError(t, err, "File at exactly 50MB should be valid")
 
-	// Test one byte over
 	overMaxSize := int64(50*1024*1024 + 1)
 	fileHeader.Size = overMaxSize
 	err = modulHelper.ValidateModulFile(fileHeader)
@@ -369,7 +362,7 @@ func TestModulHelper_CaseInsensitiveExtension(t *testing.T) {
 	cfg := &config.Config{
 		App: config.AppConfig{Env: "development"},
 	}
-	modulHelper := helper.NewModulHelper(cfg)
+	modulHelper := storage.NewModulHelper(cfg)
 
 	tests := []string{
 		"file.PDF",
@@ -389,7 +382,6 @@ func TestModulHelper_CaseInsensitiveExtension(t *testing.T) {
 				Size:     1024,
 			}
 
-			// GetFileExtension converts to lowercase, so these should pass
 			err := modulHelper.ValidateModulFile(fileHeader)
 			assert.NoError(t, err, "Extensions should be case-insensitive (GetFileExtension converts to lowercase)")
 		})

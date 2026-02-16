@@ -1,9 +1,9 @@
-package helper_test
+package storage_test
 
 import (
 	"invento-service/config"
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"io"
 	"mime/multipart"
 	"testing"
@@ -20,9 +20,9 @@ func TestNewUserHelper(t *testing.T) {
 			PathProduction:  "/var/uploads",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
-	userHelper := helper.NewUserHelper(pathResolver, cfg)
+	userHelper := storage.NewUserHelper(pathResolver, cfg)
 
 	assert.NotNil(t, userHelper)
 	assert.NotNil(t, userHelper)
@@ -34,8 +34,8 @@ func TestUserHelper_BuildProfileData(t *testing.T) {
 			PathDevelopment: "/tmp/uploads",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
-	userHelper := helper.NewUserHelper(pathResolver, cfg)
+	pathResolver := storage.NewPathResolver(cfg)
+	userHelper := storage.NewUserHelper(pathResolver, cfg)
 
 	tests := []struct {
 		name          string
@@ -113,8 +113,8 @@ func TestUserHelper_BuildProfileData(t *testing.T) {
 
 func TestUserHelper_AggregateUserPermissions(t *testing.T) {
 	cfg := &config.Config{}
-	pathResolver := helper.NewPathResolver(cfg)
-	userHelper := helper.NewUserHelper(pathResolver, cfg)
+	pathResolver := storage.NewPathResolver(cfg)
+	userHelper := storage.NewUserHelper(pathResolver, cfg)
 
 	tests := []struct {
 		name               string
@@ -189,21 +189,20 @@ func TestUserHelper_AggregateUserPermissions(t *testing.T) {
 
 func TestUserHelper_AggregateUserPermissions_Deduplication(t *testing.T) {
 	cfg := &config.Config{}
-	pathResolver := helper.NewPathResolver(cfg)
-	userHelper := helper.NewUserHelper(pathResolver, cfg)
+	pathResolver := storage.NewPathResolver(cfg)
+	userHelper := storage.NewUserHelper(pathResolver, cfg)
 
 	permissions := [][]string{
 		{"role", "projects", "create"},
 		{"role", "projects", "read"},
-		{"role", "projects", "create"}, // Duplicate
-		{"role", "projects", "read"},   // Duplicate
+		{"role", "projects", "create"},
+		{"role", "projects", "read"},
 	}
 
 	result := userHelper.AggregateUserPermissions(permissions)
 
 	assert.Len(t, result, 1)
 	assert.Equal(t, "projects", result[0].Resource)
-	// Actions may contain duplicates, test that they're aggregated
 	assert.GreaterOrEqual(t, len(result[0].Actions), 2)
 }
 
@@ -214,8 +213,8 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 			PathDevelopment: tempDir,
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
-	userHelper := helper.NewUserHelper(pathResolver, cfg)
+	pathResolver := storage.NewPathResolver(cfg)
+	userHelper := storage.NewUserHelper(pathResolver, cfg)
 
 	t.Run("Nil fotoProfil returns nil", func(t *testing.T) {
 		result, err := userHelper.SaveProfilePhoto(nil, "1", nil)
@@ -224,24 +223,20 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 	})
 
 	t.Run("Valid image file saves successfully", func(t *testing.T) {
-		// Create a pipe for multipart writer
 		pr, pw := io.Pipe()
 		writer := multipart.NewWriter(pw)
 
-		// Write multipart form in goroutine
 		go func() {
 			defer pw.Close()
 			part, err := writer.CreateFormFile("file", "profil.jpg")
 			require.NoError(t, err)
-			// Write valid JPEG content
-			imageContent := []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01} // JPEG header + JFIF
+			imageContent := []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01}
 			part.Write(imageContent)
 			writer.Close()
 		}()
 
-		// Read from pipe to create reader
 		reader := multipart.NewReader(pr, writer.Boundary())
-		form, err := reader.ReadForm(1 << 20) // 1MB max memory
+		form, err := reader.ReadForm(1 << 20)
 		require.NoError(t, err)
 		defer pr.Close()
 
@@ -272,7 +267,7 @@ func TestUserHelper_SaveProfilePhoto(t *testing.T) {
 	t.Run("File too large returns error", func(t *testing.T) {
 		fileHeader := &multipart.FileHeader{
 			Filename: "large.jpg",
-			Size:     3 * 1024 * 1024, // 3MB
+			Size:     3 * 1024 * 1024,
 		}
 
 		result, err := userHelper.SaveProfilePhoto(fileHeader, "1", nil)
@@ -294,8 +289,8 @@ func TestUserHelper_Integration(t *testing.T) {
 			PathDevelopment: tempDir,
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
-	userHelper := helper.NewUserHelper(pathResolver, cfg)
+	pathResolver := storage.NewPathResolver(cfg)
+	userHelper := storage.NewUserHelper(pathResolver, cfg)
 
 	t.Run("Build complete user profile", func(t *testing.T) {
 		user := &domain.User{
@@ -318,7 +313,6 @@ func TestUserHelper_Integration(t *testing.T) {
 	})
 }
 
-// Helper function
 func stringPtr(s string) *string {
 	return &s
 }

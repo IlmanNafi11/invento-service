@@ -1,9 +1,9 @@
-package helper
+package storage
 
 import (
 	"errors"
-	"invento-service/internal/domain"
 	"fmt"
+	"invento-service/internal/domain"
 	"os"
 	"path/filepath"
 	"strings"

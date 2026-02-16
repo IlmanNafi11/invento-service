@@ -1,8 +1,8 @@
-package helper_test
+package storage_test
 
 import (
 	"bytes"
-	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"mime/multipart"
 	"net/http/httptest"
 	"os"
@@ -14,21 +14,21 @@ import (
 )
 
 func TestGenerateUniqueIdentifier(t *testing.T) {
-	id1, err := helper.GenerateUniqueIdentifier(10)
+	id1, err := storage.GenerateUniqueIdentifier(10)
 	assert.NoError(t, err)
 	assert.Equal(t, 20, len(id1)) // hex encoding doubles the length
 
-	id2, err := helper.GenerateUniqueIdentifier(10)
+	id2, err := storage.GenerateUniqueIdentifier(10)
 	assert.NoError(t, err)
 	assert.NotEqual(t, id1, id2)
 }
 
 func TestGenerateRandomString(t *testing.T) {
-	str1, err := helper.GenerateRandomString(10)
+	str1, err := storage.GenerateRandomString(10)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, len(str1))
 
-	str2, err := helper.GenerateRandomString(10)
+	str2, err := storage.GenerateRandomString(10)
 	assert.NoError(t, err)
 	assert.NotEqual(t, str1, str2)
 
@@ -40,8 +40,8 @@ func TestGenerateRandomString(t *testing.T) {
 
 func TestGetFileExtension(t *testing.T) {
 	tests := []struct {
-		filename     string
-		expectedExt  string
+		filename    string
+		expectedExt string
 	}{
 		{"test.txt", ".txt"},
 		{"document.pdf", ".pdf"},
@@ -54,7 +54,7 @@ func TestGetFileExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {
-			ext := helper.GetFileExtension(tt.filename)
+			ext := storage.GetFileExtension(tt.filename)
 			assert.Equal(t, tt.expectedExt, ext)
 		})
 	}
@@ -95,7 +95,7 @@ func TestValidateZipFile(t *testing.T) {
 				Filename: tt.filename,
 			}
 
-			err := helper.ValidateZipFile(header)
+			err := storage.ValidateZipFile(header)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -132,7 +132,7 @@ func TestValidateModulFile(t *testing.T) {
 				Filename: tt.filename,
 			}
 
-			err := helper.ValidateModulFile(header)
+			err := storage.ValidateModulFile(header)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -162,7 +162,7 @@ func TestGetFileType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {
-			fileType := helper.GetFileType(tt.filename)
+			fileType := storage.GetFileType(tt.filename)
 			assert.Equal(t, tt.expectedType, fileType)
 		})
 	}
@@ -186,7 +186,7 @@ func TestGetFileSize(t *testing.T) {
 				Size: tt.size,
 			}
 
-			sizeStr := helper.GetFileSize(header)
+			sizeStr := storage.GetFileSize(header)
 			assert.Equal(t, tt.expectedStr, sizeStr)
 		})
 	}
@@ -194,7 +194,7 @@ func TestGetFileSize(t *testing.T) {
 
 func TestDetectProjectCategory(t *testing.T) {
 	tests := []struct {
-		filename        string
+		filename         string
 		expectedCategory string
 	}{
 		{"website project", "website"},
@@ -213,7 +213,7 @@ func TestDetectProjectCategory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.filename, func(t *testing.T) {
-			category := helper.DetectProjectCategory(tt.filename)
+			category := storage.DetectProjectCategory(tt.filename)
 			assert.Equal(t, tt.expectedCategory, category)
 		})
 	}
@@ -268,7 +268,7 @@ func TestValidateImageFile(t *testing.T) {
 				Size:     tt.size,
 			}
 
-			err := helper.ValidateImageFile(header)
+			err := storage.ValidateImageFile(header)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -306,7 +306,7 @@ func TestSaveUploadedFile(t *testing.T) {
 	defer file.Close()
 
 	// Save the uploaded file
-	err = helper.SaveUploadedFile(header, destPath)
+	err = storage.SaveUploadedFile(header, destPath)
 	assert.NoError(t, err)
 
 	// Verify file was saved
@@ -328,7 +328,7 @@ func TestDeleteFile(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Delete the file
-	err = helper.DeleteFile(testFile)
+	err = storage.DeleteFile(testFile)
 	assert.NoError(t, err)
 
 	// Verify file is gone
@@ -338,7 +338,7 @@ func TestDeleteFile(t *testing.T) {
 
 func TestDeleteFile_NonExistent(t *testing.T) {
 	// Deleting a non-existent file should not return an error
-	err := helper.DeleteFile("/nonexistent/path/to/file.txt")
+	err := storage.DeleteFile("/nonexistent/path/to/file.txt")
 	assert.NoError(t, err)
 }
 
@@ -353,7 +353,7 @@ func TestMoveFile(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move file
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify source is gone
@@ -372,7 +372,7 @@ func TestMoveFile_NonExistentSource(t *testing.T) {
 	dstPath := filepath.Join(tempDir, "dest.txt")
 
 	// Try to move non-existent file
-	err := helper.MoveFile(srcPath, dstPath)
+	err := storage.MoveFile(srcPath, dstPath)
 	assert.Error(t, err)
 
 	// Verify destination was not created
@@ -391,7 +391,7 @@ func TestMoveFile_SameSourceAndDestination(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move file to itself should succeed (no-op)
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify file still exists and content is unchanged
@@ -411,7 +411,7 @@ func TestMoveFile_DestinationDirectoryNotExists(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move file to non-existent directory - should fail or create parent dir
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.Error(t, err)
 
 	// Verify source still exists (move failed)
@@ -435,7 +435,7 @@ func TestMoveFile_OverwriteExistingDestination(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move file - should overwrite destination
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify source is gone
@@ -464,7 +464,7 @@ func TestMoveFile_MoveToSubdirectory(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move file to subdirectory
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify source is gone
@@ -495,7 +495,7 @@ func TestMoveFile_CopyFallbackPath(t *testing.T) {
 	require.NoError(t, err)
 
 	// Try to move - should fail because dst is a directory
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.Error(t, err)
 
 	// Clean up the directory
@@ -503,7 +503,7 @@ func TestMoveFile_CopyFallbackPath(t *testing.T) {
 
 	// Now move to a proper file path - this should work
 	// and on most systems will use the direct rename path
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify source is gone
@@ -526,7 +526,7 @@ func TestMoveFile_EmptyFile(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move empty file
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify source is gone
@@ -553,7 +553,7 @@ func TestMoveFile_LargeFile(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move large file
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify source is gone
@@ -586,7 +586,7 @@ func TestMoveFile_WithRelativePath(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move file using relative paths
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify source is gone
@@ -610,7 +610,7 @@ func TestMoveFile_SpecialCharactersInFilename(t *testing.T) {
 	require.NoError(t, err)
 
 	// Move file
-	err = helper.MoveFile(srcPath, dstPath)
+	err = storage.MoveFile(srcPath, dstPath)
 	assert.NoError(t, err)
 
 	// Verify source is gone
@@ -637,7 +637,7 @@ func TestFormatFileSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sizeStr := helper.FormatFileSize(tt.size)
+			sizeStr := storage.FormatFileSize(tt.size)
 			assert.Equal(t, tt.expectedStr, sizeStr)
 		})
 	}
@@ -653,13 +653,13 @@ func TestGetFileSizeFromPath(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get file size
-	sizeStr := helper.GetFileSizeFromPath(testFile)
+	sizeStr := storage.GetFileSizeFromPath(testFile)
 	assert.NotEqual(t, "0B", sizeStr)
 	assert.Contains(t, sizeStr, "B")
 }
 
 func TestGetFileSizeFromPath_NonExistent(t *testing.T) {
-	sizeStr := helper.GetFileSizeFromPath("/nonexistent/file.txt")
+	sizeStr := storage.GetFileSizeFromPath("/nonexistent/file.txt")
 	assert.Equal(t, "0B", sizeStr)
 }
 
@@ -677,7 +677,7 @@ func TestCreateZipArchive(t *testing.T) {
 
 	// Create zip archive
 	zipPath := filepath.Join(tempDir, "archive.zip")
-	err = helper.CreateZipArchive([]string{file1, file2}, zipPath)
+	err = storage.CreateZipArchive([]string{file1, file2}, zipPath)
 	assert.NoError(t, err)
 
 	// Verify zip file exists
@@ -693,7 +693,7 @@ func TestCreateZipArchive_NonExistentFile(t *testing.T) {
 	tempDir := t.TempDir()
 	zipPath := filepath.Join(tempDir, "archive.zip")
 
-	err := helper.CreateZipArchive([]string{"/nonexistent/file.txt"}, zipPath)
+	err := storage.CreateZipArchive([]string{"/nonexistent/file.txt"}, zipPath)
 	assert.Error(t, err)
 }
 
@@ -726,7 +726,7 @@ func TestCreateUserDirectory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir, err := helper.CreateUserDirectory(tt.email, tt.role)
+			dir, err := storage.CreateUserDirectory(tt.email, tt.role)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -773,7 +773,7 @@ func TestCreateModulDirectory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir, err := helper.CreateModulDirectory(tt.email, tt.role, tt.fileType)
+			dir, err := storage.CreateModulDirectory(tt.email, tt.role, tt.fileType)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -818,7 +818,7 @@ func TestCreateProfilDirectory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir, err := helper.CreateProfilDirectory(tt.email, tt.role)
+			dir, err := storage.CreateProfilDirectory(tt.email, tt.role)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -851,12 +851,12 @@ func TestFileOperations_Integration(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check file size
-	sizeStr := helper.GetFileSizeFromPath(testFile)
+	sizeStr := storage.GetFileSizeFromPath(testFile)
 	assert.NotEqual(t, "0B", sizeStr)
 
 	// Move file
 	newPath := filepath.Join(tempDir, "moved.txt")
-	err = helper.MoveFile(testFile, newPath)
+	err = storage.MoveFile(testFile, newPath)
 	assert.NoError(t, err)
 
 	// Verify old path is gone
@@ -869,7 +869,7 @@ func TestFileOperations_Integration(t *testing.T) {
 	assert.Equal(t, content, movedContent)
 
 	// Delete file
-	err = helper.DeleteFile(newPath)
+	err = storage.DeleteFile(newPath)
 	assert.NoError(t, err)
 
 	// Verify deletion

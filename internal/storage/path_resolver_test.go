@@ -1,8 +1,8 @@
-package helper_test
+package storage_test
 
 import (
 	"invento-service/config"
-	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,20 +11,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupPathResolverTest(t *testing.T) (*helper.PathResolver, string) {
+func setupPathResolverTest(t *testing.T) (*storage.PathResolver, string) {
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Env: "development",
 		},
 		Upload: config.UploadConfig{
-			PathDevelopment:      tempDir,
-			PathProduction:       filepath.Join(tempDir, "prod"),
-			TempPathDevelopment:   filepath.Join(tempDir, "temp-dev"),
-			TempPathProduction:    filepath.Join(tempDir, "temp-prod"),
+			PathDevelopment:     tempDir,
+			PathProduction:      filepath.Join(tempDir, "prod"),
+			TempPathDevelopment: filepath.Join(tempDir, "temp-dev"),
+			TempPathProduction:  filepath.Join(tempDir, "temp-prod"),
 		},
 	}
-	return helper.NewPathResolver(cfg), tempDir
+	return storage.NewPathResolver(cfg), tempDir
 }
 
 func TestNewPathResolver(t *testing.T) {
@@ -34,13 +34,13 @@ func TestNewPathResolver(t *testing.T) {
 			Env: "development",
 		},
 		Upload: config.UploadConfig{
-			PathDevelopment:    tempDir,
-			PathProduction:     filepath.Join(tempDir, "prod"),
+			PathDevelopment:     tempDir,
+			PathProduction:      filepath.Join(tempDir, "prod"),
 			TempPathDevelopment: filepath.Join(tempDir, "temp"),
 		},
 	}
 
-	pr := helper.NewPathResolver(cfg)
+	pr := storage.NewPathResolver(cfg)
 
 	assert.NotNil(t, pr)
 }
@@ -62,7 +62,7 @@ func TestPathResolver_GetBasePath_Production(t *testing.T) {
 			PathProduction: tempDir,
 		},
 	}
-	pr := helper.NewPathResolver(cfg)
+	pr := storage.NewPathResolver(cfg)
 
 	basePath := pr.GetBasePath()
 	assert.Equal(t, tempDir, basePath)
@@ -85,7 +85,7 @@ func TestPathResolver_GetTempPath_Production(t *testing.T) {
 			TempPathProduction: filepath.Join(tempDir, "temp-prod"),
 		},
 	}
-	pr := helper.NewPathResolver(cfg)
+	pr := storage.NewPathResolver(cfg)
 
 	tempPath := pr.GetTempPath()
 	assert.Equal(t, filepath.Join(tempDir, "temp-prod"), tempPath)

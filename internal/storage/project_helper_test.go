@@ -1,9 +1,9 @@
-package helper_test
+package storage_test
 
 import (
-	"invento-service/config"
-	"invento-service/internal/helper"
 	"fmt"
+	"invento-service/config"
+	"invento-service/internal/storage"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -21,19 +21,18 @@ func TestNewProjectHelper(t *testing.T) {
 		},
 	}
 
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	assert.NotNil(t, projectHelper)
 }
 
 func TestProjectHelper_GenerateProjectIdentifier(t *testing.T) {
 	cfg := &config.Config{}
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Generate unique identifiers", func(t *testing.T) {
 		identifiers := make(map[string]bool)
 
-		// Generate 100 identifiers and check for uniqueness
 		for i := 0; i < 100; i++ {
 			id, err := projectHelper.GenerateProjectIdentifier()
 			assert.NoError(t, err)
@@ -48,7 +47,6 @@ func TestProjectHelper_GenerateProjectIdentifier(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, id, 10)
 
-		// Should only contain lowercase letters and numbers
 		for _, char := range id {
 			assert.True(t, (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9'))
 		}
@@ -65,7 +63,7 @@ func TestProjectHelper_BuildProjectPath(t *testing.T) {
 			PathProduction:  "/var/uploads",
 		},
 	}
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	tests := []struct {
 		name       string
@@ -109,7 +107,7 @@ func TestProjectHelper_BuildProjectDirectory(t *testing.T) {
 			PathDevelopment: "/tmp/uploads",
 		},
 	}
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	userID := uint(123)
 	identifier := "testidentifier"
@@ -123,15 +121,15 @@ func TestProjectHelper_BuildProjectDirectory(t *testing.T) {
 func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
-			MaxSize: 10 * 1024 * 1024, // 10MB
+			MaxSize: 10 * 1024 * 1024,
 		},
 	}
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Valid ZIP file", func(t *testing.T) {
 		fileHeader := &multipart.FileHeader{
 			Filename: "project.zip",
-			Size:     1024 * 1024, // 1MB
+			Size:     1024 * 1024,
 		}
 
 		err := projectHelper.ValidateProjectFile(fileHeader)
@@ -152,7 +150,7 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 	t.Run("File too large", func(t *testing.T) {
 		fileHeader := &multipart.FileHeader{
 			Filename: "large.zip",
-			Size:     15 * 1024 * 1024, // 15MB
+			Size:     15 * 1024 * 1024,
 		}
 
 		err := projectHelper.ValidateProjectFile(fileHeader)
@@ -167,27 +165,27 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 		}
 
 		err := projectHelper.ValidateProjectFile(fileHeader)
-		assert.NoError(t, err) // GetFileExtension converts to lowercase
+		assert.NoError(t, err)
 	})
 }
 
 func TestProjectHelper_ValidateProjectFileSize(t *testing.T) {
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
-			MaxSize: 50 * 1024 * 1024, // 50MB
+			MaxSize: 50 * 1024 * 1024,
 		},
 	}
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	tests := []struct {
-		name      string
-		fileSize  int64
-		wantErr   bool
-		errMsg    string
+		name     string
+		fileSize int64
+		wantErr  bool
+		errMsg   string
 	}{
 		{
 			name:     "Valid file size",
-			fileSize: 5 * 1024 * 1024, // 5MB
+			fileSize: 5 * 1024 * 1024,
 			wantErr:  false,
 		},
 		{
@@ -204,13 +202,13 @@ func TestProjectHelper_ValidateProjectFileSize(t *testing.T) {
 		},
 		{
 			name:     "File too large",
-			fileSize: 100 * 1024 * 1024, // 100MB
+			fileSize: 100 * 1024 * 1024,
 			wantErr:  true,
 			errMsg:   "melebihi batas maksimal",
 		},
 		{
 			name:     "Exactly at limit",
-			fileSize: 50 * 1024 * 1024, // 50MB
+			fileSize: 50 * 1024 * 1024,
 			wantErr:  false,
 		},
 		{
@@ -239,9 +237,9 @@ func TestProjectHelper_ValidateProjectFileSize(t *testing.T) {
 
 func TestValidateProjectZipExtension(t *testing.T) {
 	tests := []struct {
-		name      string
-		filename  string
-		wantErr   bool
+		name     string
+		filename string
+		wantErr  bool
 	}{
 		{
 			name:     "Valid lowercase ZIP",
@@ -282,7 +280,7 @@ func TestValidateProjectZipExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := helper.ValidateProjectZipExtension(tt.filename)
+			err := storage.ValidateProjectZipExtension(tt.filename)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -305,7 +303,7 @@ func TestProjectHelper_ProductionVsDevelopment(t *testing.T) {
 				PathProduction:  "/prod/uploads",
 			},
 		}
-		projectHelper := helper.NewProjectHelper(cfg)
+		projectHelper := storage.NewProjectHelper(cfg)
 
 		path := projectHelper.BuildProjectPath(1, "abc", "test.zip")
 		assert.Contains(t, path, "/dev/uploads")
@@ -322,7 +320,7 @@ func TestProjectHelper_ProductionVsDevelopment(t *testing.T) {
 				PathProduction:  "/prod/uploads",
 			},
 		}
-		projectHelper := helper.NewProjectHelper(cfg)
+		projectHelper := storage.NewProjectHelper(cfg)
 
 		path := projectHelper.BuildProjectPath(1, "abc", "test.zip")
 		assert.Contains(t, path, "/prod/uploads")
@@ -343,27 +341,23 @@ func TestProjectHelper_Integration(t *testing.T) {
 		},
 		Upload: config.UploadConfig{
 			PathDevelopment: tempDir,
-			MaxSize:         10 * 1024 * 1024, // 10MB
+			MaxSize:         10 * 1024 * 1024,
 		},
 	}
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Complete project workflow", func(t *testing.T) {
-		// Generate identifier
 		identifier, err := projectHelper.GenerateProjectIdentifier()
 		assert.NoError(t, err)
 		assert.Len(t, identifier, 10)
 
-		// Build directory path
 		userID := uint(123)
 		projectDir := projectHelper.BuildProjectDirectory(userID, identifier)
 
-		// Create directory
 		err = os.MkdirAll(projectDir, 0755)
 		assert.NoError(t, err)
 		assert.DirExists(t, projectDir)
 
-		// Build file path
 		filename := "myproject.zip"
 		projectPath := projectHelper.BuildProjectPath(userID, identifier, filename)
 
@@ -371,12 +365,10 @@ func TestProjectHelper_Integration(t *testing.T) {
 		assert.Contains(t, projectPath, identifier)
 		assert.Contains(t, projectPath, filename)
 
-		// Create a test zip file
-		err = os.WriteFile(projectPath, []byte("test zip content"), 0644)
+		err = os.WriteFile(projectPath, []byte("PK\x03\x04"), 0644)
 		assert.NoError(t, err)
 		assert.FileExists(t, projectPath)
 
-		// Validate file size
 		fileInfo, _ := os.Stat(projectPath)
 		err = projectHelper.ValidateProjectFileSize(fileInfo.Size())
 		assert.NoError(t, err)
@@ -385,7 +377,6 @@ func TestProjectHelper_Integration(t *testing.T) {
 	t.Run("Multiple project directories", func(t *testing.T) {
 		userID := uint(456)
 
-		// Create multiple project directories
 		for i := 0; i < 5; i++ {
 			identifier, err := projectHelper.GenerateProjectIdentifier()
 			assert.NoError(t, err)
@@ -394,7 +385,6 @@ func TestProjectHelper_Integration(t *testing.T) {
 			err = os.MkdirAll(projectDir, 0755)
 			assert.NoError(t, err)
 
-			// Verify directory exists and is unique
 			assert.DirExists(t, projectDir)
 		}
 	})
@@ -404,10 +394,10 @@ func TestProjectHelper_EdgeCases(t *testing.T) {
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
 			PathDevelopment: "/tmp/uploads",
-			MaxSize:         100 * 1024 * 1024, // 100MB
+			MaxSize:         100 * 1024 * 1024,
 		},
 	}
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Special characters in filename", func(t *testing.T) {
 		filename := "project (2024) [v1.0].zip"
@@ -441,7 +431,7 @@ func TestProjectHelper_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Maximum file size validation", func(t *testing.T) {
-		maxSize := int64(100 * 1024 * 1024) // 100MB
+		maxSize := int64(100 * 1024 * 1024)
 
 		err := projectHelper.ValidateProjectFileSize(maxSize)
 		assert.NoError(t, err, "Should accept file exactly at max size")
@@ -460,10 +450,10 @@ func TestProjectHelper_FileOperations(t *testing.T) {
 		},
 		Upload: config.UploadConfig{
 			PathDevelopment: tempDir,
-			MaxSize:         5 * 1024 * 1024, // 5MB
+			MaxSize:         5 * 1024 * 1024,
 		},
 	}
-	projectHelper := helper.NewProjectHelper(cfg)
+	projectHelper := storage.NewProjectHelper(cfg)
 
 	t.Run("Create and validate project file", func(t *testing.T) {
 		userID := uint(123)
@@ -474,12 +464,10 @@ func TestProjectHelper_FileOperations(t *testing.T) {
 		err = os.MkdirAll(projectDir, 0755)
 		require.NoError(t, err)
 
-		// Create a small zip file
 		zipPath := filepath.Join(projectDir, "testproject.zip")
-		err = os.WriteFile(zipPath, []byte("PK\x03\x04"), 0644) // ZIP header
+		err = os.WriteFile(zipPath, []byte("PK\x03\x04"), 0644)
 		require.NoError(t, err)
 
-		// Create file header for validation
 		fileInfo, _ := os.Stat(zipPath)
 		fileHeader := &multipart.FileHeader{
 			Filename: "testproject.zip",

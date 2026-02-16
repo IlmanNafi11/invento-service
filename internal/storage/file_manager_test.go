@@ -1,8 +1,8 @@
-package helper_test
+package storage_test
 
 import (
 	"invento-service/config"
-	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,20 +11,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupFileManagerTest(t *testing.T) (*helper.FileManager, string) {
+func setupFileManagerTest(t *testing.T) (*storage.FileManager, string) {
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
 			Env: "development",
 		},
 		Upload: config.UploadConfig{
-			PathDevelopment:      tempDir,
-			PathProduction:       filepath.Join(tempDir, "prod"),
-			TempPathDevelopment:   filepath.Join(tempDir, "temp-dev"),
-			TempPathProduction:    filepath.Join(tempDir, "temp-prod"),
+			PathDevelopment:     tempDir,
+			PathProduction:      filepath.Join(tempDir, "prod"),
+			TempPathDevelopment: filepath.Join(tempDir, "temp-dev"),
+			TempPathProduction:  filepath.Join(tempDir, "temp-prod"),
 		},
 	}
-	return helper.NewFileManager(cfg), tempDir
+	return storage.NewFileManager(cfg), tempDir
 }
 
 func TestNewFileManager(t *testing.T) {
@@ -37,7 +37,7 @@ func TestNewFileManager(t *testing.T) {
 		},
 	}
 
-	fm := helper.NewFileManager(cfg)
+	fm := storage.NewFileManager(cfg)
 
 	assert.NotNil(t, fm)
 }
@@ -83,7 +83,7 @@ func TestFileManager_GetUserUploadPath_Production(t *testing.T) {
 			PathProduction: tempDir,
 		},
 	}
-	fm := helper.NewFileManager(cfg)
+	fm := storage.NewFileManager(cfg)
 	userID := "456"
 
 	path, err := fm.GetUserUploadPath(userID)
@@ -198,7 +198,7 @@ func TestFileManager_GetUploadFilePath_Production(t *testing.T) {
 			TempPathProduction: "/tmp/prod/temp",
 		},
 	}
-	fm := helper.NewFileManager(cfg)
+	fm := storage.NewFileManager(cfg)
 	uploadID := "upload-prod-456"
 
 	path := fm.GetUploadFilePath(uploadID)
@@ -224,7 +224,7 @@ func TestFileManager_GetModulBasePath_Production(t *testing.T) {
 			PathProduction: "/tmp/prod",
 		},
 	}
-	fm := helper.NewFileManager(cfg)
+	fm := storage.NewFileManager(cfg)
 
 	path := fm.GetModulBasePath()
 	assert.Equal(t, "/tmp/prod", path)
