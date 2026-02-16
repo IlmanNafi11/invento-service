@@ -1,7 +1,7 @@
 package httputil
 
 import (
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"math"
 )
 
@@ -27,12 +27,12 @@ func NormalizePaginationParams(page, limit int) PaginationParams {
 	}
 }
 
-func CalculatePagination(page, limit, totalItems int) domain.PaginationData {
+func CalculatePagination(page, limit, totalItems int) dto.PaginationData {
 	params := NormalizePaginationParams(page, limit)
 
 	totalPages := int(math.Ceil(float64(totalItems) / float64(params.Limit)))
 
-	return domain.PaginationData{
+	return dto.PaginationData{
 		Page:       params.Page,
 		Limit:      params.Limit,
 		TotalItems: totalItems,

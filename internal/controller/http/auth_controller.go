@@ -43,11 +43,11 @@ func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *httputil.C
 // @Accept json
 // @Produce json
 // @Param request body domain.AuthRequest true "Credential login (email, password)"
-// @Success 200 {object} domain.SuccessResponse{data=domain.AuthResponse} "Login berhasil"
-// @Failure 400 {object} domain.ErrorResponse "Format request tidak valid"
-// @Failure 401 {object} domain.ErrorResponse "Email atau password salah"
-// @Failure 403 {object} domain.ErrorResponse "Akun belum diaktifkan"
-// @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
+// @Success 200 {object} dto.SuccessResponse{data=domain.AuthResponse} "Login berhasil"
+// @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
+// @Failure 401 {object} dto.ErrorResponse "Email atau password salah"
+// @Failure 403 {object} dto.ErrorResponse "Akun belum diaktifkan"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /auth/login [post]
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	var req domain.AuthRequest
@@ -82,10 +82,10 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body domain.RegisterRequest true "Data registrasi (name, email, password)"
-// @Success 201 {object} domain.SuccessResponse{data=domain.AuthResponse} "Registrasi berhasil"
-// @Failure 400 {object} domain.ErrorResponse "Data validasi tidak valid"
-// @Failure 409 {object} domain.ErrorResponse "Email sudah terdaftar"
-// @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
+// @Success 201 {object} dto.SuccessResponse{data=domain.AuthResponse} "Registrasi berhasil"
+// @Failure 400 {object} dto.ErrorResponse "Data validasi tidak valid"
+// @Failure 409 {object} dto.ErrorResponse "Email sudah terdaftar"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /auth/register [post]
 func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 	var req domain.RegisterRequest
@@ -119,10 +119,10 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} domain.SuccessResponse{data=domain.RefreshTokenResponse} "Token berhasil diperbarui"
-// @Failure 400 {object} domain.ErrorResponse "Refresh token diperlukan"
-// @Failure 401 {object} domain.ErrorResponse "Token tidak valid atau expired"
-// @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
+// @Success 200 {object} dto.SuccessResponse{data=domain.RefreshTokenResponse} "Token berhasil diperbarui"
+// @Failure 400 {object} dto.ErrorResponse "Refresh token diperlukan"
+// @Failure 401 {object} dto.ErrorResponse "Token tidak valid atau expired"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /auth/refresh [post]
 func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 	refreshToken := ctrl.cookieHelper.GetRefreshTokenFromCookie(c)
@@ -152,10 +152,10 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} domain.SuccessResponse "Logout berhasil"
-// @Failure 400 {object} domain.ErrorResponse "Refresh token diperlukan"
-// @Failure 404 {object} domain.ErrorResponse "Token tidak valid"
-// @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
+// @Success 200 {object} dto.SuccessResponse "Logout berhasil"
+// @Failure 400 {object} dto.ErrorResponse "Refresh token diperlukan"
+// @Failure 404 {object} dto.ErrorResponse "Token tidak valid"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Security BearerAuth
 // @Router /auth/logout [post]
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
@@ -178,10 +178,10 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body domain.ResetPasswordRequest true "Email untuk reset password"
-// @Success 200 {object} domain.SuccessResponse "Link reset password telah dikirim"
-// @Failure 400 {object} domain.ErrorResponse "Format request tidak valid"
-// @Failure 404 {object} domain.ErrorResponse "Email tidak ditemukan"
-// @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
+// @Success 200 {object} dto.SuccessResponse "Link reset password telah dikirim"
+// @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
+// @Failure 404 {object} dto.ErrorResponse "Email tidak ditemukan"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /auth/reset-password [post]
 func (ctrl *AuthController) RequestPasswordReset(c *fiber.Ctx) error {
 	var req domain.ResetPasswordRequest

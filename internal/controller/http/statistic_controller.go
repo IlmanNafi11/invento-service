@@ -48,10 +48,10 @@ func NewStatisticController(statisticUsecase usecase.StatisticUsecase) *Statisti
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} domain.SuccessResponse{data=domain.StatisticData} "Data statistik berhasil diambil"
-// @Success 200 {object} domain.SuccessResponse{data=domain.StatisticData} "Data statistik berhasil diambil (partial untuk user biasa)"
-// @Failure 401 {object} domain.ErrorResponse "Tidak memiliki akses"
-// @Failure 500 {object} domain.ErrorResponse "Terjadi kesalahan pada server"
+// @Success 200 {object} dto.SuccessResponse{data=domain.StatisticData} "Data statistik berhasil diambil"
+// @Success 200 {object} dto.SuccessResponse{data=domain.StatisticData} "Data statistik berhasil diambil (partial untuk user biasa)"
+// @Failure 401 {object} dto.ErrorResponse "Tidak memiliki akses"
+// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /statistic [get]
 func (ctrl *StatisticController) GetStatistics(c *fiber.Ctx) error {
 	// Extract authenticated user ID

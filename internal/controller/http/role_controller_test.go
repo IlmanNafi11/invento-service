@@ -3,8 +3,9 @@ package http_test
 import (
 	"bytes"
 	"encoding/json"
-	
+
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"net/http"
 	"net/http/httptest"
@@ -105,7 +106,7 @@ func TestRoleController_GetRoleList_Success(t *testing.T) {
 		Items: []domain.RoleListItem{
 			{ID: 1, NamaRole: "admin", JumlahPermission: 5, TanggalDiperbarui: time.Now()},
 		},
-		Pagination: domain.PaginationData{Page: 1, Limit: 10, TotalPages: 1, TotalItems: 1},
+		Pagination: dto.PaginationData{Page: 1, Limit: 10, TotalPages: 1, TotalItems: 1},
 	}
 	mockRoleUC.On("GetRoleList", mock.Anything).Return(expectedResult, nil)
 
@@ -125,16 +126,16 @@ func TestRoleController_CreateRole_Success(t *testing.T) {
 	app.Post("/role", controller.CreateRole)
 
 	reqBody := domain.RoleCreateRequest{
-		NamaRole: "editor",
+		NamaRole:    "editor",
 		Permissions: map[string][]string{"user": {"read"}},
 	}
 
 	expectedResponse := &domain.RoleDetailResponse{
 		ID: 1, NamaRole: "editor",
-		Permissions: []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read"}}},
+		Permissions:      []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read"}}},
 		JumlahPermission: 1,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 	mockRoleUC.On("CreateRole", reqBody).Return(expectedResponse, nil)
 
@@ -157,10 +158,10 @@ func TestRoleController_GetRoleDetail_Success(t *testing.T) {
 
 	expectedResponse := &domain.RoleDetailResponse{
 		ID: 1, NamaRole: "admin",
-		Permissions: []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read"}}},
+		Permissions:      []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read"}}},
 		JumlahPermission: 1,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 	mockRoleUC.On("GetRoleDetail", uint(1)).Return(expectedResponse, nil)
 
@@ -180,16 +181,16 @@ func TestRoleController_UpdateRole_Success(t *testing.T) {
 	app.Put("/role/:id", controller.UpdateRole)
 
 	reqBody := domain.RoleUpdateRequest{
-		NamaRole: "superadmin",
+		NamaRole:    "superadmin",
 		Permissions: map[string][]string{"user": {"read", "create"}},
 	}
 
 	expectedResponse := &domain.RoleDetailResponse{
 		ID: 1, NamaRole: "superadmin",
-		Permissions: []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read", "create"}}},
+		Permissions:      []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read", "create"}}},
 		JumlahPermission: 1,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 	mockRoleUC.On("UpdateRole", uint(1), reqBody).Return(expectedResponse, nil)
 
@@ -284,7 +285,7 @@ func TestRoleController_UpdateRole_NotFound(t *testing.T) {
 	app.Put("/role/:id", controller.UpdateRole)
 
 	reqBody := domain.RoleUpdateRequest{
-		NamaRole: "updated_role",
+		NamaRole:    "updated_role",
 		Permissions: map[string][]string{"user": {"read"}},
 	}
 
@@ -310,7 +311,7 @@ func TestRoleController_UpdateRole_ValidationError(t *testing.T) {
 	app.Put("/role/:id", controller.UpdateRole)
 
 	reqBody := map[string]interface{}{
-		"nama_role": "", // Empty name should fail validation
+		"nama_role":   "", // Empty name should fail validation
 		"permissions": map[string][]string{"user": {"read"}},
 	}
 
@@ -331,7 +332,7 @@ func TestRoleController_UpdateRole_DuplicateName(t *testing.T) {
 	app.Put("/role/:id", controller.UpdateRole)
 
 	reqBody := domain.RoleUpdateRequest{
-		NamaRole: "admin",
+		NamaRole:    "admin",
 		Permissions: map[string][]string{"user": {"read"}},
 	}
 
@@ -413,7 +414,7 @@ func TestRoleController_CreateRole_ValidationError(t *testing.T) {
 	app.Post("/role", controller.CreateRole)
 
 	reqBody := map[string]interface{}{
-		"nama_role": "", // Empty name
+		"nama_role":   "", // Empty name
 		"permissions": map[string][]string{},
 	}
 
@@ -441,4 +442,3 @@ func TestRoleController_GetRoleDetail_InvalidID(t *testing.T) {
 	// This is expected behavior
 	assert.NotEqual(t, fiber.StatusOK, resp.StatusCode)
 }
-

@@ -3,12 +3,11 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
-	"invento-service/internal/domain"
+	"fmt"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
-	"fmt"
 	"net/http/httptest"
 	"testing"
 
@@ -41,7 +40,7 @@ func TestIntegrationMiddlewareChain(t *testing.T) {
 	app.Get("/test", func(c *fiber.Ctx) error {
 		requestID := middleware.GetRequestID(c)
 		return c.JSON(fiber.Map{
-			"status":    "success",
+			"status":     "success",
 			"message":    "Test successful",
 			"request_id": requestID,
 		})
@@ -103,7 +102,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -118,7 +117,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -133,7 +132,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -148,7 +147,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusForbidden, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -163,7 +162,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusConflict, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -178,7 +177,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -226,7 +225,7 @@ func TestIntegrationDTOMiddleware(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -246,7 +245,7 @@ func TestIntegrationDTOMiddleware(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -267,7 +266,7 @@ func TestIntegrationDTOMiddleware(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -309,7 +308,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 
 		totalPages := (totalItems + pagReq.Limit - 1) / pagReq.Limit
 
-		paginationData := domain.PaginationData{
+		paginationData := dto.PaginationData{
 			Page:       pagReq.Page,
 			Limit:      pagReq.Limit,
 			TotalItems: totalItems,
@@ -325,7 +324,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -348,7 +347,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -483,7 +482,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		requestID := resp.Header.Get(middleware.RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -508,7 +507,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -521,7 +520,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -535,7 +534,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -556,7 +555,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -570,7 +569,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -584,7 +583,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 

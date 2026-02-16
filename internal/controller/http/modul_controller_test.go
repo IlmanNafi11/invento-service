@@ -15,6 +15,7 @@ import (
 	"invento-service/internal/controller/base"
 	httpcontroller "invento-service/internal/controller/http"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/rbac"
 	app_testing "invento-service/internal/testing"
@@ -112,7 +113,7 @@ func TestModulController_GetList_Success(t *testing.T) {
 				TerakhirDiperbarui: time.Now(),
 			},
 		},
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalItems: 2,
@@ -157,7 +158,7 @@ func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 				TerakhirDiperbarui: time.Now(),
 			},
 		},
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalItems: 1,

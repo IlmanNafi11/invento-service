@@ -1,8 +1,8 @@
 package httputil
 
 import (
-	"invento-service/internal/domain"
 	"fmt"
+	"invento-service/internal/dto"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -13,13 +13,13 @@ func init() {
 	validate = validator.New()
 }
 
-func ValidateStruct(data interface{}) []domain.ValidationError {
-	var validationErrors []domain.ValidationError
+func ValidateStruct(data interface{}) []dto.ValidationError {
+	var validationErrors []dto.ValidationError
 
 	err := validate.Struct(data)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
-			validationError := domain.ValidationError{
+			validationError := dto.ValidationError{
 				Field:   err.Field(),
 				Message: getValidationMessage(err),
 			}

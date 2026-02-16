@@ -37,12 +37,12 @@ func NewProjectController(projectUsecase usecase.ProjectUsecase, supabaseURL str
 // @Security BearerAuth
 // @Param id path int true "Project ID"
 // @Param request body domain.ProjectUpdateRequest true "Update request"
-// @Success 200 {object} domain.SuccessResponse "Metadata updated successfully"
-// @Failure 400 {object} domain.ErrorResponse "Invalid request format"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
-// @Failure 404 {object} domain.ErrorResponse "Project not found"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Success 200 {object} dto.SuccessResponse "Metadata updated successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request format"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Forbidden - no access to this project"
+// @Failure 404 {object} dto.ErrorResponse "Project not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project/{id} [patch]
 func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
@@ -90,12 +90,12 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Project ID"
-// @Success 200 {object} domain.SuccessResponse "Project details retrieved successfully"
-// @Failure 400 {object} domain.ErrorResponse "Invalid project ID"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
-// @Failure 404 {object} domain.ErrorResponse "Project not found"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Success 200 {object} dto.SuccessResponse "Project details retrieved successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid project ID"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Forbidden - no access to this project"
+// @Failure 404 {object} dto.ErrorResponse "Project not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project/{id} [get]
 func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
@@ -136,10 +136,10 @@ func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 // @Param filter_kategori query string false "Filter by category (website, mobile, iot, machine_learning, deep_learning)"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} domain.SuccessResponse "List retrieved successfully"
-// @Failure 400 {object} domain.ErrorResponse "Invalid query parameters"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Success 200 {object} dto.SuccessResponse "List retrieved successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid query parameters"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project [get]
 func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
@@ -181,12 +181,12 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Project ID"
-// @Success 200 {object} domain.SuccessResponse "Project deleted successfully"
-// @Failure 400 {object} domain.ErrorResponse "Invalid project ID"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this project"
-// @Failure 404 {object} domain.ErrorResponse "Project not found"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Success 200 {object} dto.SuccessResponse "Project deleted successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid project ID"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Forbidden - no access to this project"
+// @Failure 404 {object} dto.ErrorResponse "Project not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project/{id} [delete]
 func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller
@@ -224,10 +224,10 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Param request body domain.ProjectDownloadRequest true "Download request with project IDs"
 // @Success 200 {file} binary "ZIP file containing project files"
-// @Failure 400 {object} domain.ErrorResponse "Invalid request format or empty IDs"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 404 {object} domain.ErrorResponse "One or more projects not found"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request format or empty IDs"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "One or more projects not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /project/download [post]
 func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
 	// Get authenticated user ID using base controller

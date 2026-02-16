@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 )
@@ -158,7 +159,7 @@ func TestModulResponseStructs(t *testing.T) {
 		}
 		data := ModulListData{
 			Items: items,
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 2,

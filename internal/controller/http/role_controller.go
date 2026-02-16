@@ -40,8 +40,8 @@ func NewRoleController(roleUsecase usecase.RoleUsecase, baseController *base.Bas
 // @Tags   Roles
 // @Accept   json
 // @Produce  json
-// @Success  200 {object} domain.SuccessResponse "Permissions retrieved successfully"
-// @Failure  500 {object} domain.ErrorResponse "Internal server error"
+// @Success  200 {object} dto.SuccessResponse "Permissions retrieved successfully"
+// @Failure  500 {object} dto.ErrorResponse "Internal server error"
 // @Router   /role/permissions [get]
 // @Security  BearerAuth
 func (ctrl *RoleController) GetAvailablePermissions(c *fiber.Ctx) error {
@@ -67,9 +67,9 @@ func (ctrl *RoleController) GetAvailablePermissions(c *fiber.Ctx) error {
 // @Param   search query  string false "Search keyword"
 // @Param   page  query  int  false "Page number"  default(1)
 // @Param   limit  query  int  false "Items per page" default(10)
-// @Success  200  {object} domain.SuccessResponse "Roles retrieved successfully"
-// @Failure  400  {object} domain.ErrorResponse "Invalid query parameters"
-// @Failure  500  {object} domain.ErrorResponse "Internal server error"
+// @Success  200  {object} dto.SuccessResponse "Roles retrieved successfully"
+// @Failure  400  {object} dto.ErrorResponse "Invalid query parameters"
+// @Failure  500  {object} dto.ErrorResponse "Internal server error"
 // @Router   /role [get]
 // @Security  BearerAuth
 func (ctrl *RoleController) GetRoleList(c *fiber.Ctx) error {
@@ -94,10 +94,10 @@ func (ctrl *RoleController) GetRoleList(c *fiber.Ctx) error {
 // @Accept   json
 // @Produce  json
 // @Param   request body  domain.RoleCreateRequest true "Role creation request"
-// @Success  201  {object} domain.SuccessResponse "Role created successfully"
-// @Failure  400  {object} domain.ErrorResponse "Invalid request format"
-// @Failure  409  {object} domain.ErrorResponse "Role name already exists"
-// @Failure  500  {object} domain.ErrorResponse "Internal server error"
+// @Success  201  {object} dto.SuccessResponse "Role created successfully"
+// @Failure  400  {object} dto.ErrorResponse "Invalid request format"
+// @Failure  409  {object} dto.ErrorResponse "Role name already exists"
+// @Failure  500  {object} dto.ErrorResponse "Internal server error"
 // @Router   /role [post]
 // @Security  BearerAuth
 func (ctrl *RoleController) CreateRole(c *fiber.Ctx) error {
@@ -126,10 +126,10 @@ func (ctrl *RoleController) CreateRole(c *fiber.Ctx) error {
 // @Accept   json
 // @Produce  json
 // @Param   id path  int true "Role ID"
-// @Success  200 {object} domain.SuccessResponse "Role details retrieved successfully"
-// @Failure  400 {object} domain.ErrorResponse "Invalid role ID"
-// @Failure  404 {object} domain.ErrorResponse "Role not found"
-// @Failure  500 {object} domain.ErrorResponse "Internal server error"
+// @Success  200 {object} dto.SuccessResponse "Role details retrieved successfully"
+// @Failure  400 {object} dto.ErrorResponse "Invalid role ID"
+// @Failure  404 {object} dto.ErrorResponse "Role not found"
+// @Failure  500 {object} dto.ErrorResponse "Internal server error"
 // @Router   /role/{id} [get]
 // @Security  BearerAuth
 func (ctrl *RoleController) GetRoleDetail(c *fiber.Ctx) error {
@@ -155,11 +155,11 @@ func (ctrl *RoleController) GetRoleDetail(c *fiber.Ctx) error {
 // @Produce  json
 // @Param   id  path  int      true "Role ID"
 // @Param   request body  domain.RoleUpdateRequest true "Role update request"
-// @Success  200  {object} domain.SuccessResponse "Role updated successfully"
-// @Failure  400  {object} domain.ErrorResponse "Invalid request format"
-// @Failure  404  {object} domain.ErrorResponse "Role not found"
-// @Failure  409  {object} domain.ErrorResponse "Role name already exists"
-// @Failure  500  {object} domain.ErrorResponse "Internal server error"
+// @Success  200  {object} dto.SuccessResponse "Role updated successfully"
+// @Failure  400  {object} dto.ErrorResponse "Invalid request format"
+// @Failure  404  {object} dto.ErrorResponse "Role not found"
+// @Failure  409  {object} dto.ErrorResponse "Role name already exists"
+// @Failure  500  {object} dto.ErrorResponse "Internal server error"
 // @Router   /role/{id} [put]
 // @Security  BearerAuth
 func (ctrl *RoleController) UpdateRole(c *fiber.Ctx) error {
@@ -193,10 +193,10 @@ func (ctrl *RoleController) UpdateRole(c *fiber.Ctx) error {
 // @Accept   json
 // @Produce  json
 // @Param   id path int true "Role ID"
-// @Success  200 {object} domain.SuccessResponse "Role deleted successfully"
-// @Failure  400 {object} domain.ErrorResponse "Invalid role ID"
-// @Failure  404 {object} domain.ErrorResponse "Role not found"
-// @Failure  500 {object} domain.ErrorResponse "Internal server error"
+// @Success  200 {object} dto.SuccessResponse "Role deleted successfully"
+// @Failure  400 {object} dto.ErrorResponse "Invalid role ID"
+// @Failure  404 {object} dto.ErrorResponse "Role not found"
+// @Failure  500 {object} dto.ErrorResponse "Internal server error"
 // @Router   /role/{id} [delete]
 // @Security  BearerAuth
 func (ctrl *RoleController) DeleteRole(c *fiber.Ctx) error {

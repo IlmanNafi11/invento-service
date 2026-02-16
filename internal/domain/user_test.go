@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 )
@@ -47,7 +48,7 @@ func TestUserListItem(t *testing.T) {
 	t.Run("UserListItem struct", func(t *testing.T) {
 		now := time.Now()
 		item := UserListItem{
-			ID: "user-1",
+			ID:         "user-1",
 			Email:      "user@example.com",
 			Role:       "Admin",
 			DibuatPada: now,
@@ -74,7 +75,7 @@ func TestUserListData(t *testing.T) {
 
 		data := UserListData{
 			Items: items,
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 2,
@@ -93,7 +94,7 @@ func TestUserListData(t *testing.T) {
 	t.Run("UserListData empty", func(t *testing.T) {
 		data := UserListData{
 			Items: []UserListItem{},
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 0,
@@ -240,7 +241,7 @@ func TestUpdateProfileRequest(t *testing.T) {
 func TestUserFileItem(t *testing.T) {
 	t.Run("UserFileItem struct", func(t *testing.T) {
 		item := UserFileItem{
-			ID: "user-1",
+			ID:          "user-1",
 			NamaFile:    "project_report.pdf",
 			Kategori:    "project",
 			DownloadURL: "https://example.com/download/project_report.pdf",
@@ -265,7 +266,7 @@ func TestUserFileItem(t *testing.T) {
 
 		for _, kategori := range kategories {
 			item := UserFileItem{
-				ID: "user-1",
+				ID:          "user-1",
 				NamaFile:    "test.pdf",
 				Kategori:    kategori,
 				DownloadURL: "https://example.com/download/test.pdf",
@@ -318,7 +319,7 @@ func TestUserFilesData(t *testing.T) {
 
 		data := UserFilesData{
 			Items: items,
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 2,

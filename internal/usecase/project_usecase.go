@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
@@ -52,7 +53,7 @@ func (uc *projectUsecase) GetList(userID string, search string, filterSemester i
 
 	return &domain.ProjectListData{
 		Items: projects,
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       page,
 			Limit:      limit,
 			TotalItems: total,

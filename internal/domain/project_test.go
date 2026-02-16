@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 )
@@ -228,7 +229,7 @@ func TestProjectListData(t *testing.T) {
 
 		data := ProjectListData{
 			Items: items,
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 3,
@@ -247,7 +248,7 @@ func TestProjectListData(t *testing.T) {
 	t.Run("ProjectListData empty", func(t *testing.T) {
 		data := ProjectListData{
 			Items: []ProjectListItem{},
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 0,
@@ -472,7 +473,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	t.Run("Nil project list", func(t *testing.T) {
 		data := ProjectListData{
 			Items: nil,
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 0,
@@ -488,7 +489,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	t.Run("Empty project list", func(t *testing.T) {
 		data := ProjectListData{
 			Items: []ProjectListItem{},
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 0,
@@ -629,7 +630,7 @@ func TestProjectTimestampFields(t *testing.T) {
 
 func TestProjectPaginationData(t *testing.T) {
 	t.Run("Single page pagination", func(t *testing.T) {
-		pagination := PaginationData{
+		pagination := dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalItems: 5,
@@ -645,7 +646,7 @@ func TestProjectPaginationData(t *testing.T) {
 	})
 
 	t.Run("Multiple page pagination", func(t *testing.T) {
-		pagination := PaginationData{
+		pagination := dto.PaginationData{
 			Page:       2,
 			Limit:      10,
 			TotalItems: 25,
@@ -661,7 +662,7 @@ func TestProjectPaginationData(t *testing.T) {
 	})
 
 	t.Run("Empty pagination", func(t *testing.T) {
-		pagination := PaginationData{
+		pagination := dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalItems: 0,

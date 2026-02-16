@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 )
@@ -279,7 +280,7 @@ func TestRoleListData(t *testing.T) {
 
 		data := RoleListData{
 			Items: items,
-			Pagination: PaginationData{
+			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
 				TotalItems: 2,

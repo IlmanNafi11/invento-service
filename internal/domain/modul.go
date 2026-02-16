@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"time"
 
 	"github.com/google/uuid"
@@ -59,8 +60,8 @@ type ModulListItem struct {
 }
 
 type ModulListData struct {
-	Items      []ModulListItem `json:"items"`
-	Pagination PaginationData  `json:"pagination"`
+	Items      []ModulListItem    `json:"items"`
+	Pagination dto.PaginationData `json:"pagination"`
 }
 
 type ModulResponse struct {

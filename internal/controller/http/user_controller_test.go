@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	httpcontroller "invento-service/internal/controller/http"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
-	"fmt"
 	"mime/multipart"
 	"net/http/httptest"
 	"os"
@@ -143,7 +144,7 @@ func TestUserController_GetUserList_Success(t *testing.T) {
 				DibuatPada: time.Now(),
 			},
 		},
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalPages: 1,
@@ -193,7 +194,7 @@ func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 				DibuatPada: time.Now(),
 			},
 		},
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalPages: 1,
@@ -337,7 +338,7 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 				DownloadURL: "/uploads/moduls/modul1.pdf",
 			},
 		},
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalPages: 1,
@@ -387,7 +388,7 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 				DownloadURL: "/uploads/projects/project1.zip",
 			},
 		},
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalPages: 1,

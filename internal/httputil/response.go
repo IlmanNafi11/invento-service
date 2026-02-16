@@ -1,7 +1,7 @@
 package httputil
 
 import (
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/version"
 	"strconv"
@@ -15,9 +15,9 @@ func SendSuccessResponse(c *fiber.Ctx, code int, message string, data interface{
 	c.Set("X-API-Version", version.CurrentAPIVersion)
 	c.Set("X-API-Deprecated", strconv.FormatBool(false))
 
-	response := domain.SuccessResponse{
-		BaseResponse: domain.BaseResponse{
-			Status: "success",
+	response := dto.SuccessResponse{
+		BaseResponse: dto.BaseResponse{
+			Status:  "success",
 			Message: message,
 			Code:    code,
 		},
@@ -32,9 +32,9 @@ func SendErrorResponse(c *fiber.Ctx, code int, message string, errors interface{
 	c.Set("X-API-Version", version.CurrentAPIVersion)
 	c.Set("X-API-Deprecated", strconv.FormatBool(false))
 
-	response := domain.ErrorResponse{
-		BaseResponse: domain.BaseResponse{
-			Status: "error",
+	response := dto.ErrorResponse{
+		BaseResponse: dto.BaseResponse{
+			Status:  "error",
 			Message: message,
 			Code:    code,
 		},
@@ -44,15 +44,15 @@ func SendErrorResponse(c *fiber.Ctx, code int, message string, errors interface{
 	return c.Status(code).JSON(response)
 }
 
-func SendListResponse(c *fiber.Ctx, code int, message string, items interface{}, pagination domain.PaginationData) error {
-	listData := domain.ListData{
+func SendListResponse(c *fiber.Ctx, code int, message string, items interface{}, pagination dto.PaginationData) error {
+	listData := dto.ListData{
 		Items:      items,
 		Pagination: pagination,
 	}
 	return SendSuccessResponse(c, code, message, listData)
 }
 
-func SendValidationErrorResponse(c *fiber.Ctx, validationErrors []domain.ValidationError) error {
+func SendValidationErrorResponse(c *fiber.Ctx, validationErrors []dto.ValidationError) error {
 	return SendErrorResponse(c, fiber.StatusBadRequest, "Data validasi tidak valid", validationErrors)
 }
 

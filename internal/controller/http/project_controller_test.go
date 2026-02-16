@@ -11,6 +11,7 @@ import (
 
 	httpcontroller "invento-service/internal/controller/http"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
 
@@ -157,7 +158,7 @@ func TestProjectController_GetList_WithFilters(t *testing.T) {
 				TerakhirDiperbarui: time.Now(),
 			},
 		},
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalItems: 1,
@@ -373,7 +374,7 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{},
-				Pagination: domain.PaginationData{
+				Pagination: dto.PaginationData{
 					Page:       tt.expectedPage,
 					Limit:      tt.expectedLimit,
 					TotalItems: 0,
@@ -674,7 +675,7 @@ func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
 						TerakhirDiperbarui: time.Now(),
 					},
 				},
-				Pagination: domain.PaginationData{
+				Pagination: dto.PaginationData{
 					Page:       1,
 					Limit:      10,
 					TotalItems: 1,
@@ -771,7 +772,7 @@ func TestProjectController_GetList_FilterKategoriBoundaryCases(t *testing.T) {
 						TerakhirDiperbarui: time.Now(),
 					},
 				},
-				Pagination: domain.PaginationData{
+				Pagination: dto.PaginationData{
 					Page:       1,
 					Limit:      10,
 					TotalItems: 1,
@@ -863,7 +864,7 @@ func TestProjectController_GetList_PaginationBoundaries(t *testing.T) {
 
 			expectedData := &domain.ProjectListData{
 				Items: []domain.ProjectListItem{},
-				Pagination: domain.PaginationData{
+				Pagination: dto.PaginationData{
 					Page:       tt.expectedPage,
 					Limit:      tt.expectedLimit,
 					TotalItems: 0,

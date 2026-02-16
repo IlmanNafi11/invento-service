@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"invento-service/internal/dto"
+	"time"
+)
 
 type Role struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
@@ -75,6 +78,6 @@ type ResourcePermissions struct {
 }
 
 type RoleListData struct {
-	Items      []RoleListItem `json:"items"`
-	Pagination PaginationData `json:"pagination"`
+	Items      []RoleListItem     `json:"items"`
+	Pagination dto.PaginationData `json:"pagination"`
 }

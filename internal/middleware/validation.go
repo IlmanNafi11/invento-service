@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"invento-service/internal/httputil"
 	customValidator "invento-service/internal/validator"
 	"reflect"
@@ -35,15 +35,15 @@ func setupValidator() *validator.Validate {
 // appropriate error responses if validation fails.
 //
 // Parameters:
-//   - requestType: A pointer to the request struct type (e.g., &domain.LoginRequest{})
+//   - requestType: A pointer to the request struct type (e.g., &dto.LoginRequest{})
 //
 // Returns:
 //   - fiber.Handler: Middleware function that handles validation
 //
 // Usage:
 //
-//	app.Post("/login", middleware.ValidateRequest(&domain.LoginRequest{}), func(c *fiber.Ctx) error {
-//	    req := c.Locals("request").(*domain.LoginRequest)
+//	app.Post("/login", middleware.ValidateRequest(&dto.LoginRequest{}), func(c *fiber.Ctx) error {
+//	    req := c.Locals("request").(*dto.LoginRequest)
 //	    // Use validated request
 //	    return c.JSON(req)
 //	})
@@ -78,7 +78,7 @@ func ValidateRequest(requestType interface{}) fiber.Handler {
 //   - data: The struct to validate
 //
 // Returns:
-//   - []domain.ValidationError: List of validation errors (empty if valid)
+//   - []dto.ValidationError: List of validation errors (empty if valid)
 //
 // Usage:
 //
@@ -95,8 +95,8 @@ func ValidateRequest(requestType interface{}) fiber.Handler {
 //	    // Process valid request
 //	    return c.Next()
 //	}
-func ValidateStruct(data interface{}) []domain.ValidationError {
-	var validationErrors []domain.ValidationError
+func ValidateStruct(data interface{}) []dto.ValidationError {
+	var validationErrors []dto.ValidationError
 
 	err := validate.Struct(data)
 	if err != nil {
@@ -106,12 +106,12 @@ func ValidateStruct(data interface{}) []domain.ValidationError {
 	return validationErrors
 }
 
-// parseValidationErrors converts validator.ValidationErrors into domain.ValidationError slice.
-func parseValidationErrors(err error) []domain.ValidationError {
+// parseValidationErrors converts validator.ValidationErrors into dto.ValidationError slice.
+func parseValidationErrors(err error) []dto.ValidationError {
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
-		var errors []domain.ValidationError
+		var errors []dto.ValidationError
 		for _, err := range validationErrors {
-			validationError := domain.ValidationError{
+			validationError := dto.ValidationError{
 				Field:   err.Field(),
 				Message: getCustomValidationMessage(err),
 			}

@@ -1,7 +1,7 @@
 package httputil_test
 
 import (
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"invento-service/internal/httputil"
 	"net/http/httptest"
 	"testing"
@@ -99,7 +99,7 @@ func TestSendListResponse(t *testing.T) {
 			{"id": 1, "name": "Item 1"},
 			{"id": 2, "name": "Item 2"},
 		}
-		pagination := domain.PaginationData{
+		pagination := dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalItems: 50,
@@ -118,7 +118,7 @@ func TestSendListResponse(t *testing.T) {
 func TestSendValidationErrorResponse(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		errors := []domain.ValidationError{
+		errors := []dto.ValidationError{
 			{Field: "email", Message: "Email wajib diisi"},
 			{Field: "password", Message: "Password minimal 8 karakter"},
 		}

@@ -164,18 +164,6 @@ definitions:
       status:
         $ref: '#/definitions/domain.ServiceStatus'
     type: object
-  domain.ErrorResponse:
-    properties:
-      code:
-        type: integer
-      errors: {}
-      message:
-        type: string
-      success:
-        type: boolean
-      timestamp:
-        type: string
-    type: object
   domain.HealthStatus:
     enum:
     - healthy
@@ -223,7 +211,7 @@ definitions:
           $ref: '#/definitions/domain.ModulListItem'
         type: array
       pagination:
-        $ref: '#/definitions/domain.PaginationData'
+        $ref: '#/definitions/dto.PaginationData'
     type: object
   domain.ModulListItem:
     properties:
@@ -252,17 +240,6 @@ definitions:
         maxLength: 255
         minLength: 3
         type: string
-    type: object
-  domain.PaginationData:
-    properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total_items:
-        type: integer
-      total_pages:
-        type: integer
     type: object
   domain.ProfileData:
     properties:
@@ -434,18 +411,6 @@ definitions:
       total_user:
         type: integer
     type: object
-  domain.SuccessResponse:
-    properties:
-      code:
-        type: integer
-      data: {}
-      message:
-        type: string
-      success:
-        type: boolean
-      timestamp:
-        type: string
-    type: object
   domain.SystemInfo:
     properties:
       cpu_cores:
@@ -505,7 +470,7 @@ definitions:
           $ref: '#/definitions/domain.UserFileItem'
         type: array
       pagination:
-        $ref: '#/definitions/domain.PaginationData'
+        $ref: '#/definitions/dto.PaginationData'
     type: object
   domain.UserListData:
     properties:
@@ -514,7 +479,7 @@ definitions:
           $ref: '#/definitions/domain.UserListItem'
         type: array
       pagination:
-        $ref: '#/definitions/domain.PaginationData'
+        $ref: '#/definitions/dto.PaginationData'
     type: object
   domain.UserListItem:
     properties:
@@ -534,6 +499,41 @@ definitions:
           type: string
         type: array
       resource:
+        type: string
+    type: object
+  dto.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      errors: {}
+      message:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  dto.PaginationData:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  dto.SuccessResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+      timestamp:
         type: string
     type: object
 host: localhost:3000
@@ -564,7 +564,7 @@ paths:
           description: Login berhasil
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.AuthResponse'
@@ -572,19 +572,19 @@ paths:
         "400":
           description: Format request tidak valid
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Email atau password salah
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "403":
           description: Akun belum diaktifkan
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Terjadi kesalahan pada server
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Login pengguna
       tags:
       - Auth
@@ -599,19 +599,19 @@ paths:
         "200":
           description: Logout berhasil
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Refresh token diperlukan
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Token tidak valid
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Terjadi kesalahan pada server
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Logout pengguna
@@ -629,7 +629,7 @@ paths:
           description: Token berhasil diperbarui
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.RefreshTokenResponse'
@@ -637,15 +637,15 @@ paths:
         "400":
           description: Refresh token diperlukan
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Token tidak valid atau expired
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Terjadi kesalahan pada server
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Refresh access token
       tags:
       - Auth
@@ -669,7 +669,7 @@ paths:
           description: Registrasi berhasil
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.AuthResponse'
@@ -677,15 +677,15 @@ paths:
         "400":
           description: Data validasi tidak valid
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "409":
           description: Email sudah terdaftar
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Terjadi kesalahan pada server
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Registrasi pengguna baru
       tags:
       - Auth
@@ -708,19 +708,19 @@ paths:
         "200":
           description: Link reset password telah dikirim
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Format request tidak valid
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Email tidak ditemukan
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Terjadi kesalahan pada server
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Minta reset password
       tags:
       - Auth
@@ -737,7 +737,7 @@ paths:
           description: Server berjalan dengan baik
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.BasicHealthCheck'
@@ -780,7 +780,7 @@ paths:
           description: List retrieved successfully
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.ModulListData'
@@ -788,15 +788,15 @@ paths:
         "400":
           description: Invalid query parameters
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get list of modules
@@ -819,27 +819,27 @@ paths:
         "200":
           description: Module deleted successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid module ID
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "403":
           description: Forbidden - no access to this module
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Module not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a module
@@ -867,27 +867,27 @@ paths:
         "200":
           description: Metadata updated successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid request format
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "403":
           description: Forbidden - no access to this module
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Module not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update module metadata
@@ -915,19 +915,19 @@ paths:
         "400":
           description: Invalid request format or empty IDs
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: One or more modules not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Download modules as ZIP
@@ -946,7 +946,7 @@ paths:
           description: Status aplikasi berhasil diambil
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.ApplicationStatus'
@@ -967,7 +967,7 @@ paths:
           description: Metrics sistem berhasil diambil
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.SystemMetrics'
@@ -990,7 +990,7 @@ paths:
           description: Sistem sehat
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.ComprehensiveHealthCheck'
@@ -998,7 +998,7 @@ paths:
         "503":
           description: Beberapa komponen sistem mengalami masalah
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Comprehensive Health Check
       tags:
       - Monitoring
@@ -1014,7 +1014,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.ProfileData'
@@ -1022,11 +1022,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user profile
@@ -1054,7 +1054,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.ProfileData'
@@ -1062,15 +1062,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update user profile
@@ -1110,19 +1110,19 @@ paths:
         "200":
           description: List retrieved successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid query parameters
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get list of projects
@@ -1145,27 +1145,27 @@ paths:
         "200":
           description: Project deleted successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid project ID
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "403":
           description: Forbidden - no access to this project
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Project not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a project
@@ -1187,27 +1187,27 @@ paths:
         "200":
           description: Project details retrieved successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid project ID
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "403":
           description: Forbidden - no access to this project
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Project not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get project by ID
@@ -1235,27 +1235,27 @@ paths:
         "200":
           description: Metadata updated successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid request format
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "403":
           description: Forbidden - no access to this project
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Project not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update project metadata
@@ -1283,19 +1283,19 @@ paths:
         "400":
           description: Invalid request format or empty IDs
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: One or more projects not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Download projects as ZIP
@@ -1327,15 +1327,15 @@ paths:
         "200":
           description: Roles retrieved successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid query parameters
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get role list
@@ -1358,19 +1358,19 @@ paths:
         "201":
           description: Role created successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid request format
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "409":
           description: Role name already exists
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create role
@@ -1393,19 +1393,19 @@ paths:
         "200":
           description: Role deleted successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid role ID
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Role not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete role
@@ -1428,19 +1428,19 @@ paths:
         "200":
           description: Role details retrieved successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid role ID
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Role not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get role detail
@@ -1468,23 +1468,23 @@ paths:
         "200":
           description: Role updated successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Invalid request format
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Role not found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "409":
           description: Role name already exists
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update role
@@ -1501,11 +1501,11 @@ paths:
         "200":
           description: Permissions retrieved successfully
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get available permissions
@@ -1535,7 +1535,7 @@ paths:
           description: Data statistik berhasil diambil (partial untuk user biasa)
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.StatisticData'
@@ -1543,11 +1543,11 @@ paths:
         "401":
           description: Tidak memiliki akses
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Terjadi kesalahan pada server
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get User Statistics
@@ -1580,7 +1580,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.UserListData'
@@ -1588,11 +1588,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get list of users
@@ -1615,23 +1615,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete user
@@ -1664,19 +1664,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Download user files
@@ -1710,7 +1710,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   $ref: '#/definitions/domain.UserFilesData'
@@ -1718,19 +1718,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user files
@@ -1759,23 +1759,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/dto.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update user role
@@ -1793,7 +1793,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
+            - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
                   items:
@@ -1803,11 +1803,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user permissions

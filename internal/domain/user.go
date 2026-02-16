@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"invento-service/internal/dto"
+	"time"
+)
 
 type UserListQueryParams struct {
 	Search     string `query:"search"`
@@ -17,8 +20,8 @@ type UserListItem struct {
 }
 
 type UserListData struct {
-	Items      []UserListItem `json:"items"`
-	Pagination PaginationData `json:"pagination"`
+	Items      []UserListItem     `json:"items"`
+	Pagination dto.PaginationData `json:"pagination"`
 }
 
 type UpdateUserRoleRequest struct {
@@ -55,8 +58,8 @@ type UserFilesQueryParams struct {
 }
 
 type UserFilesData struct {
-	Items      []UserFileItem `json:"items"`
-	Pagination PaginationData `json:"pagination"`
+	Items      []UserFileItem     `json:"items"`
+	Pagination dto.PaginationData `json:"pagination"`
 }
 
 type UserPermissionItem struct {

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"net/http/httptest"
@@ -51,7 +51,7 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		assert.NotEmpty(t, requestID)
 
 		// Parse response body
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -130,7 +130,7 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
 		// Verify error response
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "error", result.Status)
@@ -193,7 +193,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		assert.NotEmpty(t, requestID)
 
 		// Parse response body
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -212,7 +212,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -230,7 +230,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -248,7 +248,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -266,7 +266,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -284,7 +284,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -302,7 +302,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 
@@ -415,7 +415,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "success", result.Status)
@@ -436,7 +436,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "error", result.Status)
@@ -457,7 +457,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "error", result.Status)
@@ -478,7 +478,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "error", result.Status)
@@ -502,7 +502,7 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "error", result.Status)
@@ -634,7 +634,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		requestID := resp.Header.Get(RequestIDHeader)
 		assert.NotEmpty(t, requestID)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "success", result.Status)
@@ -646,7 +646,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "success", result.Status)
@@ -658,7 +658,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "error", result.Status)
@@ -677,7 +677,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusCreated, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "success", result.Status)
@@ -695,7 +695,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
 
-		var result domain.ErrorResponse
+		var result dto.ErrorResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "error", result.Status)
@@ -712,7 +712,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "success", result.Status)
@@ -725,7 +725,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
-		var result domain.SuccessResponse
+		var result dto.SuccessResponse
 		err = json.NewDecoder(resp.Body).Decode(&result)
 		require.NoError(t, err)
 		assert.Equal(t, "success", result.Status)

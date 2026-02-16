@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
@@ -49,7 +50,7 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 
 	return &domain.ModulListData{
 		Items: moduls,
-		Pagination: domain.PaginationData{
+		Pagination: dto.PaginationData{
 			Page:       page,
 			Limit:      limit,
 			TotalItems: total,

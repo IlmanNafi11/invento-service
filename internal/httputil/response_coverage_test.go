@@ -1,7 +1,7 @@
 package httputil
 
 import (
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"net/http"
 	"testing"
 
@@ -43,7 +43,7 @@ func TestSendListResponse_Success(t *testing.T) {
 
 	app.Get("/test", func(c *fiber.Ctx) error {
 		data := []string{"item1", "item2"}
-		pagination := domain.PaginationData{
+		pagination := dto.PaginationData{
 			Page:       1,
 			Limit:      10,
 			TotalItems: 2,

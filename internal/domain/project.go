@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"invento-service/internal/dto"
+	"time"
+)
 
 type Project struct {
 	ID          uint      `json:"id" gorm:"primaryKey"`
@@ -45,8 +48,8 @@ type ProjectListItem struct {
 }
 
 type ProjectListData struct {
-	Items      []ProjectListItem `json:"items"`
-	Pagination PaginationData    `json:"pagination"`
+	Items      []ProjectListItem  `json:"items"`
+	Pagination dto.PaginationData `json:"pagination"`
 }
 
 type ProjectResponse struct {

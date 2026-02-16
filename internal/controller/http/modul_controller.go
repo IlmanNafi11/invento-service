@@ -46,10 +46,10 @@ func NewModulController(
 // @Param filter_status query string false "Filter by status (pending, completed)"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} domain.SuccessResponse{data=domain.ModulListData} "List retrieved successfully"
-// @Failure 400 {object} domain.ErrorResponse "Invalid query parameters"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Success 200 {object} dto.SuccessResponse{data=domain.ModulListData} "List retrieved successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid query parameters"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /modul [get]
 func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -83,12 +83,12 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Module ID (UUID)"
-// @Success 200 {object} domain.SuccessResponse "Module deleted successfully"
-// @Failure 400 {object} domain.ErrorResponse "Invalid module ID"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this module"
-// @Failure 404 {object} domain.ErrorResponse "Module not found"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Success 200 {object} dto.SuccessResponse "Module deleted successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid module ID"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Forbidden - no access to this module"
+// @Failure 404 {object} dto.ErrorResponse "Module not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /modul/{id} [delete]
 func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -123,12 +123,12 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Param id path string true "Module ID (UUID)"
 // @Param request body domain.ModulUpdateRequest true "Update request"
-// @Success 200 {object} domain.SuccessResponse "Metadata updated successfully"
-// @Failure 400 {object} domain.ErrorResponse "Invalid request format"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 403 {object} domain.ErrorResponse "Forbidden - no access to this module"
-// @Failure 404 {object} domain.ErrorResponse "Module not found"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Success 200 {object} dto.SuccessResponse "Metadata updated successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request format"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Forbidden - no access to this module"
+// @Failure 404 {object} dto.ErrorResponse "Module not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /modul/{id} [patch]
 func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
@@ -172,10 +172,10 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Param request body domain.ModulDownloadRequest true "Download request with module IDs"
 // @Success 200 {file} binary "ZIP file containing module files"
-// @Failure 400 {object} domain.ErrorResponse "Invalid request format or empty IDs"
-// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Failure 404 {object} domain.ErrorResponse "One or more modules not found"
-// @Failure 500 {object} domain.ErrorResponse "Internal server error"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request format or empty IDs"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "One or more modules not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /modul/download [post]
 func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 	userID := ctrl.GetAuthenticatedUserID(c)
