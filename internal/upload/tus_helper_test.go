@@ -1,11 +1,11 @@
-package helper_test
+package upload_test
 
 import (
 	"bytes"
 	"invento-service/config"
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
 	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"io"
 	"net/http/httptest"
 	"os"
@@ -86,14 +86,14 @@ func setupTestConfig() *config.Config {
 	}
 }
 
-func setupTestTusStore(t *testing.T) (*helper.TusStore, string) {
+func setupTestTusStore(t *testing.T) (*upload.TusStore, string) {
 	cfg := setupTestConfig()
 	tempDir := t.TempDir()
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
 
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 
 	return store, tempDir
 }
@@ -103,11 +103,11 @@ func setupTestTusStore(t *testing.T) (*helper.TusStore, string) {
 func TestNewTusManager_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(cfg.Upload.MaxConcurrentProject)
 	fileManager := storage.NewFileManager(cfg)
 
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	assert.NotNil(t, manager)
 }
@@ -115,10 +115,10 @@ func TestNewTusManager_Success(t *testing.T) {
 func TestTusManager_CheckUploadSlot_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	// Test when no active upload
 	response := manager.CheckUploadSlot()
@@ -132,10 +132,10 @@ func TestTusManager_CheckUploadSlot_Success(t *testing.T) {
 func TestTusManager_CheckUploadSlot_WithActiveUpload(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so slot fills up
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so slot fills up
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	queue.Add("upload-1")
 
@@ -148,10 +148,10 @@ func TestTusManager_CheckUploadSlot_WithActiveUpload(t *testing.T) {
 func TestTusManager_ResetUploadQueue_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	queue.Add("upload-1")
 	queue.Add("upload-2")
@@ -165,30 +165,30 @@ func TestTusManager_ParseMetadata_Success(t *testing.T) {
 	// Valid base64 encoded metadata
 	metadata := "filename dGVzdC56aXA=,content-type YXBwbGljYXRpb24vemlw"
 
-	parsed := helper.ParseTusMetadata(metadata)
+	parsed := upload.ParseTusMetadata(metadata)
 	assert.Equal(t, "test.zip", parsed["filename"])
 	assert.Equal(t, "application/zip", parsed["content-type"])
 }
 
 func TestTusManager_ParseMetadata_Empty(t *testing.T) {
-	parsed := helper.ParseTusMetadata("")
+	parsed := upload.ParseTusMetadata("")
 	assert.Empty(t, parsed)
 }
 
 func TestTusManager_ParseMetadata_InvalidBase64(t *testing.T) {
 	metadata := "filename invalid_base64!!!"
 
-	parsed := helper.ParseTusMetadata(metadata)
+	parsed := upload.ParseTusMetadata(metadata)
 	assert.Equal(t, "", parsed["filename"])
 }
 
 func TestTusManager_ValidateModulMetadata_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	tests := []struct {
 		name     string
@@ -253,7 +253,7 @@ func TestNewTusStore_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
 
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 
 	assert.NotNil(t, store)
 }
@@ -264,7 +264,7 @@ func TestTusStore_InitiateUpload_Success(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 
 	assert.NoError(t, err)
 
@@ -282,7 +282,7 @@ func TestTusStore_InitiateUpload_FileTooLarge(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(200 * 1024 * 1024) // Larger than max
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "melebihi batas maksimal")
@@ -303,7 +303,7 @@ func TestTusStore_InitiateUpload_InvalidSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := store.NewUpload(helper.TusFileInfo{ID: "test-" + tt.name, Size: tt.fileSize})
+			err := store.NewUpload(upload.TusFileInfo{ID: "test-" + tt.name, Size: tt.fileSize})
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -319,7 +319,7 @@ func TestTusStore_WriteChunk_Success(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	chunk := []byte("test chunk content")
@@ -348,7 +348,7 @@ func TestTusStore_GetInfo_Success(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	info, err := store.GetInfo(uploadID)
@@ -373,7 +373,7 @@ func TestTusStore_IsComplete_True(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(20)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	chunk := []byte("test chunk content test!")
@@ -392,7 +392,7 @@ func TestTusStore_IsComplete_False(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(100)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	isComplete, err := store.IsComplete(uploadID)
@@ -407,7 +407,7 @@ func TestTusStore_GetProgress_Success(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(100)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	progress, err := store.GetProgress(uploadID)
@@ -422,7 +422,7 @@ func TestTusStore_GetProgress_HalfComplete(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(20)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	chunk := []byte("1234567890") // 10 bytes
@@ -441,7 +441,7 @@ func TestTusStore_GetOffset_Success(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	offset, err := store.GetOffset(uploadID)
@@ -456,7 +456,7 @@ func TestTusStore_Terminate_Success(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	err = store.Terminate(uploadID)
@@ -475,7 +475,7 @@ func TestTusStore_UpdateMetadata_Success(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	metadata := map[string]string{
@@ -498,7 +498,7 @@ func TestTusStore_FinalizeUpload_Success(t *testing.T) {
 	uploadID := "test-upload-123"
 	fileSize := int64(20)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	chunk := []byte("test chunk content test!")
@@ -519,7 +519,7 @@ func TestTusStore_FinalizeUpload_Success(t *testing.T) {
 
 func TestNewTusQueue_Success(t *testing.T) {
 	maxConcurrent := 3
-	queue := helper.NewTusQueue(maxConcurrent)
+	queue := upload.NewTusQueue(maxConcurrent)
 
 	assert.NotNil(t, queue)
 	assert.Equal(t, 0, queue.GetQueueLength())
@@ -527,7 +527,7 @@ func TestNewTusQueue_Success(t *testing.T) {
 }
 
 func TestTusQueue_Add_Success(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
 
@@ -538,7 +538,7 @@ func TestTusQueue_Add_Success(t *testing.T) {
 }
 
 func TestTusQueue_Add_Queued(t *testing.T) {
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
 
 	queue.Add("upload-1")
 	queue.Add("upload-2")
@@ -549,7 +549,7 @@ func TestTusQueue_Add_Queued(t *testing.T) {
 }
 
 func TestTusQueue_Add_Duplicate(t *testing.T) {
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so uploads go to queue
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so uploads go to queue
 
 	queue.Add("upload-1")
 	queue.FinishUpload("upload-1") // Clear active, now active is empty
@@ -564,7 +564,7 @@ func TestTusQueue_Add_Duplicate(t *testing.T) {
 }
 
 func TestTusQueue_Remove_ActiveUpload(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
 	err := queue.Remove("upload-1")
@@ -574,7 +574,7 @@ func TestTusQueue_Remove_ActiveUpload(t *testing.T) {
 }
 
 func TestTusQueue_Remove_QueuedUpload(t *testing.T) {
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
 
 	queue.Add("upload-1")
 	queue.Add("upload-2")
@@ -585,7 +585,7 @@ func TestTusQueue_Remove_QueuedUpload(t *testing.T) {
 }
 
 func TestTusQueue_Remove_NotFound(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	err := queue.Remove("nonexistent")
 
@@ -594,7 +594,7 @@ func TestTusQueue_Remove_NotFound(t *testing.T) {
 }
 
 func TestTusQueue_GetQueuePosition_Active(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
 
@@ -603,7 +603,7 @@ func TestTusQueue_GetQueuePosition_Active(t *testing.T) {
 }
 
 func TestTusQueue_GetQueuePosition_Queued(t *testing.T) {
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so second upload goes to queue
 
 	queue.Add("upload-1")
 	queue.Add("upload-2")
@@ -613,14 +613,14 @@ func TestTusQueue_GetQueuePosition_Queued(t *testing.T) {
 }
 
 func TestTusQueue_GetQueuePosition_NotFound(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	position := queue.GetQueuePosition("nonexistent")
 	assert.Equal(t, -1, position)
 }
 
 func TestTusQueue_FinishUpload_Success(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
 	queue.FinishUpload("upload-1")
@@ -631,7 +631,7 @@ func TestTusQueue_FinishUpload_Success(t *testing.T) {
 }
 
 func TestTusQueue_Clear_Success(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
 	queue.Add("upload-2")
@@ -642,13 +642,13 @@ func TestTusQueue_Clear_Success(t *testing.T) {
 }
 
 func TestTusQueue_CanAcceptUpload_True(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	assert.True(t, queue.CanAcceptUpload())
 }
 
 func TestTusQueue_CanAcceptUpload_False(t *testing.T) {
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so it fills up with one upload
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so it fills up with one upload
 
 	queue.Add("upload-1")
 
@@ -656,7 +656,7 @@ func TestTusQueue_CanAcceptUpload_False(t *testing.T) {
 }
 
 func TestTusQueue_IsActiveUpload_True(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
 
@@ -664,7 +664,7 @@ func TestTusQueue_IsActiveUpload_True(t *testing.T) {
 }
 
 func TestTusQueue_IsActiveUpload_False(t *testing.T) {
-	queue := helper.NewTusQueue(3)
+	queue := upload.NewTusQueue(3)
 
 	queue.Add("upload-1")
 
@@ -672,7 +672,7 @@ func TestTusQueue_IsActiveUpload_False(t *testing.T) {
 }
 
 func TestTusQueue_GetCurrentQueue_Success(t *testing.T) {
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so uploads go to queue
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so uploads go to queue
 
 	queue.Add("upload-1")
 	queue.Add("upload-2")
@@ -689,7 +689,7 @@ func TestTusQueue_GetCurrentQueue_Success(t *testing.T) {
 func TestSendTusInitiateResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusInitiateResponse(c, "upload-123", "/uploads/upload-123", 1024)
+		return upload.SendTusInitiateResponse(c, "upload-123", "/uploads/upload-123", 1024)
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)
@@ -703,7 +703,7 @@ func TestSendTusInitiateResponse_Success(t *testing.T) {
 func TestSendTusChunkResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Patch("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusChunkResponse(c, 512)
+		return upload.SendTusChunkResponse(c, 512)
 	})
 
 	req := httptest.NewRequest("PATCH", "/test", nil)
@@ -717,7 +717,7 @@ func TestSendTusChunkResponse_Success(t *testing.T) {
 func TestSendTusHeadResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Head("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusHeadResponse(c, 512, 1024)
+		return upload.SendTusHeadResponse(c, 512, 1024)
 	})
 
 	req := httptest.NewRequest("HEAD", "/test", nil)
@@ -732,7 +732,7 @@ func TestSendTusHeadResponse_Success(t *testing.T) {
 func TestSendTusDeleteResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Delete("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusDeleteResponse(c)
+		return upload.SendTusDeleteResponse(c)
 	})
 
 	req := httptest.NewRequest("DELETE", "/test", nil)
@@ -745,7 +745,7 @@ func TestSendTusDeleteResponse_Success(t *testing.T) {
 func TestSendTusSlotResponse_Available(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 3)
+		return upload.SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 3)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -762,7 +762,7 @@ func TestSendTusSlotResponse_Available(t *testing.T) {
 func TestSendTusModulSlotResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 10)
+		return upload.SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 10)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -779,7 +779,7 @@ func TestSendTusModulSlotResponse_Success(t *testing.T) {
 func TestSendTusErrorResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusErrorResponse(c, fiber.StatusBadRequest, "1.0.0")
+		return upload.SendTusErrorResponse(c, fiber.StatusBadRequest, "1.0.0")
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -793,7 +793,7 @@ func TestSendTusErrorResponse_Success(t *testing.T) {
 func TestSendTusErrorResponseWithOffset_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusErrorResponseWithOffset(c, fiber.StatusConflict, "1.0.0", 512)
+		return upload.SendTusErrorResponseWithOffset(c, fiber.StatusConflict, "1.0.0", 512)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -807,7 +807,7 @@ func TestSendTusErrorResponseWithOffset_Success(t *testing.T) {
 func TestSendTusErrorResponseWithLength_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusErrorResponseWithLength(c, fiber.StatusRequestEntityTooLarge, "1.0.0", 1024)
+		return upload.SendTusErrorResponseWithLength(c, fiber.StatusRequestEntityTooLarge, "1.0.0", 1024)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -821,7 +821,7 @@ func TestSendTusErrorResponseWithLength_Success(t *testing.T) {
 func TestSendTusValidationErrorResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusValidationErrorResponse(c, "Metadata tidak valid")
+		return upload.SendTusValidationErrorResponse(c, "Metadata tidak valid")
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)
@@ -834,7 +834,7 @@ func TestSendTusValidationErrorResponse_Success(t *testing.T) {
 func TestSendTusNotFoundErrorResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusNotFoundErrorResponse(c, "Upload tidak ditemukan")
+		return upload.SendTusNotFoundErrorResponse(c, "Upload tidak ditemukan")
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -847,7 +847,7 @@ func TestSendTusNotFoundErrorResponse_Success(t *testing.T) {
 func TestSendTusNotFoundErrorResponse_DefaultMessage(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusNotFoundErrorResponse(c, "")
+		return upload.SendTusNotFoundErrorResponse(c, "")
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -860,7 +860,7 @@ func TestSendTusNotFoundErrorResponse_DefaultMessage(t *testing.T) {
 func TestSendTusForbiddenErrorResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusForbiddenErrorResponse(c)
+		return upload.SendTusForbiddenErrorResponse(c)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -873,7 +873,7 @@ func TestSendTusForbiddenErrorResponse_Success(t *testing.T) {
 func TestSendTusConflictErrorResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusConflictErrorResponse(c, "Upload sudah selesai")
+		return upload.SendTusConflictErrorResponse(c, "Upload sudah selesai")
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)
@@ -886,7 +886,7 @@ func TestSendTusConflictErrorResponse_Success(t *testing.T) {
 func TestSendTusConflictErrorResponse_DefaultMessage(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusConflictErrorResponse(c, "")
+		return upload.SendTusConflictErrorResponse(c, "")
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)
@@ -899,7 +899,7 @@ func TestSendTusConflictErrorResponse_DefaultMessage(t *testing.T) {
 func TestSendTusPayloadTooLargeErrorResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusPayloadTooLargeErrorResponse(c, "File terlalu besar")
+		return upload.SendTusPayloadTooLargeErrorResponse(c, "File terlalu besar")
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)
@@ -912,7 +912,7 @@ func TestSendTusPayloadTooLargeErrorResponse_Success(t *testing.T) {
 func TestSendTusPayloadTooLargeErrorResponse_DefaultMessage(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusPayloadTooLargeErrorResponse(c, "")
+		return upload.SendTusPayloadTooLargeErrorResponse(c, "")
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)
@@ -925,7 +925,7 @@ func TestSendTusPayloadTooLargeErrorResponse_DefaultMessage(t *testing.T) {
 func TestSendTusTooManyRequestsErrorResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusTooManyRequestsErrorResponse(c, "Terlalu banyak request")
+		return upload.SendTusTooManyRequestsErrorResponse(c, "Terlalu banyak request")
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)
@@ -938,7 +938,7 @@ func TestSendTusTooManyRequestsErrorResponse_Success(t *testing.T) {
 func TestSendTusTooManyRequestsErrorResponse_DefaultMessage(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusTooManyRequestsErrorResponse(c, "")
+		return upload.SendTusTooManyRequestsErrorResponse(c, "")
 	})
 
 	req := httptest.NewRequest("POST", "/test", nil)
@@ -951,7 +951,7 @@ func TestSendTusTooManyRequestsErrorResponse_DefaultMessage(t *testing.T) {
 func TestSendTusInternalErrorResponse_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.SendTusInternalErrorResponse(c)
+		return upload.SendTusInternalErrorResponse(c)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -973,7 +973,7 @@ func TestGetTusHeaders_Success(t *testing.T) {
 		c.Set("Content-Type", "application/offset+octet-stream")
 		c.Set("Content-Length", "50")
 
-		headers, err := helper.GetTusHeaders(c)
+		headers, err := upload.GetTusHeaders(c)
 		if err != nil {
 			return err
 		}
@@ -991,7 +991,7 @@ func TestGetTusHeaders_Success(t *testing.T) {
 func TestGetTusHeaders_EmptyHeaders(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		headers, err := helper.GetTusHeaders(c)
+		headers, err := upload.GetTusHeaders(c)
 		if err != nil {
 			return err
 		}
@@ -1009,7 +1009,7 @@ func TestGetTusHeaders_EmptyHeaders(t *testing.T) {
 func TestSetTusResponseHeaders_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		helper.SetTusResponseHeaders(c, 100, 1000)
+		upload.SetTusResponseHeaders(c, 100, 1000)
 		return c.SendStatus(fiber.StatusOK)
 	})
 
@@ -1025,7 +1025,7 @@ func TestSetTusResponseHeaders_Success(t *testing.T) {
 func TestSetTusResponseHeaders_ZeroLength(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		helper.SetTusResponseHeaders(c, 0, 0)
+		upload.SetTusResponseHeaders(c, 0, 0)
 		return c.SendStatus(fiber.StatusOK)
 	})
 
@@ -1040,7 +1040,7 @@ func TestSetTusResponseHeaders_ZeroLength(t *testing.T) {
 func TestSetTusLocationHeader_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/test", func(c *fiber.Ctx) error {
-		helper.SetTusLocationHeader(c, "/uploads/upload-123")
+		upload.SetTusLocationHeader(c, "/uploads/upload-123")
 		return c.SendStatus(fiber.StatusCreated)
 	})
 
@@ -1054,7 +1054,7 @@ func TestSetTusLocationHeader_Success(t *testing.T) {
 func TestSetTusOffsetHeader_Success(t *testing.T) {
 	app := fiber.New()
 	app.Patch("/test", func(c *fiber.Ctx) error {
-		helper.SetTusOffsetHeader(c, 500)
+		upload.SetTusOffsetHeader(c, 500)
 		return c.SendStatus(fiber.StatusNoContent)
 	})
 
@@ -1073,15 +1073,15 @@ func TestValidateChunkSize_Valid(t *testing.T) {
 	}{
 		{"min size", 1, false},
 		{"1MB", 1024 * 1024, false},
-		{"2MB", helper.MaxChunkSize, false},
+		{"2MB", upload.MaxChunkSize, false},
 		{"zero", 0, true},
 		{"negative", -1, true},
-		{"too large", helper.MaxChunkSize + 1, true},
+		{"too large", upload.MaxChunkSize + 1, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := helper.ValidateChunkSize(tt.size)
+			err := upload.ValidateChunkSize(tt.size)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -1094,7 +1094,7 @@ func TestValidateChunkSize_Valid(t *testing.T) {
 func TestBuildTusErrorResponse_ConflictWithOffset(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.BuildTusErrorResponse(c, fiber.StatusConflict, 100)
+		return upload.BuildTusErrorResponse(c, fiber.StatusConflict, 100)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -1108,7 +1108,7 @@ func TestBuildTusErrorResponse_ConflictWithOffset(t *testing.T) {
 func TestBuildTusErrorResponse_OtherStatus(t *testing.T) {
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
-		return helper.BuildTusErrorResponse(c, fiber.StatusBadRequest, 100)
+		return upload.BuildTusErrorResponse(c, fiber.StatusBadRequest, 100)
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
@@ -1127,9 +1127,9 @@ func TestNewTusCleanup_Success(t *testing.T) {
 		uploads: make(map[string]domain.TusUpload),
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	assert.NotNil(t, cleanup)
 }
@@ -1140,8 +1140,8 @@ func TestTusCleanup_Start_Success(t *testing.T) {
 		uploads: make(map[string]domain.TusUpload),
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	cleanup.Start()
 
@@ -1158,8 +1158,8 @@ func TestTusCleanup_Start_AlreadyRunning(t *testing.T) {
 		uploads: make(map[string]domain.TusUpload),
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	cleanup.Start()
 	cleanup.Start() // Should not cause issues
@@ -1173,8 +1173,8 @@ func TestTusCleanup_Stop_Success(t *testing.T) {
 		uploads: make(map[string]domain.TusUpload),
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	cleanup.Start()
 	cleanup.Stop()
@@ -1189,8 +1189,8 @@ func TestTusCleanup_Stop_NotRunning(t *testing.T) {
 		uploads: make(map[string]domain.TusUpload),
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	cleanup.Stop() // Should not cause issues
 
@@ -1209,11 +1209,11 @@ func TestTusCleanup_CleanupExpired_Success(t *testing.T) {
 		},
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	// Create a temp upload
-	err := store.NewUpload(helper.TusFileInfo{ID: "expired-1", Size: 1024})
+	err := store.NewUpload(upload.TusFileInfo{ID: "expired-1", Size: 1024})
 	require.NoError(t, err)
 
 	err = cleanup.CleanupExpiredProjects()
@@ -1227,8 +1227,8 @@ func TestTusCleanup_CleanupExpired_NoExpired(t *testing.T) {
 		expired: []domain.TusUpload{},
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	err := cleanup.CleanupExpiredProjects()
 	assert.NoError(t, err)
@@ -1242,8 +1242,8 @@ func TestTusCleanup_CleanupExpired_RepositoryError(t *testing.T) {
 		getError: true,
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	err := cleanup.CleanupExpiredProjects()
 	assert.Error(t, err)
@@ -1263,11 +1263,11 @@ func TestTusCleanup_CleanupAbandoned_Success(t *testing.T) {
 		},
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	// Create a temp upload
-	err := store.NewUpload(helper.TusFileInfo{ID: "abandoned-1", Size: 1024})
+	err := store.NewUpload(upload.TusFileInfo{ID: "abandoned-1", Size: 1024})
 	require.NoError(t, err)
 
 	err = cleanup.CleanupAbandonedProjects()
@@ -1281,8 +1281,8 @@ func TestTusCleanup_CleanupAbandoned_NoActive(t *testing.T) {
 		active:  []domain.TusUpload{},
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	err := cleanup.CleanupAbandonedProjects()
 	assert.NoError(t, err)
@@ -1296,8 +1296,8 @@ func TestTusCleanup_CleanupAbandoned_RepositoryError(t *testing.T) {
 		getError: true,
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	err := cleanup.CleanupAbandonedProjects()
 	assert.Error(t, err)
@@ -1314,11 +1314,11 @@ func TestTusCleanup_CleanupUpload_Success(t *testing.T) {
 		},
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	// Create a temp upload
-	err := store.NewUpload(helper.TusFileInfo{ID: "test-upload", Size: 1024})
+	err := store.NewUpload(upload.TusFileInfo{ID: "test-upload", Size: 1024})
 	require.NoError(t, err)
 
 	err = cleanup.CleanupUpload("test-upload")
@@ -1336,8 +1336,8 @@ func TestTusCleanup_CleanupUpload_NotFound(t *testing.T) {
 		deleteError: true, // Simulate error for non-existent
 	}
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	cleanup := upload.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
 	err := cleanup.CleanupUpload("nonexistent")
 	assert.Error(t, err)
@@ -1348,10 +1348,10 @@ func TestTusCleanup_CleanupUpload_NotFound(t *testing.T) {
 func TestTusManager_InitiateUpload_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-123"
 	fileSize := int64(1024)
@@ -1371,10 +1371,10 @@ func TestTusManager_InitiateUpload_Success(t *testing.T) {
 func TestTusManager_InitiateUpload_FileTooLarge(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-large"
 	fileSize := cfg.Upload.MaxSize + 1
@@ -1389,10 +1389,10 @@ func TestTusManager_InitiateUpload_FileTooLarge(t *testing.T) {
 func TestTusManager_InitiateUpload_InvalidSize(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	tests := []struct {
 		name     string
@@ -1418,16 +1418,16 @@ func TestTusManager_InitiateUpload_InvalidSize(t *testing.T) {
 func TestTusManager_HandleChunk_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-chunk"
 	fileSize := int64(1024)
 
 	// First initiate upload
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	// Handle chunk
@@ -1446,10 +1446,10 @@ func TestTusManager_HandleChunk_Success(t *testing.T) {
 func TestTusManager_HandleChunk_UploadNotFound(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	chunk := []byte("test data")
 	_, err := manager.HandleChunk("nonexistent", 0, bytes.NewReader(chunk))
@@ -1460,15 +1460,15 @@ func TestTusManager_HandleChunk_UploadNotFound(t *testing.T) {
 func TestTusManager_GetUploadStatus_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-status"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	offset, size, err := manager.GetUploadStatus(uploadID)
@@ -1481,10 +1481,10 @@ func TestTusManager_GetUploadStatus_Success(t *testing.T) {
 func TestTusManager_GetUploadStatus_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	_, _, err := manager.GetUploadStatus("nonexistent")
 
@@ -1494,15 +1494,15 @@ func TestTusManager_GetUploadStatus_NotFound(t *testing.T) {
 func TestTusManager_GetUploadInfo_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-info"
 	fileSize := int64(2048)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	info, err := manager.GetUploadInfo(uploadID)
@@ -1516,10 +1516,10 @@ func TestTusManager_GetUploadInfo_Success(t *testing.T) {
 func TestTusManager_GetUploadInfo_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	_, err := manager.GetUploadInfo("nonexistent")
 
@@ -1529,15 +1529,15 @@ func TestTusManager_GetUploadInfo_NotFound(t *testing.T) {
 func TestTusManager_CancelUpload_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-cancel"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	err = manager.CancelUpload(uploadID)
@@ -1552,10 +1552,10 @@ func TestTusManager_CancelUpload_Success(t *testing.T) {
 func TestTusManager_CancelUpload_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	// Terminate on non-existent upload doesn't return error (os.RemoveAll succeeds)
 	err := manager.CancelUpload("nonexistent")
@@ -1569,15 +1569,15 @@ func TestTusManager_FinalizeUpload_Success(t *testing.T) {
 	pathResolver := storage.NewPathResolver(cfg)
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-finalize"
 	fileSize := int64(20)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	chunk := []byte("test chunk content test!")
@@ -1600,15 +1600,15 @@ func TestTusManager_FinalizeUpload_NotComplete(t *testing.T) {
 	pathResolver := storage.NewPathResolver(cfg)
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-incomplete"
 	fileSize := int64(100)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	// Write partial data (not complete)
@@ -1627,15 +1627,15 @@ func TestTusManager_FinalizeUpload_NotComplete(t *testing.T) {
 func TestTusManager_IsUploadComplete_True(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-complete"
 	fileSize := int64(20)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	chunk := []byte("test chunk content test!")
@@ -1651,15 +1651,15 @@ func TestTusManager_IsUploadComplete_True(t *testing.T) {
 func TestTusManager_IsUploadComplete_False(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-pending"
 	fileSize := int64(100)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	isComplete, err := manager.IsUploadComplete(uploadID)
@@ -1671,15 +1671,15 @@ func TestTusManager_IsUploadComplete_False(t *testing.T) {
 func TestTusManager_GetUploadProgress_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-progress"
 	fileSize := int64(100)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	progress, err := manager.GetUploadProgress(uploadID)
@@ -1691,15 +1691,15 @@ func TestTusManager_GetUploadProgress_Success(t *testing.T) {
 func TestTusManager_GetUploadProgress_HalfComplete(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-half-progress"
 	fileSize := int64(20)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	chunk := []byte("1234567890") // 10 bytes
@@ -1715,10 +1715,10 @@ func TestTusManager_GetUploadProgress_HalfComplete(t *testing.T) {
 func TestTusManager_AddToQueue_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
 
@@ -1730,10 +1730,10 @@ func TestTusManager_AddToQueue_Success(t *testing.T) {
 func TestTusManager_AddToQueue_Multiple(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so queue fills up
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so queue fills up
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1") // Active
 	manager.AddToQueue("upload-2") // Queued
@@ -1747,10 +1747,10 @@ func TestTusManager_AddToQueue_Multiple(t *testing.T) {
 func TestTusManager_RemoveFromQueue_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
 	err := manager.RemoveFromQueue("upload-1")
@@ -1762,10 +1762,10 @@ func TestTusManager_RemoveFromQueue_Success(t *testing.T) {
 func TestTusManager_RemoveFromQueue_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	err := manager.RemoveFromQueue("nonexistent")
 
@@ -1775,10 +1775,10 @@ func TestTusManager_RemoveFromQueue_NotFound(t *testing.T) {
 func TestTusManager_CanAcceptUpload_True(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	assert.True(t, manager.CanAcceptUpload())
 }
@@ -1786,10 +1786,10 @@ func TestTusManager_CanAcceptUpload_True(t *testing.T) {
 func TestTusManager_CanAcceptUpload_False(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so it fills up with one upload
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so it fills up with one upload
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
 
@@ -1799,10 +1799,10 @@ func TestTusManager_CanAcceptUpload_False(t *testing.T) {
 func TestTusManager_IsActiveUpload_True(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
 
@@ -1812,10 +1812,10 @@ func TestTusManager_IsActiveUpload_True(t *testing.T) {
 func TestTusManager_IsActiveUpload_False(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
 
@@ -1825,10 +1825,10 @@ func TestTusManager_IsActiveUpload_False(t *testing.T) {
 func TestTusManager_GetDefaultTusHeaders_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	headers := manager.GetDefaultTusHeaders()
 
@@ -1842,15 +1842,15 @@ func TestTusManager_ResetUploadQueue_WithActiveUpload(t *testing.T) {
 	pathResolver := storage.NewPathResolver(cfg)
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-reset"
 	fileSize := int64(1024)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	queue.Add(uploadID)
@@ -1870,7 +1870,7 @@ func TestTusManager_ParseMetadata_WithSpaces(t *testing.T) {
 	// Metadata with extra spaces between key and value (spaces around the comma are trimmed)
 	metadata := "filename dGVzdC56aXA=, content-type YXBwbGljYXRpb24vemlw"
 
-	parsed := helper.ParseTusMetadata(metadata)
+	parsed := upload.ParseTusMetadata(metadata)
 	assert.Equal(t, "test.zip", parsed["filename"])
 	assert.Equal(t, "application/zip", parsed["content-type"])
 }
@@ -1879,17 +1879,17 @@ func TestTusManager_ParseMetadata_InvalidPair(t *testing.T) {
 	// Invalid pair format (missing value)
 	metadata := "filename dGVzdC56aXA=,invalid-key"
 
-	parsed := helper.ParseTusMetadata(metadata)
+	parsed := upload.ParseTusMetadata(metadata)
 	assert.Equal(t, "test.zip", parsed["filename"])
 }
 
 func TestTusManager_ValidateModulMetadata_TooLong(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	// Create nama_file > 255 characters
 	longName := string(make([]byte, 256))
@@ -1911,10 +1911,10 @@ func TestTusManager_ValidateModulMetadata_TooLong(t *testing.T) {
 func TestTusManager_ValidateModulMetadata_AllTypes(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	validTypes := []string{"docx", "xlsx", "pdf", "pptx"}
 
@@ -1932,15 +1932,15 @@ func TestTusManager_ValidateModulMetadata_AllTypes(t *testing.T) {
 func TestTusManager_HandleChunk_MultipleChunks(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-multiple"
 	fileSize := int64(30)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	// First chunk
@@ -1964,10 +1964,10 @@ func TestTusManager_HandleChunk_MultipleChunks(t *testing.T) {
 func TestTusManager_CheckUploadSlot_QueueFull(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(1) // maxConcurrent=1 so queue fills up
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(1) // maxConcurrent=1 so queue fills up
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	// Fill the queue - first goes active, rest go to queue
 	queue.Add("upload-1") // Active
@@ -1986,15 +1986,15 @@ func TestTusManager_CheckUploadSlot_QueueFull(t *testing.T) {
 func TestTusManager_GetUploadStatus_AfterChunk(t *testing.T) {
 	cfg := setupTestConfig()
 	pathResolver := storage.NewPathResolver(cfg)
-	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	queue := helper.NewTusQueue(3)
+	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	queue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
+	manager := upload.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-status-chunk"
 	fileSize := int64(100)
 
-	err := store.NewUpload(helper.TusFileInfo{ID: uploadID, Size: fileSize})
+	err := store.NewUpload(upload.TusFileInfo{ID: uploadID, Size: fileSize})
 	require.NoError(t, err)
 
 	// Write a chunk

@@ -1,4 +1,4 @@
-package helper
+package upload
 
 import (
 	"path/filepath"
@@ -7,6 +7,7 @@ import (
 
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/storage"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -70,7 +71,7 @@ func newTestTusCleanup(t *testing.T) (*TusCleanup, *TusStore, *mockTusUploadRepo
 		},
 	}
 
-	store := NewTusStore(NewPathResolver(cfg), 1024*1024)
+	store := NewTusStore(storage.NewPathResolver(cfg), 1024*1024)
 	projectRepo := &mockTusUploadRepository{}
 	modulRepo := &mockTusModulUploadCleanupRepository{}
 

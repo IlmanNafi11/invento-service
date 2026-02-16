@@ -1,4 +1,4 @@
-package helper
+package upload
 
 import (
 	"bytes"
@@ -9,6 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"invento-service/config"
+	"invento-service/internal/storage"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,11 +19,14 @@ import (
 func newTestTusStore(t *testing.T, maxSize int64) *TusStore {
 	t.Helper()
 	base := t.TempDir()
-	resolver := &PathResolver{
-		env:                 "development",
-		pathDevelopment:     filepath.Join(base, "uploads"),
-		tempPathDevelopment: filepath.Join(base, "temp"),
+	cfg := &config.Config{
+		App: config.AppConfig{Env: "development"},
+		Upload: config.UploadConfig{
+			PathDevelopment:     filepath.Join(base, "uploads"),
+			TempPathDevelopment: filepath.Join(base, "temp"),
+		},
 	}
+	resolver := storage.NewPathResolver(cfg)
 
 	return NewTusStore(resolver, maxSize)
 }

@@ -1,4 +1,4 @@
-package helper
+package upload
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"invento-service/config"
+	"invento-service/internal/storage"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ func newTestTusManager(t *testing.T) (*TusManager, *TusStore, *TusQueue) {
 		},
 	}
 
-	resolver := NewPathResolver(cfg)
+	resolver := storage.NewPathResolver(cfg)
 	store := NewTusStore(resolver, cfg.Upload.MaxSize)
 	queue := NewTusQueue(cfg.Upload.MaxConcurrentProject)
 	manager := NewTusManager(store, queue, nil, cfg, zerolog.Nop())
