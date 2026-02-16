@@ -6,9 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 // =============================================================================
@@ -320,11 +317,8 @@ func TestHasPolicy_NotExists(t *testing.T) {
 
 func TestSavePolicy_Success(t *testing.T) {
 	t.Parallel()
-	// Use shared cache for persistent in-memory database
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	require.NoError(t, err)
+	// Use shared cache with unique name to avoid conflicts with parallel tests
+	db := createTestDB(t, "file:save_policy?mode=memory&cache=shared")
 
 	enforcer, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err)
@@ -338,11 +332,8 @@ func TestSavePolicy_Success(t *testing.T) {
 
 func TestLoadPolicy_Success(t *testing.T) {
 	t.Parallel()
-	// Use shared cache for persistent in-memory database
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	require.NoError(t, err)
+	// Use shared cache with unique name to avoid conflicts with parallel tests
+	db := createTestDB(t, "file:load_policy?mode=memory&cache=shared")
 
 	enforcer, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err)

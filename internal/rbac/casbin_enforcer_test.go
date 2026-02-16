@@ -4,6 +4,7 @@ import (
 	"invento-service/internal/rbac"
 	"testing"
 
+	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -11,14 +12,30 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// createTestDB opens an in-memory SQLite database and pre-creates
+// the casbin_rule table required by NewCasbinEnforcer (which disables
+// auto-migrate in production).
+func createTestDB(t *testing.T, dsn string) *gorm.DB {
+	t.Helper()
+
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+	require.NoError(t, err, "failed to open test database")
+
+	// Pre-create the casbin_rule table because production code calls
+	// TurnOffAutoMigrate before NewAdapterByDB.
+	require.NoError(t, db.AutoMigrate(&gormadapter.CasbinRule{}),
+		"failed to create casbin_rule table")
+
+	return db
+}
+
 // setupTestCasbinEnforcer creates an in-memory Casbin enforcer for testing
 func setupTestCasbinEnforcer(t *testing.T) *rbac.CasbinEnforcer {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	require.NoError(t, err, "failed to open test database")
+	db := createTestDB(t, ":memory:")
 
 	enforcer, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err, "failed to create casbin enforcer")
@@ -31,10 +48,7 @@ func setupTestCasbinEnforcer(t *testing.T) *rbac.CasbinEnforcer {
 // =============================================================================
 
 func TestNewCasbinEnforcer_Success(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	require.NoError(t, err)
+	db := createTestDB(t, ":memory:")
 
 	enforcer, err := rbac.NewCasbinEnforcer(db)
 
@@ -45,10 +59,7 @@ func TestNewCasbinEnforcer_Success(t *testing.T) {
 
 func TestNewCasbinEnforcer_WithExistingDB(t *testing.T) {
 	// Create first enforcer and add policy
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
-	})
-	require.NoError(t, err)
+	db := createTestDB(t, "file:existing_db?mode=memory&cache=shared")
 
 	enforcer1, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err)

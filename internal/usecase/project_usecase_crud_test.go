@@ -44,11 +44,14 @@ func TestProjectUsecase_GetProjectByID_Success(t *testing.T) {
 
 	result, err := projectUC.GetByID(context.Background(), projectID, userID)
 
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	var appErr *apperrors.AppError
-	assert.True(t, errors.As(err, &appErr))
-	assert.Equal(t, apperrors.ErrNotFound, appErr.Code)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, projectID, result.ID)
+	assert.Equal(t, "Test Project", result.NamaProject)
+	assert.Equal(t, "website", result.Kategori)
+	assert.Equal(t, 1, result.Semester)
+	assert.Equal(t, "small", result.Ukuran)
+	assert.Equal(t, "/uploads/test.zip", result.PathFile)
 
 	mockProjectRepo.AssertExpectations(t)
 }
