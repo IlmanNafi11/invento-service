@@ -2,11 +2,11 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
@@ -26,74 +26,74 @@ type MockUserUsecase struct {
 	mock.Mock
 }
 
-func (m *MockUserUsecase) GetUserList(params dto.UserListQueryParams) (*dto.UserListData, error) {
-	args := m.Called(params)
+func (m *MockUserUsecase) GetUserList(ctx context.Context, params dto.UserListQueryParams) (*dto.UserListData, error) {
+	args := m.Called(ctx, params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.UserListData), args.Error(1)
 }
 
-func (m *MockUserUsecase) UpdateUserRole(userID string, roleName string) error {
-	args := m.Called(userID, roleName)
+func (m *MockUserUsecase) UpdateUserRole(ctx context.Context, userID string, roleName string) error {
+	args := m.Called(ctx, userID, roleName)
 	return args.Error(0)
 }
 
-func (m *MockUserUsecase) DeleteUser(userID string) error {
-	args := m.Called(userID)
+func (m *MockUserUsecase) DeleteUser(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
 
-func (m *MockUserUsecase) GetUserFiles(userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error) {
-	args := m.Called(userID, params)
+func (m *MockUserUsecase) GetUserFiles(ctx context.Context, userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error) {
+	args := m.Called(ctx, userID, params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.UserFilesData), args.Error(1)
 }
 
-func (m *MockUserUsecase) GetProfile(userID string) (*dto.ProfileData, error) {
-	args := m.Called(userID)
+func (m *MockUserUsecase) GetProfile(ctx context.Context, userID string) (*dto.ProfileData, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.ProfileData), args.Error(1)
 }
 
-func (m *MockUserUsecase) UpdateProfile(userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error) {
-	args := m.Called(userID, req, fotoProfil)
+func (m *MockUserUsecase) UpdateProfile(ctx context.Context, userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error) {
+	args := m.Called(ctx, userID, req, fotoProfil)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.ProfileData), args.Error(1)
 }
 
-func (m *MockUserUsecase) GetUserPermissions(userID string) ([]dto.UserPermissionItem, error) {
-	args := m.Called(userID)
+func (m *MockUserUsecase) GetUserPermissions(ctx context.Context, userID string) ([]dto.UserPermissionItem, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]dto.UserPermissionItem), args.Error(1)
 }
 
-func (m *MockUserUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error) {
-	args := m.Called(ownerUserID, projectIDs, modulIDs)
+func (m *MockUserUsecase) DownloadUserFiles(ctx context.Context, ownerUserID string, projectIDs, modulIDs []string) (string, error) {
+	args := m.Called(ctx, ownerUserID, projectIDs, modulIDs)
 	if args.Get(0) == nil || args.Get(0).(string) == "" {
 		return "", args.Error(1)
 	}
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockUserUsecase) GetUsersForRole(roleID uint) ([]dto.UserListItem, error) {
-	args := m.Called(roleID)
+func (m *MockUserUsecase) GetUsersForRole(ctx context.Context, roleID uint) ([]dto.UserListItem, error) {
+	args := m.Called(ctx, roleID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]dto.UserListItem), args.Error(1)
 }
 
-func (m *MockUserUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
-	args := m.Called(userIDs, roleID)
+func (m *MockUserUsecase) BulkAssignRole(ctx context.Context, userIDs []string, roleID uint) error {
+	args := m.Called(ctx, userIDs, roleID)
 	return args.Error(0)
 }
 

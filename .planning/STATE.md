@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 5 of 6 (Deep Architecture Improvements)
-Plan: 2 of 8 complete
+Plan: 4 of 8 complete
 Status: In Progress
-Last activity: 2026-02-16 -- Plan 05-02 (DTO migration for all domain types) complete
+Last activity: 2026-02-16 -- Plan 05-04 (context.Context for Project/Modul/Auth/Stat/Health domains) complete
 
-Progress: [██░░░░░░░░] 25% (2/8 plans)
+Progress: [█████░░░░░] 50% (4/8 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
+- Total plans completed: 20
 - Average duration: ~8min
 - Total execution time: ~2.3 hours
 
@@ -31,10 +31,10 @@ Progress: [██░░░░░░░░] 25% (2/8 plans)
 | 02-memory-performance-tuning | 2 | ~12min | ~6min |
 | 03-code-quality-standardization | 3 | ~25min | ~8min |
 | 04-architecture-restructuring | 6 | ~55min | ~9min |
-| 05-deep-architecture-improvements | 2 | ~30min | ~15min |
+| 05-deep-architecture-improvements | 4 | ~57min | ~14min |
 
 **Recent Trend:**
-- Last 5 plans: 04-05, 04-06, 05-01, 05-02
+- Last 5 plans: 04-06, 05-01, 05-02, 05-03, 05-04
 - Trend: Stable ~10-15min per plan
 
 ## Accumulated Context
@@ -85,6 +85,12 @@ Recent decisions affecting current work:
 - [05-02]: All domain-specific request/response types migrated to dto/ package (auth, user, role, project, modul, stat, health, TUS)
 - [05-02]: Repository interfaces keep domain types; controllers and usecases use dto types
 
+- [05-03]: context.Context on all Role/Permission/User domain repo/usecase interfaces
+- [05-03]: RBAC helper interfaces updated with context.Context
+
+- [05-04]: context.Context on all Project/Modul repo interfaces and all remaining usecase interfaces
+- [05-04]: TUS usecases use context.Background() as temporary bridge (05-05 will fix)
+
 ### Pending Todos
 
 None yet.
@@ -97,5 +103,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 05-02-PLAN.md — Wave 2 done
+Stopped at: Completed 05-04-PLAN.md — context.Context on all domains
 Resume file: None
