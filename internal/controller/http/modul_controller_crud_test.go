@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"invento-service/internal/controller/base"
-	"invento-service/internal/dto"
-	"invento-service/internal/rbac"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"invento-service/internal/controller/base"
+	"invento-service/internal/dto"
+	"invento-service/internal/rbac"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
