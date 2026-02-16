@@ -41,14 +41,14 @@ This roadmap transforms invento-service from a working-but-rough `fiber-boiler-p
 
 **Risk**: Module rename leaves partial old references, breaking compilation. Mitigated by atomic sed + grep verification + full build/test pass.
 
-**Plans:** 5 plans
+**Plans:** 5/5 plans complete
 
 Plans:
-- [ ] 01-01-PLAN.md -- Atomic module rename from fiber-boiler-plate to invento-service
-- [ ] 01-02-PLAN.md -- Replace panic/log.Fatal with error returns, add config validation and graceful shutdown
-- [ ] 01-03-PLAN.md -- Create RBAC constants package and remove hardcoded secrets from tests
-- [ ] 01-04-PLAN.md -- Set up developer tooling (golangci-lint, Taskfile, gofumpt) and memory baselines
-- [ ] 01-05-PLAN.md -- Gap closure: fix LoadConfig() signature in test files, rename README heading
+- [x] 01-01-PLAN.md -- Atomic module rename from fiber-boiler-plate to invento-service
+- [x] 01-02-PLAN.md -- Replace panic/log.Fatal with error returns, add config validation and graceful shutdown
+- [x] 01-03-PLAN.md -- Create RBAC constants package and remove hardcoded secrets from tests
+- [x] 01-04-PLAN.md -- Set up developer tooling (golangci-lint, Taskfile, gofumpt) and memory baselines
+- [x] 01-05-PLAN.md -- Gap closure: fix LoadConfig() signature in test files, rename README heading
 
 ### Phase 2: Memory & Performance Tuning
 **Goal**: The service runs within a measurable memory budget, with profiling tools available to validate all subsequent changes stay within the 500MB constraint.
@@ -73,8 +73,8 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 02-01-PLAN.md -- Add PerformanceConfig struct, env var helpers, update Dockerfile GOGC and .env.example
-- [ ] 02-02-PLAN.md -- Wire config into database pool, Fiber server, pprof, memory monitor, and runtime settings
+- [x] 02-01-PLAN.md -- Add PerformanceConfig struct, env var helpers, update Dockerfile GOGC and .env.example
+- [x] 02-02-PLAN.md -- Wire config into database pool, Fiber server, pprof, memory monitor, and runtime settings
 
 ### Phase 3: Code Quality Standardization
 **Goal**: All logging uses structured zerolog, all errors are handled consistently with proper wrapping, and all API responses follow a single format.
@@ -104,9 +104,9 @@ Plans:
 **Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 03-01-PLAN.md -- Zerolog foundation, response envelope update, replace internal/logger with zerolog in server.go
-- [ ] 03-02-PLAN.md -- Error handling audit (return-after-error), error wrapping, ignored errors, file size dedup
-- [ ] 03-03-PLAN.md -- Complete logging migration across all remaining files, delete helper/logger.go, update test assertions
+- [x] 03-01-PLAN.md -- Zerolog foundation, response envelope update, replace internal/logger with zerolog in server.go
+- [x] 03-02-PLAN.md -- Error handling audit (return-after-error), error wrapping, ignored errors, file size dedup
+- [x] 03-03-PLAN.md -- Complete logging migration across all remaining files, delete helper/logger.go, update test assertions
 
 ### Phase 4: Architecture Restructuring
 **Goal**: The `internal/helper/` god-package is decomposed into focused packages with clear single responsibilities, and no circular dependencies exist.
@@ -134,15 +134,15 @@ Plans:
 
 **Risk**: Circular dependencies surface during extraction, requiring unexpected refactoring. Mitigated by mapping all deps before moving any code, extracting leaf packages first.
 
-**Plans:** 6 plans
+**Plans:** 6/6 plans complete
 
 Plans:
-- [ ] 04-01-PLAN.md -- Extract httputil package (HTTP response helpers, status constants, pagination, query parsing, cookie, validator)
-- [ ] 04-02-PLAN.md -- Extract storage package (file operations, FileManager, PathResolver, domain helpers)
-- [ ] 04-03-PLAN.md -- Extract rbac package (Casbin enforcer, RBAC helpers, constants from internal/constants/)
-- [ ] 04-04-PLAN.md -- Extract middleware functions into existing internal/middleware/ package (auth, RBAC, TUS middleware)
-- [ ] 04-05-PLAN.md -- Extract upload package (TUS store, queue, manager, cleanup, headers, metadata, response)
-- [ ] 04-06-PLAN.md -- Final cleanup: inline orphan email.go, delete internal/helper/ entirely
+- [x] 04-01-PLAN.md -- Extract httputil package (HTTP response helpers, status constants, pagination, query parsing, cookie, validator)
+- [x] 04-02-PLAN.md -- Extract storage package (file operations, FileManager, PathResolver, domain helpers)
+- [x] 04-03-PLAN.md -- Extract rbac package (Casbin enforcer, RBAC helpers, constants from internal/constants/)
+- [x] 04-04-PLAN.md -- Extract middleware functions into existing internal/middleware/ package (auth, RBAC, TUS middleware)
+- [x] 04-05-PLAN.md -- Extract upload package (TUS store, queue, manager, cleanup, headers, metadata, response)
+- [x] 04-06-PLAN.md -- Final cleanup: inline orphan email.go, delete internal/helper/ entirely
 
 ### Phase 5: Deep Architecture Improvements
 **Goal**: All layers accept `context.Context` for proper timeout/cancellation support, route registration is modular, and no source file exceeds 500 lines.
@@ -171,16 +171,16 @@ Plans:
 **Plans:** 10/10 plans complete
 
 Plans:
-- [ ] 05-01-PLAN.md -- Foundation: install copier, migrate response types to dto, extract routes.go, centralized ErrorHandler
-- [ ] 05-02-PLAN.md -- DTO migration: move all domain-specific request/response types to dto/, create mapping functions
-- [ ] 05-03-PLAN.md -- Context propagation for Role/Permission and User domains
-- [ ] 05-04-PLAN.md -- Context propagation for Project, Modul, Auth, Statistic, and Health domains
-- [ ] 05-05-PLAN.md -- Context propagation for TUS Upload and TUS Modul Upload domains (completes context rollout)
-- [ ] 05-06-PLAN.md -- Split test_mocks.go and top 15 oversized test files (>750 lines)
-- [ ] 05-07-PLAN.md -- Split remaining 14 oversized test files (501-750 lines)
-- [ ] 05-08-PLAN.md -- Test parallelization (t.Parallel()) and final 500-line enforcement verification
-- [ ] 05-09-PLAN.md -- Gap closure: context.Context for AuthUsecase, HealthUsecase, StatisticUsecase interfaces
-- [ ] 05-10-PLAN.md -- Gap closure: trim 5 test files to under 500-line limit
+- [x] 05-01-PLAN.md -- Foundation: install copier, migrate response types to dto, extract routes.go, centralized ErrorHandler
+- [x] 05-02-PLAN.md -- DTO migration: move all domain-specific request/response types to dto/, create mapping functions
+- [x] 05-03-PLAN.md -- Context propagation for Role/Permission and User domains
+- [x] 05-04-PLAN.md -- Context propagation for Project, Modul, Auth, Statistic, and Health domains
+- [x] 05-05-PLAN.md -- Context propagation for TUS Upload and TUS Modul Upload domains (completes context rollout)
+- [x] 05-06-PLAN.md -- Split test_mocks.go and top 15 oversized test files (>750 lines)
+- [x] 05-07-PLAN.md -- Split remaining 14 oversized test files (501-750 lines)
+- [x] 05-08-PLAN.md -- Test parallelization (t.Parallel()) and final 500-line enforcement verification
+- [x] 05-09-PLAN.md -- Gap closure: context.Context for AuthUsecase, HealthUsecase, StatisticUsecase interfaces
+- [x] 05-10-PLAN.md -- Gap closure: trim 5 test files to under 500-line limit
 
 ### Phase 6: Polish & Verification
 **Goal**: The codebase is clean, verified under load to stay within memory limits, and all documentation reflects the final state.
@@ -204,15 +204,15 @@ Plans:
 
 **Risk**: Memory issues only surface under concurrent load, not in unit tests. Mitigated by running pprof heap profiles during load simulation, not just at rest.
 
-**Plans:** 6 plans
+**Plans:** 6/6 plans complete
 
 Plans:
-- [ ] 06-01-PLAN.md -- Fix golangci-lint config, extract magic string constants, remove dead code and TODO comments
-- [ ] 06-02-PLAN.md -- Fix failing tests in rbac, usecase, and app packages
-- [ ] 06-03-PLAN.md -- Add Swagger annotations to all missing TUS and user management endpoints
-- [ ] 06-04-PLAN.md -- Comprehensive golangci-lint pass (zero warnings) and gofumpt formatting
-- [ ] 06-05-PLAN.md -- Regenerate Swagger docs, update .env.example, create memory verification checklist
-- [ ] 06-06-PLAN.md -- Test coverage audit: add tests for config (32.5%) and usecase/repo (65.5%) packages
+- [x] 06-01-PLAN.md -- Fix golangci-lint config, extract magic string constants, remove dead code and TODO comments
+- [x] 06-02-PLAN.md -- Fix failing tests in rbac, usecase, and app packages
+- [x] 06-03-PLAN.md -- Add Swagger annotations to all missing TUS and user management endpoints
+- [x] 06-04-PLAN.md -- Comprehensive golangci-lint pass (zero warnings) and gofumpt formatting
+- [x] 06-05-PLAN.md -- Regenerate Swagger docs, update .env.example, create memory verification checklist
+- [x] 06-06-PLAN.md -- Test coverage audit: add tests for config (32.5%) and usecase/repo (65.5%) packages
 
 ## Requirements Coverage
 
@@ -220,19 +220,19 @@ Every active requirement from PROJECT.md is mapped to exactly one phase.
 
 | Requirement | ID | Phase | Status |
 |-------------|----|-------|--------|
-| Rename Go module from `fiber-boiler-plate` to `invento-service` | REN-01 | Phase 1 | Pending |
-| Fix inconsistent error handling (missing `return` after error responses) | ERR-01 | Phase 3 | Pending |
-| Replace magic strings with constants/config | CFG-01 | Phase 1 + Phase 6 | Pending |
-| Remove unused/commented-out code | CLN-01 | Phase 6 | Pending |
-| Split large files (>500 lines) into smaller, modular, reusable utilities | ARC-01 | Phase 4 | Pending |
-| Fix potential panics on initialization failures | SAF-01 | Phase 1 | Pending |
-| Remove hardcoded secrets from test files | SEC-01 | Phase 1 | Pending |
-| Fix ignored errors in file operations | ERR-02 | Phase 3 | Pending |
-| Implement structured logging (zerolog) | LOG-01 | Phase 3 | Pending |
-| Improve architecture consistency across all layers | ARC-02 | Phase 5 | Pending |
-| Optimize memory usage for 500MB RAM constraint | MEM-01 | Phase 2 | Pending |
-| Standardize API response format across all endpoints | API-01 | Phase 3 | Pending |
-| Improve test organization | TST-01 | Phase 5 | Pending |
+| Rename Go module from `fiber-boiler-plate` to `invento-service` | REN-01 | Phase 1 | Complete |
+| Fix inconsistent error handling (missing `return` after error responses) | ERR-01 | Phase 3 | Complete |
+| Replace magic strings with constants/config | CFG-01 | Phase 1 + Phase 6 | Complete |
+| Remove unused/commented-out code | CLN-01 | Phase 6 | Complete |
+| Split large files (>500 lines) into smaller, modular, reusable utilities | ARC-01 | Phase 4 | Complete |
+| Fix potential panics on initialization failures | SAF-01 | Phase 1 | Complete |
+| Remove hardcoded secrets from test files | SEC-01 | Phase 1 | Complete |
+| Fix ignored errors in file operations | ERR-02 | Phase 3 | Complete |
+| Implement structured logging (zerolog) | LOG-01 | Phase 3 | Complete |
+| Improve architecture consistency across all layers | ARC-02 | Phase 5 | Complete |
+| Optimize memory usage for 500MB RAM constraint | MEM-01 | Phase 2 | Complete |
+| Standardize API response format across all endpoints | API-01 | Phase 3 | Complete |
+| Improve test organization | TST-01 | Phase 5 | Complete |
 
 **Coverage: 13/13 active requirements mapped.**
 
