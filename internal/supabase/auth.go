@@ -5,10 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"invento-service/internal/domain"
 	"io"
 	"net/http"
 	"time"
+
+	"invento-service/internal/domain"
 )
 
 var _ domain.AuthService = (*AuthService)(nil)

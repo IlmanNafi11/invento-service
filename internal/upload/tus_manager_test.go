@@ -3,10 +3,11 @@ package upload
 import (
 	"bytes"
 	"encoding/base64"
-	"invento-service/config"
-	"invento-service/internal/storage"
 	"path/filepath"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/storage"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

@@ -2,6 +2,7 @@ package supabase
 
 import (
 	"context"
+
 	"invento-service/config"
 
 	"github.com/supabase-community/supabase-go"

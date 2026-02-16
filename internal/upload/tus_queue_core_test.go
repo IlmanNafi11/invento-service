@@ -1,8 +1,9 @@
 package upload_test
 
 import (
-	"invento-service/internal/upload"
 	"testing"
+
+	"invento-service/internal/upload"
 
 	"github.com/stretchr/testify/assert"
 )

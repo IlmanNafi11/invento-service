@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"invento-service/internal/dto"
-	"invento-service/internal/httputil"
-	"invento-service/internal/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"invento-service/internal/dto"
+	"invento-service/internal/httputil"
+	"invento-service/internal/middleware"
 
 	apperrors "invento-service/internal/errors"
 

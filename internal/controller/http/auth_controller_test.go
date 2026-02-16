@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"invento-service/config"
-	"invento-service/internal/httputil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/httputil"
 
 	httpcontroller "invento-service/internal/controller/http"
 	dto "invento-service/internal/dto"

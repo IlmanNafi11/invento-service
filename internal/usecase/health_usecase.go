@@ -3,10 +3,11 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"invento-service/config"
-	"invento-service/internal/dto"
 	"runtime"
 	"time"
+
+	"invento-service/config"
+	"invento-service/internal/dto"
 
 	"gorm.io/gorm"
 )

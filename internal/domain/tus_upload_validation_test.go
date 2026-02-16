@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"invento-service/internal/dto"
 	"testing"
+
+	"invento-service/internal/dto"
 )
 
 func TestTusUploadResponse_EdgeCases(t *testing.T) {

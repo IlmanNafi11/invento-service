@@ -1,11 +1,12 @@
 package storage
 
 import (
-	"invento-service/config"
-	"invento-service/internal/domain"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

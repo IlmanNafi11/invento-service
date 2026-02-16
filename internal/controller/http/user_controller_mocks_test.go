@@ -2,8 +2,9 @@ package http_test
 
 import (
 	"context"
-	"invento-service/internal/dto"
 	"mime/multipart"
+
+	"invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/mock"

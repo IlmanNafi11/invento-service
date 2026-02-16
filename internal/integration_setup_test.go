@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"invento-service/internal/httputil"
-	"invento-service/internal/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"invento-service/internal/httputil"
+	"invento-service/internal/middleware"
 
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"

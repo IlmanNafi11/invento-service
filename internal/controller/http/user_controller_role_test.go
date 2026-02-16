@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"invento-service/internal/dto"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"invento-service/internal/dto"
 
 	httpcontroller "invento-service/internal/controller/http"
 

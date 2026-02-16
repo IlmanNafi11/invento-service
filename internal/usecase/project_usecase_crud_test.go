@@ -3,10 +3,11 @@ package usecase
 import (
 	"context"
 	"errors"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
 	"testing"
 	"time"
+
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 
 	apperrors "invento-service/internal/errors"
 

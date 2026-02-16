@@ -2,10 +2,11 @@ package storage
 
 import (
 	"fmt"
-	"invento-service/config"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"invento-service/config"
 )
 
 type PathResolver struct {

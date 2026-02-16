@@ -1,8 +1,9 @@
 package httputil_test
 
 import (
-	"invento-service/internal/httputil"
 	"testing"
+
+	"invento-service/internal/httputil"
 
 	"github.com/stretchr/testify/assert"
 )

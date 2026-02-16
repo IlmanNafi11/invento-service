@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"context"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
 	"testing"
 	"time"
+
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

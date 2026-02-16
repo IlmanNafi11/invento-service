@@ -1,9 +1,10 @@
 package upload_test
 
 import (
+	"testing"
+
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
-	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

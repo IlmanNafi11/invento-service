@@ -3,13 +3,14 @@ package upload
 import (
 	"bytes"
 	"fmt"
-	"invento-service/config"
-	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
 	"time"
+
+	"invento-service/config"
+	"invento-service/internal/storage"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

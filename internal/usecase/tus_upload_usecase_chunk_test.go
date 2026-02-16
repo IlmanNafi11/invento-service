@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"invento-service/internal/domain"
 	"testing"
 	"time"
+
+	"invento-service/internal/domain"
 
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"

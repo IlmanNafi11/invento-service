@@ -1,10 +1,11 @@
 package upload_test
 
 import (
-	"invento-service/internal/upload"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"invento-service/internal/upload"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

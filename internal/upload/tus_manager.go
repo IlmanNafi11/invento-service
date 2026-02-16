@@ -2,11 +2,12 @@ package upload
 
 import (
 	"fmt"
+	"io"
+	"strconv"
+
 	"invento-service/config"
 	"invento-service/internal/dto"
 	"invento-service/internal/storage"
-	"io"
-	"strconv"
 
 	apperrors "invento-service/internal/errors"
 

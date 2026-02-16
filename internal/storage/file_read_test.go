@@ -2,12 +2,13 @@ package storage_test
 
 import (
 	"bytes"
-	"invento-service/internal/storage"
 	"mime/multipart"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"invento-service/internal/storage"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

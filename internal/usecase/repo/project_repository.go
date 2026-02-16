@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
-	"strings"
 
 	apperrors "invento-service/internal/errors"
 

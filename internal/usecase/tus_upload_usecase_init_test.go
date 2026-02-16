@@ -2,12 +2,13 @@ package usecase
 
 import (
 	"context"
-	"invento-service/internal/domain"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"invento-service/internal/domain"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 
 	dto "invento-service/internal/dto"
 

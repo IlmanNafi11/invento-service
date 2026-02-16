@@ -2,6 +2,7 @@ package testing
 
 import (
 	"fmt"
+
 	"invento-service/internal/rbac"
 
 	"github.com/casbin/casbin/v2"

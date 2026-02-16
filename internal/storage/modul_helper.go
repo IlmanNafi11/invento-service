@@ -2,9 +2,10 @@ package storage
 
 import (
 	"errors"
-	"invento-service/config"
 	"mime/multipart"
 	"path/filepath"
+
+	"invento-service/config"
 )
 
 type ModulHelper struct {
