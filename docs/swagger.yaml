@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  domain.AppInfo:
+  dto.AppInfo:
     properties:
       environment:
         type: string
@@ -15,18 +15,18 @@ definitions:
       version:
         type: string
     type: object
-  domain.ApplicationStatus:
+  dto.ApplicationStatus:
     properties:
       app:
-        $ref: '#/definitions/domain.AppInfo'
+        $ref: '#/definitions/dto.AppInfo'
       dependencies:
         items:
-          $ref: '#/definitions/domain.Dependency'
+          $ref: '#/definitions/dto.Dependency'
         type: array
       services:
-        $ref: '#/definitions/domain.ServicesStatus'
+        $ref: '#/definitions/dto.ServicesStatus'
     type: object
-  domain.AuthRequest:
+  dto.AuthRequest:
     properties:
       email:
         type: string
@@ -37,7 +37,7 @@ definitions:
     - email
     - password
     type: object
-  domain.AuthResponse:
+  dto.AuthResponse:
     properties:
       access_token:
         type: string
@@ -48,9 +48,9 @@ definitions:
       token_type:
         type: string
       user:
-        $ref: '#/definitions/domain.AuthUserResponse'
+        $ref: '#/definitions/dto.AuthUserResponse'
     type: object
-  domain.AuthUserResponse:
+  dto.AuthUserResponse:
     properties:
       created_at:
         type: string
@@ -63,47 +63,57 @@ definitions:
       role:
         type: string
     type: object
-  domain.BasicHealthCheck:
+  dto.BasicHealthCheck:
     properties:
       app:
         type: string
       status:
-        $ref: '#/definitions/domain.HealthStatus'
+        $ref: '#/definitions/dto.HealthStatus'
       timestamp:
         type: string
     type: object
-  domain.CPUInfo:
+  dto.BulkAssignRoleRequest:
+    properties:
+      user_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - user_ids
+    type: object
+  dto.CPUInfo:
     properties:
       cores:
         type: integer
       goroutines:
         type: integer
     type: object
-  domain.ComprehensiveHealthCheck:
+  dto.ComprehensiveHealthCheck:
     properties:
       app:
-        $ref: '#/definitions/domain.AppInfo'
+        $ref: '#/definitions/dto.AppInfo'
       database:
-        $ref: '#/definitions/domain.DatabaseStatus'
+        $ref: '#/definitions/dto.DatabaseStatus'
       status:
-        $ref: '#/definitions/domain.HealthStatus'
+        $ref: '#/definitions/dto.HealthStatus'
       system:
-        $ref: '#/definitions/domain.SystemInfo'
+        $ref: '#/definitions/dto.SystemInfo'
       timestamp:
         type: string
     type: object
-  domain.DatabaseService:
+  dto.DatabaseService:
     properties:
       name:
         type: string
       ping_time:
         type: string
       status:
-        $ref: '#/definitions/domain.ServiceStatus'
+        $ref: '#/definitions/dto.ServiceStatus'
       version:
         type: string
     type: object
-  domain.DatabaseStatus:
+  dto.DatabaseStatus:
     properties:
       error:
         type: string
@@ -118,31 +128,31 @@ definitions:
       ping_time:
         type: string
       status:
-        $ref: '#/definitions/domain.ServiceStatus'
+        $ref: '#/definitions/dto.ServiceStatus'
       total_queries:
         type: integer
       version:
         type: string
     type: object
-  domain.Dependency:
+  dto.Dependency:
     properties:
       name:
         type: string
       status:
-        $ref: '#/definitions/domain.ServiceStatus'
+        $ref: '#/definitions/dto.ServiceStatus'
       version:
         type: string
     type: object
-  domain.DetailedSystemInfo:
+  dto.DetailedSystemInfo:
     properties:
       cpu:
-        $ref: '#/definitions/domain.CPUInfo'
+        $ref: '#/definitions/dto.CPUInfo'
       memory:
-        $ref: '#/definitions/domain.MemoryInfo'
+        $ref: '#/definitions/dto.MemoryInfo'
       runtime:
-        $ref: '#/definitions/domain.RuntimeInfo'
+        $ref: '#/definitions/dto.RuntimeInfo'
     type: object
-  domain.DownloadUserFilesRequest:
+  dto.DownloadUserFilesRequest:
     properties:
       modul_ids:
         items:
@@ -153,7 +163,7 @@ definitions:
           type: integer
         type: array
     type: object
-  domain.EmailService:
+  dto.EmailService:
     properties:
       api_key_set:
         type: boolean
@@ -162,9 +172,21 @@ definitions:
       provider:
         type: string
       status:
-        $ref: '#/definitions/domain.ServiceStatus'
+        $ref: '#/definitions/dto.ServiceStatus'
     type: object
-  domain.HealthStatus:
+  dto.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      errors: {}
+      message:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  dto.HealthStatus:
     enum:
     - healthy
     - unhealthy
@@ -174,16 +196,16 @@ definitions:
     - HealthStatusHealthy
     - HealthStatusUnhealthy
     - HealthStatusDegraded
-  domain.HttpMetrics:
+  dto.HttpMetrics:
     properties:
       active_requests:
         type: integer
       response_times:
-        $ref: '#/definitions/domain.ResponseTimes'
+        $ref: '#/definitions/dto.ResponseTimes'
       total_requests:
         type: integer
     type: object
-  domain.MemoryInfo:
+  dto.MemoryInfo:
     properties:
       allocated:
         type: string
@@ -194,7 +216,7 @@ definitions:
       total_allocated:
         type: string
     type: object
-  domain.ModulDownloadRequest:
+  dto.ModulDownloadRequest:
     properties:
       ids:
         items:
@@ -204,16 +226,16 @@ definitions:
     required:
     - ids
     type: object
-  domain.ModulListData:
+  dto.ModulListData:
     properties:
       items:
         items:
-          $ref: '#/definitions/domain.ModulListItem'
+          $ref: '#/definitions/dto.ModulListItem'
         type: array
       pagination:
         $ref: '#/definitions/dto.PaginationData'
     type: object
-  domain.ModulListItem:
+  dto.ModulListItem:
     properties:
       deskripsi:
         type: string
@@ -232,16 +254,18 @@ definitions:
       terakhir_diperbarui:
         type: string
     type: object
-  domain.ModulUpdateRequest:
+  dto.PaginationData:
     properties:
-      deskripsi:
-        type: string
-      judul:
-        maxLength: 255
-        minLength: 3
-        type: string
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
     type: object
-  domain.ProfileData:
+  dto.ProfileData:
     properties:
       created_at:
         type: string
@@ -260,7 +284,7 @@ definitions:
       role:
         type: string
     type: object
-  domain.ProjectDownloadRequest:
+  dto.ProjectDownloadRequest:
     properties:
       ids:
         items:
@@ -270,7 +294,278 @@ definitions:
     required:
     - ids
     type: object
-  domain.ProjectUpdateRequest:
+  dto.RefreshTokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: integer
+      expires_in:
+        type: integer
+      token_type:
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  dto.ResetPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  dto.ResponseTimes:
+    properties:
+      avg:
+        type: string
+      max:
+        type: string
+      min:
+        type: string
+    type: object
+  dto.RoleCreateRequest:
+    properties:
+      nama_role:
+        maxLength: 50
+        minLength: 2
+        type: string
+      permissions:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+    required:
+    - nama_role
+    - permissions
+    type: object
+  dto.RoleUpdateRequest:
+    properties:
+      nama_role:
+        maxLength: 50
+        minLength: 2
+        type: string
+      permissions:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+    required:
+    - nama_role
+    - permissions
+    type: object
+  dto.RuntimeInfo:
+    properties:
+      arch:
+        type: string
+      compiler:
+        type: string
+      go_version:
+        type: string
+      os:
+        type: string
+    type: object
+  dto.ServiceStatus:
+    enum:
+    - healthy
+    - unhealthy
+    - connected
+    - disconnected
+    - error
+    - loaded
+    - running
+    type: string
+    x-enum-varnames:
+    - ServiceStatusHealthy
+    - ServiceStatusUnhealthy
+    - ServiceStatusConnected
+    - ServiceStatusDisconnected
+    - ServiceStatusError
+    - ServiceStatusLoaded
+    - ServiceStatusRunning
+  dto.ServicesStatus:
+    properties:
+      database:
+        $ref: '#/definitions/dto.DatabaseService'
+      email:
+        $ref: '#/definitions/dto.EmailService'
+    type: object
+  dto.StatisticData:
+    properties:
+      total_modul:
+        type: integer
+      total_project:
+        type: integer
+      total_role:
+        type: integer
+      total_user:
+        type: integer
+    type: object
+  dto.SuccessResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  dto.SystemInfo:
+    properties:
+      cpu_cores:
+        type: integer
+      goroutines:
+        type: integer
+      memory_usage:
+        type: string
+    type: object
+  dto.SystemMetrics:
+    properties:
+      app:
+        $ref: '#/definitions/dto.AppInfo'
+      database:
+        $ref: '#/definitions/dto.DatabaseStatus'
+      http:
+        $ref: '#/definitions/dto.HttpMetrics'
+      system:
+        $ref: '#/definitions/dto.DetailedSystemInfo'
+    type: object
+  dto.TusModulUploadInfoResponse:
+    properties:
+      created_at:
+        type: string
+      deskripsi:
+        type: string
+      judul:
+        type: string
+      length:
+        type: integer
+      modul_id:
+        type: string
+      offset:
+        type: integer
+      progress:
+        type: number
+      status:
+        type: string
+      updated_at:
+        type: string
+      upload_id:
+        type: string
+    type: object
+  dto.TusModulUploadResponse:
+    properties:
+      length:
+        type: integer
+      offset:
+        type: integer
+      upload_id:
+        type: string
+      upload_url:
+        type: string
+    type: object
+  dto.TusModulUploadSlotResponse:
+    properties:
+      available:
+        type: boolean
+      max_queue:
+        type: integer
+      message:
+        type: string
+      queue_length:
+        type: integer
+    type: object
+  dto.TusUploadInfoResponse:
+    properties:
+      created_at:
+        type: string
+      kategori:
+        type: string
+      length:
+        type: integer
+      nama_project:
+        type: string
+      offset:
+        type: integer
+      progress:
+        type: number
+      project_id:
+        type: integer
+      semester:
+        type: integer
+      status:
+        type: string
+      updated_at:
+        type: string
+      upload_id:
+        type: string
+    type: object
+  dto.TusUploadResponse:
+    properties:
+      length:
+        type: integer
+      offset:
+        type: integer
+      upload_id:
+        type: string
+      upload_url:
+        type: string
+    type: object
+  dto.TusUploadSlotResponse:
+    properties:
+      active_upload:
+        type: boolean
+      available:
+        type: boolean
+      max_concurrent:
+        type: integer
+      message:
+        type: string
+      queue_length:
+        type: integer
+    type: object
+  dto.UpdateModulRequest:
+    properties:
+      deskripsi:
+        type: string
+      judul:
+        maxLength: 255
+        minLength: 3
+        type: string
+    type: object
+  dto.UpdateProfileRequest:
+    properties:
+      jenis_kelamin:
+        enum:
+        - Laki-laki
+        - Perempuan
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateProjectRequest:
     properties:
       kategori:
         enum:
@@ -289,170 +584,14 @@ definitions:
         minimum: 1
         type: integer
     type: object
-  domain.RefreshTokenResponse:
-    properties:
-      access_token:
-        type: string
-      expires_at:
-        type: integer
-      expires_in:
-        type: integer
-      token_type:
-        type: string
-    type: object
-  domain.RegisterRequest:
-    properties:
-      email:
-        type: string
-      name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      password:
-        minLength: 8
-        type: string
-    required:
-    - email
-    - name
-    - password
-    type: object
-  domain.ResetPasswordRequest:
-    properties:
-      email:
-        type: string
-    required:
-    - email
-    type: object
-  domain.ResponseTimes:
-    properties:
-      avg:
-        type: string
-      max:
-        type: string
-      min:
-        type: string
-    type: object
-  domain.RoleCreateRequest:
-    properties:
-      nama_role:
-        maxLength: 50
-        minLength: 2
-        type: string
-      permissions:
-        additionalProperties:
-          items:
-            type: string
-          type: array
-        type: object
-    required:
-    - nama_role
-    - permissions
-    type: object
-  domain.RoleUpdateRequest:
-    properties:
-      nama_role:
-        maxLength: 50
-        minLength: 2
-        type: string
-      permissions:
-        additionalProperties:
-          items:
-            type: string
-          type: array
-        type: object
-    required:
-    - nama_role
-    - permissions
-    type: object
-  domain.RuntimeInfo:
-    properties:
-      arch:
-        type: string
-      compiler:
-        type: string
-      go_version:
-        type: string
-      os:
-        type: string
-    type: object
-  domain.ServiceStatus:
-    enum:
-    - healthy
-    - unhealthy
-    - connected
-    - disconnected
-    - error
-    - loaded
-    - running
-    type: string
-    x-enum-varnames:
-    - ServiceStatusHealthy
-    - ServiceStatusUnhealthy
-    - ServiceStatusConnected
-    - ServiceStatusDisconnected
-    - ServiceStatusError
-    - ServiceStatusLoaded
-    - ServiceStatusRunning
-  domain.ServicesStatus:
-    properties:
-      database:
-        $ref: '#/definitions/domain.DatabaseService'
-      email:
-        $ref: '#/definitions/domain.EmailService'
-    type: object
-  domain.StatisticData:
-    properties:
-      total_modul:
-        type: integer
-      total_project:
-        type: integer
-      total_role:
-        type: integer
-      total_user:
-        type: integer
-    type: object
-  domain.SystemInfo:
-    properties:
-      cpu_cores:
-        type: integer
-      goroutines:
-        type: integer
-      memory_usage:
-        type: string
-    type: object
-  domain.SystemMetrics:
-    properties:
-      app:
-        $ref: '#/definitions/domain.AppInfo'
-      database:
-        $ref: '#/definitions/domain.DatabaseStatus'
-      http:
-        $ref: '#/definitions/domain.HttpMetrics'
-      system:
-        $ref: '#/definitions/domain.DetailedSystemInfo'
-    type: object
-  domain.UpdateProfileRequest:
-    properties:
-      jenis_kelamin:
-        enum:
-        - Laki-laki
-        - Perempuan
-        type: string
-      name:
-        maxLength: 100
-        minLength: 2
-        type: string
-    required:
-    - name
-    type: object
-  domain.UpdateUserRoleRequest:
+  dto.UpdateUserRoleRequest:
     properties:
       role:
         type: string
     required:
     - role
     type: object
-  domain.UserFileItem:
+  dto.UserFileItem:
     properties:
       download_url:
         type: string
@@ -463,25 +602,25 @@ definitions:
       nama_file:
         type: string
     type: object
-  domain.UserFilesData:
+  dto.UserFilesData:
     properties:
       items:
         items:
-          $ref: '#/definitions/domain.UserFileItem'
+          $ref: '#/definitions/dto.UserFileItem'
         type: array
       pagination:
         $ref: '#/definitions/dto.PaginationData'
     type: object
-  domain.UserListData:
+  dto.UserListData:
     properties:
       items:
         items:
-          $ref: '#/definitions/domain.UserListItem'
+          $ref: '#/definitions/dto.UserListItem'
         type: array
       pagination:
         $ref: '#/definitions/dto.PaginationData'
     type: object
-  domain.UserListItem:
+  dto.UserListItem:
     properties:
       dibuat_pada:
         type: string
@@ -492,48 +631,13 @@ definitions:
       role:
         type: string
     type: object
-  domain.UserPermissionItem:
+  dto.UserPermissionItem:
     properties:
       actions:
         items:
           type: string
         type: array
       resource:
-        type: string
-    type: object
-  dto.ErrorResponse:
-    properties:
-      code:
-        type: integer
-      errors: {}
-      message:
-        type: string
-      status:
-        type: string
-      timestamp:
-        type: string
-    type: object
-  dto.PaginationData:
-    properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total_items:
-        type: integer
-      total_pages:
-        type: integer
-    type: object
-  dto.SuccessResponse:
-    properties:
-      code:
-        type: integer
-      data: {}
-      message:
-        type: string
-      status:
-        type: string
-      timestamp:
         type: string
     type: object
 host: localhost:3000
@@ -556,7 +660,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.AuthRequest'
+          $ref: '#/definitions/dto.AuthRequest'
       produces:
       - application/json
       responses:
@@ -567,7 +671,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.AuthResponse'
+                  $ref: '#/definitions/dto.AuthResponse'
               type: object
         "400":
           description: Format request tidak valid
@@ -632,7 +736,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.RefreshTokenResponse'
+                  $ref: '#/definitions/dto.RefreshTokenResponse'
               type: object
         "400":
           description: Refresh token diperlukan
@@ -661,7 +765,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.RegisterRequest'
+          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -672,7 +776,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.AuthResponse'
+                  $ref: '#/definitions/dto.AuthResponse'
               type: object
         "400":
           description: Data validasi tidak valid
@@ -701,7 +805,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.ResetPasswordRequest'
+          $ref: '#/definitions/dto.ResetPasswordRequest'
       produces:
       - application/json
       responses:
@@ -740,7 +844,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.BasicHealthCheck'
+                  $ref: '#/definitions/dto.BasicHealthCheck'
               type: object
       summary: Basic Health Check
       tags:
@@ -783,7 +887,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.ModulListData'
+                  $ref: '#/definitions/dto.ModulListData'
               type: object
         "400":
           description: Invalid query parameters
@@ -860,7 +964,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.ModulUpdateRequest'
+          $ref: '#/definitions/dto.UpdateModulRequest'
       produces:
       - application/json
       responses:
@@ -893,6 +997,288 @@ paths:
       summary: Update module metadata
       tags:
       - Modul
+  /modul/{id}/update/{upload_id}:
+    delete:
+      description: Membatalkan upload update modul yang sedang berlangsung berdasarkan
+        modul ID dan upload ID
+      parameters:
+      - description: Modul ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Upload update berhasil dibatalkan
+        "400":
+          description: ID modul tidak valid
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel modul update upload
+      tags:
+      - TUS Modul Upload
+    get:
+      description: Mendapatkan informasi detail upload update modul berdasarkan modul
+        ID dan upload ID
+      parameters:
+      - description: Modul ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informasi update upload berhasil didapat
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusModulUploadInfoResponse'
+              type: object
+        "400":
+          description: ID modul tidak valid
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get modul update upload info
+      tags:
+      - TUS Modul Upload
+    head:
+      description: Get the current offset and length of a TUS modul update upload
+        via HEAD request
+      parameters:
+      - description: Modul ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Upload status
+          headers:
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+            Upload-Length:
+              description: Total file size
+              type: string
+            Upload-Offset:
+              description: Current byte offset
+              type: string
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get modul update upload status
+      tags:
+      - TUS Modul Upload
+    patch:
+      consumes:
+      - application/offset+octet-stream
+      description: Upload a chunk of data for a TUS resumable modul update upload
+      parameters:
+      - description: Modul ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Byte offset for this chunk
+        in: header
+        name: Upload-Offset
+        required: true
+        type: integer
+      - default: application/offset+octet-stream
+        description: Content type
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Chunk uploaded
+          headers:
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+            Upload-Offset:
+              description: New byte offset after chunk
+              type: string
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Offset mismatch
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload modul update file chunk
+      tags:
+      - TUS Modul Upload
+  /modul/{id}/upload:
+    post:
+      consumes:
+      - application/json
+      description: Start a new TUS resumable upload to update an existing module file
+      parameters:
+      - description: Modul ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Total file size in bytes
+        in: header
+        name: Upload-Length
+        required: true
+        type: integer
+      - description: Upload metadata (judul, deskripsi)
+        in: header
+        name: Upload-Metadata
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Update upload initiated
+          headers:
+            Location:
+              description: Upload URL
+              type: string
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusModulUploadResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Modul not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Initiate modul update upload
+      tags:
+      - TUS Modul Upload
   /modul/download:
     post:
       consumes:
@@ -904,7 +1290,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.ModulDownloadRequest'
+          $ref: '#/definitions/dto.ModulDownloadRequest'
       produces:
       - application/zip
       responses:
@@ -933,6 +1319,287 @@ paths:
       summary: Download modules as ZIP
       tags:
       - Modul
+  /modul/upload/:
+    post:
+      consumes:
+      - application/json
+      description: Start a new TUS resumable upload for a module file
+      parameters:
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Total file size in bytes
+        in: header
+        name: Upload-Length
+        required: true
+        type: integer
+      - description: Upload metadata (judul, deskripsi)
+        in: header
+        name: Upload-Metadata
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Upload initiated
+          headers:
+            Location:
+              description: Upload URL
+              type: string
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusModulUploadResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: No upload slot available
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Initiate modul upload
+      tags:
+      - TUS Modul Upload
+  /modul/upload/{upload_id}:
+    delete:
+      description: Membatalkan upload modul yang sedang berlangsung berdasarkan upload
+        ID
+      parameters:
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Upload berhasil dibatalkan
+        "400":
+          description: Upload ID tidak valid
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel modul upload
+      tags:
+      - TUS Modul Upload
+    get:
+      description: Mendapatkan informasi detail upload modul berdasarkan upload ID
+      parameters:
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Informasi upload berhasil didapat
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusModulUploadInfoResponse'
+              type: object
+        "400":
+          description: Upload ID tidak valid
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get modul upload info
+      tags:
+      - TUS Modul Upload
+    head:
+      description: Get the current offset and length of a TUS modul upload via HEAD
+        request
+      parameters:
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Upload status
+          headers:
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+            Upload-Length:
+              description: Total file size
+              type: string
+            Upload-Offset:
+              description: Current byte offset
+              type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get modul upload status
+      tags:
+      - TUS Modul Upload
+    patch:
+      consumes:
+      - application/offset+octet-stream
+      description: Upload a chunk of data for a TUS resumable modul upload
+      parameters:
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Byte offset for this chunk
+        in: header
+        name: Upload-Offset
+        required: true
+        type: integer
+      - default: application/offset+octet-stream
+        description: Content type
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Chunk uploaded
+          headers:
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+            Upload-Offset:
+              description: New byte offset after chunk
+              type: string
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Offset mismatch
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload modul file chunk
+      tags:
+      - TUS Modul Upload
+  /modul/upload/check-slot:
+    get:
+      description: Check if a modul upload slot is available for the authenticated
+        user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Slot status
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusModulUploadSlotResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Check modul upload slot
+      tags:
+      - TUS Modul Upload
   /monitoring/app-status:
     get:
       consumes:
@@ -949,7 +1616,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.ApplicationStatus'
+                  $ref: '#/definitions/dto.ApplicationStatus'
               type: object
       summary: Application Status
       tags:
@@ -970,7 +1637,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.SystemMetrics'
+                  $ref: '#/definitions/dto.SystemMetrics'
               type: object
       summary: System Metrics
       tags:
@@ -993,7 +1660,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.ComprehensiveHealthCheck'
+                  $ref: '#/definitions/dto.ComprehensiveHealthCheck'
               type: object
         "503":
           description: Beberapa komponen sistem mengalami masalah
@@ -1017,7 +1684,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.ProfileData'
+                  $ref: '#/definitions/dto.ProfileData'
               type: object
         "401":
           description: Unauthorized
@@ -1042,7 +1709,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.UpdateProfileRequest'
+          $ref: '#/definitions/dto.UpdateProfileRequest'
       - description: Profile photo (optional)
         in: formData
         name: foto_profil
@@ -1057,7 +1724,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.ProfileData'
+                  $ref: '#/definitions/dto.ProfileData'
               type: object
         "400":
           description: Bad Request
@@ -1228,7 +1895,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.ProjectUpdateRequest'
+          $ref: '#/definitions/dto.UpdateProjectRequest'
       produces:
       - application/json
       responses:
@@ -1261,6 +1928,284 @@ paths:
       summary: Update project metadata
       tags:
       - Project
+  /project/{id}/update/{upload_id}:
+    delete:
+      description: Cancel and clean up a TUS project update upload
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Upload cancelled
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel project update upload
+      tags:
+      - TUS Upload
+    get:
+      description: Get detailed information about a TUS project update upload
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upload info
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusUploadInfoResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get project update upload info
+      tags:
+      - TUS Upload
+    head:
+      description: Get the current offset and length of a TUS project update upload
+        via HEAD request
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Upload status
+          headers:
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+            Upload-Length:
+              description: Total file size
+              type: string
+            Upload-Offset:
+              description: Current byte offset
+              type: string
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get project update upload status
+      tags:
+      - TUS Upload
+    patch:
+      consumes:
+      - application/offset+octet-stream
+      description: Upload a chunk of data for a TUS resumable project update upload
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upload ID
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Byte offset for this chunk
+        in: header
+        name: Upload-Offset
+        required: true
+        type: integer
+      - default: application/offset+octet-stream
+        description: Content type
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Chunk uploaded
+          headers:
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+            Upload-Offset:
+              description: New byte offset after chunk
+              type: string
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Offset mismatch
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload project update file chunk
+      tags:
+      - TUS Upload
+  /project/{id}/upload:
+    post:
+      consumes:
+      - application/json
+      description: Start a new TUS resumable upload to update an existing project
+        file
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Total file size in bytes
+        in: header
+        name: Upload-Length
+        required: true
+        type: integer
+      - description: Upload metadata (nama_project, kategori, semester)
+        in: header
+        name: Upload-Metadata
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Update upload initiated
+          headers:
+            Location:
+              description: Upload URL
+              type: string
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusUploadResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Initiate project update upload
+      tags:
+      - TUS Upload
   /project/download:
     post:
       consumes:
@@ -1272,7 +2217,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.ProjectDownloadRequest'
+          $ref: '#/definitions/dto.ProjectDownloadRequest'
       produces:
       - application/zip
       responses:
@@ -1301,6 +2246,317 @@ paths:
       summary: Download projects as ZIP
       tags:
       - Project
+  /project/upload/:
+    post:
+      consumes:
+      - application/json
+      description: Start a new TUS resumable upload for a project file
+      parameters:
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Total file size in bytes
+        in: header
+        name: Upload-Length
+        required: true
+        type: integer
+      - description: Upload metadata (nama_project, kategori, semester)
+        in: header
+        name: Upload-Metadata
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Upload initiated
+          headers:
+            Location:
+              description: Upload URL
+              type: string
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusUploadResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: No upload slot available
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Initiate project upload
+      tags:
+      - TUS Upload
+  /project/upload/{id}:
+    delete:
+      description: Cancel and clean up a TUS project upload
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Upload cancelled
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel project upload
+      tags:
+      - TUS Upload
+    get:
+      description: Get detailed information about a TUS project upload
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upload info
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusUploadInfoResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get project upload info
+      tags:
+      - TUS Upload
+    head:
+      description: Get the current offset and length of a TUS project upload via HEAD
+        request
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Upload status
+          headers:
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+            Upload-Length:
+              description: Total file size
+              type: string
+            Upload-Offset:
+              description: Current byte offset
+              type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get project upload status
+      tags:
+      - TUS Upload
+    patch:
+      consumes:
+      - application/offset+octet-stream
+      description: Upload a chunk of data for a TUS resumable project upload
+      parameters:
+      - description: Upload ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      - description: Byte offset for this chunk
+        in: header
+        name: Upload-Offset
+        required: true
+        type: integer
+      - default: application/offset+octet-stream
+        description: Content type
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Chunk uploaded
+          headers:
+            Tus-Resumable:
+              description: TUS protocol version
+              type: string
+            Upload-Offset:
+              description: New byte offset after chunk
+              type: string
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Upload not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Offset mismatch
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload project file chunk
+      tags:
+      - TUS Upload
+  /project/upload/check-slot:
+    get:
+      description: Check if an upload slot is available for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Slot status
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.TusUploadSlotResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: No slot available
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Check project upload slot
+      tags:
+      - TUS Upload
+  /project/upload/reset-queue:
+    post:
+      description: Reset the upload queue for the authenticated user
+      parameters:
+      - default: 1.0.0
+        description: TUS protocol version
+        in: header
+        name: Tus-Resumable
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Queue reset berhasil
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Reset project upload queue
+      tags:
+      - TUS Upload
   /role:
     get:
       consumes:
@@ -1351,7 +2607,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.RoleCreateRequest'
+          $ref: '#/definitions/dto.RoleCreateRequest'
       produces:
       - application/json
       responses:
@@ -1461,7 +2717,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.RoleUpdateRequest'
+          $ref: '#/definitions/dto.RoleUpdateRequest'
       produces:
       - application/json
       responses:
@@ -1490,6 +2746,94 @@ paths:
       summary: Update role
       tags:
       - Roles
+  /role/{id}/users:
+    get:
+      description: Mendapatkan daftar user yang memiliki role tertentu berdasarkan
+        role ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Daftar user untuk role berhasil diambil
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
+        "400":
+          description: ID role tidak valid
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Role tidak ditemukan
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get users for a specific role
+      tags:
+      - Role Management
+  /role/{id}/users/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Menetapkan role tertentu ke beberapa user sekaligus berdasarkan
+        daftar user ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Daftar user ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BulkAssignRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role berhasil ditetapkan ke user
+          schema:
+            $ref: '#/definitions/dto.SuccessResponse'
+        "400":
+          description: Format request tidak valid
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Role tidak ditemukan
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validasi gagal
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Bulk assign role to users
+      tags:
+      - Role Management
   /role/permissions:
     get:
       consumes:
@@ -1538,7 +2882,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.StatisticData'
+                  $ref: '#/definitions/dto.StatisticData'
               type: object
         "401":
           description: Tidak memiliki akses
@@ -1583,7 +2927,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.UserListData'
+                  $ref: '#/definitions/dto.UserListData'
               type: object
         "401":
           description: Unauthorized
@@ -1653,7 +2997,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.DownloadUserFilesRequest'
+          $ref: '#/definitions/dto.DownloadUserFilesRequest'
       produces:
       - application/octet-stream
       responses:
@@ -1713,7 +3057,7 @@ paths:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.UserFilesData'
+                  $ref: '#/definitions/dto.UserFilesData'
               type: object
         "400":
           description: Bad Request
@@ -1752,7 +3096,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/domain.UpdateUserRoleRequest'
+          $ref: '#/definitions/dto.UpdateUserRoleRequest'
       produces:
       - application/json
       responses:
@@ -1797,7 +3141,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/domain.UserPermissionItem'
+                    $ref: '#/definitions/dto.UserPermissionItem'
                   type: array
               type: object
         "401":

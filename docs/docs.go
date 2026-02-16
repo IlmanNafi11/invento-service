@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.AuthRequest"
+                            "$ref": "#/definitions/dto.AuthRequest"
                         }
                     }
                 ],
@@ -51,7 +51,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.AuthResponse"
+                                            "$ref": "#/definitions/dto.AuthResponse"
                                         }
                                     }
                                 }
@@ -156,7 +156,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.RefreshTokenResponse"
+                                            "$ref": "#/definitions/dto.RefreshTokenResponse"
                                         }
                                     }
                                 }
@@ -204,7 +204,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.RegisterRequest"
+                            "$ref": "#/definitions/dto.RegisterRequest"
                         }
                     }
                 ],
@@ -220,7 +220,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.AuthResponse"
+                                            "$ref": "#/definitions/dto.AuthResponse"
                                         }
                                     }
                                 }
@@ -268,7 +268,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.ResetPasswordRequest"
+                            "$ref": "#/definitions/dto.ResetPasswordRequest"
                         }
                     }
                 ],
@@ -325,7 +325,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.BasicHealthCheck"
+                                            "$ref": "#/definitions/dto.BasicHealthCheck"
                                         }
                                     }
                                 }
@@ -399,7 +399,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.ModulListData"
+                                            "$ref": "#/definitions/dto.ModulListData"
                                         }
                                     }
                                 }
@@ -452,7 +452,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.ModulDownloadRequest"
+                            "$ref": "#/definitions/dto.ModulDownloadRequest"
                         }
                     }
                 ],
@@ -477,6 +477,442 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "One or more modules not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/modul/upload/": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start a new TUS resumable upload for a module file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Initiate modul upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total file size in bytes",
+                        "name": "Upload-Length",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload metadata (judul, deskripsi)",
+                        "name": "Upload-Metadata",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Upload initiated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusModulUploadResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "Upload URL"
+                            },
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "No upload slot available",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/modul/upload/check-slot": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check if a modul upload slot is available for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Check modul upload slot",
+                "responses": {
+                    "200": {
+                        "description": "Slot status",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusModulUploadSlotResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/modul/upload/{upload_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mendapatkan informasi detail upload modul berdasarkan upload ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Get modul upload info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Informasi upload berhasil didapat",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusModulUploadInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Upload ID tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membatalkan upload modul yang sedang berlangsung berdasarkan upload ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Cancel modul upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Upload berhasil dibatalkan"
+                    },
+                    "400": {
+                        "description": "Upload ID tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "head": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the current offset and length of a TUS modul upload via HEAD request",
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Get modul upload status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload status",
+                        "headers": {
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            },
+                            "Upload-Length": {
+                                "type": "string",
+                                "description": "Total file size"
+                            },
+                            "Upload-Offset": {
+                                "type": "string",
+                                "description": "Current byte offset"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a chunk of data for a TUS resumable modul upload",
+                "consumes": [
+                    "application/offset+octet-stream"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Upload modul file chunk",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Byte offset for this chunk",
+                        "name": "Upload-Offset",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "application/offset+octet-stream",
+                        "description": "Content type",
+                        "name": "Content-Type",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Chunk uploaded",
+                        "headers": {
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            },
+                            "Upload-Offset": {
+                                "type": "string",
+                                "description": "New byte offset after chunk"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Offset mismatch",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -587,7 +1023,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.ModulUpdateRequest"
+                            "$ref": "#/definitions/dto.UpdateModulRequest"
                         }
                     }
                 ],
@@ -631,6 +1067,434 @@ const docTemplate = `{
                 }
             }
         },
+        "/modul/{id}/update/{upload_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mendapatkan informasi detail upload update modul berdasarkan modul ID dan upload ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Get modul update upload info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modul ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Informasi update upload berhasil didapat",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusModulUploadInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "ID modul tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membatalkan upload update modul yang sedang berlangsung berdasarkan modul ID dan upload ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Cancel modul update upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modul ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Upload update berhasil dibatalkan"
+                    },
+                    "400": {
+                        "description": "ID modul tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "head": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the current offset and length of a TUS modul update upload via HEAD request",
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Get modul update upload status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modul ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload status",
+                        "headers": {
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            },
+                            "Upload-Length": {
+                                "type": "string",
+                                "description": "Total file size"
+                            },
+                            "Upload-Offset": {
+                                "type": "string",
+                                "description": "Current byte offset"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a chunk of data for a TUS resumable modul update upload",
+                "consumes": [
+                    "application/offset+octet-stream"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Upload modul update file chunk",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modul ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Byte offset for this chunk",
+                        "name": "Upload-Offset",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "application/offset+octet-stream",
+                        "description": "Content type",
+                        "name": "Content-Type",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Chunk uploaded",
+                        "headers": {
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            },
+                            "Upload-Offset": {
+                                "type": "string",
+                                "description": "New byte offset after chunk"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Offset mismatch",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/modul/{id}/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start a new TUS resumable upload to update an existing module file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Modul Upload"
+                ],
+                "summary": "Initiate modul update upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Modul ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total file size in bytes",
+                        "name": "Upload-Length",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload metadata (judul, deskripsi)",
+                        "name": "Upload-Metadata",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Update upload initiated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusModulUploadResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "Upload URL"
+                            },
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Modul not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/monitoring/app-status": {
             "get": {
                 "description": "Mengambil status aplikasi lengkap termasuk uptime, layanan yang aktif, dan dependency eksternal.",
@@ -656,7 +1520,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.ApplicationStatus"
+                                            "$ref": "#/definitions/dto.ApplicationStatus"
                                         }
                                     }
                                 }
@@ -691,7 +1555,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.SystemMetrics"
+                                            "$ref": "#/definitions/dto.SystemMetrics"
                                         }
                                     }
                                 }
@@ -726,7 +1590,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.ComprehensiveHealthCheck"
+                                            "$ref": "#/definitions/dto.ComprehensiveHealthCheck"
                                         }
                                     }
                                 }
@@ -772,7 +1636,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.ProfileData"
+                                            "$ref": "#/definitions/dto.ProfileData"
                                         }
                                     }
                                 }
@@ -817,7 +1681,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UpdateProfileRequest"
+                            "$ref": "#/definitions/dto.UpdateProfileRequest"
                         }
                     },
                     {
@@ -839,7 +1703,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.ProfileData"
+                                            "$ref": "#/definitions/dto.ProfileData"
                                         }
                                     }
                                 }
@@ -972,7 +1836,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.ProjectDownloadRequest"
+                            "$ref": "#/definitions/dto.ProjectDownloadRequest"
                         }
                     }
                 ],
@@ -997,6 +1861,492 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "One or more projects not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/project/upload/": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start a new TUS resumable upload for a project file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Initiate project upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total file size in bytes",
+                        "name": "Upload-Length",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload metadata (nama_project, kategori, semester)",
+                        "name": "Upload-Metadata",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Upload initiated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusUploadResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "Upload URL"
+                            },
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "No upload slot available",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/project/upload/check-slot": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Check if an upload slot is available for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Check project upload slot",
+                "responses": {
+                    "200": {
+                        "description": "Slot status",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusUploadSlotResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "No slot available",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/project/upload/reset-queue": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reset the upload queue for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Reset project upload queue",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Queue reset berhasil",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/project/upload/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a TUS project upload",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Get project upload info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload info",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusUploadInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel and clean up a TUS project upload",
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Cancel project upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Upload cancelled"
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "head": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the current offset and length of a TUS project upload via HEAD request",
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Get project upload status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload status",
+                        "headers": {
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            },
+                            "Upload-Length": {
+                                "type": "string",
+                                "description": "Total file size"
+                            },
+                            "Upload-Offset": {
+                                "type": "string",
+                                "description": "Current byte offset"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a chunk of data for a TUS resumable project upload",
+                "consumes": [
+                    "application/offset+octet-stream"
+                ],
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Upload project file chunk",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Byte offset for this chunk",
+                        "name": "Upload-Offset",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "application/offset+octet-stream",
+                        "description": "Content type",
+                        "name": "Content-Type",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Chunk uploaded",
+                        "headers": {
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            },
+                            "Upload-Offset": {
+                                "type": "string",
+                                "description": "New byte offset after chunk"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Offset mismatch",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -1172,7 +2522,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.ProjectUpdateRequest"
+                            "$ref": "#/definitions/dto.UpdateProjectRequest"
                         }
                     }
                 ],
@@ -1197,6 +2547,430 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden - no access to this project",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Project not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/project/{id}/update/{upload_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a TUS project update upload",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Get project update upload info",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload info",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusUploadInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel and clean up a TUS project update upload",
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Cancel project update upload",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Upload cancelled"
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "head": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the current offset and length of a TUS project update upload via HEAD request",
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Get project update upload status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upload status",
+                        "headers": {
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            },
+                            "Upload-Length": {
+                                "type": "string",
+                                "description": "Total file size"
+                            },
+                            "Upload-Offset": {
+                                "type": "string",
+                                "description": "Current byte offset"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload a chunk of data for a TUS resumable project update upload",
+                "consumes": [
+                    "application/offset+octet-stream"
+                ],
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Upload project update file chunk",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Byte offset for this chunk",
+                        "name": "Upload-Offset",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "application/offset+octet-stream",
+                        "description": "Content type",
+                        "name": "Content-Type",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Chunk uploaded",
+                        "headers": {
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            },
+                            "Upload-Offset": {
+                                "type": "string",
+                                "description": "New byte offset after chunk"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Upload not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Offset mismatch",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/project/{id}/upload": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start a new TUS resumable upload to update an existing project file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "TUS Upload"
+                ],
+                "summary": "Initiate project update upload",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.0.0",
+                        "description": "TUS protocol version",
+                        "name": "Tus-Resumable",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Total file size in bytes",
+                        "name": "Upload-Length",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Upload metadata (nama_project, kategori, semester)",
+                        "name": "Upload-Metadata",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Update upload initiated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.TusUploadResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "Upload URL"
+                            },
+                            "Tus-Resumable": {
+                                "type": "string",
+                                "description": "TUS protocol version"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -1301,7 +3075,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.RoleCreateRequest"
+                            "$ref": "#/definitions/dto.RoleCreateRequest"
                         }
                     }
                 ],
@@ -1452,7 +3226,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.RoleUpdateRequest"
+                            "$ref": "#/definitions/dto.RoleUpdateRequest"
                         }
                     }
                 ],
@@ -1543,6 +3317,140 @@ const docTemplate = `{
                 }
             }
         },
+        "/role/{id}/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mendapatkan daftar user yang memiliki role tertentu berdasarkan role ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "Get users for a specific role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar user untuk role berhasil diambil",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID role tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Role tidak ditemukan",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/role/{id}/users/bulk": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menetapkan role tertentu ke beberapa user sekaligus berdasarkan daftar user ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role Management"
+                ],
+                "summary": "Bulk assign role to users",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Daftar user ID",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BulkAssignRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role berhasil ditetapkan ke user",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Format request tidak valid",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Role tidak ditemukan",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validasi gagal",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/statistic": {
             "get": {
                 "security": [
@@ -1573,7 +3481,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.StatisticData"
+                                            "$ref": "#/definitions/dto.StatisticData"
                                         }
                                     }
                                 }
@@ -1647,7 +3555,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.UserListData"
+                                            "$ref": "#/definitions/dto.UserListData"
                                         }
                                     }
                                 }
@@ -1701,7 +3609,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/domain.UserPermissionItem"
+                                                "$ref": "#/definitions/dto.UserPermissionItem"
                                             }
                                         }
                                     }
@@ -1817,7 +3725,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.DownloadUserFilesRequest"
+                            "$ref": "#/definitions/dto.DownloadUserFilesRequest"
                         }
                     }
                 ],
@@ -1908,7 +3816,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.UserFilesData"
+                                            "$ref": "#/definitions/dto.UserFilesData"
                                         }
                                     }
                                 }
@@ -1974,7 +3882,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UpdateUserRoleRequest"
+                            "$ref": "#/definitions/dto.UpdateUserRoleRequest"
                         }
                     }
                 ],
@@ -2014,7 +3922,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "domain.AppInfo": {
+        "dto.AppInfo": {
             "type": "object",
             "properties": {
                 "environment": {
@@ -2037,24 +3945,24 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ApplicationStatus": {
+        "dto.ApplicationStatus": {
             "type": "object",
             "properties": {
                 "app": {
-                    "$ref": "#/definitions/domain.AppInfo"
+                    "$ref": "#/definitions/dto.AppInfo"
                 },
                 "dependencies": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.Dependency"
+                        "$ref": "#/definitions/dto.Dependency"
                     }
                 },
                 "services": {
-                    "$ref": "#/definitions/domain.ServicesStatus"
+                    "$ref": "#/definitions/dto.ServicesStatus"
                 }
             }
         },
-        "domain.AuthRequest": {
+        "dto.AuthRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -2070,7 +3978,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.AuthResponse": {
+        "dto.AuthResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -2086,11 +3994,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/domain.AuthUserResponse"
+                    "$ref": "#/definitions/dto.AuthUserResponse"
                 }
             }
         },
-        "domain.AuthUserResponse": {
+        "dto.AuthUserResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -2110,21 +4018,36 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.BasicHealthCheck": {
+        "dto.BasicHealthCheck": {
             "type": "object",
             "properties": {
                 "app": {
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/domain.HealthStatus"
+                    "$ref": "#/definitions/dto.HealthStatus"
                 },
                 "timestamp": {
                     "type": "string"
                 }
             }
         },
-        "domain.CPUInfo": {
+        "dto.BulkAssignRoleRequest": {
+            "type": "object",
+            "required": [
+                "user_ids"
+            ],
+            "properties": {
+                "user_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.CPUInfo": {
             "type": "object",
             "properties": {
                 "cores": {
@@ -2135,27 +4058,27 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ComprehensiveHealthCheck": {
+        "dto.ComprehensiveHealthCheck": {
             "type": "object",
             "properties": {
                 "app": {
-                    "$ref": "#/definitions/domain.AppInfo"
+                    "$ref": "#/definitions/dto.AppInfo"
                 },
                 "database": {
-                    "$ref": "#/definitions/domain.DatabaseStatus"
+                    "$ref": "#/definitions/dto.DatabaseStatus"
                 },
                 "status": {
-                    "$ref": "#/definitions/domain.HealthStatus"
+                    "$ref": "#/definitions/dto.HealthStatus"
                 },
                 "system": {
-                    "$ref": "#/definitions/domain.SystemInfo"
+                    "$ref": "#/definitions/dto.SystemInfo"
                 },
                 "timestamp": {
                     "type": "string"
                 }
             }
         },
-        "domain.DatabaseService": {
+        "dto.DatabaseService": {
             "type": "object",
             "properties": {
                 "name": {
@@ -2165,14 +4088,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/domain.ServiceStatus"
+                    "$ref": "#/definitions/dto.ServiceStatus"
                 },
                 "version": {
                     "type": "string"
                 }
             }
         },
-        "domain.DatabaseStatus": {
+        "dto.DatabaseStatus": {
             "type": "object",
             "properties": {
                 "error": {
@@ -2194,7 +4117,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/domain.ServiceStatus"
+                    "$ref": "#/definitions/dto.ServiceStatus"
                 },
                 "total_queries": {
                     "type": "integer"
@@ -2204,35 +4127,35 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.Dependency": {
+        "dto.Dependency": {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/domain.ServiceStatus"
+                    "$ref": "#/definitions/dto.ServiceStatus"
                 },
                 "version": {
                     "type": "string"
                 }
             }
         },
-        "domain.DetailedSystemInfo": {
+        "dto.DetailedSystemInfo": {
             "type": "object",
             "properties": {
                 "cpu": {
-                    "$ref": "#/definitions/domain.CPUInfo"
+                    "$ref": "#/definitions/dto.CPUInfo"
                 },
                 "memory": {
-                    "$ref": "#/definitions/domain.MemoryInfo"
+                    "$ref": "#/definitions/dto.MemoryInfo"
                 },
                 "runtime": {
-                    "$ref": "#/definitions/domain.RuntimeInfo"
+                    "$ref": "#/definitions/dto.RuntimeInfo"
                 }
             }
         },
-        "domain.DownloadUserFilesRequest": {
+        "dto.DownloadUserFilesRequest": {
             "type": "object",
             "properties": {
                 "modul_ids": {
@@ -2249,7 +4172,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.EmailService": {
+        "dto.EmailService": {
             "type": "object",
             "properties": {
                 "api_key_set": {
@@ -2262,11 +4185,29 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/domain.ServiceStatus"
+                    "$ref": "#/definitions/dto.ServiceStatus"
                 }
             }
         },
-        "domain.HealthStatus": {
+        "dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "errors": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.HealthStatus": {
             "type": "string",
             "enum": [
                 "healthy",
@@ -2279,21 +4220,21 @@ const docTemplate = `{
                 "HealthStatusDegraded"
             ]
         },
-        "domain.HttpMetrics": {
+        "dto.HttpMetrics": {
             "type": "object",
             "properties": {
                 "active_requests": {
                     "type": "integer"
                 },
                 "response_times": {
-                    "$ref": "#/definitions/domain.ResponseTimes"
+                    "$ref": "#/definitions/dto.ResponseTimes"
                 },
                 "total_requests": {
                     "type": "integer"
                 }
             }
         },
-        "domain.MemoryInfo": {
+        "dto.MemoryInfo": {
             "type": "object",
             "properties": {
                 "allocated": {
@@ -2310,7 +4251,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ModulDownloadRequest": {
+        "dto.ModulDownloadRequest": {
             "type": "object",
             "required": [
                 "ids"
@@ -2325,13 +4266,13 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ModulListData": {
+        "dto.ModulListData": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.ModulListItem"
+                        "$ref": "#/definitions/dto.ModulListItem"
                     }
                 },
                 "pagination": {
@@ -2339,7 +4280,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ModulListItem": {
+        "dto.ModulListItem": {
             "type": "object",
             "properties": {
                 "deskripsi": {
@@ -2368,20 +4309,24 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ModulUpdateRequest": {
+        "dto.PaginationData": {
             "type": "object",
             "properties": {
-                "deskripsi": {
-                    "type": "string"
+                "limit": {
+                    "type": "integer"
                 },
-                "judul": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
+                "page": {
+                    "type": "integer"
+                },
+                "total_items": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
                 }
             }
         },
-        "domain.ProfileData": {
+        "dto.ProfileData": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -2410,7 +4355,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ProjectDownloadRequest": {
+        "dto.ProjectDownloadRequest": {
             "type": "object",
             "required": [
                 "ids"
@@ -2425,7 +4370,409 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ProjectUpdateRequest": {
+        "dto.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "integer"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "dto.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ResponseTimes": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "string"
+                },
+                "max": {
+                    "type": "string"
+                },
+                "min": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RoleCreateRequest": {
+            "type": "object",
+            "required": [
+                "nama_role",
+                "permissions"
+            ],
+            "properties": {
+                "nama_role": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                },
+                "permissions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "dto.RoleUpdateRequest": {
+            "type": "object",
+            "required": [
+                "nama_role",
+                "permissions"
+            ],
+            "properties": {
+                "nama_role": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                },
+                "permissions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "dto.RuntimeInfo": {
+            "type": "object",
+            "properties": {
+                "arch": {
+                    "type": "string"
+                },
+                "compiler": {
+                    "type": "string"
+                },
+                "go_version": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ServiceStatus": {
+            "type": "string",
+            "enum": [
+                "healthy",
+                "unhealthy",
+                "connected",
+                "disconnected",
+                "error",
+                "loaded",
+                "running"
+            ],
+            "x-enum-varnames": [
+                "ServiceStatusHealthy",
+                "ServiceStatusUnhealthy",
+                "ServiceStatusConnected",
+                "ServiceStatusDisconnected",
+                "ServiceStatusError",
+                "ServiceStatusLoaded",
+                "ServiceStatusRunning"
+            ]
+        },
+        "dto.ServicesStatus": {
+            "type": "object",
+            "properties": {
+                "database": {
+                    "$ref": "#/definitions/dto.DatabaseService"
+                },
+                "email": {
+                    "$ref": "#/definitions/dto.EmailService"
+                }
+            }
+        },
+        "dto.StatisticData": {
+            "type": "object",
+            "properties": {
+                "total_modul": {
+                    "type": "integer"
+                },
+                "total_project": {
+                    "type": "integer"
+                },
+                "total_role": {
+                    "type": "integer"
+                },
+                "total_user": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SystemInfo": {
+            "type": "object",
+            "properties": {
+                "cpu_cores": {
+                    "type": "integer"
+                },
+                "goroutines": {
+                    "type": "integer"
+                },
+                "memory_usage": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SystemMetrics": {
+            "type": "object",
+            "properties": {
+                "app": {
+                    "$ref": "#/definitions/dto.AppInfo"
+                },
+                "database": {
+                    "$ref": "#/definitions/dto.DatabaseStatus"
+                },
+                "http": {
+                    "$ref": "#/definitions/dto.HttpMetrics"
+                },
+                "system": {
+                    "$ref": "#/definitions/dto.DetailedSystemInfo"
+                }
+            }
+        },
+        "dto.TusModulUploadInfoResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deskripsi": {
+                    "type": "string"
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "length": {
+                    "type": "integer"
+                },
+                "modul_id": {
+                    "type": "string"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TusModulUploadResponse": {
+            "type": "object",
+            "properties": {
+                "length": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "upload_id": {
+                    "type": "string"
+                },
+                "upload_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TusModulUploadSlotResponse": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "boolean"
+                },
+                "max_queue": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "queue_length": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TusUploadInfoResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "kategori": {
+                    "type": "string"
+                },
+                "length": {
+                    "type": "integer"
+                },
+                "nama_project": {
+                    "type": "string"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "project_id": {
+                    "type": "integer"
+                },
+                "semester": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TusUploadResponse": {
+            "type": "object",
+            "properties": {
+                "length": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "upload_id": {
+                    "type": "string"
+                },
+                "upload_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TusUploadSlotResponse": {
+            "type": "object",
+            "properties": {
+                "active_upload": {
+                    "type": "boolean"
+                },
+                "available": {
+                    "type": "boolean"
+                },
+                "max_concurrent": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "queue_length": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateModulRequest": {
+            "type": "object",
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "judul": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                }
+            }
+        },
+        "dto.UpdateProfileRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "jenis_kelamin": {
+                    "type": "string",
+                    "enum": [
+                        "Laki-laki",
+                        "Perempuan"
+                    ]
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                }
+            }
+        },
+        "dto.UpdateProjectRequest": {
             "type": "object",
             "properties": {
                 "kategori": {
@@ -2450,234 +4797,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.RefreshTokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_at": {
-                    "type": "integer"
-                },
-                "expires_in": {
-                    "type": "integer"
-                },
-                "token_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "domain.ResetPasswordRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.ResponseTimes": {
-            "type": "object",
-            "properties": {
-                "avg": {
-                    "type": "string"
-                },
-                "max": {
-                    "type": "string"
-                },
-                "min": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.RoleCreateRequest": {
-            "type": "object",
-            "required": [
-                "nama_role",
-                "permissions"
-            ],
-            "properties": {
-                "nama_role": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 2
-                },
-                "permissions": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "domain.RoleUpdateRequest": {
-            "type": "object",
-            "required": [
-                "nama_role",
-                "permissions"
-            ],
-            "properties": {
-                "nama_role": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 2
-                },
-                "permissions": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "domain.RuntimeInfo": {
-            "type": "object",
-            "properties": {
-                "arch": {
-                    "type": "string"
-                },
-                "compiler": {
-                    "type": "string"
-                },
-                "go_version": {
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.ServiceStatus": {
-            "type": "string",
-            "enum": [
-                "healthy",
-                "unhealthy",
-                "connected",
-                "disconnected",
-                "error",
-                "loaded",
-                "running"
-            ],
-            "x-enum-varnames": [
-                "ServiceStatusHealthy",
-                "ServiceStatusUnhealthy",
-                "ServiceStatusConnected",
-                "ServiceStatusDisconnected",
-                "ServiceStatusError",
-                "ServiceStatusLoaded",
-                "ServiceStatusRunning"
-            ]
-        },
-        "domain.ServicesStatus": {
-            "type": "object",
-            "properties": {
-                "database": {
-                    "$ref": "#/definitions/domain.DatabaseService"
-                },
-                "email": {
-                    "$ref": "#/definitions/domain.EmailService"
-                }
-            }
-        },
-        "domain.StatisticData": {
-            "type": "object",
-            "properties": {
-                "total_modul": {
-                    "type": "integer"
-                },
-                "total_project": {
-                    "type": "integer"
-                },
-                "total_role": {
-                    "type": "integer"
-                },
-                "total_user": {
-                    "type": "integer"
-                }
-            }
-        },
-        "domain.SystemInfo": {
-            "type": "object",
-            "properties": {
-                "cpu_cores": {
-                    "type": "integer"
-                },
-                "goroutines": {
-                    "type": "integer"
-                },
-                "memory_usage": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.SystemMetrics": {
-            "type": "object",
-            "properties": {
-                "app": {
-                    "$ref": "#/definitions/domain.AppInfo"
-                },
-                "database": {
-                    "$ref": "#/definitions/domain.DatabaseStatus"
-                },
-                "http": {
-                    "$ref": "#/definitions/domain.HttpMetrics"
-                },
-                "system": {
-                    "$ref": "#/definitions/domain.DetailedSystemInfo"
-                }
-            }
-        },
-        "domain.UpdateProfileRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "jenis_kelamin": {
-                    "type": "string",
-                    "enum": [
-                        "Laki-laki",
-                        "Perempuan"
-                    ]
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                }
-            }
-        },
-        "domain.UpdateUserRoleRequest": {
+        "dto.UpdateUserRoleRequest": {
             "type": "object",
             "required": [
                 "role"
@@ -2688,7 +4808,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UserFileItem": {
+        "dto.UserFileItem": {
             "type": "object",
             "properties": {
                 "download_url": {
@@ -2705,13 +4825,13 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UserFilesData": {
+        "dto.UserFilesData": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.UserFileItem"
+                        "$ref": "#/definitions/dto.UserFileItem"
                     }
                 },
                 "pagination": {
@@ -2719,13 +4839,13 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UserListData": {
+        "dto.UserListData": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/domain.UserListItem"
+                        "$ref": "#/definitions/dto.UserListItem"
                     }
                 },
                 "pagination": {
@@ -2733,7 +4853,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UserListItem": {
+        "dto.UserListItem": {
             "type": "object",
             "properties": {
                 "dibuat_pada": {
@@ -2750,7 +4870,7 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UserPermissionItem": {
+        "dto.UserPermissionItem": {
             "type": "object",
             "properties": {
                 "actions": {
@@ -2760,59 +4880,6 @@ const docTemplate = `{
                     }
                 },
                 "resource": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "errors": {},
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.PaginationData": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total_items": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "timestamp": {
                     "type": "string"
                 }
             }
