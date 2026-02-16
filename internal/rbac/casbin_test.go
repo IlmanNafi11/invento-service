@@ -1,7 +1,7 @@
-package helper_test
+package rbac_test
 
 import (
-	"invento-service/internal/helper"
+	"invento-service/internal/rbac"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +12,7 @@ import (
 )
 
 // setupTestCasbinEnforcer creates an in-memory Casbin enforcer for testing
-func setupTestCasbinEnforcer(t *testing.T) *helper.CasbinEnforcer {
+func setupTestCasbinEnforcer(t *testing.T) *rbac.CasbinEnforcer {
 	t.Helper()
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
@@ -20,7 +20,7 @@ func setupTestCasbinEnforcer(t *testing.T) *helper.CasbinEnforcer {
 	})
 	require.NoError(t, err, "failed to open test database")
 
-	enforcer, err := helper.NewCasbinEnforcer(db)
+	enforcer, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err, "failed to create casbin enforcer")
 
 	return enforcer
@@ -36,7 +36,7 @@ func TestNewCasbinEnforcer_Success(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	enforcer, err := helper.NewCasbinEnforcer(db)
+	enforcer, err := rbac.NewCasbinEnforcer(db)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, enforcer)
@@ -50,7 +50,7 @@ func TestNewCasbinEnforcer_WithExistingDB(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	enforcer1, err := helper.NewCasbinEnforcer(db)
+	enforcer1, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err)
 
 	err = enforcer1.AddPermissionForRole("admin", "users", "read")
@@ -59,7 +59,7 @@ func TestNewCasbinEnforcer_WithExistingDB(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create second enforcer with same DB - should load existing policies
-	enforcer2, err := helper.NewCasbinEnforcer(db)
+	enforcer2, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err)
 
 	hasPolicy, err := enforcer2.HasPolicy("admin", "users", "read")
@@ -653,7 +653,7 @@ func TestSavePolicy_Success(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	enforcer, err := helper.NewCasbinEnforcer(db)
+	enforcer, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err)
 
 	err = enforcer.AddPermissionForRole("admin", "users", "create")
@@ -670,7 +670,7 @@ func TestLoadPolicy_Success(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	enforcer, err := helper.NewCasbinEnforcer(db)
+	enforcer, err := rbac.NewCasbinEnforcer(db)
 	require.NoError(t, err)
 
 	err = enforcer.AddPermissionForRole("admin", "users", "create")

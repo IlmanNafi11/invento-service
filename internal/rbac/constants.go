@@ -1,4 +1,4 @@
-package constants
+package rbac
 
 // RBAC Resources - correspond to Casbin policy objects
 const (
