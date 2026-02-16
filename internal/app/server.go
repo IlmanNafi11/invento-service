@@ -28,7 +28,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/rs/zerolog"
 	"github.com/supabase-community/supabase-go"
-	fiberSwagger "github.com/swaggo/fiber-swagger"
 	"gorm.io/gorm"
 )
 
@@ -199,100 +198,23 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	healthUsecase := usecase.NewHealthUsecase(db, cfg)
 	healthController := http.NewHealthController(healthUsecase)
 
-	api := app.Group("/api/v1")
-
-	auth := api.Group("/auth")
-	auth.Post("/login", authController.Login)
-	auth.Post("/register", authController.Register)
-	auth.Post("/refresh", authController.RefreshToken)
-	auth.Post("/reset-password", authController.RequestPasswordReset)
-
-	protected := auth.Group("/", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	protected.Post("logout", authController.Logout)
-
-	role := api.Group("/role", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	role.Get("/permissions", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourcePermission, rbac.ActionRead), roleController.GetAvailablePermissions)
-	role.Get("/", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceRole, rbac.ActionRead), roleController.GetRoleList)
-	role.Post("/", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceRole, rbac.ActionCreate), roleController.CreateRole)
-	role.Get("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceRole, rbac.ActionRead), roleController.GetRoleDetail)
-	role.Put("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceRole, rbac.ActionUpdate), roleController.UpdateRole)
-	role.Delete("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceRole, rbac.ActionDelete), roleController.DeleteRole)
-	role.Get("/:id/users", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceRole, rbac.ActionRead), userController.GetUsersForRole)
-	role.Post("/:id/users/bulk", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceRole, rbac.ActionUpdate), userController.BulkAssignRole)
-
-	user := api.Group("/user", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	user.Get("/", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceUser, rbac.ActionRead), userController.GetUserList)
-	user.Put("/:id/role", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceUser, rbac.ActionUpdate), userController.UpdateUserRole)
-	user.Delete("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceUser, rbac.ActionDelete), userController.DeleteUser)
-	user.Get("/:id/files", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceUser, rbac.ActionRead), userController.GetUserFiles)
-	user.Post("/:id/download", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceUser, rbac.ActionDownload), userController.DownloadUserFiles)
-	user.Get("/permissions", userController.GetUserPermissions)
-
-	profile := api.Group("/profile", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	profile.Get("/", userController.GetProfile)
-	profile.Put("/", userController.UpdateProfile)
-
-	project := api.Group("/project", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	project.Get("/", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionRead), projectController.GetList)
-	project.Get("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionRead), projectController.GetByID)
-	project.Patch("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionUpdate), projectController.UpdateMetadata)
-	project.Post("/download", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionRead), projectController.Download)
-	project.Delete("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionDelete), projectController.Delete)
-
-	tusUploadCheck := api.Group("/project/upload", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	tusUploadCheck.Get("/check-slot", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionRead), tusController.CheckUploadSlot)
-	tusUploadCheck.Post("/reset-queue", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionCreate), tusController.ResetUploadQueue)
-
-	tusUpload := api.Group("/project/upload", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper), middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeProject))
-	tusUpload.Post("/", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionCreate), tusController.InitiateUpload)
-	tusUpload.Patch("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionCreate), tusController.UploadChunk)
-	tusUpload.Head("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionRead), tusController.GetUploadStatus)
-	tusUpload.Get("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionRead), tusController.GetUploadInfo)
-	tusUpload.Delete("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionDelete), tusController.CancelUpload)
-
-	projectUpdate := api.Group("/project/:id", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	projectUpdate.Post("/upload", middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeProject), middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionUpdate), tusController.InitiateProjectUpdateUpload)
-	projectUpdate.Patch("/update/:upload_id", middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeProject), middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionUpdate), tusController.UploadProjectUpdateChunk)
-	projectUpdate.Head("/update/:upload_id", middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeProject), middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionRead), tusController.GetProjectUpdateUploadStatus)
-	projectUpdate.Get("/update/:upload_id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionRead), tusController.GetProjectUpdateUploadInfo)
-	projectUpdate.Delete("/update/:upload_id", middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeProject), middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceProject, rbac.ActionUpdate), tusController.CancelProjectUpdateUpload)
-
-	modul := api.Group("/modul", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	modul.Get("/", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionRead), modulController.GetList)
-	modul.Patch("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionUpdate), modulController.UpdateMetadata)
-	modul.Post("/download", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionRead), modulController.Download)
-	modul.Delete("/:id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionDelete), modulController.Delete)
-
-	tusModulCheck := api.Group("/modul/upload", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	tusModulCheck.Get("/check-slot", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionRead), tusModulController.CheckUploadSlot)
-
-	tusModul := api.Group("/modul/upload", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper), middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeModul))
-	tusModul.Post("/", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionCreate), tusModulController.InitiateUpload)
-	tusModul.Patch("/:upload_id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionCreate), tusModulController.UploadChunk)
-	tusModul.Head("/:upload_id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionRead), tusModulController.GetUploadStatus)
-	tusModul.Get("/:upload_id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionRead), tusModulController.GetUploadInfo)
-	tusModul.Delete("/:upload_id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionDelete), tusModulController.CancelUpload)
-
-	modulUpdate := api.Group("/modul/:id", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	modulUpdate.Post("/upload", middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeModul), middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionUpdate), tusModulController.InitiateModulUpdateUpload)
-	modulUpdate.Patch("/update/:upload_id", middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeModul), middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionUpdate), tusModulController.UploadModulUpdateChunk)
-	modulUpdate.Head("/update/:upload_id", middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeModul), middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionRead), tusModulController.GetModulUpdateUploadStatus)
-	modulUpdate.Get("/update/:upload_id", middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionRead), tusModulController.GetModulUpdateUploadInfo)
-	modulUpdate.Delete("/update/:upload_id", middleware.TusProtocolMiddleware(cfg.Upload.TusVersion, cfg.Upload.MaxSizeModul), middleware.RBACMiddleware(casbinEnforcer, rbac.ResourceModul, rbac.ActionUpdate), tusModulController.CancelModulUpdateUpload)
-
-	statistic := api.Group("/statistic", middleware.SupabaseAuthMiddleware(supabaseAuthService, userRepo, cookieHelper))
-	statistic.Get("/", statisticController.GetStatistics)
-
-	monitoring := api.Group("/monitoring")
-	monitoring.Get("/health", healthController.ComprehensiveHealthCheck)
-	monitoring.Get("/metrics", healthController.GetSystemMetrics)
-	monitoring.Get("/status", healthController.GetApplicationStatus)
-
-	app.Get("/health", healthController.BasicHealthCheck)
-
-	// Enable Swagger UI
-	appLogger.Info().Msg("swagger UI enabled at /swagger/*")
-	app.Get("/swagger/*", fiberSwagger.WrapHandler)
+	registerRoutes(app, routeDeps{
+		authController:      authController,
+		roleController:      roleController,
+		userController:      userController,
+		projectController:   projectController,
+		modulController:     modulController,
+		tusController:       tusController,
+		tusModulController:  tusModulController,
+		statisticController: statisticController,
+		healthController:    healthController,
+		supabaseAuthService: supabaseAuthService,
+		userRepo:            userRepo,
+		cookieHelper:        cookieHelper,
+		casbinEnforcer:      casbinEnforcer,
+		cfg:                 cfg,
+		appLogger:           appLogger,
+	})
 
 	return app, nil
 }
