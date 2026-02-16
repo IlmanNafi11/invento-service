@@ -17,7 +17,7 @@ func newTusModulUpload(id, userID, status string, expiresAt time.Time) domain.Tu
 		UserID:     userID,
 		UploadType: domain.UploadTypeModulCreate,
 		UploadURL:  "https://example.com/upload/" + id,
-		UploadMetadata: dto.TusModulUploadInitRequest{
+		UploadMetadata: domain.TusModulUploadMetadata{
 			Judul:     "Modul " + id,
 			Deskripsi: "Deskripsi modul",
 		},
