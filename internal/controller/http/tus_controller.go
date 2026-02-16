@@ -4,7 +4,7 @@ import (
 	"invento-service/config"
 	base "invento-service/internal/controller/base"
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
+	"invento-service/internal/upload"
 	"invento-service/internal/usecase"
 	"strconv"
 
@@ -44,7 +44,7 @@ func (ctrl *TusController) CheckUploadSlot(c *fiber.Ctx) error {
 		return ctrl.base.SendInternalError(c)
 	}
 
-	return helper.SendTusSlotResponse(
+	return upload.SendTusSlotResponse(
 		c,
 		result.Available,
 		result.Message,
@@ -83,7 +83,7 @@ func (ctrl *TusController) InitiateProjectUpdateUpload(c *fiber.Ctx) error {
 func (ctrl *TusController) initiateUpload(c *fiber.Ctx, projectID *uint) error {
 	userID, userEmail, userRole, err := getTusAuthContext(c)
 	if err != nil {
-		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
 	if err := validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
@@ -95,7 +95,7 @@ func (ctrl *TusController) initiateUpload(c *fiber.Ctx, projectID *uint) error {
 		return ctrl.base.SendBadRequest(c, "Header Upload-Length tidak valid")
 	}
 
-	uploadMetadata := c.Get(helper.HeaderUploadMetadata)
+	uploadMetadata := c.Get(upload.HeaderUploadMetadata)
 	metadata := domain.TusUploadInitRequest{}
 	if projectID == nil || uploadMetadata != "" {
 		metadata, err = ctrl.parseUploadMetadata(uploadMetadata)
@@ -117,9 +117,9 @@ func (ctrl *TusController) initiateUpload(c *fiber.Ctx, projectID *uint) error {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	helper.SetTusResponseHeaders(c, 0, fileSize)
-	helper.SetTusLocationHeader(c, result.UploadURL)
-	return helper.SendTusInitiateResponse(c, result.UploadID, result.UploadURL, fileSize)
+	upload.SetTusResponseHeaders(c, 0, fileSize)
+	upload.SetTusLocationHeader(c, result.UploadURL)
+	return upload.SendTusInitiateResponse(c, result.UploadID, result.UploadURL, fileSize)
 }
 
 func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
@@ -129,7 +129,7 @@ func (ctrl *TusController) UploadChunk(c *fiber.Ctx) error {
 func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
 	projectID, err := ctrl.base.ParsePathID(c)
 	if err != nil {
-		return helper.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
 	}
 	return ctrl.uploadChunk(c, &projectID)
 }
@@ -137,7 +137,7 @@ func (ctrl *TusController) UploadProjectUpdateChunk(c *fiber.Ctx) error {
 func (ctrl *TusController) uploadChunk(c *fiber.Ctx, projectID *uint) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
-		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
 	uploadID := c.Params("id")
@@ -145,7 +145,7 @@ func (ctrl *TusController) uploadChunk(c *fiber.Ctx, projectID *uint) error {
 		uploadID = c.Params("upload_id")
 	}
 	if uploadID == "" {
-		return helper.SendTusValidationErrorResponse(c, "Upload ID wajib diisi")
+		return upload.SendTusValidationErrorResponse(c, "Upload ID wajib diisi")
 	}
 
 	if err := validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
@@ -167,7 +167,7 @@ func (ctrl *TusController) uploadChunk(c *fiber.Ctx, projectID *uint) error {
 		return handleTusChunkError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	return helper.SendTusChunkResponse(c, newOffset)
+	return upload.SendTusChunkResponse(c, newOffset)
 }
 
 func (ctrl *TusController) GetUploadStatus(c *fiber.Ctx) error {
@@ -214,7 +214,7 @@ func (ctrl *TusController) getUploadStatus(c *fiber.Ctx, projectID *uint) error 
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	return helper.SendTusHeadResponse(c, offset, length)
+	return upload.SendTusHeadResponse(c, offset, length)
 }
 
 func (ctrl *TusController) GetUploadInfo(c *fiber.Ctx) error {
@@ -304,11 +304,11 @@ func (ctrl *TusController) cancelUpload(c *fiber.Ctx, projectID *uint) error {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	return helper.SendTusDeleteResponse(c)
+	return upload.SendTusDeleteResponse(c)
 }
 
 func (ctrl *TusController) parseUploadLength(c *fiber.Ctx) (int64, error) {
-	uploadLengthStr := c.Get(helper.HeaderUploadLength)
+	uploadLengthStr := c.Get(upload.HeaderUploadLength)
 	if uploadLengthStr == "" {
 		return 0, fiber.NewError(fiber.StatusBadRequest, "Upload-Length header required")
 	}
@@ -328,7 +328,7 @@ func (ctrl *TusController) parseUploadMetadata(metadataHeader string) (domain.Tu
 		return metadata, fiber.NewError(fiber.StatusBadRequest, "Upload-Metadata header required")
 	}
 
-	metadataMap := helper.ParseTusMetadata(metadataHeader)
+	metadataMap := upload.ParseTusMetadata(metadataHeader)
 	if namaProject, ok := metadataMap["nama_project"]; ok {
 		metadata.NamaProject = namaProject
 	}

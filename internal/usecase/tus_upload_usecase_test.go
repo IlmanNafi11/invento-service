@@ -9,8 +9,8 @@ import (
 
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func newTusUploadTestDeps(t *testing.T) (*tusUploadUsecase, *MockTusUploadRepository, *MockProjectRepository, *helper.TusManager) {
+func newTusUploadTestDeps(t *testing.T) (*tusUploadUsecase, *MockTusUploadRepository, *MockProjectRepository, *upload.TusManager) {
 	t.Helper()
 
 	mockTusUploadRepo := new(MockTusUploadRepository)
@@ -32,9 +32,9 @@ func newTusUploadTestDeps(t *testing.T) (*tusUploadUsecase, *MockTusUploadReposi
 	cfg.Upload.TempPathDevelopment = filepath.Join(baseDir, "temp")
 
 	pathResolver := storage.NewPathResolver(cfg)
-	tusStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	tusQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, nil, cfg, zerolog.Nop())
+	tusStore := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	tusQueue := upload.NewTusQueue(cfg.Upload.MaxConcurrentProject)
+	tusManager := upload.NewTusManager(tusStore, tusQueue, nil, cfg, zerolog.Nop())
 	fileManager := storage.NewFileManager(cfg)
 
 	uc := NewTusUploadUsecase(mockTusUploadRepo, mockProjectRepo, nil, tusManager, fileManager, cfg).(*tusUploadUsecase)
@@ -42,7 +42,7 @@ func newTusUploadTestDeps(t *testing.T) (*tusUploadUsecase, *MockTusUploadReposi
 	return uc, mockTusUploadRepo, mockProjectRepo, tusManager
 }
 
-func seedTusUploadStore(t *testing.T, manager *helper.TusManager, uploadID string, size int64, metadata map[string]string) {
+func seedTusUploadStore(t *testing.T, manager *upload.TusManager, uploadID string, size int64, metadata map[string]string) {
 	t.Helper()
 	require.NoError(t, manager.InitiateUpload(uploadID, size, metadata))
 }

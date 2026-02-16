@@ -4,7 +4,7 @@ import (
 	"invento-service/config"
 	base "invento-service/internal/controller/base"
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
+	"invento-service/internal/upload"
 	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
@@ -45,7 +45,7 @@ func (ctrl *TusModulController) InitiateUpload(c *fiber.Ctx) error {
 func (ctrl *TusModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
-		return helper.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
 	}
 	return ctrl.initiateUpload(c, &modulID)
 }
@@ -53,22 +53,22 @@ func (ctrl *TusModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 func (ctrl *TusModulController) initiateUpload(c *fiber.Ctx, modulID *string) error {
 	userID, _, _, err := getTusAuthContext(c)
 	if err != nil {
-		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
 	if err := validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	tusHeaders, err := helper.GetTusHeaders(c)
+	tusHeaders, err := upload.GetTusHeaders(c)
 	if err != nil {
-		return helper.SendTusValidationErrorResponse(c, err.Error())
+		return upload.SendTusValidationErrorResponse(c, err.Error())
 	}
 	if tusHeaders.UploadLength <= 0 {
-		return helper.SendTusValidationErrorResponse(c, "Header Upload-Length wajib diisi")
+		return upload.SendTusValidationErrorResponse(c, "Header Upload-Length wajib diisi")
 	}
 	if tusHeaders.UploadMetadata == "" {
-		return helper.SendTusValidationErrorResponse(c, "Header Upload-Metadata wajib diisi")
+		return upload.SendTusValidationErrorResponse(c, "Header Upload-Metadata wajib diisi")
 	}
 
 	var result *domain.TusModulUploadResponse
@@ -81,8 +81,8 @@ func (ctrl *TusModulController) initiateUpload(c *fiber.Ctx, modulID *string) er
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	helper.SetTusResponseHeaders(c, 0, tusHeaders.UploadLength)
-	helper.SetTusLocationHeader(c, result.UploadURL)
+	upload.SetTusResponseHeaders(c, 0, tusHeaders.UploadLength)
+	upload.SetTusLocationHeader(c, result.UploadURL)
 
 	message := "Upload modul berhasil diinisiasi"
 	if modulID != nil {
@@ -99,7 +99,7 @@ func (ctrl *TusModulController) UploadChunk(c *fiber.Ctx) error {
 func (ctrl *TusModulController) UploadModulUpdateChunk(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
-		return helper.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
 	}
 	return ctrl.uploadChunk(c, &modulID)
 }
@@ -107,12 +107,12 @@ func (ctrl *TusModulController) UploadModulUpdateChunk(c *fiber.Ctx) error {
 func (ctrl *TusModulController) uploadChunk(c *fiber.Ctx, modulID *string) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
-		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
 	uploadID := c.Params("upload_id")
 	if uploadID == "" {
-		return helper.SendTusValidationErrorResponse(c, "Upload ID wajib diisi")
+		return upload.SendTusValidationErrorResponse(c, "Upload ID wajib diisi")
 	}
 
 	if err := validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
@@ -134,7 +134,7 @@ func (ctrl *TusModulController) uploadChunk(c *fiber.Ctx, modulID *string) error
 		return handleTusChunkError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	return helper.SendTusChunkResponse(c, newOffset)
+	return upload.SendTusChunkResponse(c, newOffset)
 }
 
 func (ctrl *TusModulController) GetUploadStatus(c *fiber.Ctx) error {
@@ -144,7 +144,7 @@ func (ctrl *TusModulController) GetUploadStatus(c *fiber.Ctx) error {
 func (ctrl *TusModulController) GetModulUpdateUploadStatus(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
-		return helper.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
 	}
 	return ctrl.getUploadStatus(c, &modulID)
 }
@@ -152,12 +152,12 @@ func (ctrl *TusModulController) GetModulUpdateUploadStatus(c *fiber.Ctx) error {
 func (ctrl *TusModulController) getUploadStatus(c *fiber.Ctx, modulID *string) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
-		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
 	uploadID := c.Params("upload_id")
 	if uploadID == "" {
-		return helper.SendTusValidationErrorResponse(c, "Upload ID wajib diisi")
+		return upload.SendTusValidationErrorResponse(c, "Upload ID wajib diisi")
 	}
 
 	if err := validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
@@ -178,7 +178,7 @@ func (ctrl *TusModulController) getUploadStatus(c *fiber.Ctx, modulID *string) e
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	return helper.SendTusHeadResponse(c, offset, length)
+	return upload.SendTusHeadResponse(c, offset, length)
 }
 
 func (ctrl *TusModulController) GetUploadInfo(c *fiber.Ctx) error {
@@ -232,7 +232,7 @@ func (ctrl *TusModulController) CancelUpload(c *fiber.Ctx) error {
 func (ctrl *TusModulController) CancelModulUpdateUpload(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
-		return helper.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
 	}
 	return ctrl.cancelUpload(c, &modulID)
 }
@@ -240,12 +240,12 @@ func (ctrl *TusModulController) CancelModulUpdateUpload(c *fiber.Ctx) error {
 func (ctrl *TusModulController) cancelUpload(c *fiber.Ctx, modulID *string) error {
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
-		return helper.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
 	uploadID := c.Params("upload_id")
 	if uploadID == "" {
-		return helper.SendTusValidationErrorResponse(c, "Upload ID wajib diisi")
+		return upload.SendTusValidationErrorResponse(c, "Upload ID wajib diisi")
 	}
 
 	if err := validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
@@ -262,5 +262,5 @@ func (ctrl *TusModulController) cancelUpload(c *fiber.Ctx, modulID *string) erro
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	return helper.SendTusDeleteResponse(c)
+	return upload.SendTusDeleteResponse(c)
 }

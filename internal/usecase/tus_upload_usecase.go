@@ -9,8 +9,8 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"invento-service/internal/usecase/repo"
 
 	"github.com/google/uuid"
@@ -36,7 +36,7 @@ type tusUploadUsecase struct {
 	tusUploadRepo  repo.TusUploadRepository
 	projectRepo    repo.ProjectRepository
 	projectUsecase ProjectUsecase
-	tusManager     *helper.TusManager
+	tusManager     *upload.TusManager
 	fileManager    *storage.FileManager
 	config         *config.Config
 }
@@ -45,7 +45,7 @@ func NewTusUploadUsecase(
 	tusUploadRepo repo.TusUploadRepository,
 	projectRepo repo.ProjectRepository,
 	projectUsecase ProjectUsecase,
-	tusManager *helper.TusManager,
+	tusManager *upload.TusManager,
 	fileManager *storage.FileManager,
 	cfg *config.Config,
 ) TusUploadUsecase {

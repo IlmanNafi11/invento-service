@@ -6,12 +6,12 @@ import (
 	_ "invento-service/docs"
 	"invento-service/internal/controller/base"
 	"invento-service/internal/controller/http"
-	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"invento-service/internal/rbac"
 	"invento-service/internal/storage"
 	supabaseAuth "invento-service/internal/supabase"
+	"invento-service/internal/upload"
 	"invento-service/internal/usecase"
 	"invento-service/internal/usecase/repo"
 	"io"
@@ -151,13 +151,13 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("casbin enforcer init: %w", err)
 	}
-	tusProjectStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeProject)
-	tusModulStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeModul)
-	tusQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
-	tusModulQueue := helper.NewTusQueue(cfg.Upload.MaxQueueModulPerUser)
+	tusProjectStore := upload.NewTusStore(pathResolver, cfg.Upload.MaxSizeProject)
+	tusModulStore := upload.NewTusStore(pathResolver, cfg.Upload.MaxSizeModul)
+	tusQueue := upload.NewTusQueue(cfg.Upload.MaxConcurrentProject)
+	tusModulQueue := upload.NewTusQueue(cfg.Upload.MaxQueueModulPerUser)
 	fileManager := storage.NewFileManager(cfg)
-	tusProjectManager := helper.NewTusManager(tusProjectStore, tusQueue, fileManager, cfg, appLogger)
-	tusModulManager := helper.NewTusManager(tusModulStore, tusModulQueue, fileManager, cfg, appLogger)
+	tusProjectManager := upload.NewTusManager(tusProjectStore, tusQueue, fileManager, cfg, appLogger)
+	tusModulManager := upload.NewTusManager(tusModulStore, tusModulQueue, fileManager, cfg, appLogger)
 
 	if activeIDs, err := tusUploadRepo.GetActiveUploadIDs(); err == nil && len(activeIDs) > 0 {
 		tusQueue.LoadFromDB(activeIDs)
@@ -190,7 +190,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	modulController := http.NewModulController(modulUsecase, cfg, baseCtrl)
 	tusModulController := http.NewTusModulController(tusModulUsecase, cfg, baseCtrl)
 
-	tusCleanup := helper.NewTusCleanup(tusUploadRepo, tusModulUploadRepo, tusProjectStore, tusModulStore, cfg.Upload.CleanupInterval, cfg.Upload.IdleTimeout, appLogger)
+	tusCleanup := upload.NewTusCleanup(tusUploadRepo, tusModulUploadRepo, tusProjectStore, tusModulStore, cfg.Upload.CleanupInterval, cfg.Upload.IdleTimeout, appLogger)
 	tusCleanup.Start()
 
 	statisticUsecase := usecase.NewStatisticUsecase(userRepo, projectRepo, modulRepo, roleRepo, casbinEnforcer, db)

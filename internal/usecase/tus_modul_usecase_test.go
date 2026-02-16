@@ -10,8 +10,8 @@ import (
 
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +28,7 @@ func modulMetadataHeader(judul, deskripsi string) string {
 	return fmt.Sprintf("judul %s,deskripsi %s", b64(judul), b64(deskripsi))
 }
 
-func newTusModulTestDeps(t *testing.T) (*tusModulUsecase, *MockTusModulUploadRepository, *MockModulRepository, *helper.TusManager) {
+func newTusModulTestDeps(t *testing.T) (*tusModulUsecase, *MockTusModulUploadRepository, *MockModulRepository, *upload.TusManager) {
 	t.Helper()
 
 	mockTusModulRepo := new(MockTusModulUploadRepository)
@@ -41,16 +41,16 @@ func newTusModulTestDeps(t *testing.T) (*tusModulUsecase, *MockTusModulUploadRep
 	cfg.Upload.TempPathDevelopment = filepath.Join(baseDir, "temp")
 
 	pathResolver := storage.NewPathResolver(cfg)
-	tusStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
-	tusQueue := helper.NewTusQueue(5)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, nil, cfg, zerolog.Nop())
+	tusStore := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	tusQueue := upload.NewTusQueue(5)
+	tusManager := upload.NewTusManager(tusStore, tusQueue, nil, cfg, zerolog.Nop())
 	fileManager := storage.NewFileManager(cfg)
 
 	uc := NewTusModulUsecase(mockTusModulRepo, mockModulRepo, tusManager, fileManager, cfg).(*tusModulUsecase)
 	return uc, mockTusModulRepo, mockModulRepo, tusManager
 }
 
-func seedTusModulStore(t *testing.T, manager *helper.TusManager, uploadID string, size int64, metadata map[string]string) {
+func seedTusModulStore(t *testing.T, manager *upload.TusManager, uploadID string, size int64, metadata map[string]string) {
 	t.Helper()
 	require.NoError(t, manager.InitiateUpload(uploadID, size, metadata))
 }

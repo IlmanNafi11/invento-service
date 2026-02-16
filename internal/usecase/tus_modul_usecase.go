@@ -12,8 +12,8 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"invento-service/internal/usecase/repo"
 
 	"github.com/google/uuid"
@@ -38,7 +38,7 @@ type TusModulUsecase interface {
 type tusModulUsecase struct {
 	tusModulUploadRepo repo.TusModulUploadRepository
 	modulRepo          repo.ModulRepository
-	tusManager         *helper.TusManager
+	tusManager         *upload.TusManager
 	fileManager        *storage.FileManager
 	config             *config.Config
 }
@@ -46,7 +46,7 @@ type tusModulUsecase struct {
 func NewTusModulUsecase(
 	tusModulUploadRepo repo.TusModulUploadRepository,
 	modulRepo repo.ModulRepository,
-	tusManager *helper.TusManager,
+	tusManager *upload.TusManager,
 	fileManager *storage.FileManager,
 	config *config.Config,
 ) TusModulUsecase {
@@ -417,7 +417,7 @@ func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*domain.Tu
 		return nil, apperrors.NewValidationError("metadata wajib diisi", nil)
 	}
 
-	metadataMap := helper.ParseTusMetadata(metadataHeader)
+	metadataMap := upload.ParseTusMetadata(metadataHeader)
 	judul, ok := metadataMap["judul"]
 	if !ok || judul == "" {
 		return nil, apperrors.NewValidationError("judul wajib diisi", nil)

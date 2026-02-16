@@ -5,8 +5,8 @@ import (
 	"io"
 
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
+	"invento-service/internal/upload"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -31,11 +31,11 @@ func getTusAuthContext(c *fiber.Ctx) (userID string, email string, role string, 
 }
 
 func validateTusHeaders(c *fiber.Ctx, tusVersion string) error {
-	if c.Get(helper.HeaderTusResumable) != tusVersion {
+	if c.Get(upload.HeaderTusResumable) != tusVersion {
 		return apperrors.NewTusVersionError(tusVersion)
 	}
 
-	if c.Method() == fiber.MethodPatch && c.Get(helper.HeaderContentType) != helper.TusContentType {
+	if c.Method() == fiber.MethodPatch && c.Get(upload.HeaderContentType) != upload.TusContentType {
 		return apperrors.NewValidationError("Content-Type harus application/offset+octet-stream", nil)
 	}
 
@@ -43,7 +43,7 @@ func validateTusHeaders(c *fiber.Ctx, tusVersion string) error {
 }
 
 func parseChunkRequest(c *fiber.Ctx) (offset int64, chunkSize int64, body io.Reader, err error) {
-	tusHeaders, err := helper.GetTusHeaders(c)
+	tusHeaders, err := upload.GetTusHeaders(c)
 	if err != nil {
 		return 0, 0, nil, err
 	}
@@ -54,7 +54,7 @@ func parseChunkRequest(c *fiber.Ctx) (offset int64, chunkSize int64, body io.Rea
 	if tusHeaders.ContentLength <= 0 {
 		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "Content-Length tidak valid")
 	}
-	if err := helper.ValidateChunkSize(tusHeaders.ContentLength); err != nil {
+	if err := upload.ValidateChunkSize(tusHeaders.ContentLength); err != nil {
 		return 0, 0, nil, err
 	}
 
@@ -77,23 +77,23 @@ func handleTusChunkError(c *fiber.Ctx, err error, tusVersion string) error {
 	if appErr, ok := err.(*apperrors.AppError); ok {
 		switch appErr.Code {
 		case apperrors.ErrTusOffsetMismatch:
-			return helper.SendTusErrorResponse(c, fiber.StatusConflict, tusVersion)
+			return upload.SendTusErrorResponse(c, fiber.StatusConflict, tusVersion)
 		case apperrors.ErrNotFound:
-			return helper.SendTusErrorResponse(c, fiber.StatusNotFound, tusVersion)
+			return upload.SendTusErrorResponse(c, fiber.StatusNotFound, tusVersion)
 		case apperrors.ErrForbidden:
-			return helper.SendTusErrorResponse(c, fiber.StatusForbidden, tusVersion)
+			return upload.SendTusErrorResponse(c, fiber.StatusForbidden, tusVersion)
 		case apperrors.ErrTusInactive:
-			return helper.SendTusErrorResponse(c, fiber.StatusLocked, tusVersion)
+			return upload.SendTusErrorResponse(c, fiber.StatusLocked, tusVersion)
 		case apperrors.ErrTusAlreadyCompleted:
-			return helper.SendTusErrorResponse(c, fiber.StatusConflict, tusVersion)
+			return upload.SendTusErrorResponse(c, fiber.StatusConflict, tusVersion)
 		case apperrors.ErrPayloadTooLarge:
-			return helper.SendTusErrorResponse(c, fiber.StatusRequestEntityTooLarge, tusVersion)
+			return upload.SendTusErrorResponse(c, fiber.StatusRequestEntityTooLarge, tusVersion)
 		default:
-			return helper.SendTusErrorResponse(c, appErr.HTTPStatus, tusVersion)
+			return upload.SendTusErrorResponse(c, appErr.HTTPStatus, tusVersion)
 		}
 	}
 
-	return helper.SendTusErrorResponse(c, fiber.StatusInternalServerError, tusVersion)
+	return upload.SendTusErrorResponse(c, fiber.StatusInternalServerError, tusVersion)
 }
 
 func handleTusUsecaseError(c *fiber.Ctx, err error, tusVersion string) error {
@@ -103,13 +103,13 @@ func handleTusUsecaseError(c *fiber.Ctx, err error, tusVersion string) error {
 
 	if appErr, ok := err.(*apperrors.AppError); ok {
 		if c.Method() == fiber.MethodPatch || c.Method() == fiber.MethodHead || c.Method() == fiber.MethodDelete {
-			return helper.SendTusErrorResponse(c, appErr.HTTPStatus, tusVersion)
+			return upload.SendTusErrorResponse(c, appErr.HTTPStatus, tusVersion)
 		}
 		return httputil.SendAppError(c, appErr)
 	}
 
 	if c.Method() == fiber.MethodPatch || c.Method() == fiber.MethodHead || c.Method() == fiber.MethodDelete {
-		return helper.SendTusErrorResponse(c, fiber.StatusInternalServerError, tusVersion)
+		return upload.SendTusErrorResponse(c, fiber.StatusInternalServerError, tusVersion)
 	}
 
 	return httputil.SendInternalServerErrorResponse(c)

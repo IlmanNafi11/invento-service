@@ -18,9 +18,9 @@ import (
 	httpcontroller "invento-service/internal/controller/http"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/rbac"
 	app_testing "invento-service/internal/testing"
+	"invento-service/internal/upload"
 )
 
 // MockTusUploadUsecase mocks the TusUploadUsecase interface
@@ -287,7 +287,7 @@ func TestUploadChunk_Success(t *testing.T) {
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/upload/test-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Offset", "0")
-	req.Header.Set("Content-Type", helper.TusContentType)
+	req.Header.Set("Content-Type", upload.TusContentType)
 	req.Header.Set("Content-Length", strconv.Itoa(len(chunkData)))
 
 	resp, err := app.Test(req)
@@ -321,7 +321,7 @@ func TestUploadChunk_InvalidOffset(t *testing.T) {
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/upload/test-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Offset", "0")
-	req.Header.Set("Content-Type", helper.TusContentType)
+	req.Header.Set("Content-Type", upload.TusContentType)
 	req.Header.Set("Content-Length", strconv.Itoa(len(chunkData)))
 
 	resp, err := app.Test(req)
@@ -344,7 +344,7 @@ func TestUploadChunk_Unauthorized(t *testing.T) {
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/upload/test-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Offset", "0")
-	req.Header.Set("Content-Type", helper.TusContentType)
+	req.Header.Set("Content-Type", upload.TusContentType)
 
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
@@ -638,7 +638,7 @@ func TestUploadProjectUpdateChunk_Success(t *testing.T) {
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/project/1/upload/test-update-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Offset", "0")
-	req.Header.Set("Content-Type", helper.TusContentType)
+	req.Header.Set("Content-Type", upload.TusContentType)
 	req.Header.Set("Content-Length", strconv.Itoa(len(chunkData)))
 
 	resp, err := app.Test(req)
@@ -670,7 +670,7 @@ func TestUploadProjectUpdateChunk_ProjectMismatch(t *testing.T) {
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/project/1/upload/test-update-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Offset", "0")
-	req.Header.Set("Content-Type", helper.TusContentType)
+	req.Header.Set("Content-Type", upload.TusContentType)
 	req.Header.Set("Content-Length", strconv.Itoa(len(chunkData)))
 
 	resp, err := app.Test(req)
@@ -1038,7 +1038,7 @@ func TestTusModulController_UploadChunk_Success(t *testing.T) {
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/modul/modul-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Offset", "0")
-	req.Header.Set("Content-Type", helper.TusContentType)
+	req.Header.Set("Content-Type", upload.TusContentType)
 	req.Header.Set("Content-Length", strconv.Itoa(len(chunkData)))
 
 	resp, err := app.Test(req)
@@ -1174,7 +1174,7 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 	chunkReq := httptest.NewRequest("PATCH", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", bytes.NewReader([]byte("test")))
 	chunkReq.Header.Set("Tus-Resumable", "1.0.0")
 	chunkReq.Header.Set("Upload-Offset", "0")
-	chunkReq.Header.Set("Content-Type", helper.TusContentType)
+	chunkReq.Header.Set("Content-Type", upload.TusContentType)
 	chunkReq.Header.Set("Content-Length", "4")
 	chunkResp, chunkErr := app.Test(chunkReq)
 	assert.NoError(t, chunkErr)

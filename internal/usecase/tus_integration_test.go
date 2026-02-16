@@ -12,8 +12,8 @@ import (
 
 	"invento-service/config"
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
 	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"invento-service/internal/usecase/repo"
 
 	"github.com/rs/zerolog"
@@ -28,10 +28,10 @@ type tusIntegrationEnv struct {
 	db             *gorm.DB
 	userID         string
 	pathResolver   *storage.PathResolver
-	projectQueue   *helper.TusQueue
-	modulQueue     *helper.TusQueue
-	projectManager *helper.TusManager
-	modulManager   *helper.TusManager
+	projectQueue   *upload.TusQueue
+	modulQueue     *upload.TusQueue
+	projectManager *upload.TusManager
+	modulManager   *upload.TusManager
 	uploadUsecase  *tusUploadUsecase
 	modulUsecase   *tusModulUsecase
 }
@@ -89,14 +89,14 @@ func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 	pathResolver := storage.NewPathResolver(cfg)
 	fileManager := storage.NewFileManager(cfg)
 
-	projectStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeProject)
-	modulStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeModul)
+	projectStore := upload.NewTusStore(pathResolver, cfg.Upload.MaxSizeProject)
+	modulStore := upload.NewTusStore(pathResolver, cfg.Upload.MaxSizeModul)
 
-	projectQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
-	modulQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentModul)
+	projectQueue := upload.NewTusQueue(cfg.Upload.MaxConcurrentProject)
+	modulQueue := upload.NewTusQueue(cfg.Upload.MaxConcurrentModul)
 
-	projectManager := helper.NewTusManager(projectStore, projectQueue, fileManager, cfg, zerolog.Nop())
-	modulManager := helper.NewTusManager(modulStore, modulQueue, fileManager, cfg, zerolog.Nop())
+	projectManager := upload.NewTusManager(projectStore, projectQueue, fileManager, cfg, zerolog.Nop())
+	modulManager := upload.NewTusManager(modulStore, modulQueue, fileManager, cfg, zerolog.Nop())
 
 	tusUploadRepo := repo.NewTusUploadRepository(db)
 	projectRepo := repo.NewProjectRepository(db)

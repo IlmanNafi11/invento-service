@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 4 of 6 (Architecture Restructuring)
-Plan: 1 of 6 complete
+Plan: 4 of 6 complete
 Status: In Progress
-Last activity: 2026-02-16 -- Plan 04-01 (extract httputil package) complete
+Last activity: 2026-02-16 -- Plan 04-04 (extract middleware functions) complete
 
-Progress: [██░░░░░░░░] 17% (1/6 plans)
+Progress: [██████░░░░] 67% (4/6 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 14
 - Average duration: ~8min
-- Total execution time: ~1.4 hours
+- Total execution time: ~1.8 hours
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [██░░░░░░░░] 17% (1/6 plans)
 | 01-foundation-rename | 5 | ~40min | ~8min |
 | 02-memory-performance-tuning | 2 | ~12min | ~6min |
 | 03-code-quality-standardization | 3 | ~25min | ~8min |
-| 04-architecture-restructuring | 1 | ~15min | ~15min |
+| 04-architecture-restructuring | 4 | ~45min | ~11min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02, 03-01, 03-02, 03-03, 04-01
-- Trend: Stable ~6-15min per plan
+- Last 5 plans: 03-03, 04-01, 04-02, 04-03, 04-04
+- Trend: Stable ~8-15min per plan
 
 ## Accumulated Context
 
@@ -70,6 +70,10 @@ Recent decisions affecting current work:
 - [04-01]: TUS controllers keep helper import only (no httputil needed for SendTus* functions)
 - [04-01]: Files using only httputil symbols have helper import removed entirely
 
+- [04-04]: CasbinPermissionChecker interface stays in middleware package (accept-interfaces principle)
+- [04-04]: rbac_middleware.go filename avoids confusion with internal/rbac/ package
+- [04-04]: server.go keeps helper import for TUS store/queue/manager symbols
+
 ### Pending Todos
 
 None yet.
@@ -82,5 +86,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 04-01-PLAN.md
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
