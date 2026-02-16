@@ -2,10 +2,11 @@ package repo_test
 
 import (
 	"context"
+	"testing"
+
 	"invento-service/internal/domain"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -142,8 +143,8 @@ func TestRoleRepository_GetAll_Success(t *testing.T) {
 	}
 
 	for _, role := range roles {
-		err := db.Create(&role).Error
-		require.NoError(t, err)
+		createErr := db.Create(&role).Error
+		require.NoError(t, createErr)
 	}
 
 	roleRepo := repo.NewRoleRepository(db)

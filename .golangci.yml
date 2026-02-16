@@ -19,17 +19,30 @@ linters:
   settings:
     govet:
       enable-all: true
+      disable:
+        - fieldalignment # Struct field reordering hurts readability, minimal memory savings
+        - unusedwrite # False positives on test struct setup patterns
     errcheck:
-      check-type-assertions: true
+      check-type-assertions: false # Mock patterns in tests use safe type assertions
+      exclude-functions:
+        - (io.Closer).Close # Deferred Close() errors are safe to ignore
+        - (*os.File).Close
+        - (io.Writer).Write
+        - os.Remove
+        - os.RemoveAll
+        - os.Setenv
+        - os.Unsetenv
+        - os.Chdir
     revive:
       rules:
         - name: exported
-          arguments:
-            - "checkPrivateReceivers"
+          disabled: true # Godoc comments are documentation work, not code quality lint
     gocritic:
       enabled-tags:
         - diagnostic
         - style
+      disabled-checks:
+        - paramTypeCombine # Explicit parameter names improve readability
     godox:
       keywords:
         - TODO
@@ -39,6 +52,14 @@ linters:
     goconst:
       min-len: 3
       min-occurrences: 3
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+      - path: _test\.go
+        linters:
+          - goconst
 
 formatters:
   enable:

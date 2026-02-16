@@ -234,8 +234,8 @@ func TestGetProvinceName_UnknownCode(t *testing.T) {
 func TestGetProvinceName_AllProvinces(t *testing.T) {
 	t.Parallel()
 	provinces := []struct {
-		code  string
-		name  string
+		code string
+		name string
 	}{
 		{"11", "Aceh"},
 		{"12", "Sumatera Utara"},
@@ -354,7 +354,7 @@ func TestFormatNPWP_WithSeparators(t *testing.T) {
 func TestValidateNIKChecksum_EdgeCases(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		nik       string
+		nik        string
 		shouldPass bool
 	}{
 		{"0000000000000001", true},

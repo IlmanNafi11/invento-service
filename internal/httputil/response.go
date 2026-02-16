@@ -1,11 +1,12 @@
 package httputil
 
 import (
+	"strconv"
+	"time"
+
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/version"
-	"strconv"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 )

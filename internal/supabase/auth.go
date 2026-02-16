@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"invento-service/internal/domain"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
+
+	"invento-service/internal/domain"
 )
 
 var _ domain.AuthService = (*AuthService)(nil)
@@ -234,7 +235,7 @@ func (s *AuthService) RequestPasswordReset(ctx context.Context, email string, re
 }
 
 func (s *AuthService) Logout(ctx context.Context, accessToken string) error {
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, s.authURL+"/logout", nil)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, s.authURL+"/logout", http.NoBody)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -256,7 +257,7 @@ func (s *AuthService) Logout(ctx context.Context, accessToken string) error {
 }
 
 func (s *AuthService) DeleteUser(ctx context.Context, uid string) error {
-	httpReq, err := http.NewRequestWithContext(ctx, "DELETE", s.authURL+"/admin/users/"+uid, nil)
+	httpReq, err := http.NewRequestWithContext(ctx, "DELETE", s.authURL+"/admin/users/"+uid, http.NoBody)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

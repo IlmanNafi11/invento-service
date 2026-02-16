@@ -36,17 +36,20 @@ func main() {
 	if err != nil {
 		bootLogger.Fatal().Err(err).Msg("config load failed")
 	}
-	if err := cfg.Validate(); err != nil {
+	if err = cfg.Validate(); err != nil {
 		bootLogger.Fatal().Err(err).Msg("config validation failed")
 	}
 
 	// Apply runtime memory configuration from config
 	// This overrides GOMEMLIMIT/GOGC env vars for consistency
-	if memLimit, err := config.ParseMemLimit(cfg.Performance.GoMemLimit); err == nil && memLimit > 0 {
-		debug.SetMemoryLimit(memLimit)
-		bootLogger.Info().Str("gomemlimit", cfg.Performance.GoMemLimit).Int64("bytes", memLimit).Msg("GOMEMLIMIT set")
-	} else if err != nil {
-		bootLogger.Warn().Str("value", cfg.Performance.GoMemLimit).Err(err).Msg("invalid GOMEMLIMIT value")
+	{
+		memLimit, memErr := config.ParseMemLimit(cfg.Performance.GoMemLimit)
+		if memErr == nil && memLimit > 0 {
+			debug.SetMemoryLimit(memLimit)
+			bootLogger.Info().Str("gomemlimit", cfg.Performance.GoMemLimit).Int64("bytes", memLimit).Msg("GOMEMLIMIT set")
+		} else if memErr != nil {
+			bootLogger.Warn().Str("value", cfg.Performance.GoMemLimit).Err(memErr).Msg("invalid GOMEMLIMIT value")
+		}
 	}
 	if cfg.Performance.GoGC >= 0 {
 		oldGOGC := debug.SetGCPercent(cfg.Performance.GoGC)

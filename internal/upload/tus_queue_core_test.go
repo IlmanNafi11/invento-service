@@ -2,8 +2,9 @@ package upload_test
 
 import (
 	"testing"
-	"invento-service/internal/upload"
+
 	"github.com/stretchr/testify/assert"
+	"invento-service/internal/upload"
 )
 
 // ==================== TusQueue Tests ====================

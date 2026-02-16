@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -85,7 +86,7 @@ func TestProjectController_GetByID_Success(t *testing.T) {
 	app.Get("/api/v1/project/:id", controller.GetByID)
 
 	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
-	req := httptest.NewRequest("GET", "/api/v1/project/1", nil)
+	req := httptest.NewRequest("GET", "/api/v1/project/1", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
 
@@ -125,7 +126,7 @@ func TestProjectController_GetByID_ProjectNotFound(t *testing.T) {
 	app.Get("/api/v1/project/:id", controller.GetByID)
 
 	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
-	req := httptest.NewRequest("GET", "/api/v1/project/999", nil)
+	req := httptest.NewRequest("GET", "/api/v1/project/999", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
 
@@ -181,7 +182,7 @@ func TestProjectController_GetList_WithFilters(t *testing.T) {
 	app.Get("/api/v1/project", controller.GetList)
 
 	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
-	req := httptest.NewRequest("GET", "/api/v1/project?search=search&filter_semester=1&filter_kategori=website", nil)
+	req := httptest.NewRequest("GET", "/api/v1/project?search=search&filter_semester=1&filter_kategori=website", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
 
@@ -256,7 +257,7 @@ func TestProjectController_Delete_Success(t *testing.T) {
 	app.Delete("/api/v1/project/:id", controller.Delete)
 
 	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
-	req := httptest.NewRequest("DELETE", "/api/v1/project/1", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/project/1", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
 
@@ -402,7 +403,7 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 			app.Get("/api/v1/project", controller.GetList)
 
 			token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
-			req := httptest.NewRequest("GET", "/api/v1/project"+tt.queryParams, nil)
+			req := httptest.NewRequest("GET", "/api/v1/project"+tt.queryParams, http.NoBody)
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			resp, err := app.Test(req)
 

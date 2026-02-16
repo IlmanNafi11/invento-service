@@ -3,10 +3,11 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"invento-service/config"
-	"invento-service/internal/dto"
 	"runtime"
 	"time"
+
+	"invento-service/config"
+	"invento-service/internal/dto"
 
 	"gorm.io/gorm"
 )
@@ -218,11 +219,6 @@ func (uc *healthUsecase) getEmailServiceStatus() dto.EmailService {
 		Status:    dto.ServiceStatusConnected,
 		APIKeySet: true,
 	}
-}
-
-func (uc *healthUsecase) checkResendAPI() bool {
-	// Email service is disabled - using Supabase Auth
-	return true
 }
 
 func (uc *healthUsecase) getDependencies() []dto.Dependency {

@@ -1,17 +1,18 @@
 package storage_test
 
 import (
-	"invento-service/config"
-	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/storage"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func setupPathResolverTest(t *testing.T) (*storage.PathResolver, string) {
+func setupPathResolverTest(t *testing.T) (pr *storage.PathResolver, tmpDir string) {
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
@@ -190,7 +191,7 @@ func TestPathResolver_DirectoryExists(t *testing.T) {
 
 	// Create directory
 	existingDir := filepath.Join(tempDir, "existing")
-	err := os.MkdirAll(existingDir, 0755)
+	err := os.MkdirAll(existingDir, 0o755)
 	require.NoError(t, err)
 
 	// Test existing directory
@@ -207,7 +208,7 @@ func TestPathResolver_FileExists(t *testing.T) {
 
 	// Create file
 	existingFile := filepath.Join(tempDir, "existing.txt")
-	err := os.WriteFile(existingFile, []byte("test"), 0644)
+	err := os.WriteFile(existingFile, []byte("test"), 0o644)
 	require.NoError(t, err)
 
 	// Test existing file

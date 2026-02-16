@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"invento-service/internal/dto"
 	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
-	app_testing "invento-service/internal/testing"
-	apperrors "invento-service/internal/errors"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	httpcontroller "invento-service/internal/controller/http"
+	"invento-service/internal/dto"
+	apperrors "invento-service/internal/errors"
+	app_testing "invento-service/internal/testing"
 )
 
 func TestUserController_GetUserList_Success(t *testing.T) {

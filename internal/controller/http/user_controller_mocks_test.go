@@ -2,10 +2,9 @@ package http_test
 
 import (
 	"context"
-	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/dto"
 	"mime/multipart"
-	"os"
+
+	"invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/mock"
@@ -88,7 +87,7 @@ func (m *MockUserUsecase) BulkAssignRole(ctx context.Context, userIDs []string, 
 }
 
 // Helper function to create a test app with authenticated middleware for UserController
-func setupTestAppWithAuthForUser(controller *httpcontroller.UserController) *fiber.App {
+func setupTestAppWithAuthForUser() *fiber.App {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		EnablePrintRoutes:     false,
@@ -112,19 +111,4 @@ func setupTestAppWithAuthForUser(controller *httpcontroller.UserController) *fib
 // Helper function
 func stringPtr(s string) *string {
 	return &s
-}
-
-// createTempFile creates a temporary file for testing and returns its name.
-// Caller is responsible for cleanup via os.Remove.
-func createTempFile(content string) (string, error) {
-	tmpFile, err := os.CreateTemp("", "test_download_*.zip")
-	if err != nil {
-		return "", err
-	}
-	if _, err = tmpFile.WriteString(content); err != nil {
-		tmpFile.Close()
-		return "", err
-	}
-	tmpFile.Close()
-	return tmpFile.Name(), nil
 }

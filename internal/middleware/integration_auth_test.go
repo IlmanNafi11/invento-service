@@ -3,11 +3,14 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +24,8 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		// Create Fiber app with full middleware stack
 		app := fiber.New(fiber.Config{
 			ErrorHandler: func(c *fiber.Ctx, err error) error {
-				if appErr, ok := err.(*apperrors.AppError); ok {
+				var appErr *apperrors.AppError
+				if errors.As(err, &appErr) {
 					return httputil.SendAppError(c, appErr)
 				}
 				return httputil.SendInternalServerErrorResponse(c)
@@ -41,7 +45,7 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		})
 
 		// Make request
-		req := httptest.NewRequest("GET", "/api/test", nil)
+		req := httptest.NewRequest("GET", "/api/test", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -86,7 +90,7 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 			return c.SendString("OK")
 		})
 
-		req := httptest.NewRequest("GET", "/test", nil)
+		req := httptest.NewRequest("GET", "/test", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -142,7 +146,8 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	t.Parallel()
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			if appErr, ok := err.(*apperrors.AppError); ok {
+			var appErr *apperrors.AppError
+			if errors.As(err, &appErr) {
 				return httputil.SendAppError(c, appErr)
 			}
 			return httputil.SendInternalServerErrorResponse(c)
@@ -182,7 +187,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	})
 
 	t.Run("ErrorScenario_NotFound", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/notfound", nil)
+		req := httptest.NewRequest("GET", "/error/notfound", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 
@@ -204,7 +209,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	})
 
 	t.Run("ErrorScenario_Validation", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/validation", nil)
+		req := httptest.NewRequest("GET", "/error/validation", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 
@@ -222,7 +227,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	})
 
 	t.Run("ErrorScenario_Unauthorized", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/unauthorized", nil)
+		req := httptest.NewRequest("GET", "/error/unauthorized", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 
@@ -240,7 +245,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	})
 
 	t.Run("ErrorScenario_Forbidden", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/forbidden", nil)
+		req := httptest.NewRequest("GET", "/error/forbidden", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 
@@ -258,7 +263,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	})
 
 	t.Run("ErrorScenario_Conflict", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/conflict", nil)
+		req := httptest.NewRequest("GET", "/error/conflict", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 
@@ -276,7 +281,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	})
 
 	t.Run("ErrorScenario_Internal", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/internal", nil)
+		req := httptest.NewRequest("GET", "/error/internal", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 
@@ -294,7 +299,7 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	})
 
 	t.Run("ErrorScenario_PayloadTooLarge", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/payload", nil)
+		req := httptest.NewRequest("GET", "/error/payload", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 
@@ -323,7 +328,7 @@ func TestIntegrationMiddlewareRequestIDInLogs(t *testing.T) {
 			return c.SendString("OK")
 		})
 
-		req := httptest.NewRequest("GET", "/test", nil)
+		req := httptest.NewRequest("GET", "/test", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -346,7 +351,7 @@ func TestIntegrationMiddlewareRequestIDInLogs(t *testing.T) {
 			})
 		})
 
-		req := httptest.NewRequest("GET", "/test", nil)
+		req := httptest.NewRequest("GET", "/test", http.NoBody)
 		req.Header.Set(RequestIDHeader, customRequestID)
 
 		resp, err := app.Test(req)

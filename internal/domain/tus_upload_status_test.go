@@ -1,9 +1,10 @@
 package domain
 
 import (
-	"invento-service/internal/dto"
 	"testing"
 	"time"
+
+	"invento-service/internal/dto"
 )
 
 func TestTusUploadStruct(t *testing.T) {
@@ -15,7 +16,7 @@ func TestTusUploadStruct(t *testing.T) {
 
 		upload := TusUpload{
 			ID:         "upload-123",
-			UserID: "user-1",
+			UserID:     "user-1",
 			ProjectID:  &projectID,
 			UploadType: UploadTypeProjectCreate,
 			UploadURL:  "https://example.com/upload/upload-123",
@@ -49,7 +50,7 @@ func TestTusUploadStruct(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-456",
-			UserID: "user-2",
+			UserID:     "user-2",
 			ProjectID:  nil,
 			UploadType: UploadTypeProjectUpdate,
 			FileSize:   512000,
@@ -71,7 +72,7 @@ func TestTusUploadStruct(t *testing.T) {
 
 		upload := TusUpload{
 			ID:          "upload-789",
-			UserID: "user-3",
+			UserID:      "user-3",
 			UploadType:  UploadTypeProjectCreate,
 			FileSize:    2048000,
 			Status:      UploadStatusCompleted,
@@ -389,7 +390,7 @@ func TestTusUploadMetadata(t *testing.T) {
 
 		upload := TusUpload{
 			ID:             "upload-metadata-1",
-			UserID: "user-1",
+			UserID:         "user-1",
 			UploadType:     UploadTypeProjectCreate,
 			UploadMetadata: metadata,
 			FileSize:       5000000,

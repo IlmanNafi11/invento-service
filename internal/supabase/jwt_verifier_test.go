@@ -35,8 +35,8 @@ func newTestJWKSVerifier(t *testing.T) *testJWKSVerifier {
 			{
 				"kty": "EC",
 				"crv": "P-256",
-				"x":   base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.X.Bytes()),
-				"y":   base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.Y.Bytes()),
+				"x":   base64.RawURLEncoding.EncodeToString(privateKey.X.Bytes()),
+				"y":   base64.RawURLEncoding.EncodeToString(privateKey.Y.Bytes()),
 				"kid": testKeyID,
 				"use": "sig",
 				"alg": "ES256",

@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	supabaseAuth "invento-service/internal/supabase"
 	"invento-service/internal/usecase/repo"
-	"strings"
-	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/supabase-community/supabase-go"
@@ -78,7 +79,6 @@ func NewAuthUsecaseWithDeps(
 }
 
 func (uc *authUsecase) Register(ctx context.Context, req dto.RegisterRequest) (string, *dto.AuthResponse, error) {
-
 	emailInfo, err := validatePolijeEmail(req.Email)
 	if err != nil {
 		return "", nil, apperrors.NewValidationError(err.Error(), err)
@@ -93,7 +93,7 @@ func (uc *authUsecase) Register(ctx context.Context, req dto.RegisterRequest) (s
 	// Get role for the user
 	role, err := uc.roleRepo.GetByName(ctx, emailInfo.RoleName)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", nil, apperrors.NewNotFoundError("Role " + emailInfo.RoleName)
 		}
 		return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: get role: %w", err))
@@ -159,7 +159,6 @@ func (uc *authUsecase) Register(ctx context.Context, req dto.RegisterRequest) (s
 }
 
 func (uc *authUsecase) Login(ctx context.Context, req dto.AuthRequest) (string, *dto.AuthResponse, error) {
-
 	authResp, err := uc.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		return "", nil, apperrors.NewUnauthorizedError("Email atau password salah")
@@ -167,7 +166,7 @@ func (uc *authUsecase) Login(ctx context.Context, req dto.AuthRequest) (string, 
 
 	user, err := uc.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			emailInfo, validateErr := validatePolijeEmail(req.Email)
 			if validateErr != nil {
 				return "", nil, apperrors.NewValidationError(validateErr.Error(), validateErr)
@@ -230,7 +229,6 @@ func (uc *authUsecase) Login(ctx context.Context, req dto.AuthRequest) (string, 
 }
 
 func (uc *authUsecase) RefreshToken(ctx context.Context, refreshToken string) (string, *dto.RefreshTokenResponse, error) {
-
 	authResp, err := uc.authService.RefreshToken(ctx, refreshToken)
 	if err != nil {
 		return "", nil, apperrors.NewUnauthorizedError("Refresh token tidak valid atau sudah expired")
@@ -247,7 +245,6 @@ func (uc *authUsecase) RefreshToken(ctx context.Context, refreshToken string) (s
 }
 
 func (uc *authUsecase) RequestPasswordReset(ctx context.Context, req dto.ResetPasswordRequest) error {
-
 	redirectURL := uc.config.App.CorsOriginDev + "/reset-password"
 	if uc.config.App.Env == config.EnvProduction {
 		redirectURL = uc.config.App.CorsOriginProd + "/reset-password"

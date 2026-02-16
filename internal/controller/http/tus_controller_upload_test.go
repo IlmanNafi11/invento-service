@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
@@ -72,7 +73,7 @@ func (m *MockTusUploadUsecase) CancelUpload(ctx context.Context, uploadID string
 	return args.Error(0)
 }
 
-func (m *MockTusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error) {
+func (m *MockTusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID string, userID string) (offset int64, length int64, err error) {
 	args := m.Called(ctx, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
@@ -93,7 +94,7 @@ func (m *MockTusUploadUsecase) HandleProjectUpdateChunk(ctx context.Context, pro
 	return args.Get(0).(int64), nil
 }
 
-func (m *MockTusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID string, userID string) (int64, int64, error) {
+func (m *MockTusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID string, userID string) (offset int64, length int64, err error) {
 	args := m.Called(ctx, projectID, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
@@ -195,7 +196,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 		"semester":     "1",
 	})
 
-	req := httptest.NewRequest("POST", "/api/v1/tus/upload", nil)
+	req := httptest.NewRequest("POST", "/api/v1/tus/upload", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Length", "1048576")
 	req.Header.Set("Upload-Metadata", metadataHeader)
@@ -226,7 +227,7 @@ func TestInitiateUpload_InvalidHeaders(t *testing.T) {
 	})
 	app.Post("/api/v1/tus/upload", controller.InitiateUpload)
 
-	req := httptest.NewRequest("POST", "/api/v1/tus/upload", nil)
+	req := httptest.NewRequest("POST", "/api/v1/tus/upload", http.NoBody)
 	// Missing Tus-Resumable header
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
@@ -247,7 +248,7 @@ func TestInitiateUpload_InvalidTusVersion(t *testing.T) {
 	})
 	app.Post("/api/v1/tus/upload", controller.InitiateUpload)
 
-	req := httptest.NewRequest("POST", "/api/v1/tus/upload", nil)
+	req := httptest.NewRequest("POST", "/api/v1/tus/upload", http.NoBody)
 	req.Header.Set("Tus-Resumable", "0.0.1") // Wrong version
 	req.Header.Set("Upload-Length", "1048576")
 
@@ -266,7 +267,7 @@ func TestInitiateUpload_Unauthorized(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/tus/upload", controller.InitiateUpload)
 
-	req := httptest.NewRequest("POST", "/api/v1/tus/upload", nil)
+	req := httptest.NewRequest("POST", "/api/v1/tus/upload", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Length", "1048576")
 
@@ -402,7 +403,7 @@ func TestGetUploadStatus_Success(t *testing.T) {
 
 	mockUC.On("GetUploadStatus", mock.Anything, "test-upload-id", "user-123").Return(int64(524288), int64(1048576), nil)
 
-	req := httptest.NewRequest("HEAD", "/api/v1/tus/upload/test-upload-id", nil)
+	req := httptest.NewRequest("HEAD", "/api/v1/tus/upload/test-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)
@@ -433,7 +434,7 @@ func TestGetUploadStatus_NotFound(t *testing.T) {
 
 	mockUC.On("GetUploadStatus", mock.Anything, "nonexistent-id", "user-123").Return(int64(0), int64(0), apperrors.NewNotFoundError("upload"))
 
-	req := httptest.NewRequest("HEAD", "/api/v1/tus/upload/nonexistent-id", nil)
+	req := httptest.NewRequest("HEAD", "/api/v1/tus/upload/nonexistent-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)

@@ -4,6 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"runtime"
+	"runtime/metrics"
+	"strings"
+	"time"
+
 	"invento-service/config"
 	_ "invento-service/docs"
 	"invento-service/internal/controller/base"
@@ -18,12 +25,6 @@ import (
 	"invento-service/internal/upload"
 	"invento-service/internal/usecase"
 	"invento-service/internal/usecase/repo"
-	"io"
-	"os"
-	"runtime"
-	"runtime/metrics"
-	"strings"
-	"time"
 
 	"github.com/gofiber/contrib/fiberzerolog"
 	"github.com/gofiber/fiber/v2"
@@ -186,10 +187,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	tusProjectManager := upload.NewTusManager(tusProjectStore, tusQueue, fileManager, cfg, appLogger)
 	tusModulManager := upload.NewTusManager(tusModulStore, tusModulQueue, fileManager, cfg, appLogger)
 
-	if activeIDs, err := tusUploadRepo.GetActiveUploadIDs(context.Background()); err == nil && len(activeIDs) > 0 {
+	if activeIDs, activeErr := tusUploadRepo.GetActiveUploadIDs(context.Background()); activeErr == nil && len(activeIDs) > 0 {
 		tusQueue.LoadFromDB(activeIDs)
 	}
-	if activeIDs, err := tusModulUploadRepo.GetActiveUploadIDs(context.Background()); err == nil && len(activeIDs) > 0 {
+	if activeIDs, activeErr := tusModulUploadRepo.GetActiveUploadIDs(context.Background()); activeErr == nil && len(activeIDs) > 0 {
 		tusModulQueue.LoadFromDB(activeIDs)
 	}
 

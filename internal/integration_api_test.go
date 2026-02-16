@@ -3,12 +3,15 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -149,7 +152,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 	})
 
 	t.Run("ValidPagination_Default", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/items", nil)
+		req := httptest.NewRequest("GET", "/items", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -172,7 +175,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 	})
 
 	t.Run("ValidPagination_Custom", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/items?page=2&limit=20", nil)
+		req := httptest.NewRequest("GET", "/items?page=2&limit=20", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -198,7 +201,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 			Page:  3,
 			Limit: 10,
 		}
-		var offset = pagReq.GetOffset()
+		offset := pagReq.GetOffset()
 		assert.Equal(t, 20, offset, "Offset should be (3-1)*10 = 20")
 
 		pagReq.Page = 1
@@ -213,7 +216,8 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 	// Setup complete application stack
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			if appErr, ok := err.(*apperrors.AppError); ok {
+			var appErr *apperrors.AppError
+			if errors.As(err, &appErr) {
 				return httputil.SendAppError(c, appErr)
 			}
 			return httputil.SendInternalServerErrorResponse(c)
@@ -346,7 +350,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 	})
 
 	t.Run("GetUser_Success", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/users/1", nil)
+		req := httptest.NewRequest("GET", "/users/1", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -360,7 +364,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 	})
 
 	t.Run("GetUser_NotFound", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/users/999", nil)
+		req := httptest.NewRequest("GET", "/users/999", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
@@ -395,7 +399,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 	})
 
 	t.Run("DeleteUser_Success", func(t *testing.T) {
-		req := httptest.NewRequest("DELETE", "/users/1", nil)
+		req := httptest.NewRequest("DELETE", "/users/1", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -409,7 +413,7 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 	})
 
 	t.Run("DeleteUser_NotFound", func(t *testing.T) {
-		req := httptest.NewRequest("DELETE", "/users/999", nil)
+		req := httptest.NewRequest("DELETE", "/users/999", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)

@@ -3,12 +3,15 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +23,8 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 	t.Parallel()
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			if appErr, ok := err.(*apperrors.AppError); ok {
+			var appErr *apperrors.AppError
+			if errors.As(err, &appErr) {
 				return httputil.SendAppError(c, appErr)
 			}
 			return httputil.SendInternalServerErrorResponse(c)
@@ -165,7 +169,8 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 	t.Parallel()
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			if appErr, ok := err.(*apperrors.AppError); ok {
+			var appErr *apperrors.AppError
+			if errors.As(err, &appErr) {
 				return httputil.SendAppError(c, appErr)
 			}
 			return httputil.SendInternalServerErrorResponse(c)
@@ -278,7 +283,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 	})
 
 	t.Run("Scenario_ListItems", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/items", nil)
+		req := httptest.NewRequest("GET", "/items", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -293,7 +298,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 	})
 
 	t.Run("Scenario_GetItem_Success", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/items/1", nil)
+		req := httptest.NewRequest("GET", "/items/1", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -305,7 +310,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 	})
 
 	t.Run("Scenario_GetItem_NotFound", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/items/999", nil)
+		req := httptest.NewRequest("GET", "/items/999", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
@@ -372,7 +377,7 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 	})
 
 	t.Run("Scenario_DeleteItem_Success", func(t *testing.T) {
-		req := httptest.NewRequest("DELETE", "/items/2", nil)
+		req := httptest.NewRequest("DELETE", "/items/2", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)

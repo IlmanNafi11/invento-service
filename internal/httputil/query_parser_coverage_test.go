@@ -21,7 +21,7 @@ func TestParsePaginationQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("GET", "/test1", nil)
+	req, _ := http.NewRequest("GET", "/test1", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -34,7 +34,7 @@ func TestParsePaginationQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test2?page=2&limit=20", nil)
+	req, _ = http.NewRequest("GET", "/test2?page=2&limit=20", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -47,7 +47,7 @@ func TestParsePaginationQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test3?page=abc&limit=xyz", nil)
+	req, _ = http.NewRequest("GET", "/test3?page=abc&limit=xyz", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -60,7 +60,7 @@ func TestParsePaginationQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test4?page=1&limit=200", nil)
+	req, _ = http.NewRequest("GET", "/test4?page=1&limit=200", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -78,7 +78,7 @@ func TestParseSearchQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("GET", "/test1", nil)
+	req, _ := http.NewRequest("GET", "/test1", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -90,7 +90,7 @@ func TestParseSearchQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test2?search=test", nil)
+	req, _ = http.NewRequest("GET", "/test2?search=test", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -108,7 +108,7 @@ func TestParseFilterQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("GET", "/test1", nil)
+	req, _ := http.NewRequest("GET", "/test1", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -120,7 +120,7 @@ func TestParseFilterQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test2?category=active", nil)
+	req, _ = http.NewRequest("GET", "/test2?category=active", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -138,7 +138,7 @@ func TestParseIntQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("GET", "/test1", nil)
+	req, _ := http.NewRequest("GET", "/test1", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -150,7 +150,7 @@ func TestParseIntQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test2?semester=2", nil)
+	req, _ = http.NewRequest("GET", "/test2?semester=2", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -162,7 +162,7 @@ func TestParseIntQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test3?semester=abc", nil)
+	req, _ = http.NewRequest("GET", "/test3?semester=abc", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -180,7 +180,7 @@ func TestParseBoolQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("GET", "/test1", nil)
+	req, _ := http.NewRequest("GET", "/test1", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -192,7 +192,7 @@ func TestParseBoolQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test2?active=true", nil)
+	req, _ = http.NewRequest("GET", "/test2?active=true", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -204,7 +204,7 @@ func TestParseBoolQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test3?active=false", nil)
+	req, _ = http.NewRequest("GET", "/test3?active=false", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -216,7 +216,7 @@ func TestParseBoolQuery_Success(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ = http.NewRequest("GET", "/test4?active=invalid", nil)
+	req, _ = http.NewRequest("GET", "/test4?active=invalid", http.NoBody)
 	resp, err = app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)

@@ -218,7 +218,7 @@ func TestTusUploadRepository_GetAbandonedUploads(t *testing.T) {
 	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "not-abandoned-completed").Update("updated_at", oldTime).Error)
 	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "not-abandoned-recent").Update("updated_at", now).Error)
 
-	uploads, err := repository.GetAbandonedUploads(context.Background(), 10 * time.Minute)
+	uploads, err := repository.GetAbandonedUploads(context.Background(), 10*time.Minute)
 	require.NoError(t, err)
 
 	ids := make([]string, 0, len(uploads))

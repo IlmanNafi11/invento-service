@@ -1,6 +1,8 @@
 package http
 
 import (
+	"errors"
+
 	"invento-service/internal/controller/base"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
@@ -173,7 +175,7 @@ func (ctrl *RoleController) UpdateRole(c *fiber.Ctx) error {
 	}
 
 	var req dto.RoleUpdateRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err = c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
 
@@ -222,7 +224,8 @@ func (ctrl *RoleController) DeleteRole(c *fiber.Ctx) error {
 // handleRoleError handles role usecase errors and maps them to appropriate HTTP responses.
 // Uses type-safe error handling with AppError types.
 func (ctrl *RoleController) handleRoleError(c *fiber.Ctx, err error) error {
-	if appErr, ok := err.(*apperrors.AppError); ok {
+	var appErr *apperrors.AppError
+	if errors.As(err, &appErr) {
 		return httputil.SendAppError(c, appErr)
 	}
 	return ctrl.SendInternalError(c)

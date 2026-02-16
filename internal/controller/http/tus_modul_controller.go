@@ -105,7 +105,7 @@ func (ctrl *TusModulController) initiateUpload(c *fiber.Ctx, modulID *string) er
 		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
-	if err := validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
+	if err = validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 

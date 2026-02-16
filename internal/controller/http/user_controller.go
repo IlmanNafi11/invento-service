@@ -2,12 +2,13 @@ package http
 
 import (
 	"errors"
+	"strconv"
+
 	"invento-service/internal/controller/base"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -87,7 +88,7 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 	}
 
 	var req dto.UpdateUserRoleRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err = c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
 
@@ -164,7 +165,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 	}
 
 	var params dto.UserFilesQueryParams
-	if err := c.QueryParser(&params); err != nil {
+	if err = c.QueryParser(&params); err != nil {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
 
@@ -307,7 +308,7 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 	}
 
 	var req dto.DownloadUserFilesRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err = c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
 
@@ -358,7 +359,7 @@ func (ctrl *UserController) GetUsersForRole(c *fiber.Ctx) error {
 		return err
 	}
 
-	result, err := ctrl.userUsecase.GetUsersForRole(ctx, uint(id))
+	result, err := ctrl.userUsecase.GetUsersForRole(ctx, id)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -394,7 +395,7 @@ func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
 	}
 
 	var req dto.BulkAssignRoleRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err = c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
 
@@ -402,7 +403,7 @@ func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err = ctrl.userUsecase.BulkAssignRole(ctx, req.UserIDs, uint(id))
+	err = ctrl.userUsecase.BulkAssignRole(ctx, req.UserIDs, id)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {

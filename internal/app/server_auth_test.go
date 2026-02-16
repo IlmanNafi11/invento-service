@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -122,7 +123,7 @@ func TestServer_ErrorHandler_NotFound(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test a non-existent route
-	req := httptest.NewRequest("GET", "/non-existent-route", nil)
+	req := httptest.NewRequest("GET", "/non-existent-route", http.NoBody)
 	resp, err := appInstance.Test(req)
 
 	require.NoError(t, err)
@@ -146,7 +147,7 @@ func TestServer_ErrorHandler_UploadsPath(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test an upload path that doesn't exist
-	req := httptest.NewRequest("GET", "/uploads/non-existent-file.txt", nil)
+	req := httptest.NewRequest("GET", "/uploads/non-existent-file.txt", http.NoBody)
 	resp, err := appInstance.Test(req)
 
 	require.NoError(t, err)
@@ -166,7 +167,7 @@ func TestServer_ErrorHandler_TusProtocol(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test TUS protocol request - returns 401 because of JWT middleware, but route exists
-	req := httptest.NewRequest("PATCH", "/api/v1/project/upload/123", nil)
+	req := httptest.NewRequest("PATCH", "/api/v1/project/upload/123", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	resp, err := appInstance.Test(req)
 
@@ -204,7 +205,7 @@ func TestServer_RouteRegistration_AuthRoutes(t *testing.T) {
 
 	for _, route := range routes {
 		t.Run(route.method+"_"+route.path, func(t *testing.T) {
-			req := httptest.NewRequest(route.method, route.path, nil)
+			req := httptest.NewRequest(route.method, route.path, http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)
@@ -240,7 +241,7 @@ func TestServer_RouteRegistration_RoleRoutes(t *testing.T) {
 
 	for _, route := range routes {
 		t.Run(route.method+"_"+strings.ReplaceAll(route.path, "/", "_"), func(t *testing.T) {
-			req := httptest.NewRequest(route.method, route.path, nil)
+			req := httptest.NewRequest(route.method, route.path, http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)
@@ -275,7 +276,7 @@ func TestServer_RouteRegistration_UserRoutes(t *testing.T) {
 
 	for _, route := range routes {
 		t.Run(route.method+"_"+strings.ReplaceAll(route.path, "/", "_"), func(t *testing.T) {
-			req := httptest.NewRequest(route.method, route.path, nil)
+			req := httptest.NewRequest(route.method, route.path, http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)
@@ -305,7 +306,7 @@ func TestServer_RouteRegistration_ProfileRoutes(t *testing.T) {
 
 	for _, route := range routes {
 		t.Run(route.method+"_"+strings.ReplaceAll(route.path, "/", "_"), func(t *testing.T) {
-			req := httptest.NewRequest(route.method, route.path, nil)
+			req := httptest.NewRequest(route.method, route.path, http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)
@@ -350,7 +351,7 @@ func TestServer_RouteRegistration_ProjectRoutes(t *testing.T) {
 
 	for _, route := range routes {
 		t.Run(route.method+"_"+strings.ReplaceAll(route.path, "/", "_"), func(t *testing.T) {
-			req := httptest.NewRequest(route.method, route.path, nil)
+			req := httptest.NewRequest(route.method, route.path, http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)
@@ -393,7 +394,7 @@ func TestServer_RouteRegistration_ModulRoutes(t *testing.T) {
 
 	for _, route := range routes {
 		t.Run(route.method+"_"+strings.ReplaceAll(route.path, "/", "_"), func(t *testing.T) {
-			req := httptest.NewRequest(route.method, route.path, nil)
+			req := httptest.NewRequest(route.method, route.path, http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)
@@ -422,7 +423,7 @@ func TestServer_RouteRegistration_StatisticsRoutes(t *testing.T) {
 
 	for _, route := range routes {
 		t.Run(route.method+"_"+strings.ReplaceAll(route.path, "/", "_"), func(t *testing.T) {
-			req := httptest.NewRequest(route.method, route.path, nil)
+			req := httptest.NewRequest(route.method, route.path, http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)
@@ -455,7 +456,7 @@ func TestServer_RouteRegistration_MonitoringRoutes(t *testing.T) {
 
 	for _, route := range routes {
 		t.Run(route.method+"_"+strings.ReplaceAll(route.path, "/", "_"), func(t *testing.T) {
-			req := httptest.NewRequest(route.method, route.path, nil)
+			req := httptest.NewRequest(route.method, route.path, http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)

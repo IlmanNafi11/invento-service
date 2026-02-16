@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -123,7 +124,7 @@ func TestModulController_GetList_Success(t *testing.T) {
 
 	mockModulUC.On("GetList", "user-1", "", "", "", 0, 0).Return(expectedData, nil)
 
-	req := httptest.NewRequest("GET", "/api/v1/modul", nil)
+	req := httptest.NewRequest("GET", "/api/v1/modul", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -304,7 +305,7 @@ func TestModulController_Delete_Success(t *testing.T) {
 
 	mockModulUC.On("Delete", "550e8400-e29b-41d4-a716-446655440000", "user-1").Return(nil)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/modul/550e8400-e29b-41d4-a716-446655440000", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/modul/550e8400-e29b-41d4-a716-446655440000", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)

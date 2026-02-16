@@ -3,6 +3,9 @@ package usecase
 import (
 	"context"
 	"errors"
+	"mime/multipart"
+	"strconv"
+
 	"invento-service/config"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
@@ -10,8 +13,6 @@ import (
 	"invento-service/internal/rbac"
 	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
-	"mime/multipart"
-	"strconv"
 
 	"gorm.io/gorm"
 )
@@ -264,8 +265,9 @@ func (uc *userUsecase) DownloadUserFiles(ctx context.Context, ownerUserID string
 
 	// Convert string IDs to uint for repository calls
 	projectIDsUint := make([]uint, 0, len(projectIDs))
+	var id uint64
 	for _, idStr := range projectIDs {
-		id, err := strconv.ParseUint(idStr, 10, 32)
+		id, err = strconv.ParseUint(idStr, 10, 32)
 		if err != nil {
 			return "", apperrors.NewValidationError("Format project ID tidak valid", err)
 		}

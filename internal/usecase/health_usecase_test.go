@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"context"
-	"invento-service/config"
-	"invento-service/internal/dto"
 	"testing"
 	"time"
+
+	"invento-service/config"
+	"invento-service/internal/dto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

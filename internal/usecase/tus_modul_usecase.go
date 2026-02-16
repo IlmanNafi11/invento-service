@@ -114,7 +114,7 @@ func (uc *tusModulUsecase) initiateUpload(ctx context.Context, userID string, fi
 		return nil, apperrors.NewConflictError(fmt.Sprintf("antrian penuh: %s", slotCheck.Message))
 	}
 
-	if err := uc.validateModulFileSize(fileSize); err != nil {
+	if err = uc.validateModulFileSize(fileSize); err != nil { //nolint:gocritic // sloppyReassign conflicts with govet shadow
 		return nil, err
 	}
 
@@ -199,7 +199,7 @@ func (uc *tusModulUsecase) handleChunk(ctx context.Context, uploadID string, use
 	}
 
 	if tusUpload.Status == domain.UploadStatusPending {
-		if err := uc.tusModulUploadRepo.UpdateStatus(ctx, uploadID, domain.UploadStatusUploading); err != nil {
+		if err = uc.tusModulUploadRepo.UpdateStatus(ctx, uploadID, domain.UploadStatusUploading); err != nil {
 			return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.handleChunk: update status: %w", err))
 		}
 		tusUpload.Status = domain.UploadStatusUploading
@@ -211,14 +211,14 @@ func (uc *tusModulUsecase) handleChunk(ctx context.Context, uploadID string, use
 	}
 
 	progress := float64(newOffset) / float64(tusUpload.FileSize) * 100
-	if err := uc.tusModulUploadRepo.UpdateOffset(ctx, uploadID, newOffset, progress); err != nil {
+	if err = uc.tusModulUploadRepo.UpdateOffset(ctx, uploadID, newOffset, progress); err != nil {
 		return newOffset, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.handleChunk: update offset: %w", err))
 	}
 
 	tusUpload.CurrentOffset = newOffset
 	tusUpload.Progress = progress
 	if newOffset >= tusUpload.FileSize {
-		if err := uc.completeUpload(ctx, tusUpload, userID); err != nil {
+		if err = uc.completeUpload(ctx, tusUpload, userID); err != nil { //nolint:gocritic // sloppyReassign conflicts with govet shadow
 			return newOffset, err
 		}
 	}
@@ -234,8 +234,8 @@ func (uc *tusModulUsecase) completeUpload(ctx context.Context, tusUpload *domain
 
 	fileName := fmt.Sprintf("%s.dat", tusUpload.ID)
 	finalPath := filepath.Join(dirPath, fileName)
-	if err := uc.tusManager.FinalizeUpload(tusUpload.ID, finalPath); err != nil {
-		uc.fileManager.DeleteModulDirectory(userID, randomDir)
+	if err = uc.tusManager.FinalizeUpload(tusUpload.ID, finalPath); err != nil {
+		_ = uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeUpload: finalize: %w", err))
 	}
 
@@ -276,7 +276,7 @@ func (uc *tusModulUsecase) completeModulCreate(ctx context.Context, tusUpload *d
 
 	if err := uc.modulRepo.Create(ctx, modul); err != nil {
 		_ = storage.DeleteFile(finalPath)
-		uc.fileManager.DeleteModulDirectory(userID, randomDir)
+		_ = uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulCreate: %w", err))
 	}
 
@@ -303,7 +303,7 @@ func (uc *tusModulUsecase) completeModulUpdate(ctx context.Context, tusUpload *d
 
 	if err := uc.modulRepo.Update(ctx, modul); err != nil {
 		_ = storage.DeleteFile(finalPath)
-		uc.fileManager.DeleteModulDirectory(userID, randomDir)
+		_ = uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulUpdate: %w", err))
 	}
 
@@ -349,15 +349,15 @@ func (uc *tusModulUsecase) getUploadInfo(ctx context.Context, uploadID string, u
 	return response, nil
 }
 
-func (uc *tusModulUsecase) GetModulUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error) {
+func (uc *tusModulUsecase) GetModulUploadStatus(ctx context.Context, uploadID string, userID string) (offset int64, length int64, err error) {
 	return uc.getUploadStatus(ctx, uploadID, userID, nil)
 }
 
-func (uc *tusModulUsecase) GetModulUpdateUploadStatus(ctx context.Context, modulID string, uploadID string, userID string) (int64, int64, error) {
+func (uc *tusModulUsecase) GetModulUpdateUploadStatus(ctx context.Context, modulID string, uploadID string, userID string) (offset int64, length int64, err error) {
 	return uc.getUploadStatus(ctx, uploadID, userID, &modulID)
 }
 
-func (uc *tusModulUsecase) getUploadStatus(ctx context.Context, uploadID string, userID string, modulID *string) (int64, int64, error) {
+func (uc *tusModulUsecase) getUploadStatus(ctx context.Context, uploadID string, userID string, modulID *string) (offset int64, length int64, err error) {
 	tusUpload, err := uc.getOwnedUpload(ctx, uploadID, userID, modulID)
 	if err != nil {
 		return 0, 0, err

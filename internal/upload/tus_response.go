@@ -1,9 +1,10 @@
 package upload
 
 import (
-	"invento-service/internal/httputil"
 	"strconv"
 	"time"
+
+	"invento-service/internal/httputil"
 
 	"github.com/gofiber/fiber/v2"
 )

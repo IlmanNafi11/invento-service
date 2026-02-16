@@ -3,10 +3,12 @@ package middleware_test
 import (
 	"encoding/json"
 	"errors"
-	"invento-service/internal/middleware"
-	testutil "invento-service/internal/testing"
+	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"invento-service/internal/middleware"
+	testutil "invento-service/internal/testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +45,7 @@ func TestRBACMiddleware_ValidRoleWithPermission_Returns200(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -67,7 +69,7 @@ func TestRBACMiddleware_ValidRoleWithoutPermission_Returns403(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -96,7 +98,7 @@ func TestRBACMiddleware_InvalidRole_Returns403(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -114,7 +116,7 @@ func TestRBACMiddleware_MissingRoleInContext_Returns403(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -136,7 +138,7 @@ func TestRBACMiddleware_EmptyRoleInContext_Returns403(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -158,7 +160,7 @@ func TestRBACMiddleware_InvalidRoleType_Returns403(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -179,7 +181,7 @@ func TestRBACMiddleware_CasbinError_Returns500(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -226,7 +228,7 @@ func TestRBACMiddleware_MultiplePermissions(t *testing.T) {
 				return c.SendStatus(fiber.StatusOK)
 			})
 
-			req := httptest.NewRequest("GET", "/test", nil)
+			req := httptest.NewRequest("GET", "/test", http.NoBody)
 			resp, err := app.Test(req)
 			require.NoError(t, err)
 
@@ -269,7 +271,7 @@ func TestRBACMiddleware_DifferentResources(t *testing.T) {
 				return c.SendStatus(fiber.StatusOK)
 			})
 
-			req := httptest.NewRequest("GET", "/test", nil)
+			req := httptest.NewRequest("GET", "/test", http.NoBody)
 			resp, err := app.Test(req)
 			require.NoError(t, err)
 

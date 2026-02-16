@@ -1,9 +1,10 @@
 package httputil
 
 import (
-	"invento-service/internal/dto"
 	"net/http"
 	"testing"
+
+	"invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ func TestSendSuccessResponse_Success(t *testing.T) {
 		return SendSuccessResponse(c, 200, "Berhasil", map[string]string{"key": "value"})
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -33,7 +34,7 @@ func TestSendErrorResponse_Success(t *testing.T) {
 		return SendErrorResponse(c, 400, "Terjadi kesalahan", nil)
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, resp.StatusCode)
@@ -55,7 +56,7 @@ func TestSendListResponse_Success(t *testing.T) {
 		return SendListResponse(c, 200, "Berhasil mengambil data", data, pagination)
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -73,7 +74,7 @@ func TestSendValidationErrorResponse_Success(t *testing.T) {
 		})
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, resp.StatusCode)
@@ -88,7 +89,7 @@ func TestSendBadRequestResponse_Success(t *testing.T) {
 		return SendBadRequestResponse(c, "Request tidak valid")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, resp.StatusCode)
@@ -103,7 +104,7 @@ func TestSendBadRequestResponse_DefaultMessage(t *testing.T) {
 		return SendBadRequestResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, resp.StatusCode)
@@ -114,11 +115,9 @@ func TestSendUnauthorizedResponse_Success(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
 
-	app.Get("/test", func(c *fiber.Ctx) error {
-		return SendUnauthorizedResponse(c)
-	})
+	app.Get("/test", SendUnauthorizedResponse)
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 401, resp.StatusCode)
@@ -129,11 +128,9 @@ func TestSendForbiddenResponse_Success(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
 
-	app.Get("/test", func(c *fiber.Ctx) error {
-		return SendForbiddenResponse(c)
-	})
+	app.Get("/test", SendForbiddenResponse)
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 403, resp.StatusCode)
@@ -148,7 +145,7 @@ func TestSendNotFoundResponse_Success(t *testing.T) {
 		return SendNotFoundResponse(c, "Data tidak ditemukan")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, resp.StatusCode)
@@ -163,7 +160,7 @@ func TestSendNotFoundResponse_DefaultMessage(t *testing.T) {
 		return SendNotFoundResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, resp.StatusCode)
@@ -178,7 +175,7 @@ func TestSendConflictResponse_Success(t *testing.T) {
 		return SendConflictResponse(c, "Data sudah ada")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 409, resp.StatusCode)
@@ -193,7 +190,7 @@ func TestSendConflictResponse_DefaultMessage(t *testing.T) {
 		return SendConflictResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 409, resp.StatusCode)
@@ -208,7 +205,7 @@ func TestSendPayloadTooLargeResponse_Success(t *testing.T) {
 		return SendPayloadTooLargeResponse(c, "Ukuran file terlalu besar")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 413, resp.StatusCode)
@@ -223,7 +220,7 @@ func TestSendPayloadTooLargeResponse_DefaultMessage(t *testing.T) {
 		return SendPayloadTooLargeResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 413, resp.StatusCode)
@@ -238,7 +235,7 @@ func TestSendTooManyRequestsResponse_Success(t *testing.T) {
 		return SendTooManyRequestsResponse(c, "Terlalu banyak permintaan")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 429, resp.StatusCode)
@@ -253,7 +250,7 @@ func TestSendTooManyRequestsResponse_DefaultMessage(t *testing.T) {
 		return SendTooManyRequestsResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 429, resp.StatusCode)
@@ -264,11 +261,9 @@ func TestSendInternalServerErrorResponse_Success(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
 
-	app.Get("/test", func(c *fiber.Ctx) error {
-		return SendInternalServerErrorResponse(c)
-	})
+	app.Get("/test", SendInternalServerErrorResponse)
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 500, resp.StatusCode)

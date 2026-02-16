@@ -4,20 +4,22 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	httpcontroller "invento-service/internal/controller/http"
 	"invento-service/internal/domain"
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
 	"invento-service/internal/upload"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestGetProjectUpdateUploadInfo_Success(t *testing.T) {
@@ -109,7 +111,7 @@ func TestCancelProjectUpdateUpload_Success(t *testing.T) {
 
 	mockUC.On("CancelProjectUpdateUpload", mock.Anything, uint(1), "test-project-upload-id", "user-123").Return(nil)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/test-project-upload-id", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/test-project-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)
@@ -129,7 +131,7 @@ func TestCancelProjectUpdateUpload_Unauthorized(t *testing.T) {
 	app := fiber.New()
 	app.Delete("/api/v1/project/:id/upload/:upload_id", controller.CancelProjectUpdateUpload)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/test-project-upload-id", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/test-project-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)
@@ -155,7 +157,7 @@ func TestCancelProjectUpdateUpload_NotFound(t *testing.T) {
 
 	mockUC.On("CancelProjectUpdateUpload", mock.Anything, uint(1), "nonexistent-upload-id", "user-123").Return(apperrors.NewNotFoundError("Upload not found"))
 
-	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/nonexistent-upload-id", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/nonexistent-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)
@@ -190,7 +192,7 @@ func (m *MockTusModulControllerUsecase) GetModulUploadInfo(ctx context.Context, 
 	return args.Get(0).(*dto.TusModulUploadInfoResponse), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) GetModulUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error) {
+func (m *MockTusModulControllerUsecase) GetModulUploadStatus(ctx context.Context, uploadID string, userID string) (offset int64, length int64, err error) {
 	args := m.Called(ctx, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
@@ -221,7 +223,7 @@ func (m *MockTusModulControllerUsecase) HandleModulUpdateChunk(ctx context.Conte
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) GetModulUpdateUploadStatus(ctx context.Context, modulID string, uploadID string, userID string) (int64, int64, error) {
+func (m *MockTusModulControllerUsecase) GetModulUpdateUploadStatus(ctx context.Context, modulID string, uploadID string, userID string) (offset int64, length int64, err error) {
 	args := m.Called(ctx, modulID, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
@@ -265,7 +267,7 @@ func TestTusModulController_InitiateUpload_Success(t *testing.T) {
 		Length:    2048,
 	}, nil)
 
-	req := httptest.NewRequest("POST", "/api/v1/tus/modul/upload", nil)
+	req := httptest.NewRequest("POST", "/api/v1/tus/modul/upload", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Length", "2048")
 	req.Header.Set("Upload-Metadata", metadataHeader)
@@ -325,7 +327,7 @@ func TestTusModulController_GetUploadStatus_Success(t *testing.T) {
 
 	mockUC.On("GetModulUploadStatus", mock.Anything, "modul-upload-id", "user-123").Return(int64(512), int64(1024), nil)
 
-	req := httptest.NewRequest("HEAD", "/api/v1/tus/modul/modul-upload-id", nil)
+	req := httptest.NewRequest("HEAD", "/api/v1/tus/modul/modul-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)

@@ -2,11 +2,12 @@ package usecase
 
 import (
 	"context"
+	"testing"
+
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
-	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
@@ -95,7 +96,7 @@ func (r *integrationUserRepository) GetByID(ctx context.Context, id string) (*do
 	return &user, nil
 }
 
-func (r *integrationUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
+func (r *integrationUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount int, modulCount int, err error) {
 	return nil, 0, 0, nil
 }
 
@@ -248,7 +249,7 @@ func (suite *IntegrationTestSuite) seedRole(name string) *domain.Role {
 	return role
 }
 
-func (suite *IntegrationTestSuite) seedUser(id, email, name string, roleID *int) *domain.User {
+func (suite *IntegrationTestSuite) seedUser(id, email, name string, roleID *int) {
 	user := &domain.User{
 		ID:       id,
 		Email:    email,
@@ -257,7 +258,6 @@ func (suite *IntegrationTestSuite) seedUser(id, email, name string, roleID *int)
 		IsActive: true,
 	}
 	suite.db.Create(user)
-	return user
 }
 
 func TestAuthIntegration_RegisterFlow(t *testing.T) {

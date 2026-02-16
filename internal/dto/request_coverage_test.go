@@ -37,10 +37,10 @@ func TestPaginationRequest_GetOffset_Success(t *testing.T) {
 func TestPaginationRequest_Validate_Success(t *testing.T) {
 	t.Parallel()
 	req := PaginationRequest{
-		Page:   1,
-		Limit:  10,
-		Sort:   "id",
-		Order:  "asc",
+		Page:  1,
+		Limit: 10,
+		Sort:  "id",
+		Order: "asc",
 	}
 
 	err := req.Validate()
@@ -51,10 +51,10 @@ func TestPaginationRequest_Validate_Success(t *testing.T) {
 func TestPaginationRequest_Validate_Failure(t *testing.T) {
 	t.Parallel()
 	req := PaginationRequest{
-		Page:   0, // Invalid: min=1
-		Limit:  10,
-		Sort:   "id",
-		Order:  "asc",
+		Page:  0, // page below minimum
+		Limit: 10,
+		Sort:  "id",
+		Order: "asc",
 	}
 
 	err := req.Validate()
@@ -65,10 +65,10 @@ func TestPaginationRequest_Validate_Failure(t *testing.T) {
 func TestPaginationRequest_Validate_InvalidOrder(t *testing.T) {
 	t.Parallel()
 	req := PaginationRequest{
-		Page:   1,
-		Limit:  10,
-		Sort:   "id",
-		Order:  "invalid", // Should be "asc" or "desc"
+		Page:  1,
+		Limit: 10,
+		Sort:  "id",
+		Order: "invalid", // Should be "asc" or "desc"
 	}
 
 	err := req.Validate()
@@ -79,10 +79,10 @@ func TestPaginationRequest_Validate_InvalidOrder(t *testing.T) {
 func TestPaginationRequest_Validate_LimitTooLarge(t *testing.T) {
 	t.Parallel()
 	req := PaginationRequest{
-		Page:   1,
-		Limit:  101, // Invalid: max=100
-		Sort:   "id",
-		Order:  "asc",
+		Page:  1,
+		Limit: 101, // exceeds maximum
+		Sort:  "id",
+		Order: "asc",
 	}
 
 	err := req.Validate()

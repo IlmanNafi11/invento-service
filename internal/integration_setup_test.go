@@ -2,13 +2,16 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +25,8 @@ func TestIntegrationMiddlewareChain(t *testing.T) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
-			if e, ok := err.(*fiber.Error); ok {
+			var e *fiber.Error
+			if errors.As(err, &e) {
 				code = e.Code
 			}
 			return c.Status(code).JSON(fiber.Map{
@@ -47,7 +51,7 @@ func TestIntegrationMiddlewareChain(t *testing.T) {
 	})
 
 	// Make HTTP request through middleware chain
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -98,7 +102,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 	})
 
 	t.Run("NotFoundError", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/notfound", nil)
+		req := httptest.NewRequest("GET", "/error/notfound", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusNotFound, resp.StatusCode)
@@ -113,7 +117,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ValidationError", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/validation", nil)
+		req := httptest.NewRequest("GET", "/error/validation", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusBadRequest, resp.StatusCode)
@@ -128,7 +132,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 	})
 
 	t.Run("UnauthorizedError", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/unauthorized", nil)
+		req := httptest.NewRequest("GET", "/error/unauthorized", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
@@ -143,7 +147,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ForbiddenError", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/forbidden", nil)
+		req := httptest.NewRequest("GET", "/error/forbidden", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusForbidden, resp.StatusCode)
@@ -158,7 +162,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 	})
 
 	t.Run("ConflictError", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/conflict", nil)
+		req := httptest.NewRequest("GET", "/error/conflict", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusConflict, resp.StatusCode)
@@ -173,7 +177,7 @@ func TestIntegrationErrorHandling(t *testing.T) {
 	})
 
 	t.Run("InternalError", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/error/internal", nil)
+		req := httptest.NewRequest("GET", "/error/internal", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusInternalServerError, resp.StatusCode)
@@ -203,7 +207,7 @@ func TestIntegrationRequestIDPropagation(t *testing.T) {
 	})
 
 	t.Run("GeneratedRequestID", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/propagate", nil)
+		req := httptest.NewRequest("GET", "/propagate", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 
@@ -219,7 +223,7 @@ func TestIntegrationRequestIDPropagation(t *testing.T) {
 
 	t.Run("CustomRequestID", func(t *testing.T) {
 		customID := "custom-request-id-12345"
-		req := httptest.NewRequest("GET", "/propagate", nil)
+		req := httptest.NewRequest("GET", "/propagate", http.NoBody)
 		req.Header.Set(middleware.RequestIDHeader, customID)
 		resp, err := app.Test(req)
 		require.NoError(t, err)

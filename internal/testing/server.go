@@ -1,6 +1,8 @@
 package testing
 
 import (
+	"errors"
+
 	"invento-service/config"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,7 +18,8 @@ func SetupTestApp(cfg *config.Config) *fiber.App {
 		EnablePrintRoutes:     false,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
-			if e, ok := err.(*fiber.Error); ok {
+			var e *fiber.Error
+			if errors.As(err, &e) {
 				code = e.Code
 			}
 			return c.Status(code).JSON(fiber.Map{

@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -65,7 +66,7 @@ func TestTusModulController_CancelUpload_Success(t *testing.T) {
 
 	mockUC.On("CancelModulUpload", mock.Anything, "modul-upload-id", "user-123").Return(nil)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/tus/modul/modul-upload-id", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/tus/modul/modul-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)
@@ -107,7 +108,7 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 	mockUC.On("GetModulUpdateUploadInfo", mock.Anything, modulID, "update-upload-id", "user-123").Return(&dto.TusModulUploadInfoResponse{UploadID: "update-upload-id"}, nil).Once()
 	mockUC.On("CancelModulUpdateUpload", mock.Anything, modulID, "update-upload-id", "user-123").Return(nil).Once()
 
-	initReq := httptest.NewRequest("POST", "/api/v1/tus/modul/"+modulID+"/update", nil)
+	initReq := httptest.NewRequest("POST", "/api/v1/tus/modul/"+modulID+"/update", http.NoBody)
 	initReq.Header.Set("Tus-Resumable", "1.0.0")
 	initReq.Header.Set("Upload-Length", "4096")
 	initReq.Header.Set("Upload-Metadata", metadataHeader)
@@ -124,7 +125,7 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 	assert.NoError(t, chunkErr)
 	assert.Equal(t, 204, chunkResp.StatusCode)
 
-	headReq := httptest.NewRequest("HEAD", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", nil)
+	headReq := httptest.NewRequest("HEAD", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", http.NoBody)
 	headReq.Header.Set("Tus-Resumable", "1.0.0")
 	headResp, headErr := app.Test(headReq)
 	assert.NoError(t, headErr)
@@ -133,7 +134,7 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 	infoResp := app_testing.MakeRequest(app, "GET", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", nil, "")
 	app_testing.AssertSuccess(t, infoResp)
 
-	deleteReq := httptest.NewRequest("DELETE", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", nil)
+	deleteReq := httptest.NewRequest("DELETE", "/api/v1/tus/modul/"+modulID+"/update/update-upload-id", http.NoBody)
 	deleteReq.Header.Set("Tus-Resumable", "1.0.0")
 	deleteResp, deleteErr := app.Test(deleteReq)
 	assert.NoError(t, deleteErr)

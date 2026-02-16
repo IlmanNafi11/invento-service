@@ -1,12 +1,13 @@
 package storage_test
 
 import (
-	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"invento-service/internal/storage"
 )
 
 func TestMoveFile_CopyFallbackPath(t *testing.T) {
@@ -20,11 +21,11 @@ func TestMoveFile_CopyFallbackPath(t *testing.T) {
 
 	// Create source file
 	content := []byte("test content for fallback path")
-	err := os.WriteFile(srcPath, content, 0644)
+	err := os.WriteFile(srcPath, content, 0o644)
 	require.NoError(t, err)
 
 	// Create destination as a directory to force rename failure
-	err = os.MkdirAll(dstPath, 0755)
+	err = os.MkdirAll(dstPath, 0o755)
 	require.NoError(t, err)
 
 	// Try to move - should fail because dst is a directory
@@ -56,7 +57,7 @@ func TestMoveFile_EmptyFile(t *testing.T) {
 	dstPath := filepath.Join(tempDir, "dest_empty.txt")
 
 	// Create empty source file
-	err := os.WriteFile(srcPath, []byte{}, 0644)
+	err := os.WriteFile(srcPath, []byte{}, 0o644)
 	require.NoError(t, err)
 
 	// Move empty file
@@ -84,7 +85,7 @@ func TestMoveFile_LargeFile(t *testing.T) {
 	for i := range largeContent {
 		largeContent[i] = byte(i % 256)
 	}
-	err := os.WriteFile(srcPath, largeContent, 0644)
+	err := os.WriteFile(srcPath, largeContent, 0o644)
 	require.NoError(t, err)
 
 	// Move large file
@@ -118,7 +119,7 @@ func TestMoveFile_WithRelativePath(t *testing.T) {
 
 	// Create source file with relative path
 	content := []byte("relative path test")
-	err = os.WriteFile(srcPath, content, 0644)
+	err = os.WriteFile(srcPath, content, 0o644)
 	require.NoError(t, err)
 
 	// Move file using relative paths
@@ -143,7 +144,7 @@ func TestMoveFile_SpecialCharactersInFilename(t *testing.T) {
 
 	// Create source file with special characters
 	content := []byte("special chars test")
-	err := os.WriteFile(srcPath, content, 0644)
+	err := os.WriteFile(srcPath, content, 0o644)
 	require.NoError(t, err)
 
 	// Move file
@@ -189,7 +190,7 @@ func TestGetFileSizeFromPath(t *testing.T) {
 	// Create a test file
 	testFile := filepath.Join(tempDir, "test.txt")
 	content := []byte("test content")
-	err := os.WriteFile(testFile, content, 0644)
+	err := os.WriteFile(testFile, content, 0o644)
 	require.NoError(t, err)
 
 	// Get file size
@@ -212,9 +213,9 @@ func TestCreateZipArchive(t *testing.T) {
 	file1 := filepath.Join(tempDir, "file1.txt")
 	file2 := filepath.Join(tempDir, "file2.txt")
 
-	err := os.WriteFile(file1, []byte("content 1"), 0644)
+	err := os.WriteFile(file1, []byte("content 1"), 0o644)
 	require.NoError(t, err)
-	err = os.WriteFile(file2, []byte("content 2"), 0644)
+	err = os.WriteFile(file2, []byte("content 2"), 0o644)
 	require.NoError(t, err)
 
 	// Create zip archive
@@ -397,7 +398,7 @@ func TestFileOperations_Integration(t *testing.T) {
 	content := []byte("integration test content")
 
 	// Create file
-	err := os.WriteFile(testFile, content, 0644)
+	err := os.WriteFile(testFile, content, 0o644)
 	require.NoError(t, err)
 
 	// Check file size

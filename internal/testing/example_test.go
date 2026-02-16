@@ -1,8 +1,9 @@
 package testing_test
 
 import (
-	testutil "invento-service/internal/testing"
 	"testing"
+
+	testutil "invento-service/internal/testing"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -17,7 +17,7 @@ func TestSendTusInitiateResponse_Success(t *testing.T) {
 		return SendTusInitiateResponse(c, "upload123", "http://example.com/upload/upload123", 1024000)
 	})
 
-	req, _ := http.NewRequest("POST", "/test", nil)
+	req, _ := http.NewRequest("POST", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 201, resp.StatusCode)
@@ -35,7 +35,7 @@ func TestSendTusChunkResponse_Success(t *testing.T) {
 		return SendTusChunkResponse(c, 1024)
 	})
 
-	req, _ := http.NewRequest("PATCH", "/test", nil)
+	req, _ := http.NewRequest("PATCH", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 204, resp.StatusCode)
@@ -51,7 +51,7 @@ func TestSendTusHeadResponse_Success(t *testing.T) {
 		return SendTusHeadResponse(c, 2048, 1024000)
 	})
 
-	req, _ := http.NewRequest("HEAD", "/test", nil)
+	req, _ := http.NewRequest("HEAD", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -64,11 +64,9 @@ func TestSendTusDeleteResponse_Success(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
 
-	app.Delete("/test", func(c *fiber.Ctx) error {
-		return SendTusDeleteResponse(c)
-	})
+	app.Delete("/test", SendTusDeleteResponse)
 
-	req, _ := http.NewRequest("DELETE", "/test", nil)
+	req, _ := http.NewRequest("DELETE", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 204, resp.StatusCode)
@@ -83,7 +81,7 @@ func TestSendTusSlotResponse_Success(t *testing.T) {
 		return SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 3)
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -98,7 +96,7 @@ func TestSendTusSlotResponse_Unavailable(t *testing.T) {
 		return SendTusSlotResponse(c, false, "Slot penuh", 5, 1, 3)
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -112,7 +110,7 @@ func TestSendTusSlotResponse_ModulShape(t *testing.T) {
 		return SendTusSlotResponse(c, true, "Slot tersedia", 0, 0, 10)
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
@@ -127,7 +125,7 @@ func TestSendTusErrorResponse_Success(t *testing.T) {
 		return SendTusErrorResponse(c, 400, "1.0.0")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, resp.StatusCode)
@@ -143,7 +141,7 @@ func TestSendTusErrorResponseWithOffset_Success(t *testing.T) {
 		return SendTusErrorResponseWithOffset(c, 409, "1.0.0", 512)
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 409, resp.StatusCode)
@@ -159,7 +157,7 @@ func TestSendTusErrorResponseWithLength_Success(t *testing.T) {
 		return SendTusErrorResponseWithLength(c, 413, "1.0.0", 1024000)
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 413, resp.StatusCode)
@@ -175,7 +173,7 @@ func TestSendTusValidationErrorResponse_Success(t *testing.T) {
 		return SendTusValidationErrorResponse(c, "Metadata tidak valid")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 400, resp.StatusCode)
@@ -190,7 +188,7 @@ func TestSendTusNotFoundErrorResponse_Success(t *testing.T) {
 		return SendTusNotFoundErrorResponse(c, "Upload tidak ditemukan")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, resp.StatusCode)
@@ -205,7 +203,7 @@ func TestSendTusNotFoundErrorResponse_DefaultMessage(t *testing.T) {
 		return SendTusNotFoundErrorResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, resp.StatusCode)
@@ -216,11 +214,9 @@ func TestSendTusForbiddenErrorResponse_Success(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
 
-	app.Get("/test", func(c *fiber.Ctx) error {
-		return SendTusForbiddenErrorResponse(c)
-	})
+	app.Get("/test", SendTusForbiddenErrorResponse)
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 403, resp.StatusCode)
@@ -235,7 +231,7 @@ func TestSendTusConflictErrorResponse_Success(t *testing.T) {
 		return SendTusConflictErrorResponse(c, "Upload sedang berlangsung")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 409, resp.StatusCode)
@@ -250,7 +246,7 @@ func TestSendTusConflictErrorResponse_DefaultMessage(t *testing.T) {
 		return SendTusConflictErrorResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 409, resp.StatusCode)
@@ -265,7 +261,7 @@ func TestSendTusPayloadTooLargeErrorResponse_Success(t *testing.T) {
 		return SendTusPayloadTooLargeErrorResponse(c, "File terlalu besar")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 413, resp.StatusCode)
@@ -280,7 +276,7 @@ func TestSendTusPayloadTooLargeErrorResponse_DefaultMessage(t *testing.T) {
 		return SendTusPayloadTooLargeErrorResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 413, resp.StatusCode)
@@ -295,7 +291,7 @@ func TestSendTusTooManyRequestsErrorResponse_Success(t *testing.T) {
 		return SendTusTooManyRequestsErrorResponse(c, "Terlalu banyak request")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 429, resp.StatusCode)
@@ -310,7 +306,7 @@ func TestSendTusTooManyRequestsErrorResponse_DefaultMessage(t *testing.T) {
 		return SendTusTooManyRequestsErrorResponse(c, "")
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 429, resp.StatusCode)
@@ -321,11 +317,9 @@ func TestSendTusInternalErrorResponse_Success(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
 
-	app.Get("/test", func(c *fiber.Ctx) error {
-		return SendTusInternalErrorResponse(c)
-	})
+	app.Get("/test", SendTusInternalErrorResponse)
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 500, resp.StatusCode)

@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"invento-service/config"
 	httpcontroller "invento-service/internal/controller/http"
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
@@ -237,7 +238,7 @@ func TestAuthController_RefreshToken_Success(t *testing.T) {
 	}
 	mockAuthUC.On("RefreshToken", mock.Anything, "old_refresh_token").Return("new_refresh_token", expectedResponse, nil)
 
-	req := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
+	req := httptest.NewRequest("POST", "/api/v1/auth/refresh", http.NoBody)
 	req.AddCookie(&http.Cookie{Name: httputil.RefreshTokenCookieName, Value: "old_refresh_token"})
 
 	resp, err := app.Test(req)
@@ -259,7 +260,7 @@ func TestAuthController_RefreshToken_MissingCookie(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/auth/refresh", controller.RefreshToken)
 
-	req := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
+	req := httptest.NewRequest("POST", "/api/v1/auth/refresh", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 	assert.Equal(t, fiber.StatusUnauthorized, resp.StatusCode)
@@ -280,7 +281,7 @@ func TestAuthController_Logout_ClearsCookies(t *testing.T) {
 
 	mockAuthUC.On("Logout", mock.Anything, "access-to-logout").Return(nil)
 
-	req := httptest.NewRequest("POST", "/logout", nil)
+	req := httptest.NewRequest("POST", "/logout", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -389,7 +390,7 @@ func TestAuthController_Login_EmptyBody(t *testing.T) {
 		app := fiber.New()
 		app.Post("/login", controller.Login)
 
-		req := httptest.NewRequest("POST", "/login", nil)
+		req := httptest.NewRequest("POST", "/login", http.NoBody)
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := app.Test(req)
@@ -416,7 +417,7 @@ func TestAuthController_RefreshToken_InvalidToken(t *testing.T) {
 
 		mockAuthUC.On("RefreshToken", mock.Anything, "invalid_refresh_token").Return("", (*dto.RefreshTokenResponse)(nil), apperrors.NewUnauthorizedError("Refresh token tidak valid atau sudah expired"))
 
-		req := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
+		req := httptest.NewRequest("POST", "/api/v1/auth/refresh", http.NoBody)
 		req.AddCookie(&http.Cookie{Name: httputil.RefreshTokenCookieName, Value: "invalid_refresh_token"})
 
 		resp, err := app.Test(req)
@@ -441,7 +442,7 @@ func TestAuthController_Logout_WithoutAccessToken(t *testing.T) {
 		app := fiber.New()
 		app.Post("/api/v1/auth/logout", controller.Logout)
 
-		req := httptest.NewRequest("POST", "/api/v1/auth/logout", nil)
+		req := httptest.NewRequest("POST", "/api/v1/auth/logout", http.NoBody)
 		resp, err := app.Test(req)
 		require.NoError(t, err)
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)

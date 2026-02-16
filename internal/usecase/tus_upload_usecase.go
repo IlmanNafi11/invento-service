@@ -254,7 +254,7 @@ func (uc *tusUploadUsecase) completeUpload(ctx context.Context, upload *domain.T
 	}
 
 	finalFilePath := uc.fileManager.GetProjectFilePath(upload.UserID, randomDir, "project.zip")
-	if err := uc.tusManager.FinalizeUpload(upload.ID, finalFilePath); err != nil {
+	if err = uc.tusManager.FinalizeUpload(upload.ID, finalFilePath); err != nil {
 		return apperrors.NewInternalError(fmt.Errorf("TusUploadUsecase.completeUpload: finalize: %w", err))
 	}
 
@@ -367,15 +367,15 @@ func (uc *tusUploadUsecase) getUploadInfo(ctx context.Context, uploadID string, 
 	return response, nil
 }
 
-func (uc *tusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error) {
+func (uc *tusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID string, userID string) (offset int64, length int64, err error) {
 	return uc.getUploadStatus(ctx, uploadID, userID, nil)
 }
 
-func (uc *tusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID string, userID string) (int64, int64, error) {
+func (uc *tusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID string, userID string) (offset int64, length int64, err error) {
 	return uc.getUploadStatus(ctx, uploadID, userID, &projectID)
 }
 
-func (uc *tusUploadUsecase) getUploadStatus(ctx context.Context, uploadID string, userID string, projectID *uint) (int64, int64, error) {
+func (uc *tusUploadUsecase) getUploadStatus(ctx context.Context, uploadID string, userID string, projectID *uint) (offset int64, length int64, err error) {
 	upload, err := uc.getOwnedUpload(ctx, uploadID, userID, projectID)
 	if err != nil {
 		return 0, 0, err

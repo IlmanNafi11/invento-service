@@ -27,8 +27,8 @@ func ValidatePasswordStrength(fl goPlaygroundValidator.FieldLevel) bool {
 
 	hasLower := regexp.MustCompile(`[a-z]`).MatchString(password)
 	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
-	hasDigit := regexp.MustCompile(`[0-9]`).MatchString(password)
-	hasSpecial := regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`).MatchString(password)
+	hasDigit := regexp.MustCompile(`\d`).MatchString(password)
+	hasSpecial := regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]`).MatchString(password)
 
 	return hasLower && hasUpper && hasDigit && hasSpecial
 }
@@ -77,7 +77,7 @@ func ValidateFileSize(fl goPlaygroundValidator.FieldLevel) bool {
 	}
 
 	var maxSize int64
-	fmt.Sscanf(maxSizeStr, "%d", &maxSize)
+	_, _ = fmt.Sscanf(maxSizeStr, "%d", &maxSize)
 
 	// Handle *multipart.FileHeader type
 	fileHeader, ok := fl.Field().Interface().(*multipart.FileHeader)

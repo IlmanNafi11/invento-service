@@ -1,10 +1,11 @@
 package middleware
 
 import (
+	"strings"
+
 	"invento-service/internal/domain"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase/repo"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )

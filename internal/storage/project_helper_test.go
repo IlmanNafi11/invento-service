@@ -2,12 +2,13 @@ package storage_test
 
 import (
 	"fmt"
-	"invento-service/config"
-	"invento-service/internal/storage"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/storage"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -367,7 +368,7 @@ func TestProjectHelper_Integration(t *testing.T) {
 		userID := uint(123)
 		projectDir := projectHelper.BuildProjectDirectory(userID, identifier)
 
-		err = os.MkdirAll(projectDir, 0755)
+		err = os.MkdirAll(projectDir, 0o755)
 		assert.NoError(t, err)
 		assert.DirExists(t, projectDir)
 
@@ -378,7 +379,7 @@ func TestProjectHelper_Integration(t *testing.T) {
 		assert.Contains(t, projectPath, identifier)
 		assert.Contains(t, projectPath, filename)
 
-		err = os.WriteFile(projectPath, []byte("PK\x03\x04"), 0644)
+		err = os.WriteFile(projectPath, []byte("PK\x03\x04"), 0o644)
 		assert.NoError(t, err)
 		assert.FileExists(t, projectPath)
 
@@ -396,7 +397,7 @@ func TestProjectHelper_Integration(t *testing.T) {
 			assert.NoError(t, err)
 
 			projectDir := projectHelper.BuildProjectDirectory(userID, identifier)
-			err = os.MkdirAll(projectDir, 0755)
+			err = os.MkdirAll(projectDir, 0o755)
 			assert.NoError(t, err)
 
 			assert.DirExists(t, projectDir)
@@ -480,11 +481,11 @@ func TestProjectHelper_FileOperations(t *testing.T) {
 		require.NoError(t, err)
 
 		projectDir := projectHelper.BuildProjectDirectory(userID, identifier)
-		err = os.MkdirAll(projectDir, 0755)
+		err = os.MkdirAll(projectDir, 0o755)
 		require.NoError(t, err)
 
 		zipPath := filepath.Join(projectDir, "testproject.zip")
-		err = os.WriteFile(zipPath, []byte("PK\x03\x04"), 0644)
+		err = os.WriteFile(zipPath, []byte("PK\x03\x04"), 0o644)
 		require.NoError(t, err)
 
 		fileInfo, _ := os.Stat(zipPath)

@@ -3,6 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -97,7 +98,7 @@ func TestProjectController_GetList_PaginationBoundaries(t *testing.T) {
 					url += fmt.Sprintf("?limit=%d", tt.limit)
 				}
 			}
-			req := httptest.NewRequest("GET", url, nil)
+			req := httptest.NewRequest("GET", url, http.NoBody)
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			resp, err := app.Test(req)
 

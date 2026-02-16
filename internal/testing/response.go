@@ -212,5 +212,5 @@ func splitPath(path string) []string {
 
 // contains checks if a string contains a substring
 func contains(s, substr string) bool {
-	return strings.Index(s, substr) >= 0
+	return strings.Contains(s, substr)
 }

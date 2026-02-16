@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
@@ -155,11 +156,11 @@ func (uc *roleUsecase) UpdateRole(ctx context.Context, id uint, req dto.RoleUpda
 	oldRoleName := role.NamaRole
 	role.NamaRole = req.NamaRole
 
-	if err := uc.roleRepo.Update(ctx, role); err != nil {
+	if err = uc.roleRepo.Update(ctx, role); err != nil {
 		return nil, apperrors.NewInternalError(err)
 	}
 
-	if err := uc.rbacHelper.RemoveAllRolePermissions(ctx, id, oldRoleName, uc.rolePermissionRepo); err != nil {
+	if err = uc.rbacHelper.RemoveAllRolePermissions(ctx, id, oldRoleName, uc.rolePermissionRepo); err != nil {
 		return nil, apperrors.NewInternalError(errors.New(err.Error()))
 	}
 

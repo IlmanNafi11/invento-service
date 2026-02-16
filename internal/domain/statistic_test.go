@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"invento-service/internal/dto"
 	"testing"
+
+	"invento-service/internal/dto"
 )
 
 func TestStatisticData(t *testing.T) {

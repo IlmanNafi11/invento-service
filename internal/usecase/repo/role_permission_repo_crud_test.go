@@ -2,10 +2,11 @@ package repo_test
 
 import (
 	"context"
+	"testing"
+
 	"invento-service/internal/domain"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -97,7 +98,7 @@ func TestRolePermissionRepository_Create_Duplicate(t *testing.T) {
 		RoleID:       role.ID,
 		PermissionID: permission.ID,
 	}
-	err = rolePermissionRepo.Create(context.Background(), duplicateRP)
+	_ = rolePermissionRepo.Create(context.Background(), duplicateRP)
 	// With proper unique constraint, this would error
 	// For now, we verify both records can coexist in test environment
 	_ = duplicateRP // Document behavior
@@ -302,4 +303,3 @@ func TestRolePermissionRepository_DeleteByRoleID_NonExistentRole(t *testing.T) {
 	err = rolePermissionRepo.DeleteByRoleID(context.Background(), 999)
 	assert.NoError(t, err) // GORM doesn't error on deleting non-existent records
 }
-

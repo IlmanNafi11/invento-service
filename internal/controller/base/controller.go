@@ -2,10 +2,11 @@ package base
 
 import (
 	"errors"
+	"strconv"
+
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"invento-service/internal/rbac"
-	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -42,12 +43,12 @@ func NewBaseController(supabaseURL string, casbin *rbac.CasbinEnforcer) *BaseCon
 func (bc *BaseController) GetAuthenticatedUserID(c *fiber.Ctx) string {
 	userIDVal := c.Locals(middleware.LocalsKeyUserID)
 	if userIDVal == nil {
-		httputil.SendUnauthorizedResponse(c)
+		_ = httputil.SendUnauthorizedResponse(c)
 		return ""
 	}
 	userID, ok := userIDVal.(string)
 	if !ok {
-		httputil.SendUnauthorizedResponse(c)
+		_ = httputil.SendUnauthorizedResponse(c)
 		return ""
 	}
 	return userID
@@ -58,12 +59,12 @@ func (bc *BaseController) GetAuthenticatedUserID(c *fiber.Ctx) string {
 func (bc *BaseController) GetAuthenticatedUserEmail(c *fiber.Ctx) string {
 	emailVal := c.Locals(middleware.LocalsKeyUserEmail)
 	if emailVal == nil {
-		httputil.SendUnauthorizedResponse(c)
+		_ = httputil.SendUnauthorizedResponse(c)
 		return ""
 	}
 	email, ok := emailVal.(string)
 	if !ok || email == "" {
-		httputil.SendUnauthorizedResponse(c)
+		_ = httputil.SendUnauthorizedResponse(c)
 		return ""
 	}
 	return email
@@ -74,12 +75,12 @@ func (bc *BaseController) GetAuthenticatedUserEmail(c *fiber.Ctx) string {
 func (bc *BaseController) GetAuthenticatedUserRole(c *fiber.Ctx) string {
 	roleVal := c.Locals(middleware.LocalsKeyUserRole)
 	if roleVal == nil {
-		httputil.SendUnauthorizedResponse(c)
+		_ = httputil.SendUnauthorizedResponse(c)
 		return ""
 	}
 	role, ok := roleVal.(string)
 	if !ok || role == "" {
-		httputil.SendUnauthorizedResponse(c)
+		_ = httputil.SendUnauthorizedResponse(c)
 		return ""
 	}
 	return role
@@ -96,7 +97,7 @@ func (bc *BaseController) GetAuthenticatedUserRole(c *fiber.Ctx) string {
 // Returns error if check fails (authorization or internal error), nil if authorized.
 func (bc *BaseController) CheckPermission(c *fiber.Ctx, resource, action string) error {
 	if bc.Casbin == nil {
-		httputil.SendInternalServerErrorResponse(c)
+		_ = httputil.SendInternalServerErrorResponse(c)
 		return errors.New("casbin enforcer not configured")
 	}
 
@@ -107,12 +108,12 @@ func (bc *BaseController) CheckPermission(c *fiber.Ctx, resource, action string)
 
 	allowed, err := bc.Casbin.CheckPermission(role, resource, action)
 	if err != nil {
-		httputil.SendInternalServerErrorResponse(c)
+		_ = httputil.SendInternalServerErrorResponse(c)
 		return err
 	}
 
 	if !allowed {
-		httputil.SendForbiddenResponse(c)
+		_ = httputil.SendForbiddenResponse(c)
 		return errors.New("permission denied")
 	}
 
@@ -131,13 +132,13 @@ func (bc *BaseController) CheckPermission(c *fiber.Ctx, resource, action string)
 func (bc *BaseController) ParsePathID(c *fiber.Ctx) (uint, error) {
 	idParam := c.Params("id")
 	if idParam == "" {
-		httputil.SendBadRequestResponse(c, "ID tidak valid")
+		_ = httputil.SendBadRequestResponse(c, "ID tidak valid")
 		return 0, errors.New("id parameter is empty")
 	}
 
 	id, err := strconv.ParseUint(idParam, 10, 32)
 	if err != nil {
-		httputil.SendBadRequestResponse(c, "ID tidak valid")
+		_ = httputil.SendBadRequestResponse(c, "ID tidak valid")
 		return 0, errors.New("id is not a valid number")
 	}
 
@@ -156,13 +157,13 @@ func (bc *BaseController) ParsePathID(c *fiber.Ctx) (uint, error) {
 func (bc *BaseController) ParsePathUUID(c *fiber.Ctx) (string, error) {
 	idParam := c.Params("id")
 	if idParam == "" {
-		httputil.SendBadRequestResponse(c, "ID tidak valid")
+		_ = httputil.SendBadRequestResponse(c, "ID tidak valid")
 		return "", errors.New("id parameter is empty")
 	}
 
 	// Validate UUID format
 	if _, err := uuid.Parse(idParam); err != nil {
-		httputil.SendBadRequestResponse(c, "ID tidak valid")
+		_ = httputil.SendBadRequestResponse(c, "ID tidak valid")
 		return "", errors.New("id is not a valid UUID")
 	}
 
@@ -225,7 +226,7 @@ func (bc *BaseController) SendCreated(c *fiber.Ctx, data interface{}, message st
 //   - defaultMessage: Fallback message in Indonesian if err.Error() is not user-friendly
 func (bc *BaseController) SendError(c *fiber.Ctx, err error, defaultMessage string) error {
 	if err == nil {
-		httputil.SendInternalServerErrorResponse(c)
+		_ = httputil.SendInternalServerErrorResponse(c)
 		return nil
 	}
 
@@ -298,7 +299,7 @@ func (bc *BaseController) SendInternalError(c *fiber.Ctx) error {
 func (bc *BaseController) ValidateStruct(c *fiber.Ctx, data interface{}) bool {
 	validationErrors := httputil.ValidateStruct(data)
 	if len(validationErrors) > 0 {
-		httputil.SendValidationErrorResponse(c, validationErrors)
+		_ = httputil.SendValidationErrorResponse(c, validationErrors)
 		return false
 	}
 	return true

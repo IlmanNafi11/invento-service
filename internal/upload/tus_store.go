@@ -101,13 +101,13 @@ func (ts *TusStore) WriteChunk(uploadID string, offset int64, src io.Reader) (in
 	defer lock.Unlock()
 
 	filePath := ts.pathResolver.GetUploadFilePath(uploadID)
-	file, err := os.OpenFile(filePath, os.O_WRONLY, 0644)
+	file, err := os.OpenFile(filePath, os.O_WRONLY, 0o644)
 	if err != nil {
 		return offset, fmt.Errorf("gagal membuka file: %w", err)
 	}
 	defer file.Close()
 
-	if _, err := file.Seek(offset, 0); err != nil {
+	if _, err = file.Seek(offset, 0); err != nil {
 		return offset, fmt.Errorf("gagal seek ke offset: %w", err)
 	}
 
@@ -116,7 +116,7 @@ func (ts *TusStore) WriteChunk(uploadID string, offset int64, src io.Reader) (in
 		return offset + bytesWritten, fmt.Errorf("gagal menulis chunk: %w", err)
 	}
 
-	if err := file.Sync(); err != nil {
+	if err = file.Sync(); err != nil {
 		return offset + bytesWritten, fmt.Errorf("gagal sync file: %w", err)
 	}
 
@@ -165,7 +165,7 @@ func (ts *TusStore) FinalizeUpload(uploadID string, finalPath string) error {
 		return fmt.Errorf("file temporary tidak ditemukan: %w", err)
 	}
 
-	if err := os.MkdirAll(filepath.Dir(finalPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(finalPath), 0o755); err != nil {
 		return fmt.Errorf("gagal membuat direktori final: %w", err)
 	}
 
@@ -189,7 +189,7 @@ func (ts *TusStore) saveInfo(info TusFileInfo) error {
 		return fmt.Errorf("gagal marshal info: %w", err)
 	}
 
-	if err := os.WriteFile(infoPath, data, 0644); err != nil {
+	if err := os.WriteFile(infoPath, data, 0o644); err != nil {
 		return fmt.Errorf("gagal menyimpan info: %w", err)
 	}
 

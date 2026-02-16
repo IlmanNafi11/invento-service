@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ func TestServer_RouteRegistration_SwaggerRoute(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test swagger route
-	req := httptest.NewRequest("GET", "/swagger/index.html", nil)
+	req := httptest.NewRequest("GET", "/swagger/index.html", http.NoBody)
 	resp, err := appInstance.Test(req)
 
 	require.NoError(t, err)
@@ -43,7 +44,7 @@ func TestServer_Middleware_RequestID(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make a request and check for X-Request-ID header
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	resp, err := appInstance.Test(req)
 
 	require.NoError(t, err)
@@ -65,7 +66,7 @@ func TestServer_Middleware_CORS_Development(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make a request with Origin header
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	req.Header.Set("Origin", "http://localhost:3000")
 	resp, err := appInstance.Test(req)
 
@@ -94,7 +95,7 @@ func TestServer_Middleware_CORS_Production(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make a request with Origin header
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	req.Header.Set("Origin", "https://example.com")
 	resp, err := appInstance.Test(req)
 
@@ -116,7 +117,7 @@ func TestServer_StaticFileUploads(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test that uploads route responds (likely 404 for non-existent file, but route exists)
-	req := httptest.NewRequest("GET", "/uploads/test.txt", nil)
+	req := httptest.NewRequest("GET", "/uploads/test.txt", http.NoBody)
 	resp, err := appInstance.Test(req)
 
 	require.NoError(t, err)
@@ -196,7 +197,7 @@ func TestServer_Shutdown(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make a test request to ensure server is running
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	resp, err := appInstance.Test(req)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -217,7 +218,7 @@ func TestServer_ShutdownWithContext(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make a test request
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	resp, err := appInstance.Test(req)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -252,7 +253,7 @@ func TestServer_MultipleRequests(t *testing.T) {
 
 	for i := 0; i < numRequests; i++ {
 		go func() {
-			req := httptest.NewRequest("GET", "/health", nil)
+			req := httptest.NewRequest("GET", "/health", http.NoBody)
 			resp, err := appInstance.Test(req)
 			if err != nil {
 				results <- -1
@@ -290,7 +291,7 @@ func TestServer_DifferentHTTPMethods(t *testing.T) {
 
 	for _, method := range methods {
 		t.Run(method, func(t *testing.T) {
-			req := httptest.NewRequest(method, "/non-existent", nil)
+			req := httptest.NewRequest(method, "/non-existent", http.NoBody)
 			resp, err := appInstance.Test(req)
 
 			require.NoError(t, err)
@@ -310,7 +311,7 @@ func TestServer_HeaderHandling(t *testing.T) {
 	appInstance, err := app.NewServer(cfg, db)
 	require.NoError(t, err)
 
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	req.Header.Set("User-Agent", "test-agent")
 	req.Header.Set("Accept", "application/json")
 
@@ -386,7 +387,7 @@ func TestServer_CORSHeadersVerification(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make a regular GET request and check CORS headers are set
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	req.Header.Set("Origin", "http://localhost:3000")
 
 	resp, err := appInstance.Test(req)

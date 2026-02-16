@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -10,7 +12,6 @@ import (
 	"gorm.io/gorm"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
-	"testing"
 )
 
 func TestAuth_EdgeCases(t *testing.T) {

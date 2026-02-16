@@ -21,7 +21,7 @@ func main() {
 	if err != nil {
 		bootLogger.Fatal().Err(err).Msg("config load failed")
 	}
-	if err := cfg.Validate(); err != nil {
+	if err = cfg.Validate(); err != nil {
 		bootLogger.Fatal().Err(err).Msg("config validation failed")
 	}
 

@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"path/filepath"
 	"testing"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 )
 
 func TestTusManager_GetUploadProgress_Success(t *testing.T) {

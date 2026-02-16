@@ -5,17 +5,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"invento-service/internal/dto"
 	"mime/multipart"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-	app_testing "invento-service/internal/testing"
-	apperrors "invento-service/internal/errors"
+
 	httpcontroller "invento-service/internal/controller/http"
+	"invento-service/internal/dto"
+	apperrors "invento-service/internal/errors"
+	app_testing "invento-service/internal/testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestUserController_GetProfile_Success(t *testing.T) {
@@ -23,7 +26,7 @@ func TestUserController_GetProfile_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/profile", controller.GetProfile)
 
 	expectedData := &dto.ProfileData{
@@ -40,7 +43,7 @@ func TestUserController_GetProfile_Success(t *testing.T) {
 	mockUserUC.On("GetProfile", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
-	req := httptest.NewRequest("GET", "/api/v1/profile", nil)
+	req := httptest.NewRequest("GET", "/api/v1/profile", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("X-Test-User-ID", "1")
 
@@ -64,7 +67,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
 	expectedData := &dto.ProfileData{
@@ -112,7 +115,7 @@ func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
 	expectedData := &dto.ProfileData{
@@ -162,7 +165,7 @@ func TestUserController_GetUserPermissions_Success(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
 
 	expectedData := []dto.UserPermissionItem{
@@ -183,7 +186,7 @@ func TestUserController_GetUserPermissions_Success(t *testing.T) {
 	mockUserUC.On("GetUserPermissions", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
-	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
+	req := httptest.NewRequest("GET", "/api/v1/user/permissions", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("X-Test-User-ID", "1")
 
@@ -207,7 +210,7 @@ func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
 
 	expectedData := []dto.UserPermissionItem{}
@@ -215,7 +218,7 @@ func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 	mockUserUC.On("GetUserPermissions", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "user")
-	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
+	req := httptest.NewRequest("GET", "/api/v1/user/permissions", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("X-Test-User-ID", "1")
 
@@ -238,7 +241,7 @@ func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
 	reqBody := dto.UpdateProfileRequest{
@@ -270,7 +273,7 @@ func TestUserController_UpdateProfile_ValidationError(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
 	reqBody := map[string]string{
@@ -296,7 +299,7 @@ func TestUserController_UpdateProfile_InvalidJenisKelamin(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
 	reqBody := dto.UpdateProfileRequest{
@@ -323,13 +326,13 @@ func TestUserController_GetProfile_InternalError(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/profile", controller.GetProfile)
 
 	mockUserUC.On("GetProfile", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil, errors.New("database error"))
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
-	req := httptest.NewRequest("GET", "/api/v1/profile", nil)
+	req := httptest.NewRequest("GET", "/api/v1/profile", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("X-Test-User-ID", "1")
 
@@ -346,14 +349,14 @@ func TestUserController_GetProfile_NotFound(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/profile", controller.GetProfile)
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
 	mockUserUC.On("GetProfile", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil, appErr)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
-	req := httptest.NewRequest("GET", "/api/v1/profile", nil)
+	req := httptest.NewRequest("GET", "/api/v1/profile", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("X-Test-User-ID", "1")
 
@@ -370,13 +373,13 @@ func TestUserController_GetUserPermissions_InternalError(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
 
 	mockUserUC.On("GetUserPermissions", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil, errors.New("db error"))
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
-	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
+	req := httptest.NewRequest("GET", "/api/v1/user/permissions", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("X-Test-User-ID", "1")
 
@@ -393,14 +396,14 @@ func TestUserController_GetUserPermissions_NotFound(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
 	mockUserUC.On("GetUserPermissions", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil, appErr)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
-	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
+	req := httptest.NewRequest("GET", "/api/v1/user/permissions", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("X-Test-User-ID", "1")
 
@@ -417,7 +420,7 @@ func TestUserController_UpdateProfile_InternalError(t *testing.T) {
 	mockUserUC := new(MockUserUsecase)
 	controller := httpcontroller.NewUserController(mockUserUC)
 
-	app := setupTestAppWithAuthForUser(controller)
+	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
 	reqBody := dto.UpdateProfileRequest{

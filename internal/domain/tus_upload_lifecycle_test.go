@@ -15,7 +15,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 
 		upload := TusUpload{
 			ID:        "upload-timestamps",
-			UserID: "user-1",
+			UserID:    "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			CreatedAt: past,
@@ -38,7 +38,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:        "upload-zero-created",
-			UserID: "user-1",
+			UserID:    "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			CreatedAt: time.Time{},
@@ -53,7 +53,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:        "upload-zero-updated",
-			UserID: "user-1",
+			UserID:    "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			UpdatedAt: time.Time{},
@@ -68,7 +68,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:        "upload-zero-expires",
-			UserID: "user-1",
+			UserID:    "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			ExpiresAt: time.Time{},
@@ -85,7 +85,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 
 		upload := TusUpload{
 			ID:        "upload-expired",
-			UserID: "user-1",
+			UserID:    "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusExpired,
 			ExpiresAt: past,
@@ -102,7 +102,7 @@ func TestTusUpload_Timestamps(t *testing.T) {
 
 		upload := TusUpload{
 			ID:        "upload-future-expiration",
-			UserID: "user-1",
+			UserID:    "user-1",
 			FileSize:  1024,
 			Status:    UploadStatusPending,
 			ExpiresAt: future,

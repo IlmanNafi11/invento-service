@@ -128,7 +128,7 @@ func (uc *modulUsecase) Download(ctx context.Context, userID string, modulIDs []
 	}
 
 	if len(moduls) == 1 {
-		if _, err := os.Stat(moduls[0].FilePath); os.IsNotExist(err) {
+		if _, statErr := os.Stat(moduls[0].FilePath); os.IsNotExist(statErr) {
 			return "", apperrors.NewNotFoundError("File modul")
 		}
 		return moduls[0].FilePath, nil
@@ -140,7 +140,7 @@ func (uc *modulUsecase) Download(ctx context.Context, userID string, modulIDs []
 	}
 
 	tempDir := "./uploads/temp"
-	if err := os.MkdirAll(tempDir, 0755); err != nil {
+	if err = os.MkdirAll(tempDir, 0o755); err != nil {
 		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
 

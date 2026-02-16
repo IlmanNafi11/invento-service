@@ -74,7 +74,6 @@ func (v *JWTVerifier) Verify(tokenString string) (*SupabaseClaims, error) {
 		&SupabaseClaims{},
 		v.jwks.Keyfunc,
 	)
-
 	if err != nil {
 		return nil, v.categorizeError(err)
 	}

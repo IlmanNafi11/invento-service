@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"errors"
 	"io"
 
 	apperrors "invento-service/internal/errors"
@@ -60,7 +61,7 @@ func parseChunkRequest(c *fiber.Ctx) (offset int64, chunkSize int64, body io.Rea
 	}
 
 	bodyBytes := c.Body()
-	if bodyBytes == nil || len(bodyBytes) == 0 {
+	if len(bodyBytes) == 0 {
 		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "Request body kosong")
 	}
 	if int64(len(bodyBytes)) != tusHeaders.ContentLength {
@@ -75,7 +76,8 @@ func handleTusChunkError(c *fiber.Ctx, err error, tusVersion string) error {
 		return nil
 	}
 
-	if appErr, ok := err.(*apperrors.AppError); ok {
+	var appErr *apperrors.AppError
+	if errors.As(err, &appErr) {
 		switch appErr.Code {
 		case apperrors.ErrTusOffsetMismatch:
 			return upload.SendTusErrorResponse(c, fiber.StatusConflict, tusVersion)
@@ -102,7 +104,8 @@ func handleTusUsecaseError(c *fiber.Ctx, err error, tusVersion string) error {
 		return nil
 	}
 
-	if appErr, ok := err.(*apperrors.AppError); ok {
+	var appErr *apperrors.AppError
+	if errors.As(err, &appErr) {
 		if c.Method() == fiber.MethodPatch || c.Method() == fiber.MethodHead || c.Method() == fiber.MethodDelete {
 			return upload.SendTusErrorResponse(c, appErr.HTTPStatus, tusVersion)
 		}

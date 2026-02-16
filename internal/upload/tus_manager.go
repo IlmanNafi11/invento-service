@@ -125,7 +125,7 @@ func (tm *TusManager) HandleChunk(uploadID string, offset int64, chunk io.Reader
 	return tm.store.WriteChunk(uploadID, offset, chunk)
 }
 
-func (tm *TusManager) GetUploadStatus(uploadID string) (int64, int64, error) {
+func (tm *TusManager) GetUploadStatus(uploadID string) (offset int64, size int64, err error) {
 	info, err := tm.store.GetInfo(uploadID)
 	if err != nil {
 		return 0, 0, err

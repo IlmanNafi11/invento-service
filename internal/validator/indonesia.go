@@ -41,7 +41,7 @@ func validateIndonesiaPhoneNumber(fl goPlaygroundValidator.FieldLevel) bool {
 	}
 
 	// Must be all digits
-	if !regexp.MustCompile(`^[0-9]+$`).MatchString(phone) {
+	if !regexp.MustCompile(`^\d+$`).MatchString(phone) {
 		return false
 	}
 
@@ -94,7 +94,7 @@ func validateIndonesiaMobileNumber(fl goPlaygroundValidator.FieldLevel) bool {
 	}
 
 	// Must be all digits
-	if !regexp.MustCompile(`^[0-9]+$`).MatchString(phone) {
+	if !regexp.MustCompile(`^\d+$`).MatchString(phone) {
 		return false
 	}
 
@@ -146,7 +146,7 @@ func validateNIK(fl goPlaygroundValidator.FieldLevel) bool {
 	}
 
 	// Must be all digits
-	if !regexp.MustCompile(`^[0-9]+$`).MatchString(nik) {
+	if !regexp.MustCompile(`^\d+$`).MatchString(nik) {
 		return false
 	}
 
@@ -223,7 +223,7 @@ func validateNPWP(fl goPlaygroundValidator.FieldLevel) bool {
 	}
 
 	// Must be all digits
-	if !regexp.MustCompile(`^[0-9]+$`).MatchString(npwp) {
+	if !regexp.MustCompile(`^\d+$`).MatchString(npwp) {
 		return false
 	}
 
@@ -235,11 +235,7 @@ func validateNPWP(fl goPlaygroundValidator.FieldLevel) bool {
 
 	// Security code should not be 000 (digits 12-14)
 	securityCode := npwp[11:14]
-	if securityCode == "000" {
-		return false
-	}
-
-	return true
+	return securityCode != "000"
 }
 
 // validateIndonesiaPostalCode validates Indonesian postal codes.
@@ -260,7 +256,7 @@ func validateIndonesiaPostalCode(fl goPlaygroundValidator.FieldLevel) bool {
 	}
 
 	// Must be all digits
-	if !regexp.MustCompile(`^[0-9]+$`).MatchString(postalCode) {
+	if !regexp.MustCompile(`^\d+$`).MatchString(postalCode) {
 		return false
 	}
 

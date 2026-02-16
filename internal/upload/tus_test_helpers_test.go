@@ -2,13 +2,14 @@ package upload_test
 
 import (
 	"context"
+	"path/filepath"
+	"testing"
+	"time"
+
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
-	"path/filepath"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -80,14 +81,14 @@ func setupTestConfig() *config.Config {
 	}
 }
 
-func setupTestTusStore(t *testing.T) (*upload.TusStore, string) {
+func setupTestTusStore(t *testing.T) (store *upload.TusStore, tmpDir string) {
 	cfg := setupTestConfig()
 	tempDir := t.TempDir()
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
 
 	pathResolver := storage.NewPathResolver(cfg)
-	store := upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
+	store = upload.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 
 	return store, tempDir
 }

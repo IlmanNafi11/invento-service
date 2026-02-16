@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -35,7 +36,7 @@ func TestProjectController_Delete_ProjectNotFound(t *testing.T) {
 	app.Delete("/api/v1/project/:id", controller.Delete)
 
 	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
-	req := httptest.NewRequest("DELETE", "/api/v1/project/999", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/project/999", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
 
@@ -168,7 +169,7 @@ func TestProjectController_GetList_UseCaseError(t *testing.T) {
 	app.Get("/api/v1/project", controller.GetList)
 
 	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
-	req := httptest.NewRequest("GET", "/api/v1/project?search=search", nil)
+	req := httptest.NewRequest("GET", "/api/v1/project?search=search", http.NoBody)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	resp, err := app.Test(req)
 
@@ -249,7 +250,7 @@ func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
 			if tt.filterSemester > 0 {
 				url += fmt.Sprintf("?filter_semester=%d", tt.filterSemester)
 			}
-			req := httptest.NewRequest("GET", url, nil)
+			req := httptest.NewRequest("GET", url, http.NoBody)
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			resp, err := app.Test(req)
 
@@ -347,7 +348,7 @@ func TestProjectController_GetList_FilterKategoriBoundaryCases(t *testing.T) {
 			if tt.filterKategori != "" {
 				url += fmt.Sprintf("?filter_kategori=%s", tt.filterKategori)
 			}
-			req := httptest.NewRequest("GET", url, nil)
+			req := httptest.NewRequest("GET", url, http.NoBody)
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 			resp, err := app.Test(req)
 

@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+
 	"invento-service/internal/controller/base"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
@@ -60,7 +61,7 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 
 	// Parse request body
 	var req dto.UpdateProjectRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err = c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
 

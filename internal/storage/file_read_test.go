@@ -2,14 +2,15 @@ package storage_test
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"invento-service/internal/storage"
 	"mime/multipart"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"invento-service/internal/storage"
 )
 
 func TestGenerateUniqueIdentifier(t *testing.T) {
@@ -332,7 +333,7 @@ func TestDeleteFile(t *testing.T) {
 	testFile := filepath.Join(tempDir, "test.txt")
 
 	// Create a test file
-	err := os.WriteFile(testFile, []byte("test"), 0644)
+	err := os.WriteFile(testFile, []byte("test"), 0o644)
 	require.NoError(t, err)
 
 	// Verify file exists
@@ -363,7 +364,7 @@ func TestMoveFile(t *testing.T) {
 
 	// Create source file
 	content := []byte("test content for move")
-	err := os.WriteFile(srcPath, content, 0644)
+	err := os.WriteFile(srcPath, content, 0o644)
 	require.NoError(t, err)
 
 	// Move file
@@ -403,7 +404,7 @@ func TestMoveFile_SameSourceAndDestination(t *testing.T) {
 
 	// Create source file
 	content := []byte("test content")
-	err := os.WriteFile(srcPath, content, 0644)
+	err := os.WriteFile(srcPath, content, 0o644)
 	require.NoError(t, err)
 
 	// Move file to itself should succeed (no-op)
@@ -424,7 +425,7 @@ func TestMoveFile_DestinationDirectoryNotExists(t *testing.T) {
 
 	// Create source file
 	content := []byte("test content for move")
-	err := os.WriteFile(srcPath, content, 0644)
+	err := os.WriteFile(srcPath, content, 0o644)
 	require.NoError(t, err)
 
 	// Move file to non-existent directory - should fail or create parent dir
@@ -444,12 +445,12 @@ func TestMoveFile_OverwriteExistingDestination(t *testing.T) {
 
 	// Create source file with content
 	srcContent := []byte("source content")
-	err := os.WriteFile(srcPath, srcContent, 0644)
+	err := os.WriteFile(srcPath, srcContent, 0o644)
 	require.NoError(t, err)
 
 	// Create destination file with different content
 	dstContent := []byte("destination content")
-	err = os.WriteFile(dstPath, dstContent, 0644)
+	err = os.WriteFile(dstPath, dstContent, 0o644)
 	require.NoError(t, err)
 
 	// Move file - should overwrite destination
@@ -474,12 +475,12 @@ func TestMoveFile_MoveToSubdirectory(t *testing.T) {
 	dstPath := filepath.Join(subDir, "dest.txt")
 
 	// Create subdirectory
-	err := os.MkdirAll(subDir, 0755)
+	err := os.MkdirAll(subDir, 0o755)
 	require.NoError(t, err)
 
 	// Create source file
 	content := []byte("test content")
-	err = os.WriteFile(srcPath, content, 0644)
+	err = os.WriteFile(srcPath, content, 0o644)
 	require.NoError(t, err)
 
 	// Move file to subdirectory

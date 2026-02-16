@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
@@ -55,7 +56,7 @@ func TestCancelUpload_Success(t *testing.T) {
 
 	mockUC.On("CancelUpload", mock.Anything, "test-upload-id", "user-123").Return(nil)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/tus/upload/test-upload-id", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/tus/upload/test-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)
@@ -81,7 +82,7 @@ func TestCancelUpload_AlreadyCompleted(t *testing.T) {
 
 	mockUC.On("CancelUpload", mock.Anything, "test-upload-id", "user-123").Return(apperrors.NewTusCompletedError())
 
-	req := httptest.NewRequest("DELETE", "/api/v1/tus/upload/test-upload-id", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/tus/upload/test-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)
@@ -130,7 +131,7 @@ func TestInitiateProjectUpdateUpload_Success(t *testing.T) {
 		"semester":     "2",
 	})
 
-	req := httptest.NewRequest("POST", "/api/v1/tus/project/1/upload", nil)
+	req := httptest.NewRequest("POST", "/api/v1/tus/project/1/upload", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Length", "1048576")
 	req.Header.Set("Upload-Metadata", metadataHeader)
@@ -163,7 +164,7 @@ func TestInitiateProjectUpdateUpload_ProjectNotFound(t *testing.T) {
 	metadata := dto.TusUploadInitRequest{}
 	mockUC.On("InitiateProjectUpdateUpload", mock.Anything, uint(999), "user-123", int64(1048576), metadata).Return(nil, apperrors.NewNotFoundError("project"))
 
-	req := httptest.NewRequest("POST", "/api/v1/tus/project/999/upload", nil)
+	req := httptest.NewRequest("POST", "/api/v1/tus/project/999/upload", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	req.Header.Set("Upload-Length", "1048576")
 
@@ -253,7 +254,7 @@ func TestGetProjectUpdateUploadStatus_Success(t *testing.T) {
 
 	mockUC.On("GetProjectUpdateUploadStatus", mock.Anything, uint(1), "test-update-upload-id", "user-123").Return(int64(524288), int64(1048576), nil)
 
-	req := httptest.NewRequest("HEAD", "/api/v1/tus/project/1/upload/test-update-upload-id", nil)
+	req := httptest.NewRequest("HEAD", "/api/v1/tus/project/1/upload/test-update-upload-id", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 
 	resp, err := app.Test(req)

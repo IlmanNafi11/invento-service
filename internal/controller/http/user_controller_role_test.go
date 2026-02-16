@@ -4,16 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"invento-service/internal/dto"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-	app_testing "invento-service/internal/testing"
-	apperrors "invento-service/internal/errors"
+
 	httpcontroller "invento-service/internal/controller/http"
+	"invento-service/internal/dto"
+	apperrors "invento-service/internal/errors"
+	app_testing "invento-service/internal/testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestUserController_UpdateUserRole_Success(t *testing.T) {
@@ -87,7 +90,7 @@ func TestUserController_DeleteUser_Success(t *testing.T) {
 
 	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(nil)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/user/1", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/user/1", http.NoBody)
 
 	resp, err := app.Test(req)
 
@@ -166,7 +169,7 @@ func TestUserController_DeleteUser_Forbidden(t *testing.T) {
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses untuk menghapus user ini")
 	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(appErr)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/user/1", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/user/1", http.NoBody)
 
 	resp, err := app.Test(req)
 
@@ -187,7 +190,7 @@ func TestUserController_DeleteUser_InternalError(t *testing.T) {
 
 	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(errors.New("database error"))
 
-	req := httptest.NewRequest("DELETE", "/api/v1/user/1", nil)
+	req := httptest.NewRequest("DELETE", "/api/v1/user/1", http.NoBody)
 
 	resp, err := app.Test(req)
 

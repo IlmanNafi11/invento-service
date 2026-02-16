@@ -1,10 +1,11 @@
 package httputil_test
 
 import (
-	"invento-service/config"
-	"invento-service/internal/httputil"
 	"net/http"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/httputil"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +45,7 @@ func TestGetRefreshTokenFromCookie(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", "/test", nil)
+			req, _ := http.NewRequest("GET", "/test", http.NoBody)
 			if tt.token != "" {
 				req.AddCookie(&http.Cookie{Name: httputil.RefreshTokenCookieName, Value: tt.token})
 			}
@@ -69,7 +70,7 @@ func TestCookieHelper_GetAccessTokenFromCookie(t *testing.T) {
 		return c.SendString(cookieHelper.GetAccessTokenFromCookie(c))
 	})
 
-	req, _ := http.NewRequest("GET", "/test", nil)
+	req, _ := http.NewRequest("GET", "/test", http.NoBody)
 	req.AddCookie(&http.Cookie{Name: httputil.AccessTokenCookieName, Value: "cookie-access-token"})
 
 	resp, err := app.Test(req)
@@ -91,7 +92,7 @@ func TestCookieHelper_ClearAllAuthCookies(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("POST", "/clear", nil)
+	req, _ := http.NewRequest("POST", "/clear", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 
@@ -128,7 +129,7 @@ func TestCookieHelper_SecurityProperties(t *testing.T) {
 			return c.SendString("ok")
 		})
 
-		req, _ := http.NewRequest("POST", "/test", nil)
+		req, _ := http.NewRequest("POST", "/test", http.NoBody)
 		resp, err := app.Test(req)
 		assert.NoError(t, err)
 
@@ -162,7 +163,7 @@ func TestCookieHelper_SecurityProperties(t *testing.T) {
 			return c.SendString("ok")
 		})
 
-		req, _ := http.NewRequest("POST", "/test", nil)
+		req, _ := http.NewRequest("POST", "/test", http.NoBody)
 		resp, err := app.Test(req)
 		assert.NoError(t, err)
 
@@ -200,7 +201,7 @@ func TestCookieHelper_EdgeCases(t *testing.T) {
 			return c.SendString("ok")
 		})
 
-		req, _ := http.NewRequest("POST", "/test", nil)
+		req, _ := http.NewRequest("POST", "/test", http.NoBody)
 		resp, err := app.Test(req)
 		assert.NoError(t, err)
 
@@ -234,7 +235,7 @@ func TestCookieHelper_EdgeCases(t *testing.T) {
 			return c.SendString("ok")
 		})
 
-		req, _ := http.NewRequest("POST", "/test", nil)
+		req, _ := http.NewRequest("POST", "/test", http.NoBody)
 		resp, err := app.Test(req)
 		assert.NoError(t, err)
 
@@ -266,7 +267,7 @@ func TestCookieHelper_EdgeCases(t *testing.T) {
 			return c.SendString("ok")
 		})
 
-		req, _ := http.NewRequest("POST", "/test", nil)
+		req, _ := http.NewRequest("POST", "/test", http.NoBody)
 		resp, err := app.Test(req)
 		assert.NoError(t, err)
 
@@ -306,7 +307,7 @@ func TestCookieHelper_Integration(t *testing.T) {
 			return c.SendString("ok")
 		})
 
-		req1, _ := http.NewRequest("POST", "/set", nil)
+		req1, _ := http.NewRequest("POST", "/set", http.NoBody)
 		resp1, _ := app.Test(req1)
 
 		// Check cookie was set in response
@@ -327,7 +328,7 @@ func TestCookieHelper_Integration(t *testing.T) {
 			return c.SendString("ok")
 		})
 
-		req2, _ := http.NewRequest("POST", "/clear", nil)
+		req2, _ := http.NewRequest("POST", "/clear", http.NoBody)
 		resp2, _ := app.Test(req2)
 
 		// Check cookie was cleared
@@ -357,7 +358,7 @@ func TestCookieHelper_Integration(t *testing.T) {
 		})
 
 		// Each request is independent
-		req1, _ := http.NewRequest("POST", "/token1", nil)
+		req1, _ := http.NewRequest("POST", "/token1", http.NoBody)
 		resp1, _ := app.Test(req1)
 		cookies1 := resp1.Cookies()
 		var cookie1 *http.Cookie
@@ -369,7 +370,7 @@ func TestCookieHelper_Integration(t *testing.T) {
 		}
 		assert.Equal(t, "token-1", cookie1.Value)
 
-		req2, _ := http.NewRequest("POST", "/token2", nil)
+		req2, _ := http.NewRequest("POST", "/token2", http.NoBody)
 		resp2, _ := app.Test(req2)
 		cookies2 := resp2.Cookies()
 		var cookie2 *http.Cookie

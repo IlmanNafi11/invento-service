@@ -2,15 +2,16 @@ package http
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"invento-service/config"
 	"invento-service/internal/controller/base"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -100,7 +101,7 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 
 	modulID, err := ctrl.ParsePathUUID(c)
 	if err != nil {
-		return nil
+		return nil //nolint:nilerr // ParsePathUUID already sent HTTP error response
 	}
 
 	err = ctrl.modulUsecase.Delete(ctx, modulID, userID)
@@ -141,11 +142,11 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 
 	modulID, err := ctrl.ParsePathUUID(c)
 	if err != nil {
-		return nil
+		return nil //nolint:nilerr // ParsePathUUID already sent HTTP error response
 	}
 
 	var req dto.UpdateModulRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err = c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
 

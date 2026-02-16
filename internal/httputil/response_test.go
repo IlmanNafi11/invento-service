@@ -1,10 +1,12 @@
 package httputil_test
 
 import (
-	"invento-service/internal/dto"
-	"invento-service/internal/httputil"
+	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"invento-service/internal/dto"
+	"invento-service/internal/httputil"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +23,7 @@ func TestSendSuccessResponse(t *testing.T) {
 		return httputil.SendSuccessResponse(c, fiber.StatusOK, "Data berhasil diambil", data)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -35,7 +37,7 @@ func TestSendErrorResponse(t *testing.T) {
 		return httputil.SendErrorResponse(c, fiber.StatusBadRequest, "Request tidak valid", nil)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -45,11 +47,9 @@ func TestSendErrorResponse(t *testing.T) {
 func TestSendInternalServerErrorResponse(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
-	app.Get("/test", func(c *fiber.Ctx) error {
-		return httputil.SendInternalServerErrorResponse(c)
-	})
+	app.Get("/test", httputil.SendInternalServerErrorResponse)
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -59,11 +59,9 @@ func TestSendInternalServerErrorResponse(t *testing.T) {
 func TestSendUnauthorizedResponse(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
-	app.Get("/test", func(c *fiber.Ctx) error {
-		return httputil.SendUnauthorizedResponse(c)
-	})
+	app.Get("/test", httputil.SendUnauthorizedResponse)
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -73,11 +71,9 @@ func TestSendUnauthorizedResponse(t *testing.T) {
 func TestSendForbiddenResponse(t *testing.T) {
 	t.Parallel()
 	app := fiber.New()
-	app.Get("/test", func(c *fiber.Ctx) error {
-		return httputil.SendForbiddenResponse(c)
-	})
+	app.Get("/test", httputil.SendForbiddenResponse)
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -91,7 +87,7 @@ func TestSendNotFoundResponse(t *testing.T) {
 		return httputil.SendNotFoundResponse(c, "Data tidak ditemukan")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -115,7 +111,7 @@ func TestSendListResponse(t *testing.T) {
 		return httputil.SendListResponse(c, fiber.StatusOK, "Data berhasil diambil", items, pagination)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -133,7 +129,7 @@ func TestSendValidationErrorResponse(t *testing.T) {
 		return httputil.SendValidationErrorResponse(c, errors)
 	})
 
-	req := httptest.NewRequest("POST", "/test", nil)
+	req := httptest.NewRequest("POST", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)

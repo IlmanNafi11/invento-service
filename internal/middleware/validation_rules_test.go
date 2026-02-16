@@ -116,10 +116,8 @@ func TestValidateFile(t *testing.T) {
 
 			if tt.expectError {
 				require.Error(t, err, "Expected validation error")
-			} else {
-				// May or may not error depending on implementation
-				// Just check it doesn't panic
 			}
+			_ = err
 		})
 	}
 }

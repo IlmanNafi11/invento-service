@@ -1,17 +1,18 @@
 package storage_test
 
 import (
-	"invento-service/config"
-	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/storage"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func setupFileManagerTest(t *testing.T) (*storage.FileManager, string) {
+func setupFileManagerTest(t *testing.T) (fm *storage.FileManager, tmpDir string) {
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		App: config.AppConfig{
@@ -169,7 +170,7 @@ func TestFileManager_DeleteProjectDirectory(t *testing.T) {
 
 	// Create a file in it
 	testFile := filepath.Join(projectPath, "test.txt")
-	err = os.WriteFile(testFile, []byte("test content"), 0644)
+	err = os.WriteFile(testFile, []byte("test content"), 0o644)
 	require.NoError(t, err)
 
 	// Verify file exists
@@ -303,7 +304,7 @@ func TestFileManager_DeleteModulDirectory(t *testing.T) {
 
 	// Create a file in it
 	testFile := filepath.Join(modulPath, "modul.pdf")
-	err = os.WriteFile(testFile, []byte("modul content"), 0644)
+	err = os.WriteFile(testFile, []byte("modul content"), 0o644)
 	require.NoError(t, err)
 
 	// Verify file exists

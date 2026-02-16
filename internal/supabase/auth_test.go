@@ -8,17 +8,18 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	apperrors "invento-service/internal/errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
-	"invento-service/internal/domain"
+	apperrors "invento-service/internal/errors"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"invento-service/internal/domain"
 )
 
 const authTestKeyID = "auth-test-key-id"
@@ -41,8 +42,8 @@ func newAuthTestJWKS(t *testing.T) *authTestJWKS {
 			{
 				"kty": "EC",
 				"crv": "P-256",
-				"x":   base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.X.Bytes()),
-				"y":   base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.Y.Bytes()),
+				"x":   base64.RawURLEncoding.EncodeToString(privateKey.X.Bytes()),
+				"y":   base64.RawURLEncoding.EncodeToString(privateKey.Y.Bytes()),
 				"kid": authTestKeyID,
 				"use": "sig",
 				"alg": "ES256",

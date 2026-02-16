@@ -266,12 +266,12 @@ func TestMultipleValidations(t *testing.T) {
 	validate.RegisterValidation("id_postal_code", ValidateIndonesiaPostalCode)
 
 	type UserForm struct {
-		Password    string `validate:"password_strength"`
-		Phone       string `validate:"id_phone"`
-		Mobile      string `validate:"id_mobile"`
-		NIK         string `validate:"nik"`
-		NPWP        string `validate:"npwp"`
-		PostalCode  string `validate:"id_postal_code"`
+		Password   string `validate:"password_strength"`
+		Phone      string `validate:"id_phone"`
+		Mobile     string `validate:"id_mobile"`
+		NIK        string `validate:"nik"`
+		NPWP       string `validate:"npwp"`
+		PostalCode string `validate:"id_postal_code"`
 	}
 
 	validForm := UserForm{

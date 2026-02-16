@@ -46,7 +46,6 @@ func seedTusUploadStore(t *testing.T, manager *upload.TusManager, uploadID strin
 	require.NoError(t, manager.InitiateUpload(uploadID, size, metadata))
 }
 
-
 func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 	t.Parallel()
 	t.Run("CheckUploadSlot available and not available", func(t *testing.T) {
@@ -166,7 +165,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 				UpdatedAt:      now,
 			}, nil).Once()
 
-			info, err := uc.GetUploadInfo(context.Background(),"info-id", "u1")
+			info, err := uc.GetUploadInfo(context.Background(), "info-id", "u1")
 			require.NoError(t, err)
 			require.NotNil(t, info)
 			assert.Equal(t, uint(7), info.ProjectID)
@@ -178,7 +177,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			info, err := uc.GetUploadInfo(context.Background(),"missing", "u1")
+			info, err := uc.GetUploadInfo(context.Background(), "missing", "u1")
 			require.Error(t, err)
 			assert.Nil(t, info)
 			assert.Contains(t, err.Error(), "tidak ditemukan")
@@ -189,7 +188,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "status-id").Return(&domain.TusUpload{ID: "status-id", UserID: "u1", CurrentOffset: 8, FileSize: 16}, nil).Once()
 
-			offset, length, err := uc.GetUploadStatus(context.Background(),"status-id", "u1")
+			offset, length, err := uc.GetUploadStatus(context.Background(), "status-id", "u1")
 			require.NoError(t, err)
 			assert.Equal(t, int64(8), offset)
 			assert.Equal(t, int64(16), length)
@@ -200,7 +199,7 @@ func TestTusUploadUsecase_InitAndStatus(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			offset, length, err := uc.GetUploadStatus(context.Background(),"missing", "u1")
+			offset, length, err := uc.GetUploadStatus(context.Background(), "missing", "u1")
 			require.Error(t, err)
 			assert.Equal(t, int64(0), offset)
 			assert.Equal(t, int64(0), length)

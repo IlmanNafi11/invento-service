@@ -41,7 +41,7 @@ func TeardownTestDatabase(db *gorm.DB) {
 	if db != nil {
 		sqlDB, err := db.DB()
 		if err == nil {
-			sqlDB.Close()
+			_ = sqlDB.Close()
 		}
 	}
 }

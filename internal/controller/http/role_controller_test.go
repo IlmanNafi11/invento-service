@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-
-	"invento-service/internal/dto"
-	apperrors "invento-service/internal/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"invento-service/internal/dto"
+	apperrors "invento-service/internal/errors"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -88,7 +88,7 @@ func TestRoleController_GetAvailablePermissions_Success(t *testing.T) {
 	}
 	mockRoleUC.On("GetAvailablePermissions", mock.Anything).Return(expectedPermissions, nil)
 
-	req := httptest.NewRequest("GET", "/role/permissions", nil)
+	req := httptest.NewRequest("GET", "/role/permissions", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -112,7 +112,7 @@ func TestRoleController_GetRoleList_Success(t *testing.T) {
 	}
 	mockRoleUC.On("GetRoleList", mock.Anything, mock.Anything).Return(expectedResult, nil)
 
-	req := httptest.NewRequest("GET", "/role?page=1&limit=10", nil)
+	req := httptest.NewRequest("GET", "/role?page=1&limit=10", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -169,7 +169,7 @@ func TestRoleController_GetRoleDetail_Success(t *testing.T) {
 	}
 	mockRoleUC.On("GetRoleDetail", mock.Anything, uint(1)).Return(expectedResponse, nil)
 
-	req := httptest.NewRequest("GET", "/role/1", nil)
+	req := httptest.NewRequest("GET", "/role/1", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -219,7 +219,7 @@ func TestRoleController_DeleteRole_Success(t *testing.T) {
 
 	mockRoleUC.On("DeleteRole", mock.Anything, uint(1)).Return(nil)
 
-	req := httptest.NewRequest("DELETE", "/role/1", nil)
+	req := httptest.NewRequest("DELETE", "/role/1", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -239,7 +239,7 @@ func TestRoleController_ErrorCases(t *testing.T) {
 			name: "GetAvailablePermissions error",
 			testFunc: func(mockUC *MockRoleUsecase, app *fiber.App) (*http.Response, error) {
 				mockUC.On("GetAvailablePermissions", mock.Anything).Return([]dto.ResourcePermissions{}, assert.AnError)
-				req := httptest.NewRequest("GET", "/role/permissions", nil)
+				req := httptest.NewRequest("GET", "/role/permissions", http.NoBody)
 				return app.Test(req)
 			},
 			expectedStatus: fiber.StatusInternalServerError,
@@ -248,7 +248,7 @@ func TestRoleController_ErrorCases(t *testing.T) {
 			name: "GetRoleDetail not found",
 			testFunc: func(mockUC *MockRoleUsecase, app *fiber.App) (*http.Response, error) {
 				mockUC.On("GetRoleDetail", mock.Anything, uint(999)).Return(nil, apperrors.NewNotFoundError("role"))
-				req := httptest.NewRequest("GET", "/role/999", nil)
+				req := httptest.NewRequest("GET", "/role/999", http.NoBody)
 				return app.Test(req)
 			},
 			expectedStatus: fiber.StatusNotFound,
@@ -371,7 +371,7 @@ func TestRoleController_DeleteRole_NotFound(t *testing.T) {
 	appErr := apperrors.NewNotFoundError("Role tidak ditemukan")
 	mockRoleUC.On("DeleteRole", mock.Anything, uint(999)).Return(appErr)
 
-	req := httptest.NewRequest("DELETE", "/role/999", nil)
+	req := httptest.NewRequest("DELETE", "/role/999", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -391,7 +391,7 @@ func TestRoleController_DeleteRole_Forbidden(t *testing.T) {
 	appErr := apperrors.NewForbiddenError("Role sedang digunakan oleh user lain")
 	mockRoleUC.On("DeleteRole", mock.Anything, uint(1)).Return(appErr)
 
-	req := httptest.NewRequest("DELETE", "/role/1", nil)
+	req := httptest.NewRequest("DELETE", "/role/1", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -410,7 +410,7 @@ func TestRoleController_GetRoleList_InternalError(t *testing.T) {
 
 	mockRoleUC.On("GetRoleList", mock.Anything, mock.Anything).Return(nil, assert.AnError)
 
-	req := httptest.NewRequest("GET", "/role?page=1&limit=10", nil)
+	req := httptest.NewRequest("GET", "/role?page=1&limit=10", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -449,7 +449,7 @@ func TestRoleController_GetRoleDetail_InvalidID(t *testing.T) {
 	app := fiber.New()
 	app.Get("/role/:id", controller.GetRoleDetail)
 
-	req := httptest.NewRequest("GET", "/role/invalid", nil)
+	req := httptest.NewRequest("GET", "/role/invalid", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)

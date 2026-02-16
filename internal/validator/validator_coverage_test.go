@@ -114,7 +114,7 @@ func TestParseFormFile_Success(t *testing.T) {
 		return c.SendStatus(200)
 	})
 
-	req, _ := http.NewRequest("POST", "/test", nil)
+	req, _ := http.NewRequest("POST", "/test", http.NoBody)
 	req.Header.Set("Content-Type", "multipart/form-data")
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
@@ -132,7 +132,7 @@ func TestValidateMultipartForm_Success(t *testing.T) {
 		return c.SendStatus(200)
 	})
 
-	req, _ := http.NewRequest("POST", "/test", nil)
+	req, _ := http.NewRequest("POST", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)

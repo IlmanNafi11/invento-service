@@ -3,6 +3,10 @@ package middleware_test
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
@@ -10,9 +14,6 @@ import (
 	"invento-service/internal/middleware"
 	"invento-service/internal/supabase"
 	"invento-service/internal/usecase/repo"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
@@ -56,9 +57,9 @@ func (m *mockAuthService) DeleteUser(ctx context.Context, uid string) error {
 	return errors.New("not implemented")
 }
 
-func testSupabaseClaims(userID string) domain.AuthClaims {
+func testSupabaseClaims() domain.AuthClaims {
 	return &supabase.SupabaseClaims{
-		RegisteredClaims: jwt.RegisteredClaims{Subject: userID},
+		RegisteredClaims: jwt.RegisteredClaims{Subject: "user-123"},
 	}
 }
 
@@ -82,7 +83,7 @@ func (m *mockUserRepository) GetByID(ctx context.Context, id string) (*domain.Us
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
+func (m *mockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount int, modulCount int, err error) {
 	return nil, 0, 0, nil
 }
 
@@ -144,7 +145,7 @@ func TestSupabaseAuthMiddleware_MissingAuthHeader_Returns401(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -175,7 +176,7 @@ func TestSupabaseAuthMiddleware_InvalidTokenFormat_Returns401(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/test", nil)
+			req := httptest.NewRequest("GET", "/test", http.NoBody)
 			req.Header.Set("Authorization", tt.authHeader)
 			resp, err := app.Test(req)
 			require.NoError(t, err)
@@ -200,7 +201,7 @@ func TestSupabaseAuthMiddleware_InvalidToken_Returns401(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("Authorization", "Bearer invalid-token")
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -212,7 +213,7 @@ func TestSupabaseAuthMiddleware_ValidTokenWithUser_SetsContext(t *testing.T) {
 	t.Parallel()
 	mockAuth := &mockAuthService{
 		verifyJWTFunc: func(accessToken string) (domain.AuthClaims, error) {
-			return testSupabaseClaims("user-123"), nil
+			return testSupabaseClaims(), nil
 		},
 	}
 	roleName := "admin"
@@ -245,7 +246,7 @@ func TestSupabaseAuthMiddleware_ValidTokenWithUser_SetsContext(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("Authorization", "Bearer valid-token")
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -257,7 +258,7 @@ func TestSupabaseAuthMiddleware_UserNotFound_Returns401(t *testing.T) {
 	t.Parallel()
 	mockAuth := &mockAuthService{
 		verifyJWTFunc: func(accessToken string) (domain.AuthClaims, error) {
-			return testSupabaseClaims("user-123"), nil
+			return testSupabaseClaims(), nil
 		},
 	}
 	mockUser := &mockUserRepository{
@@ -270,7 +271,7 @@ func TestSupabaseAuthMiddleware_UserNotFound_Returns401(t *testing.T) {
 	app.Use(middleware.SupabaseAuthMiddleware(mockAuth, mockUser, testCookieHelper()))
 	app.Get("/test", func(c *fiber.Ctx) error { return c.SendStatus(fiber.StatusOK) })
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("Authorization", "Bearer valid-token")
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -282,7 +283,7 @@ func TestSupabaseAuthMiddleware_InactiveUser_Returns401(t *testing.T) {
 	t.Parallel()
 	mockAuth := &mockAuthService{
 		verifyJWTFunc: func(accessToken string) (domain.AuthClaims, error) {
-			return testSupabaseClaims("user-123"), nil
+			return testSupabaseClaims(), nil
 		},
 	}
 	mockUser := &mockUserRepository{
@@ -301,7 +302,7 @@ func TestSupabaseAuthMiddleware_InactiveUser_Returns401(t *testing.T) {
 	app.Use(middleware.SupabaseAuthMiddleware(mockAuth, mockUser, testCookieHelper()))
 	app.Get("/test", func(c *fiber.Ctx) error { return c.SendStatus(fiber.StatusOK) })
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("Authorization", "Bearer valid-token")
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -315,7 +316,7 @@ func TestSupabaseAuthMiddleware_ValidTokenFromCookie_Fallback(t *testing.T) {
 		if token != "cookie-token" {
 			return nil, errors.New("unexpected token")
 		}
-		return testSupabaseClaims("user-123"), nil
+		return testSupabaseClaims(), nil
 	}}
 	mockUser := &mockUserRepository{getByIDFunc: func(id string) (*domain.User, error) {
 		return &domain.User{ID: id, Email: "test@example.com", IsActive: true}, nil
@@ -328,7 +329,7 @@ func TestSupabaseAuthMiddleware_ValidTokenFromCookie_Fallback(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.AddCookie(&http.Cookie{Name: httputil.AccessTokenCookieName, Value: "cookie-token"})
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -341,7 +342,7 @@ func TestSupabaseAuthMiddleware_HeaderPrecedenceOverCookie(t *testing.T) {
 		if token != "header-token" {
 			return nil, errors.New("header should take precedence")
 		}
-		return testSupabaseClaims("user-123"), nil
+		return testSupabaseClaims(), nil
 	}}
 	mockUser := &mockUserRepository{getByIDFunc: func(id string) (*domain.User, error) {
 		return &domain.User{ID: id, Email: "test@example.com", IsActive: true}, nil
@@ -354,7 +355,7 @@ func TestSupabaseAuthMiddleware_HeaderPrecedenceOverCookie(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("Authorization", "Bearer header-token")
 	req.AddCookie(&http.Cookie{Name: httputil.AccessTokenCookieName, Value: "cookie-token"})
 	resp, err := app.Test(req)

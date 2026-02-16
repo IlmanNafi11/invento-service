@@ -3,13 +3,14 @@ package usecase
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
+	"testing"
+
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
-	"os"
-	"path/filepath"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -210,8 +211,8 @@ func TestProjectUsecase_Download_MultipleFiles_Success(t *testing.T) {
 	tempDir := t.TempDir()
 	file1 := filepath.Join(tempDir, "project1.txt")
 	file2 := filepath.Join(tempDir, "project2.txt")
-	require.NoError(t, os.WriteFile(file1, []byte("file-1"), 0644))
-	require.NoError(t, os.WriteFile(file2, []byte("file-2"), 0644))
+	require.NoError(t, os.WriteFile(file1, []byte("file-1"), 0o644))
+	require.NoError(t, os.WriteFile(file2, []byte("file-2"), 0o644))
 
 	userID := "user-1"
 	projectIDs := []uint{1, 2}
@@ -242,7 +243,7 @@ func TestProjectUsecase_Download_MultipleFiles_PartialFound(t *testing.T) {
 
 	tempDir := t.TempDir()
 	file1 := filepath.Join(tempDir, "project1.txt")
-	require.NoError(t, os.WriteFile(file1, []byte("file-1"), 0644))
+	require.NoError(t, os.WriteFile(file1, []byte("file-1"), 0o644))
 
 	userID := "user-1"
 	projectIDs := []uint{1, 2, 3}

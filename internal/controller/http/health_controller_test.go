@@ -3,11 +3,13 @@ package http_test
 import (
 	"context"
 	"encoding/json"
-	httpcontroller "invento-service/internal/controller/http"
-	dto "invento-service/internal/dto"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	httpcontroller "invento-service/internal/controller/http"
+	dto "invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +56,7 @@ func TestHealthController_BasicHealthCheck_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/health", controller.BasicHealthCheck)
 
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -100,7 +102,7 @@ func TestHealthController_ComprehensiveHealthCheck_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/health", controller.ComprehensiveHealthCheck)
 
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -146,7 +148,7 @@ func TestHealthController_ComprehensiveHealthCheck_Unhealthy(t *testing.T) {
 	app := fiber.New()
 	app.Get("/health", controller.ComprehensiveHealthCheck)
 
-	req := httptest.NewRequest("GET", "/health", nil)
+	req := httptest.NewRequest("GET", "/health", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -212,7 +214,7 @@ func TestHealthController_GetSystemMetrics_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/metrics", controller.GetSystemMetrics)
 
-	req := httptest.NewRequest("GET", "/metrics", nil)
+	req := httptest.NewRequest("GET", "/metrics", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -268,7 +270,7 @@ func TestHealthController_GetApplicationStatus_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/status", controller.GetApplicationStatus)
 
-	req := httptest.NewRequest("GET", "/status", nil)
+	req := httptest.NewRequest("GET", "/status", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)

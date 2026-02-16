@@ -3,12 +3,13 @@ package usecase
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
-	"testing"
 )
 
 func TestLogin_UserInactive(t *testing.T) {

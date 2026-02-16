@@ -42,7 +42,7 @@ func (ph *ProjectHelper) getBasePath() string {
 
 func (ph *ProjectHelper) ValidateProjectFile(fileHeader *multipart.FileHeader) error {
 	ext := GetFileExtension(fileHeader.Filename)
-	if ext != ".zip" {
+	if ext != zipExtension {
 		return errors.New("file project harus berupa zip")
 	}
 
@@ -71,7 +71,7 @@ func (ph *ProjectHelper) ValidateProjectFileSize(fileSize int64) error {
 
 func ValidateProjectZipExtension(filename string) error {
 	ext := GetFileExtension(filename)
-	if ext != ".zip" {
+	if ext != zipExtension {
 		return errors.New("file project harus berupa zip")
 	}
 	return nil

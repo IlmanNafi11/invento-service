@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -23,7 +24,7 @@ func TestRequestID_GeneratesNewUUID(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	require.NoError(t, err)
@@ -54,7 +55,7 @@ func TestRequestID_UsesExistingHeader(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("X-Request-ID", existingRequestID)
 
 	resp, err := app.Test(req)
@@ -79,7 +80,7 @@ func TestRequestID_ValidatesUUIDFormat(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	require.NoError(t, err)
@@ -122,7 +123,7 @@ func TestRequestID_RetrievesFromContext(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	require.NoError(t, err)
@@ -149,7 +150,7 @@ func TestRequestID_ContextStoresString(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	require.NoError(t, err)
@@ -172,7 +173,7 @@ func TestRequestID_EmptyStringWhenNotSet(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	require.NoError(t, err)
@@ -206,7 +207,7 @@ func TestRequestID_PreservesThroughMiddlewareChain(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	require.NoError(t, err)
@@ -232,7 +233,7 @@ func TestRequestID_DifferentForEachRequest(t *testing.T) {
 	// Make multiple requests
 	requestIDs := make([]string, 10)
 	for i := 0; i < 10; i++ {
-		req := httptest.NewRequest("GET", "/test", nil)
+		req := httptest.NewRequest("GET", "/test", http.NoBody)
 		resp, err := app.Test(req)
 
 		require.NoError(t, err)
@@ -271,7 +272,7 @@ func TestRequestID_MultipleEndpoints(t *testing.T) {
 	})
 
 	// Test GET endpoint
-	req1 := httptest.NewRequest("GET", "/endpoint1", nil)
+	req1 := httptest.NewRequest("GET", "/endpoint1", http.NoBody)
 	resp1, err := app.Test(req1)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, resp1.StatusCode)
@@ -279,7 +280,7 @@ func TestRequestID_MultipleEndpoints(t *testing.T) {
 	require.NotEmpty(t, id1)
 
 	// Test POST endpoint
-	req2 := httptest.NewRequest("POST", "/endpoint2", nil)
+	req2 := httptest.NewRequest("POST", "/endpoint2", http.NoBody)
 	resp2, err := app.Test(req2)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, resp2.StatusCode)
@@ -287,7 +288,7 @@ func TestRequestID_MultipleEndpoints(t *testing.T) {
 	require.NotEmpty(t, id2)
 
 	// Test PUT endpoint
-	req3 := httptest.NewRequest("PUT", "/endpoint3", nil)
+	req3 := httptest.NewRequest("PUT", "/endpoint3", http.NoBody)
 	resp3, err := app.Test(req3)
 	require.NoError(t, err)
 	require.Equal(t, fiber.StatusOK, resp3.StatusCode)
@@ -313,7 +314,7 @@ func TestRequestID_WithExistingUUID(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("X-Request-ID", existingUUID)
 
 	resp, err := app.Test(req)
@@ -339,7 +340,7 @@ func TestRequestID_WithCustomHeader(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	req.Header.Set("X-Request-ID", customID)
 
 	resp, err := app.Test(req)
@@ -372,7 +373,7 @@ func TestRequestID_NilContext(t *testing.T) {
 		return c.SendString("OK")
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	require.NoError(t, err)

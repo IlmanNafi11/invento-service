@@ -2,9 +2,11 @@ package middleware_test
 
 import (
 	"bytes"
-	"invento-service/internal/middleware"
+	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"invento-service/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +61,7 @@ func TestTusProtocolMiddleware_MissingTusResumableOnPatch_Returns412(t *testing.
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("PATCH", "/test", nil)
+	req := httptest.NewRequest("PATCH", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -75,7 +77,7 @@ func TestTusProtocolMiddleware_WrongTusVersion_Returns412(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("PATCH", "/test", nil)
+	req := httptest.NewRequest("PATCH", "/test", http.NoBody)
 	req.Header.Set("Tus-Resumable", "0.9.0")
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -92,7 +94,7 @@ func TestTusProtocolMiddleware_GetRequestWithoutTusHeader_Passes(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -107,7 +109,7 @@ func TestTusProtocolMiddleware_PostRequestWithoutTusHeader_Passes(t *testing.T) 
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("POST", "/test", nil)
+	req := httptest.NewRequest("POST", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 
@@ -122,7 +124,7 @@ func TestTusProtocolMiddleware_ValidTusVersion_Passes(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("PATCH", "/test", nil)
+	req := httptest.NewRequest("PATCH", "/test", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -138,7 +140,7 @@ func TestTusProtocolMiddleware_HeadRequestWithTusHeader_Passes(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("HEAD", "/test", nil)
+	req := httptest.NewRequest("HEAD", "/test", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -154,7 +156,7 @@ func TestTusProtocolMiddleware_DeleteRequestWithTusHeader_Passes(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("DELETE", "/test", nil)
+	req := httptest.NewRequest("DELETE", "/test", http.NoBody)
 	req.Header.Set("Tus-Resumable", "1.0.0")
 	resp, err := app.Test(req)
 	require.NoError(t, err)

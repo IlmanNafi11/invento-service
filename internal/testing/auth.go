@@ -11,14 +11,16 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+const testKeyID = "test"
+
 // JWTClaims represents the JWT claims structure
 type JWTClaims struct {
-	UserID    string  `json:"user_id"`
-	Email     string  `json:"email"`
-	RoleID    *int    `json:"role_id"`
-	Role      string  `json:"role"`
-	TokenType string  `json:"token_type"`
-	KeyID     string  `json:"kid"`
+	UserID    string `json:"user_id"`
+	Email     string `json:"email"`
+	RoleID    *int   `json:"role_id"`
+	Role      string `json:"role"`
+	TokenType string `json:"token_type"`
+	KeyID     string `json:"kid"`
 	jwt.RegisteredClaims
 }
 
@@ -44,7 +46,7 @@ func GenerateTestToken(userID string, email, role string) string {
 		Email:     email,
 		Role:      role,
 		TokenType: "access",
-		KeyID:     "test",
+		KeyID:     testKeyID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -53,7 +55,7 @@ func GenerateTestToken(userID string, email, role string) string {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header["kid"] = "test"
+	token.Header["kid"] = testKeyID
 
 	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
@@ -76,7 +78,7 @@ func GenerateTestTokenWithRoleID(userID string, email, role string, roleID int) 
 		RoleID:    &roleID,
 		Role:      role,
 		TokenType: "access",
-		KeyID:     "test",
+		KeyID:     testKeyID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -85,7 +87,7 @@ func GenerateTestTokenWithRoleID(userID string, email, role string, roleID int) 
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header["kid"] = "test"
+	token.Header["kid"] = testKeyID
 
 	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
@@ -107,7 +109,7 @@ func GenerateExpiredToken() string {
 		Email:     "test@example.com",
 		Role:      "user",
 		TokenType: "access",
-		KeyID:     "test",
+		KeyID:     testKeyID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-24 * time.Hour)), // Expired
 			IssuedAt:  jwt.NewNumericDate(time.Now().Add(-48 * time.Hour)),
@@ -116,7 +118,7 @@ func GenerateExpiredToken() string {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header["kid"] = "test"
+	token.Header["kid"] = testKeyID
 
 	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
@@ -143,7 +145,7 @@ func GenerateTokenWithCustomExpiration(userID string, email, role string, expira
 		Email:     email,
 		Role:      role,
 		TokenType: "access",
-		KeyID:     "test",
+		KeyID:     testKeyID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -152,7 +154,7 @@ func GenerateTokenWithCustomExpiration(userID string, email, role string, expira
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header["kid"] = "test"
+	token.Header["kid"] = testKeyID
 
 	tokenString, err := token.SignedString(privateKey)
 	if err != nil {
@@ -175,7 +177,6 @@ func ParseTestToken(tokenString string) (*JWTClaims, error) {
 		}
 		return publicKey, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +224,7 @@ func GenerateTestRefreshToken() string {
 		Email:     "test@example.com",
 		Role:      "user",
 		TokenType: "refresh",
-		KeyID:     "test",
+		KeyID:     testKeyID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -232,7 +233,7 @@ func GenerateTestRefreshToken() string {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header["kid"] = "test"
+	token.Header["kid"] = testKeyID
 
 	tokenString, err := token.SignedString(privateKey)
 	if err != nil {

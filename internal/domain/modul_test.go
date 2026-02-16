@@ -1,9 +1,10 @@
 package domain
 
 import (
-	"invento-service/internal/dto"
 	"testing"
 	"time"
+
+	"invento-service/internal/dto"
 )
 
 func TestModulStruct(t *testing.T) {
@@ -206,7 +207,6 @@ func TestModulResponseStructs(t *testing.T) {
 			t.Errorf("Expected Judul 'test.pdf', got %s", resp.Judul)
 		}
 	})
-
 }
 
 func TestModulDownloadRequest(t *testing.T) {

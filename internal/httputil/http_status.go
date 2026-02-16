@@ -11,6 +11,8 @@ const (
 	StatusConflict            = 409
 	StatusPayloadTooLarge     = 413
 	StatusInternalServerError = 500
+
+	DefaultErrorMessage = "Terjadi kesalahan"
 )
 
 var StatusText = map[int]string{
@@ -40,5 +42,5 @@ func GetDefaultMessage(statusCode int) string {
 	if message, ok := DefaultMessages[statusCode]; ok {
 		return message
 	}
-	return "Terjadi kesalahan"
+	return DefaultErrorMessage
 }

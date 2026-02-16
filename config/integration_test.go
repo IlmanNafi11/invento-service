@@ -13,11 +13,13 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+const testSQLiteDSN = "file::memory:?cache=shared"
+
 // TestIntegrationDatabaseConnection tests database connection with SQLite in-memory
 func TestIntegrationDatabaseConnection(t *testing.T) {
 	t.Run("ConnectToSQLiteInMemory", func(t *testing.T) {
 		// Create SQLite in-memory database for testing
-		dsn := "file::memory:?cache=shared"
+		dsn := testSQLiteDSN
 		db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		})
@@ -43,7 +45,7 @@ func TestIntegrationDatabaseConnection(t *testing.T) {
 		}
 
 		// Connect to in-memory database
-		dsn := "file::memory:?cache=shared"
+		dsn := testSQLiteDSN
 		db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		})
@@ -76,7 +78,7 @@ func TestIntegrationDatabaseConnection(t *testing.T) {
 			Email string `gorm:"size:255;uniqueIndex"`
 		}
 
-		dsn := "file::memory:?cache=shared"
+		dsn := testSQLiteDSN
 		db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		})
@@ -171,7 +173,7 @@ LOG_LEVEL=DEBUG
 LOG_FORMAT=json
 `
 		envPath := filepath.Join(tempDir, ".env")
-		err := os.WriteFile(envPath, []byte(envContent), 0644)
+		err := os.WriteFile(envPath, []byte(envContent), 0o644)
 		require.NoError(t, err)
 
 		// Change to temp directory to load the .env file
@@ -334,7 +336,7 @@ func TestIntegrationConfigWithSQLite(t *testing.T) {
 		}
 
 		// For testing, use SQLite in-memory instead of PostgreSQL
-		dsn := "file::memory:?cache=shared"
+		dsn := testSQLiteDSN
 		db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		})
@@ -426,7 +428,6 @@ func TestIntegrationConfigHelperFunctions(t *testing.T) {
 		assert.True(t, result) // Should return default (true)
 		os.Unsetenv("TEST_BOOL_VAR")
 	})
-
 }
 
 // TestIntegrationDatabaseConnectionWithConfig tests database connection using config
@@ -458,7 +459,7 @@ func TestIntegrationDatabaseConnectionWithConfig(t *testing.T) {
 		}
 
 		// Create in-memory database
-		dsn := "file::memory:?cache=shared"
+		dsn := testSQLiteDSN
 		db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
 		})

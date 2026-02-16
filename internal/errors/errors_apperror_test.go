@@ -208,17 +208,13 @@ func TestHTTPStatusCodes(t *testing.T) {
 			expectedStatus: fiber.StatusConflict,
 		},
 		{
-			name: "TusInactiveError returns 423",
-			constructor: func() *AppError {
-				return NewTusInactiveError()
-			},
+			name:           "TusInactiveError returns 423",
+			constructor:    NewTusInactiveError,
 			expectedStatus: fiber.StatusLocked,
 		},
 		{
-			name: "TusCompletedError returns 409",
-			constructor: func() *AppError {
-				return NewTusCompletedError()
-			},
+			name:           "TusCompletedError returns 409",
+			constructor:    NewTusCompletedError,
 			expectedStatus: fiber.StatusConflict,
 		},
 		{
@@ -304,17 +300,13 @@ func TestErrorCodes(t *testing.T) {
 			expectedCode: ErrTusOffsetMismatch,
 		},
 		{
-			name: "TusInactiveError code",
-			constructor: func() *AppError {
-				return NewTusInactiveError()
-			},
+			name:         "TusInactiveError code",
+			constructor:  NewTusInactiveError,
 			expectedCode: ErrTusInactive,
 		},
 		{
-			name: "TusCompletedError code",
-			constructor: func() *AppError {
-				return NewTusCompletedError()
-			},
+			name:         "TusCompletedError code",
+			constructor:  NewTusCompletedError,
 			expectedCode: ErrTusAlreadyCompleted,
 		},
 		{
@@ -350,8 +342,8 @@ func TestTimestampSet(t *testing.T) {
 		func() *AppError { return NewInternalError(fmt.Errorf("test")) },
 		func() *AppError { return NewTusVersionError("1.0.0") },
 		func() *AppError { return NewTusOffsetError(100, 50) },
-		func() *AppError { return NewTusInactiveError() },
-		func() *AppError { return NewTusCompletedError() },
+		NewTusInactiveError,
+		NewTusCompletedError,
 		func() *AppError { return NewPayloadTooLargeError("test") },
 	}
 

@@ -2,9 +2,10 @@ package storage
 
 import (
 	"fmt"
-	"invento-service/config"
 	"os"
 	"path/filepath"
+
+	"invento-service/config"
 )
 
 type FileManager struct {
@@ -32,15 +33,15 @@ func (fm *FileManager) GetUserUploadPath(userID string) (string, error) {
 
 	userDirPath := filepath.Join(basePath, "projects", userID)
 
-	if err := os.MkdirAll(userDirPath, 0755); err != nil {
+	if err := os.MkdirAll(userDirPath, 0o755); err != nil {
 		return "", fmt.Errorf("gagal membuat direktori user: %w", err)
 	}
 
 	return userDirPath, nil
 }
 
-func (fm *FileManager) CreateProjectUploadDirectory(userID string) (string, string, error) {
-	randomDir, err := fm.GenerateRandomDirectory()
+func (fm *FileManager) CreateProjectUploadDirectory(userID string) (uploadDir string, randomDir string, err error) {
+	randomDir, err = fm.GenerateRandomDirectory()
 	if err != nil {
 		return "", "", fmt.Errorf("gagal generate random directory: %w", err)
 	}
@@ -52,8 +53,8 @@ func (fm *FileManager) CreateProjectUploadDirectory(userID string) (string, stri
 
 	projectDirPath := filepath.Join(userUploadPath, randomDir)
 
-	if err := os.MkdirAll(projectDirPath, 0755); err != nil {
-		return "", "", fmt.Errorf("gagal membuat direktori project: %w", err)
+	if mkErr := os.MkdirAll(projectDirPath, 0o755); mkErr != nil {
+		return "", "", fmt.Errorf("gagal membuat direktori project: %w", mkErr)
 	}
 
 	return projectDirPath, randomDir, nil
@@ -122,15 +123,15 @@ func (fm *FileManager) GetUserModulPath(userID string) (string, error) {
 	basePath := fm.GetModulBasePath()
 	userModulPath := filepath.Join(basePath, "moduls", userID)
 
-	if err := os.MkdirAll(userModulPath, 0755); err != nil {
+	if err := os.MkdirAll(userModulPath, 0o755); err != nil {
 		return "", fmt.Errorf("gagal membuat direktori modul user: %w", err)
 	}
 
 	return userModulPath, nil
 }
 
-func (fm *FileManager) CreateModulUploadDirectory(userID string) (string, string, error) {
-	randomDir, err := GenerateRandomString(10)
+func (fm *FileManager) CreateModulUploadDirectory(userID string) (uploadDir string, randomDir string, err error) {
+	randomDir, err = GenerateRandomString(10)
 	if err != nil {
 		return "", "", fmt.Errorf("gagal generate random directory: %w", err)
 	}
@@ -142,8 +143,8 @@ func (fm *FileManager) CreateModulUploadDirectory(userID string) (string, string
 
 	modulDirPath := filepath.Join(userModulPath, randomDir)
 
-	if err := os.MkdirAll(modulDirPath, 0755); err != nil {
-		return "", "", fmt.Errorf("gagal membuat direktori modul: %w", err)
+	if mkErr := os.MkdirAll(modulDirPath, 0o755); mkErr != nil {
+		return "", "", fmt.Errorf("gagal membuat direktori modul: %w", mkErr)
 	}
 
 	return modulDirPath, randomDir, nil

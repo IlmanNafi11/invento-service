@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 
@@ -29,7 +30,7 @@ func (m *MockUserRepository) GetByID(ctx context.Context, id string) (*domain.Us
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
+func (m *MockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount int, modulCount int, err error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) != nil {
 		return args.Get(0).(*domain.User), args.Int(1), args.Int(2), args.Error(3)

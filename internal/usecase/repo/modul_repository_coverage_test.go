@@ -2,11 +2,12 @@ package repo_test
 
 import (
 	"context"
+	"testing"
+
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
-	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

@@ -3,15 +3,16 @@ package usecase
 import (
 	"context"
 	"errors"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
-	apperrors "invento-service/internal/errors"
 	"os"
 	"testing"
 	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
+	apperrors "invento-service/internal/errors"
 )
 
 func TestModulUsecase_GetList_WithFilters(t *testing.T) {

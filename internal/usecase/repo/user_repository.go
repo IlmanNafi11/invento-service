@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 
@@ -85,9 +86,10 @@ func (r *userRepository) GetAll(ctx context.Context, search, filterRole string, 
 	return userListItems, int(total), nil
 }
 
-func (r *userRepository) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
+func (r *userRepository) GetProfileWithCounts(ctx context.Context, userID string) (userResult *domain.User, projectTotal int, modulTotal int, err error) {
 	var user domain.User
-	err := r.db.WithContext(ctx).Where("id = ? AND is_active = ?", userID, true).Preload("Role").First(&user).Error
+
+	err = r.db.WithContext(ctx).Where("id = ? AND is_active = ?", userID, true).Preload("Role").First(&user).Error
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -182,7 +184,6 @@ func (r *userRepository) GetByRoleID(ctx context.Context, roleID uint) ([]dto.Us
 		Where("user_profiles.is_active = ? AND user_profiles.role_id = ?", true, roleID).
 		Order("user_profiles.created_at DESC").
 		Scan(&userListItems).Error
-
 	if err != nil {
 		return nil, err
 	}

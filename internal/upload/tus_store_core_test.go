@@ -5,10 +5,11 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 )
 
 // ==================== TusStore Tests ====================

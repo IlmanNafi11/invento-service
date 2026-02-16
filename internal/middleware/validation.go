@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"errors"
+	"reflect"
+
 	"invento-service/internal/dto"
 	"invento-service/internal/httputil"
 	customValidator "invento-service/internal/validator"
-	"reflect"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -17,17 +19,26 @@ var validate = setupValidator()
 func setupValidator() *validator.Validate {
 	v := validator.New()
 
-	// Register custom validators from internal/validator package
-	v.RegisterValidation("password_strength", customValidator.ValidatePasswordStrength)
-	v.RegisterValidation("file_type", customValidator.ValidateFileType)
-	v.RegisterValidation("file_size", customValidator.ValidateFileSize)
-	v.RegisterValidation("id_phone", customValidator.ValidateIndonesiaPhoneNumber)
-	v.RegisterValidation("id_mobile", customValidator.ValidateIndonesiaMobileNumber)
-	v.RegisterValidation("nik", customValidator.ValidateNIK)
-	v.RegisterValidation("npwp", customValidator.ValidateNPWP)
-	v.RegisterValidation("id_postal_code", customValidator.ValidateIndonesiaPostalCode)
+	// Register custom validators from internal/validator package.
+	// These registrations only fail if the tag name is invalid (compile-time guarantee),
+	// so panicking on error is appropriate during initialization.
+	mustRegister(v, "password_strength", customValidator.ValidatePasswordStrength)
+	mustRegister(v, "file_type", customValidator.ValidateFileType)
+	mustRegister(v, "file_size", customValidator.ValidateFileSize)
+	mustRegister(v, "id_phone", customValidator.ValidateIndonesiaPhoneNumber)
+	mustRegister(v, "id_mobile", customValidator.ValidateIndonesiaMobileNumber)
+	mustRegister(v, "nik", customValidator.ValidateNIK)
+	mustRegister(v, "npwp", customValidator.ValidateNPWP)
+	mustRegister(v, "id_postal_code", customValidator.ValidateIndonesiaPostalCode)
 
 	return v
+}
+
+// mustRegister registers a custom validator and panics on error.
+func mustRegister(v *validator.Validate, tag string, fn validator.Func) {
+	if err := v.RegisterValidation(tag, fn); err != nil {
+		panic("failed to register validator " + tag + ": " + err.Error())
+	}
 }
 
 // ValidateRequest creates a validation middleware for a specific request type.
@@ -108,7 +119,8 @@ func ValidateStruct(data interface{}) []dto.ValidationError {
 
 // parseValidationErrors converts validator.ValidationErrors into dto.ValidationError slice.
 func parseValidationErrors(err error) []dto.ValidationError {
-	if validationErrors, ok := err.(validator.ValidationErrors); ok {
+	var validationErrors validator.ValidationErrors
+	if errors.As(err, &validationErrors) {
 		var errors []dto.ValidationError
 		for _, err := range validationErrors {
 			validationError := dto.ValidationError{

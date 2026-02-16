@@ -1,10 +1,11 @@
 package supabase
 
 import (
-	apperrors "invento-service/internal/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	apperrors "invento-service/internal/errors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

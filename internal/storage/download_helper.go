@@ -3,10 +3,11 @@ package storage
 import (
 	"errors"
 	"fmt"
-	"invento-service/internal/domain"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"invento-service/internal/domain"
 
 	zlog "github.com/rs/zerolog/log"
 )
@@ -60,14 +61,11 @@ func (dh *DownloadHelper) resolvePath(relativePath string) string {
 	return absPath
 }
 
-func (dh *DownloadHelper) PrepareFilesForDownload(projects []domain.Project, moduls []domain.Modul) ([]string, []string, error) {
-	var filePaths []string
-	var notFoundFiles []string
-
+func (dh *DownloadHelper) PrepareFilesForDownload(projects []domain.Project, moduls []domain.Modul) (filePaths []string, notFoundFiles []string, err error) {
 	for _, project := range projects {
 		resolvedPath := dh.resolvePath(project.PathFile)
 
-		if _, err := os.Stat(resolvedPath); err == nil {
+		if _, statErr := os.Stat(resolvedPath); statErr == nil {
 			filePaths = append(filePaths, resolvedPath)
 		} else {
 			notFoundFiles = append(notFoundFiles, fmt.Sprintf("Project ID %d: %s", project.ID, project.PathFile))
@@ -77,7 +75,7 @@ func (dh *DownloadHelper) PrepareFilesForDownload(projects []domain.Project, mod
 	for _, modul := range moduls {
 		resolvedPath := dh.resolvePath(modul.FilePath)
 
-		if _, err := os.Stat(resolvedPath); err == nil {
+		if _, statErr := os.Stat(resolvedPath); statErr == nil {
 			filePaths = append(filePaths, resolvedPath)
 		} else {
 			notFoundFiles = append(notFoundFiles, fmt.Sprintf("Modul ID %s: %s", modul.ID, modul.FilePath))
@@ -103,7 +101,7 @@ func (dh *DownloadHelper) CreateDownloadZip(filePaths []string, userID string) (
 	basePath := dh.pathResolver.GetBasePath()
 	tempDir := filepath.Join(basePath, "temp")
 
-	if err := os.MkdirAll(tempDir, 0755); err != nil {
+	if err := os.MkdirAll(tempDir, 0o755); err != nil {
 		return "", errors.New("gagal membuat direktori temp")
 	}
 

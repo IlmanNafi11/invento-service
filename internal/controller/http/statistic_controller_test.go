@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	dto "invento-service/internal/dto"
-	apperrors "invento-service/internal/errors"
+	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	dto "invento-service/internal/dto"
+	apperrors "invento-service/internal/errors"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
 	// Import alias for the http package to test it
 	httpcontroller "invento-service/internal/controller/http"
 )
@@ -30,7 +33,7 @@ func (m *MockStatisticUsecase) GetStatistics(ctx context.Context, userID string,
 }
 
 // Helper function to create a test app with authenticated context for StatisticController
-func setupTestAppWithAuthForStatistic(controller *httpcontroller.StatisticController) *fiber.App {
+func setupTestAppWithAuthForStatistic() *fiber.App {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		EnablePrintRoutes:     false,
@@ -55,7 +58,7 @@ func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
-	app := setupTestAppWithAuthForStatistic(controller)
+	app := setupTestAppWithAuthForStatistic()
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	totalProject := 10
@@ -72,7 +75,7 @@ func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 
 	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
-	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
+	req := httptest.NewRequest("GET", "/api/v1/statistic", http.NoBody)
 	req.Header.Set("X-Test-User-ID", "1")
 	req.Header.Set("X-Test-User-Role", "admin")
 
@@ -102,7 +105,7 @@ func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T)
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
-	app := setupTestAppWithAuthForStatistic(controller)
+	app := setupTestAppWithAuthForStatistic()
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	totalProject := 5
@@ -118,7 +121,7 @@ func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T)
 
 	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "user").Return(expectedData, nil)
 
-	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
+	req := httptest.NewRequest("GET", "/api/v1/statistic", http.NoBody)
 	req.Header.Set("X-Test-User-ID", "1")
 	req.Header.Set("X-Test-User-Role", "user")
 
@@ -147,7 +150,7 @@ func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
-	app := setupTestAppWithAuthForStatistic(controller)
+	app := setupTestAppWithAuthForStatistic()
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	// User with no data gets nil for all fields
@@ -160,7 +163,7 @@ func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 
 	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "user").Return(expectedData, nil)
 
-	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
+	req := httptest.NewRequest("GET", "/api/v1/statistic", http.NoBody)
 	req.Header.Set("X-Test-User-ID", "1")
 	req.Header.Set("X-Test-User-Role", "user")
 
@@ -196,7 +199,7 @@ func TestStatisticController_GetStatistics_Unauthorized(t *testing.T) {
 	})
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
-	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
+	req := httptest.NewRequest("GET", "/api/v1/statistic", http.NoBody)
 	// No authentication headers set
 
 	resp, err := app.Test(req)
@@ -212,12 +215,12 @@ func TestStatisticController_GetStatistics_InternalError(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
-	app := setupTestAppWithAuthForStatistic(controller)
+	app := setupTestAppWithAuthForStatistic()
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(nil, errors.New("database connection failed"))
 
-	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
+	req := httptest.NewRequest("GET", "/api/v1/statistic", http.NoBody)
 	req.Header.Set("X-Test-User-ID", "1")
 	req.Header.Set("X-Test-User-Role", "admin")
 
@@ -235,13 +238,13 @@ func TestStatisticController_GetStatistics_AppError(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
-	app := setupTestAppWithAuthForStatistic(controller)
+	app := setupTestAppWithAuthForStatistic()
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses ke statistik")
 	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "user").Return(nil, appErr)
 
-	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
+	req := httptest.NewRequest("GET", "/api/v1/statistic", http.NoBody)
 	req.Header.Set("X-Test-User-ID", "1")
 	req.Header.Set("X-Test-User-Role", "user")
 
@@ -264,7 +267,7 @@ func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
-	app := setupTestAppWithAuthForStatistic(controller)
+	app := setupTestAppWithAuthForStatistic()
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	totalProject := 10
@@ -274,7 +277,7 @@ func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
 
 	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
-	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
+	req := httptest.NewRequest("GET", "/api/v1/statistic", http.NoBody)
 	req.Header.Set("X-Test-User-ID", "1")
 	req.Header.Set("X-Test-User-Role", "admin")
 
@@ -299,7 +302,7 @@ func TestStatisticController_GetStatistics_ResponseStructure(t *testing.T) {
 	mockStatisticUC := new(MockStatisticUsecase)
 	controller := httpcontroller.NewStatisticController(mockStatisticUC)
 
-	app := setupTestAppWithAuthForStatistic(controller)
+	app := setupTestAppWithAuthForStatistic()
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	totalProject := 10
@@ -312,7 +315,7 @@ func TestStatisticController_GetStatistics_ResponseStructure(t *testing.T) {
 
 	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
-	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
+	req := httptest.NewRequest("GET", "/api/v1/statistic", http.NoBody)
 	req.Header.Set("X-Test-User-ID", "1")
 	req.Header.Set("X-Test-User-Role", "admin")
 

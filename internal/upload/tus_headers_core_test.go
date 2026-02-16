@@ -1,9 +1,12 @@
 package upload_test
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
+
 	"invento-service/internal/upload"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +32,7 @@ func TestGetTusHeaders_Success(t *testing.T) {
 		return c.JSON(headers)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -48,7 +51,7 @@ func TestGetTusHeaders_EmptyHeaders(t *testing.T) {
 		return c.JSON(headers)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -63,7 +66,7 @@ func TestSetTusResponseHeaders_Success(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -80,7 +83,7 @@ func TestSetTusResponseHeaders_ZeroLength(t *testing.T) {
 		return c.SendStatus(fiber.StatusOK)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -96,7 +99,7 @@ func TestSetTusLocationHeader_Success(t *testing.T) {
 		return c.SendStatus(fiber.StatusCreated)
 	})
 
-	req := httptest.NewRequest("POST", "/test", nil)
+	req := httptest.NewRequest("POST", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -111,7 +114,7 @@ func TestSetTusOffsetHeader_Success(t *testing.T) {
 		return c.SendStatus(fiber.StatusNoContent)
 	})
 
-	req := httptest.NewRequest("PATCH", "/test", nil)
+	req := httptest.NewRequest("PATCH", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -152,7 +155,7 @@ func TestBuildTusErrorResponse_ConflictWithOffset(t *testing.T) {
 		return upload.BuildTusErrorResponse(c, fiber.StatusConflict, 100)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)
@@ -167,7 +170,7 @@ func TestBuildTusErrorResponse_OtherStatus(t *testing.T) {
 		return upload.BuildTusErrorResponse(c, fiber.StatusBadRequest, 100)
 	})
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest("GET", "/test", http.NoBody)
 	resp, err := app.Test(req)
 
 	assert.NoError(t, err)

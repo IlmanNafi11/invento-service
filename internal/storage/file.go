@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 
+const zipExtension = ".zip"
+
 func GenerateUniqueIdentifier(length int) (string, error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
@@ -39,7 +41,7 @@ func GetFileExtension(filename string) string {
 
 func ValidateZipFile(fileHeader *multipart.FileHeader) error {
 	ext := GetFileExtension(fileHeader.Filename)
-	if ext != ".zip" {
+	if ext != zipExtension {
 		return errors.New("file harus berupa zip")
 	}
 	return nil
@@ -87,19 +89,20 @@ func GetFileSize(fileHeader *multipart.FileHeader) string {
 func DetectProjectCategory(filename string) string {
 	lowerFilename := strings.ToLower(filename)
 
-	if strings.Contains(lowerFilename, "website") || strings.Contains(lowerFilename, "web") {
+	switch {
+	case strings.Contains(lowerFilename, "website") || strings.Contains(lowerFilename, "web"):
 		return "website"
-	} else if strings.Contains(lowerFilename, "mobile") || strings.Contains(lowerFilename, "android") || strings.Contains(lowerFilename, "ios") {
+	case strings.Contains(lowerFilename, "mobile") || strings.Contains(lowerFilename, "android") || strings.Contains(lowerFilename, "ios"):
 		return "mobile"
-	} else if strings.Contains(lowerFilename, "iot") || strings.Contains(lowerFilename, "arduino") || strings.Contains(lowerFilename, "sensor") {
+	case strings.Contains(lowerFilename, "iot") || strings.Contains(lowerFilename, "arduino") || strings.Contains(lowerFilename, "sensor"):
 		return "iot"
-	} else if strings.Contains(lowerFilename, "machine") || strings.Contains(lowerFilename, "ml") {
+	case strings.Contains(lowerFilename, "machine") || strings.Contains(lowerFilename, "ml"):
 		return "machine_learning"
-	} else if strings.Contains(lowerFilename, "deep") || strings.Contains(lowerFilename, "dl") || strings.Contains(lowerFilename, "neural") {
+	case strings.Contains(lowerFilename, "deep") || strings.Contains(lowerFilename, "dl") || strings.Contains(lowerFilename, "neural"):
 		return "deep_learning"
+	default:
+		return "website"
 	}
-
-	return "website"
 }
 
 func CreateUserDirectory(email string, role string) (string, error) {
@@ -120,7 +123,7 @@ func CreateUserDirectory(email string, role string) (string, error) {
 	baseDir := "./uploads/project"
 	userDir := filepath.Join(baseDir, dirName)
 
-	if err := os.MkdirAll(userDir, 0755); err != nil {
+	if err := os.MkdirAll(userDir, 0o755); err != nil {
 		return "", err
 	}
 
@@ -145,7 +148,7 @@ func CreateModulDirectory(email string, role string, fileType string) (string, e
 	baseDir := "./uploads/modul"
 	userDir := filepath.Join(baseDir, dirName, fileType)
 
-	if err := os.MkdirAll(userDir, 0755); err != nil {
+	if err := os.MkdirAll(userDir, 0o755); err != nil {
 		return "", err
 	}
 
@@ -170,7 +173,7 @@ func CreateProfilDirectory(email string, role string) (string, error) {
 	baseDir := "./uploads/profil"
 	profilDir := filepath.Join(baseDir, dirName)
 
-	if err := os.MkdirAll(profilDir, 0755); err != nil {
+	if err := os.MkdirAll(profilDir, 0o755); err != nil {
 		return "", err
 	}
 
@@ -201,7 +204,7 @@ func SaveUploadedFile(fileHeader *multipart.FileHeader, destPath string) error {
 	}
 	defer file.Close()
 
-	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+	if err = os.MkdirAll(filepath.Dir(destPath), 0o755); err != nil { //nolint:gocritic // sloppyReassign conflicts with govet shadow
 		return err
 	}
 
@@ -272,7 +275,7 @@ func CreateZipArchive(filePaths []string, outputPath string) error {
 	defer zipFile.Close()
 
 	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
+	defer func() { _ = zipWriter.Close() }()
 
 	for _, filePath := range filePaths {
 		if err := addFileToZip(zipWriter, filePath); err != nil {

@@ -2,9 +2,11 @@ package storage
 
 import (
 	"fmt"
-	"invento-service/config"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"invento-service/config"
 )
 
 type PathResolver struct {
@@ -70,7 +72,7 @@ func (pr *PathResolver) GetUploadInfoPath(uploadID string) string {
 }
 
 func (pr *PathResolver) EnsureDirectoryExists(path string) error {
-	if err := os.MkdirAll(path, 0755); err != nil {
+	if err := os.MkdirAll(path, 0o755); err != nil {
 		return fmt.Errorf("gagal membuat direktori: %w", err)
 	}
 	return nil
@@ -132,12 +134,12 @@ func (pr *PathResolver) ConvertToAPIPath(absolutePath *string) *string {
 	path = filepath.Clean(path)
 	basePath = filepath.Clean(basePath)
 
-	if len(path) > len(basePath) && filepath.HasPrefix(path, basePath) {
+	if len(path) > len(basePath) && strings.HasPrefix(path, basePath) {
 		relativePath := path[len(basePath):]
 
 		relativePath = filepath.ToSlash(relativePath)
 
-		if len(relativePath) > 0 && relativePath[0] != '/' {
+		if relativePath != "" && relativePath[0] != '/' {
 			relativePath = "/" + relativePath
 		}
 

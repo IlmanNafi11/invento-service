@@ -1,10 +1,11 @@
 package httputil_test
 
 import (
-	"invento-service/config"
-	"invento-service/internal/httputil"
 	"net/http"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/httputil"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
@@ -69,7 +70,7 @@ func TestCookieHelper_SetRefreshTokenCookie(t *testing.T) {
 			})
 
 			// Make a test request
-			req, _ := http.NewRequest("POST", "/test", nil)
+			req, _ := http.NewRequest("POST", "/test", http.NoBody)
 			resp, err := app.Test(req)
 			assert.NoError(t, err)
 			assert.Equal(t, 200, resp.StatusCode)
@@ -108,7 +109,7 @@ func TestCookieHelper_SetRefreshTokenCookie_Properties(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("POST", "/test", nil)
+	req, _ := http.NewRequest("POST", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 
@@ -171,7 +172,7 @@ func TestCookieHelper_ClearRefreshTokenCookie(t *testing.T) {
 			})
 
 			// Set cookie
-			req1, _ := http.NewRequest("POST", "/set", nil)
+			req1, _ := http.NewRequest("POST", "/set", http.NoBody)
 			resp1, err := app.Test(req1)
 			assert.NoError(t, err)
 
@@ -187,7 +188,7 @@ func TestCookieHelper_ClearRefreshTokenCookie(t *testing.T) {
 			assert.Equal(t, "some-token", setCookie.Value)
 
 			// Clear cookie - the cleared cookie should have MaxAge < 0
-			req2, _ := http.NewRequest("POST", "/clear", nil)
+			req2, _ := http.NewRequest("POST", "/clear", http.NoBody)
 			resp2, err := app.Test(req2)
 			assert.NoError(t, err)
 
@@ -219,7 +220,7 @@ func TestCookieHelper_SetAccessTokenCookie(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("POST", "/test", nil)
+	req, _ := http.NewRequest("POST", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 
@@ -255,7 +256,7 @@ func TestCookieHelper_MaxAgeCalculation(t *testing.T) {
 		return c.SendString("ok")
 	})
 
-	req, _ := http.NewRequest("POST", "/test", nil)
+	req, _ := http.NewRequest("POST", "/test", http.NoBody)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 

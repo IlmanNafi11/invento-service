@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 
 	zlog "github.com/rs/zerolog/log"
 )
@@ -172,7 +173,7 @@ func (uc *projectUsecase) Download(ctx context.Context, userID string, projectID
 	}
 
 	tempDir := "./uploads/temp"
-	if err := os.MkdirAll(tempDir, 0755); err != nil {
+	if err = os.MkdirAll(tempDir, 0o755); err != nil {
 		return "", newInternalError("gagal membuat direktori temp", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
 

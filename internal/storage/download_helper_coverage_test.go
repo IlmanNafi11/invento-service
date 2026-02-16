@@ -1,11 +1,12 @@
 package storage
 
 import (
-	"invento-service/config"
-	"invento-service/internal/domain"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"invento-service/config"
+	"invento-service/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -212,8 +213,8 @@ func TestPrepareFilesForDownload_AllFilesFound(t *testing.T) {
 	// Create test files
 	file1 := filepath.Join(tmpDir, "file1.txt")
 	file2 := filepath.Join(tmpDir, "file2.txt")
-	os.WriteFile(file1, []byte("test1"), 0644)
-	os.WriteFile(file2, []byte("test2"), 0644)
+	os.WriteFile(file1, []byte("test1"), 0o644)
+	os.WriteFile(file2, []byte("test2"), 0o644)
 
 	pathResolver := NewPathResolver(&config.Config{})
 	dh := NewDownloadHelper(pathResolver)

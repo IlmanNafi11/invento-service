@@ -2,16 +2,17 @@ package usecase
 
 import (
 	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	"invento-service/internal/rbac"
 	"invento-service/internal/storage"
-	"testing"
-	"time"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"gorm.io/gorm"
 )
 
 func TestUserUsecase_GetUserByID_Success(t *testing.T) {

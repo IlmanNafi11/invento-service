@@ -1,12 +1,13 @@
 package http
 
 import (
+	"strconv"
+
 	"invento-service/config"
 	base "invento-service/internal/controller/base"
 	"invento-service/internal/dto"
 	"invento-service/internal/upload"
 	"invento-service/internal/usecase"
-	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -147,7 +148,7 @@ func (ctrl *TusController) initiateUpload(c *fiber.Ctx, projectID *uint) error {
 		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
 	}
 
-	if err := validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
+	if err = validateTusHeaders(c, ctrl.config.Upload.TusVersion); err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 

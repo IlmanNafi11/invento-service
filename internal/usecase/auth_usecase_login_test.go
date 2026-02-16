@@ -86,7 +86,7 @@ func (m *authTestUserRepo) GetByID(ctx context.Context, id string) (*domain.User
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
-func (m *authTestUserRepo) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
+func (m *authTestUserRepo) GetProfileWithCounts(ctx context.Context, userID string) (user *domain.User, projectCount int, modulCount int, err error) {
 	return nil, 0, 0, nil
 }
 

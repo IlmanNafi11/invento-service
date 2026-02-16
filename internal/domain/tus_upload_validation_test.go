@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"invento-service/internal/dto"
 	"testing"
+
+	"invento-service/internal/dto"
 )
 
 func TestTusUploadResponse_EdgeCases(t *testing.T) {
@@ -247,7 +248,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-no-project",
-			UserID: "user-1",
+			UserID:     "user-1",
 			ProjectID:  nil,
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
@@ -263,7 +264,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-zero-size",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   0,
 			Status:     UploadStatusPending,
@@ -278,7 +279,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-negative-size",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   -1,
 			Status:     UploadStatusPending,
@@ -293,7 +294,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusPending,
@@ -323,7 +324,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-empty-url",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			UploadURL:  "",
 			FileSize:   1024,
@@ -339,7 +340,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-empty-path",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			FilePath:   "",
@@ -355,7 +356,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:            "upload-zero-offset",
-			UserID: "user-1",
+			UserID:        "user-1",
 			UploadType:    UploadTypeProjectCreate,
 			FileSize:      1024,
 			CurrentOffset: 0,
@@ -371,7 +372,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:            "upload-negative-offset",
-			UserID: "user-1",
+			UserID:        "user-1",
 			UploadType:    UploadTypeProjectCreate,
 			FileSize:      1024,
 			CurrentOffset: -1,
@@ -387,7 +388,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-zero-progress",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusPending,
@@ -403,7 +404,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-negative-progress",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusUploading,
@@ -419,7 +420,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-excess-progress",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     UploadStatusUploading,
@@ -435,7 +436,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:          "upload-no-completed",
-			UserID: "user-1",
+			UserID:      "user-1",
 			UploadType:  UploadTypeProjectCreate,
 			FileSize:    1024,
 			Status:      UploadStatusPending,
@@ -451,7 +452,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-empty-type",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: "",
 			FileSize:   1024,
 			Status:     UploadStatusPending,
@@ -466,7 +467,7 @@ func TestTusUpload_EdgeCases(t *testing.T) {
 		t.Parallel()
 		upload := TusUpload{
 			ID:         "upload-empty-status",
-			UserID: "user-1",
+			UserID:     "user-1",
 			UploadType: UploadTypeProjectCreate,
 			FileSize:   1024,
 			Status:     "",
