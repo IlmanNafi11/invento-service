@@ -98,7 +98,7 @@ func (r *integrationUserRepository) GetProfileWithCounts(userID string) (*domain
 	return nil, 0, 0, nil
 }
 
-func (r *integrationUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error) {
+func (r *integrationUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -110,7 +110,7 @@ func (r *integrationUserRepository) Create(user *domain.User) error {
 	return r.db.Create(user).Error
 }
 
-func (r *integrationUserRepository) GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error) {
+func (r *integrationUserRepository) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -126,8 +126,8 @@ func (r *integrationUserRepository) Delete(userID string) error {
 	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
 }
 
-func (r *integrationUserRepository) GetByRoleID(roleID uint) ([]domain.UserListItem, error) {
-	var users []domain.UserListItem
+func (r *integrationUserRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
+	var users []dto.UserListItem
 	err := r.db.Table("user_profiles").
 		Select("id, email, name, role_id, is_active, created_at").
 		Where("role_id = ? AND is_active = ?", roleID, true).
@@ -177,7 +177,7 @@ func (r *integrationRoleRepository) Delete(id uint) error {
 	return r.db.Delete(&domain.Role{}, id).Error
 }
 
-func (r *integrationRoleRepository) GetAll(search string, page, limit int) ([]domain.RoleListItem, int, error) {
+func (r *integrationRoleRepository) GetAll(search string, page, limit int) ([]dto.RoleListItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -283,7 +283,7 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 		}, nil).Once()
 
 		// Execute: Call usecase
-		req := domain.RegisterRequest{
+		req := dto.RegisterRequest{
 			Name:     "Test User",
 			Email:    "test@student.polije.ac.id",
 			Password: "password123",
@@ -317,7 +317,7 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 		suite.seedUser("existing-user-id", "existing@student.polije.ac.id", "Existing User", &roleID)
 
 		// Execute
-		req := domain.RegisterRequest{
+		req := dto.RegisterRequest{
 			Name:     "New User",
 			Email:    "existing@student.polije.ac.id",
 			Password: "password123",
@@ -337,7 +337,7 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 
 	t.Run("RegisterFlow_InvalidEmailDomain", func(t *testing.T) {
 		// Execute
-		req := domain.RegisterRequest{
+		req := dto.RegisterRequest{
 			Name:     "Test User",
 			Email:    "test@gmail.com", // Invalid domain
 			Password: "password123",
@@ -379,7 +379,7 @@ func TestAuthIntegration_LoginFlow(t *testing.T) {
 		}, nil).Once()
 
 		// Execute
-		req := domain.AuthRequest{
+		req := dto.AuthRequest{
 			Email:    "login@student.polije.ac.id",
 			Password: "correctpassword",
 		}
@@ -402,7 +402,7 @@ func TestAuthIntegration_LoginFlow(t *testing.T) {
 		suite.mockAuth.On("Login", mock.Anything, "user@student.polije.ac.id", "wrongpassword").Return(nil, apperrors.NewUnauthorizedError("Invalid credentials")).Once()
 
 		// Execute
-		req := domain.AuthRequest{
+		req := dto.AuthRequest{
 			Email:    "user@student.polije.ac.id",
 			Password: "wrongpassword",
 		}
@@ -436,7 +436,7 @@ func TestAuthIntegration_RequestPasswordReset(t *testing.T) {
 		suite.mockAuth.On("RequestPasswordReset", mock.Anything, "reset@student.polije.ac.id", mock.Anything).Return(nil).Once()
 
 		// Execute
-		req := domain.ResetPasswordRequest{
+		req := dto.ResetPasswordRequest{
 			Email: "reset@student.polije.ac.id",
 		}
 		err := suite.authUsecase.RequestPasswordReset(req)
@@ -449,7 +449,7 @@ func TestAuthIntegration_RequestPasswordReset(t *testing.T) {
 	t.Run("RequestPasswordReset_UnknownEmailStillDelegates", func(t *testing.T) {
 		suite.mockAuth.On("RequestPasswordReset", mock.Anything, "nonexistent@student.polije.ac.id", mock.Anything).Return(nil).Once()
 
-		req := domain.ResetPasswordRequest{Email: "nonexistent@student.polije.ac.id"}
+		req := dto.ResetPasswordRequest{Email: "nonexistent@student.polije.ac.id"}
 		err := suite.authUsecase.RequestPasswordReset(req)
 
 		require.NoError(t, err)

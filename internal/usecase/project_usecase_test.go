@@ -120,7 +120,7 @@ func TestProjectUsecase_ListProjects_Success(t *testing.T) {
 	page := 1
 	limit := 10
 
-	projects := []domain.ProjectListItem{
+	projects := []dto.ProjectListItem{
 		{
 			ID:                 1,
 			NamaProject:        "Test Project 1",
@@ -170,7 +170,7 @@ func TestProjectUsecase_ListProjects_Empty(t *testing.T) {
 	page := 1
 	limit := 10
 
-	projects := []domain.ProjectListItem{}
+	projects := []dto.ProjectListItem{}
 	total := 0
 
 	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, page, limit).Return(projects, total, nil)
@@ -197,7 +197,7 @@ func TestProjectUsecase_ListProjects_Pagination(t *testing.T) {
 	page := 2
 	limit := 10
 
-	projects := []domain.ProjectListItem{
+	projects := []dto.ProjectListItem{
 		{
 			ID:                 11,
 			NamaProject:        "Project 11",
@@ -259,7 +259,7 @@ func TestProjectUsecase_ListProjects_EmptyWithDefaultPagination(t *testing.T) {
 	filterSemester := 0
 	filterKategori := ""
 
-	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, 1, 10).Return([]domain.ProjectListItem{}, 0, nil)
+	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, 1, 10).Return([]dto.ProjectListItem{}, 0, nil)
 
 	result, err := projectUC.GetList(userID, search, filterSemester, filterKategori, 0, 0)
 
@@ -294,7 +294,7 @@ func TestProjectUsecase_UpdateProject_Success(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
-	req := domain.ProjectUpdateRequest{
+	req := dto.UpdateProjectRequest{
 		NamaProject: "Updated Project Name",
 		Kategori:    "mobile",
 		Semester:    2,
@@ -318,7 +318,7 @@ func TestProjectUsecase_UpdateProject_NotFound(t *testing.T) {
 	userID := "user-1"
 	projectID := uint(999)
 
-	req := domain.ProjectUpdateRequest{
+	req := dto.UpdateProjectRequest{
 		NamaProject: "Updated Name",
 	}
 
@@ -354,7 +354,7 @@ func TestProjectUsecase_UpdateProject_AccessDenied(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
-	req := domain.ProjectUpdateRequest{
+	req := dto.UpdateProjectRequest{
 		NamaProject: "Updated Name",
 	}
 

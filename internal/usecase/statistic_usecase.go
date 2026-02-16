@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"invento-service/internal/rbac"
 	"invento-service/internal/usecase/repo"
 
@@ -9,7 +10,7 @@ import (
 )
 
 type StatisticUsecase interface {
-	GetStatistics(userID string, userRole string) (*domain.StatisticData, error)
+	GetStatistics(userID string, userRole string) (*dto.StatisticData, error)
 }
 
 type statisticUsecase struct {
@@ -39,8 +40,8 @@ func NewStatisticUsecase(
 	}
 }
 
-func (su *statisticUsecase) GetStatistics(userID string, userRole string) (*domain.StatisticData, error) {
-	result := &domain.StatisticData{}
+func (su *statisticUsecase) GetStatistics(userID string, userRole string) (*dto.StatisticData, error) {
+	result := &dto.StatisticData{}
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")
 	hasModulRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Modul", "read")

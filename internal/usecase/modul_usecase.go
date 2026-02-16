@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
@@ -16,9 +15,9 @@ import (
 )
 
 type ModulUsecase interface {
-	GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*domain.ModulListData, error)
-	GetByID(modulID string, userID string) (*domain.ModulResponse, error)
-	UpdateMetadata(modulID string, userID string, req domain.ModulUpdateRequest) error
+	GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error)
+	GetByID(modulID string, userID string) (*dto.ModulResponse, error)
+	UpdateMetadata(modulID string, userID string, req dto.UpdateModulRequest) error
 	Delete(modulID string, userID string) error
 	Download(userID string, modulIDs []string) (string, error)
 }
@@ -33,7 +32,7 @@ func NewModulUsecase(modulRepo repo.ModulRepository) ModulUsecase {
 	}
 }
 
-func (uc *modulUsecase) GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*domain.ModulListData, error) {
+func (uc *modulUsecase) GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -48,7 +47,7 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 
 	totalPages := (total + limit - 1) / limit
 
-	return &domain.ModulListData{
+	return &dto.ModulListData{
 		Items: moduls,
 		Pagination: dto.PaginationData{
 			Page:       page,
@@ -59,7 +58,7 @@ func (uc *modulUsecase) GetList(userID string, search string, filterType string,
 	}, nil
 }
 
-func (uc *modulUsecase) GetByID(modulID string, userID string) (*domain.ModulResponse, error) {
+func (uc *modulUsecase) GetByID(modulID string, userID string) (*dto.ModulResponse, error) {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
@@ -72,7 +71,7 @@ func (uc *modulUsecase) GetByID(modulID string, userID string) (*domain.ModulRes
 		return nil, apperrors.NewForbiddenError("Tidak memiliki akses ke modul ini")
 	}
 
-	return &domain.ModulResponse{
+	return &dto.ModulResponse{
 		ID:        modul.ID,
 		Judul:     modul.Judul,
 		Deskripsi: modul.Deskripsi,
@@ -159,7 +158,7 @@ func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, erro
 	return zipFilePath, nil
 }
 
-func (uc *modulUsecase) UpdateMetadata(modulID string, userID string, req domain.ModulUpdateRequest) error {
+func (uc *modulUsecase) UpdateMetadata(modulID string, userID string, req dto.UpdateModulRequest) error {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {

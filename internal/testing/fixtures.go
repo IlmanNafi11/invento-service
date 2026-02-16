@@ -2,6 +2,7 @@ package testing
 
 import (
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"time"
 )
 
@@ -157,8 +158,8 @@ func GetTestModuls() []domain.Modul {
 // Request DTO fixtures
 
 // GetTestRegisterRequest returns a test register request
-func GetTestRegisterRequest() domain.RegisterRequest {
-	return domain.RegisterRequest{
+func GetTestRegisterRequest() dto.RegisterRequest {
+	return dto.RegisterRequest{
 		Name:     "New User",
 		Email:    "newuser@example.com",
 		Password: "password123",
@@ -166,24 +167,24 @@ func GetTestRegisterRequest() domain.RegisterRequest {
 }
 
 // GetTestAuthRequest returns a test login request
-func GetTestAuthRequest() domain.AuthRequest {
-	return domain.AuthRequest{
+func GetTestAuthRequest() dto.AuthRequest {
+	return dto.AuthRequest{
 		Email:    "test@example.com",
 		Password: "password123",
 	}
 }
 
 // GetTestCreateProjectRequest returns a test create project request
-func GetTestCreateProjectRequest() domain.ProjectCreateRequest {
-	return domain.ProjectCreateRequest{
+func GetTestCreateProjectRequest() dto.CreateProjectRequest {
+	return dto.CreateProjectRequest{
 		NamaProject: "New Project",
 		Semester:    1,
 	}
 }
 
 // GetTestUpdateProjectRequest returns a test update project request
-func GetTestUpdateProjectRequest() domain.ProjectUpdateRequest {
-	return domain.ProjectUpdateRequest{
+func GetTestUpdateProjectRequest() dto.UpdateProjectRequest {
+	return dto.UpdateProjectRequest{
 		NamaProject: "Updated Project",
 		Kategori:    "website",
 		Semester:    1,
@@ -191,16 +192,16 @@ func GetTestUpdateProjectRequest() domain.ProjectUpdateRequest {
 }
 
 // GetTestCreateModulRequest returns a test create modul request
-func GetTestCreateModulRequest() domain.TusModulUploadInitRequest {
-	return domain.TusModulUploadInitRequest{
+func GetTestCreateModulRequest() dto.TusModulUploadInitRequest {
+	return dto.TusModulUploadInitRequest{
 		Judul:     "New Modul",
 		Deskripsi: "Test Deskripsi",
 	}
 }
 
 // GetTestUpdateModulRequest returns a test update modul request
-func GetTestUpdateModulRequest() domain.ModulUpdateRequest {
-	return domain.ModulUpdateRequest{
+func GetTestUpdateModulRequest() dto.UpdateModulRequest {
+	return dto.UpdateModulRequest{
 		Judul:     "Updated Modul",
 		Deskripsi: "Updated Deskripsi",
 	}
@@ -209,9 +210,9 @@ func GetTestUpdateModulRequest() domain.ModulUpdateRequest {
 // Response DTO fixtures
 
 // GetTestAuthResponse returns a test auth response
-func GetTestAuthResponse() domain.AuthResponse {
-	return domain.AuthResponse{
-		User: &domain.AuthUserResponse{
+func GetTestAuthResponse() dto.AuthResponse {
+	return dto.AuthResponse{
+		User: &dto.AuthUserResponse{
 			ID:    "00000000-0000-0000-0000-000000000001",
 			Name:  "Test User",
 			Email: "test@example.com",
@@ -224,8 +225,8 @@ func GetTestAuthResponse() domain.AuthResponse {
 }
 
 // GetTestProjectResponse returns a test project response
-func GetTestProjectResponse() domain.ProjectResponse {
-	return domain.ProjectResponse{
+func GetTestProjectResponse() dto.ProjectResponse {
+	return dto.ProjectResponse{
 		ID:          1,
 		NamaProject: "Test Project",
 		Kategori:    "website",
@@ -238,8 +239,8 @@ func GetTestProjectResponse() domain.ProjectResponse {
 }
 
 // GetTestModulResponse returns a test modul response
-func GetTestModulResponse() domain.ModulResponse {
-	return domain.ModulResponse{
+func GetTestModulResponse() dto.ModulResponse {
+	return dto.ModulResponse{
 		ID:        "550e8400-e29b-41d4-a716-446655440001",
 		Judul:     "Test Modul",
 		Deskripsi: "Test Deskripsi",
@@ -255,29 +256,29 @@ func GetTestModulResponse() domain.ModulResponse {
 // Health check fixtures
 
 // GetTestBasicHealthCheck returns a test basic health check
-func GetTestBasicHealthCheck() domain.BasicHealthCheck {
-	return domain.BasicHealthCheck{
-		Status:    domain.HealthStatusHealthy,
+func GetTestBasicHealthCheck() dto.BasicHealthCheck {
+	return dto.BasicHealthCheck{
+		Status:    dto.HealthStatusHealthy,
 		App:       "test-app",
 		Timestamp: time.Now(),
 	}
 }
 
 // GetTestComprehensiveHealthCheck returns a test comprehensive health check
-func GetTestComprehensiveHealthCheck() domain.ComprehensiveHealthCheck {
-	return domain.ComprehensiveHealthCheck{
-		Status: domain.HealthStatusHealthy,
-		App: domain.AppInfo{
+func GetTestComprehensiveHealthCheck() dto.ComprehensiveHealthCheck {
+	return dto.ComprehensiveHealthCheck{
+		Status: dto.HealthStatusHealthy,
+		App: dto.AppInfo{
 			Name:        "test-app",
 			Version:     "1.0.0",
 			Environment: "test",
 			Uptime:      "1h",
 		},
-		Database: domain.DatabaseStatus{
-			Status:   domain.ServiceStatusConnected,
+		Database: dto.DatabaseStatus{
+			Status:   dto.ServiceStatusConnected,
 			PingTime: "2ms",
 		},
-		System: domain.SystemInfo{
+		System: dto.SystemInfo{
 			MemoryUsage: "45MB",
 			CPUCores:    4,
 			Goroutines:  10,
@@ -289,40 +290,40 @@ func GetTestComprehensiveHealthCheck() domain.ComprehensiveHealthCheck {
 // Statistics fixtures
 
 // GetTestSystemMetrics returns a test system metrics
-func GetTestSystemMetrics() domain.SystemMetrics {
-	return domain.SystemMetrics{
-		App: domain.AppInfo{
+func GetTestSystemMetrics() dto.SystemMetrics {
+	return dto.SystemMetrics{
+		App: dto.AppInfo{
 			Name:        "test-app",
 			Version:     "1.0.0",
 			Environment: "test",
 			Uptime:      "1h",
 		},
-		System: domain.DetailedSystemInfo{
-			Memory: domain.MemoryInfo{
+		System: dto.DetailedSystemInfo{
+			Memory: dto.MemoryInfo{
 				Allocated:      "45MB",
 				TotalAllocated: "120MB",
 				System:         "256MB",
 				GCCount:        15,
 			},
-			CPU: domain.CPUInfo{
+			CPU: dto.CPUInfo{
 				Cores:      4,
 				Goroutines: 10,
 			},
-			Runtime: domain.RuntimeInfo{
+			Runtime: dto.RuntimeInfo{
 				GoVersion: "go1.21",
 				Compiler:  "gc",
 				Arch:      "amd64",
 				OS:        "linux",
 			},
 		},
-		Database: domain.DatabaseStatus{
-			Status:   domain.ServiceStatusConnected,
+		Database: dto.DatabaseStatus{
+			Status:   dto.ServiceStatusConnected,
 			PingTime: "2ms",
 		},
-		Http: domain.HttpMetrics{
+		Http: dto.HttpMetrics{
 			TotalRequests:  5420,
 			ActiveRequests: 3,
-			ResponseTimes: domain.ResponseTimes{
+			ResponseTimes: dto.ResponseTimes{
 				Min: "5ms",
 				Max: "150ms",
 				Avg: "25ms",
@@ -332,9 +333,9 @@ func GetTestSystemMetrics() domain.SystemMetrics {
 }
 
 // GetTestStatistics returns a test statistics response
-func GetTestStatistics() domain.StatisticResponse {
-	return domain.StatisticResponse{
-		Data: domain.StatisticData{
+func GetTestStatistics() dto.StatisticResponse {
+	return dto.StatisticResponse{
+		Data: dto.StatisticData{
 			TotalProject: intPtr(45),
 			TotalModul:   intPtr(120),
 			TotalUser:    intPtr(150),

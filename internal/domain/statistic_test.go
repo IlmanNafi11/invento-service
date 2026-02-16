@@ -1,26 +1,18 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 )
 
-func TestStatisticRequest(t *testing.T) {
-	t.Run("StatisticRequest struct", func(t *testing.T) {
-		req := StatisticRequest{}
-
-		// StatisticRequest is an empty struct but should exist
-		_ = req
-	})
-}
-
 func TestStatisticData(t *testing.T) {
-	t.Run("StatisticData with all fields", func(t *testing.T) {
+	t.Run("dto.StatisticData with all fields", func(t *testing.T) {
 		totalProject := 100
 		totalModul := 500
 		totalUser := 25
 		totalRole := 5
 
-		data := StatisticData{
+		data := dto.StatisticData{
 			TotalProject: &totalProject,
 			TotalModul:   &totalModul,
 			TotalUser:    &totalUser,
@@ -41,10 +33,10 @@ func TestStatisticData(t *testing.T) {
 		}
 	})
 
-	t.Run("StatisticData with partial fields", func(t *testing.T) {
+	t.Run("dto.StatisticData with partial fields", func(t *testing.T) {
 		totalProject := 50
 
-		data := StatisticData{
+		data := dto.StatisticData{
 			TotalProject: &totalProject,
 		}
 
@@ -62,13 +54,13 @@ func TestStatisticData(t *testing.T) {
 		}
 	})
 
-	t.Run("StatisticData with zero values", func(t *testing.T) {
+	t.Run("dto.StatisticData with zero values", func(t *testing.T) {
 		totalProject := 0
 		totalModul := 0
 		totalUser := 0
 		totalRole := 0
 
-		data := StatisticData{
+		data := dto.StatisticData{
 			TotalProject: &totalProject,
 			TotalModul:   &totalModul,
 			TotalUser:    &totalUser,
@@ -89,8 +81,8 @@ func TestStatisticData(t *testing.T) {
 		}
 	})
 
-	t.Run("StatisticData all nil", func(t *testing.T) {
-		data := StatisticData{}
+	t.Run("dto.StatisticData all nil", func(t *testing.T) {
+		data := dto.StatisticData{}
 
 		if data.TotalProject != nil {
 			t.Error("Expected TotalProject to be nil")
@@ -108,14 +100,14 @@ func TestStatisticData(t *testing.T) {
 }
 
 func TestStatisticResponse(t *testing.T) {
-	t.Run("StatisticResponse with complete data", func(t *testing.T) {
+	t.Run("dto.StatisticResponse with complete data", func(t *testing.T) {
 		totalProject := 150
 		totalModul := 750
 		totalUser := 30
 		totalRole := 6
 
-		resp := StatisticResponse{
-			Data: StatisticData{
+		resp := dto.StatisticResponse{
+			Data: dto.StatisticData{
 				TotalProject: &totalProject,
 				TotalModul:   &totalModul,
 				TotalUser:    &totalUser,
@@ -137,11 +129,11 @@ func TestStatisticResponse(t *testing.T) {
 		}
 	})
 
-	t.Run("StatisticResponse with partial data", func(t *testing.T) {
+	t.Run("dto.StatisticResponse with partial data", func(t *testing.T) {
 		totalProject := 200
 
-		resp := StatisticResponse{
-			Data: StatisticData{
+		resp := dto.StatisticResponse{
+			Data: dto.StatisticData{
 				TotalProject: &totalProject,
 			},
 		}
@@ -154,9 +146,9 @@ func TestStatisticResponse(t *testing.T) {
 		}
 	})
 
-	t.Run("StatisticResponse with empty data", func(t *testing.T) {
-		resp := StatisticResponse{
-			Data: StatisticData{},
+	t.Run("dto.StatisticResponse with empty data", func(t *testing.T) {
+		resp := dto.StatisticResponse{
+			Data: dto.StatisticData{},
 		}
 
 		if resp.Data.TotalProject != nil {
@@ -175,11 +167,11 @@ func TestStatisticResponse(t *testing.T) {
 }
 
 func TestStatisticDataMutability(t *testing.T) {
-	t.Run("Modify StatisticData pointers", func(t *testing.T) {
+	t.Run("Modify dto.StatisticData pointers", func(t *testing.T) {
 		totalProject := 100
 		totalModul := 200
 
-		data := StatisticData{
+		data := dto.StatisticData{
 			TotalProject: &totalProject,
 			TotalModul:   &totalModul,
 		}
@@ -207,7 +199,7 @@ func TestStatisticDataEdgeCases(t *testing.T) {
 		totalUser := 50000
 		totalRole := 100
 
-		data := StatisticData{
+		data := dto.StatisticData{
 			TotalProject: &totalProject,
 			TotalModul:   &totalModul,
 			TotalUser:    &totalUser,
@@ -230,37 +222,37 @@ func TestStatisticDataEdgeCases(t *testing.T) {
 
 	t.Run("Single field set", func(t *testing.T) {
 		testCases := []struct {
-			name    string
-			field   string
-			value   int
-			setter  func(*StatisticData, *int)
+			name   string
+			field  string
+			value  int
+			setter func(*dto.StatisticData, *int)
 		}{
 			{
-				name:  "TotalProject",
-				value: 10,
-				setter: func(d *StatisticData, v *int) { d.TotalProject = v },
+				name:   "TotalProject",
+				value:  10,
+				setter: func(d *dto.StatisticData, v *int) { d.TotalProject = v },
 			},
 			{
-				name:  "TotalModul",
-				value: 20,
-				setter: func(d *StatisticData, v *int) { d.TotalModul = v },
+				name:   "TotalModul",
+				value:  20,
+				setter: func(d *dto.StatisticData, v *int) { d.TotalModul = v },
 			},
 			{
-				name:  "TotalUser",
-				value: 5,
-				setter: func(d *StatisticData, v *int) { d.TotalUser = v },
+				name:   "TotalUser",
+				value:  5,
+				setter: func(d *dto.StatisticData, v *int) { d.TotalUser = v },
 			},
 			{
-				name:  "TotalRole",
-				value: 3,
-				setter: func(d *StatisticData, v *int) { d.TotalRole = v },
+				name:   "TotalRole",
+				value:  3,
+				setter: func(d *dto.StatisticData, v *int) { d.TotalRole = v },
 			},
 		}
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				value := tc.value
-				data := &StatisticData{}
+				data := &dto.StatisticData{}
 				tc.setter(data, &value)
 
 				// Verify the field is set

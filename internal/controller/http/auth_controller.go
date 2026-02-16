@@ -4,7 +4,7 @@ import (
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/controller/base"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
@@ -42,15 +42,15 @@ func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *httputil.C
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body domain.AuthRequest true "Credential login (email, password)"
-// @Success 200 {object} dto.SuccessResponse{data=domain.AuthResponse} "Login berhasil"
+// @Param request body dto.AuthRequest true "Credential login (email, password)"
+// @Success 200 {object} dto.SuccessResponse{data=dto.AuthResponse} "Login berhasil"
 // @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
 // @Failure 401 {object} dto.ErrorResponse "Email atau password salah"
 // @Failure 403 {object} dto.ErrorResponse "Akun belum diaktifkan"
 // @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /auth/login [post]
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
-	var req domain.AuthRequest
+	var req dto.AuthRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
@@ -81,14 +81,14 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body domain.RegisterRequest true "Data registrasi (name, email, password)"
-// @Success 201 {object} dto.SuccessResponse{data=domain.AuthResponse} "Registrasi berhasil"
+// @Param request body dto.RegisterRequest true "Data registrasi (name, email, password)"
+// @Success 201 {object} dto.SuccessResponse{data=dto.AuthResponse} "Registrasi berhasil"
 // @Failure 400 {object} dto.ErrorResponse "Data validasi tidak valid"
 // @Failure 409 {object} dto.ErrorResponse "Email sudah terdaftar"
 // @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /auth/register [post]
 func (ctrl *AuthController) Register(c *fiber.Ctx) error {
-	var req domain.RegisterRequest
+	var req dto.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
@@ -119,7 +119,7 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} dto.SuccessResponse{data=domain.RefreshTokenResponse} "Token berhasil diperbarui"
+// @Success 200 {object} dto.SuccessResponse{data=dto.RefreshTokenResponse} "Token berhasil diperbarui"
 // @Failure 400 {object} dto.ErrorResponse "Refresh token diperlukan"
 // @Failure 401 {object} dto.ErrorResponse "Token tidak valid atau expired"
 // @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
@@ -177,14 +177,14 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body domain.ResetPasswordRequest true "Email untuk reset password"
+// @Param request body dto.ResetPasswordRequest true "Email untuk reset password"
 // @Success 200 {object} dto.SuccessResponse "Link reset password telah dikirim"
 // @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
 // @Failure 404 {object} dto.ErrorResponse "Email tidak ditemukan"
 // @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /auth/reset-password [post]
 func (ctrl *AuthController) RequestPasswordReset(c *fiber.Ctx) error {
-	var req domain.ResetPasswordRequest
+	var req dto.ResetPasswordRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}

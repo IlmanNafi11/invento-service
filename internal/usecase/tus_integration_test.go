@@ -157,7 +157,7 @@ func TestTusProjectUploadFullFlowIntegration(t *testing.T) {
 		"integration@test.local",
 		"mahasiswa",
 		3*1024,
-		domain.TusUploadInitRequest{NamaProject: "Project Integration", Kategori: "website", Semester: 2},
+		dto.TusUploadInitRequest{NamaProject: "Project Integration", Kategori: "website", Semester: 2},
 	)
 	require.NoError(t, err)
 	require.NotNil(t, resp)
@@ -205,7 +205,7 @@ func TestTusProjectUploadResumeAfterPauseIntegration(t *testing.T) {
 		"integration@test.local",
 		"mahasiswa",
 		3*1024,
-		domain.TusUploadInitRequest{NamaProject: "Resume Project", Kategori: "mobile", Semester: 4},
+		dto.TusUploadInitRequest{NamaProject: "Resume Project", Kategori: "mobile", Semester: 4},
 	)
 	require.NoError(t, err)
 
@@ -239,7 +239,7 @@ func TestTusProjectUploadCancelIntegration(t *testing.T) {
 		"integration@test.local",
 		"mahasiswa",
 		2*1024,
-		domain.TusUploadInitRequest{NamaProject: "Cancel Project", Kategori: "iot", Semester: 5},
+		dto.TusUploadInitRequest{NamaProject: "Cancel Project", Kategori: "iot", Semester: 5},
 	)
 	require.NoError(t, err)
 
@@ -366,7 +366,7 @@ func TestTusModulUploadCancelIntegration(t *testing.T) {
 func TestTusUploadConcurrentSlotsIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
 
-	meta := domain.TusUploadInitRequest{NamaProject: "Concurrent", Kategori: "website", Semester: 1}
+	meta := dto.TusUploadInitRequest{NamaProject: "Concurrent", Kategori: "website", Semester: 1}
 	secondUserID := "22222222-2222-2222-2222-222222222222"
 
 	first, err := env.uploadUsecase.InitiateUpload(env.userID, "integration@test.local", "mahasiswa", 1024, meta)
@@ -396,7 +396,7 @@ func TestTusUploadInvalidFileSizeIntegration(t *testing.T) {
 		"integration@test.local",
 		"mahasiswa",
 		env.cfg.Upload.MaxSizeProject+1,
-		domain.TusUploadInitRequest{NamaProject: "Too Big", Kategori: "website", Semester: 1},
+		dto.TusUploadInitRequest{NamaProject: "Too Big", Kategori: "website", Semester: 1},
 	)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "ukuran file melebihi batas maksimal")
@@ -430,7 +430,7 @@ func TestTusUploadStatusTransitionsIntegration(t *testing.T) {
 		"integration@test.local",
 		"mahasiswa",
 		2*1024,
-		domain.TusUploadInitRequest{NamaProject: "Status Flow", Kategori: "deep_learning", Semester: 7},
+		dto.TusUploadInitRequest{NamaProject: "Status Flow", Kategori: "deep_learning", Semester: 7},
 	)
 	require.NoError(t, err)
 
@@ -463,7 +463,7 @@ func TestTusUploadStatusTransitionsIntegration(t *testing.T) {
 		"integration@test.local",
 		"mahasiswa",
 		1024,
-		domain.TusUploadInitRequest{NamaProject: "Cancel Flow", Kategori: "machine_learning", Semester: 8},
+		dto.TusUploadInitRequest{NamaProject: "Cancel Flow", Kategori: "machine_learning", Semester: 8},
 	)
 	require.NoError(t, err)
 

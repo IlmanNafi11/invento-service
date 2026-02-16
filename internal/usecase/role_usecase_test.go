@@ -32,10 +32,10 @@ func TestRoleUsecase_GetAvailablePermissions_Success(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, nil)
 
-	expectedPermissions := []domain.ResourcePermissions{
+	expectedPermissions := []dto.ResourcePermissions{
 		{
 			Name: "projects",
-			Permissions: []domain.PermissionItem{
+			Permissions: []dto.PermissionItem{
 				{Action: "create", Label: "Create"},
 				{Action: "read", Label: "Read"},
 			},
@@ -79,7 +79,7 @@ func TestRoleUsecase_GetRoleList_Success(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, nil)
 
-	roles := []domain.RoleListItem{
+	roles := []dto.RoleListItem{
 		{
 			ID:                1,
 			NamaRole:          "admin",
@@ -96,7 +96,7 @@ func TestRoleUsecase_GetRoleList_Success(t *testing.T) {
 
 	mockRoleRepo.On("GetAll", "", 1, 10).Return(roles, 2, nil)
 
-	params := domain.RoleListQueryParams{
+	params := dto.RoleListQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -122,7 +122,7 @@ func TestRoleUsecase_GetRoleList_WithError(t *testing.T) {
 
 	mockRoleRepo.On("GetAll", "", 1, 10).Return(nil, 0, assert.AnError)
 
-	params := domain.RoleListQueryParams{
+	params := dto.RoleListQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -142,7 +142,7 @@ func TestRoleUsecase_GetRoleList_WithSearch(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, nil)
 
-	roles := []domain.RoleListItem{
+	roles := []dto.RoleListItem{
 		{
 			ID:                1,
 			NamaRole:          "admin",
@@ -153,7 +153,7 @@ func TestRoleUsecase_GetRoleList_WithSearch(t *testing.T) {
 
 	mockRoleRepo.On("GetAll", "admin", 1, 10).Return(roles, 1, nil)
 
-	params := domain.RoleListQueryParams{
+	params := dto.RoleListQueryParams{
 		Search: "admin",
 		Page:   1,
 		Limit:  10,
@@ -249,7 +249,7 @@ func TestRoleUsecase_CreateRole_Success(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
-	req := domain.RoleCreateRequest{
+	req := dto.RoleCreateRequest{
 		NamaRole: "editor",
 		Permissions: map[string][]string{
 			"projects": {"read", "create"},
@@ -308,7 +308,7 @@ func TestRoleUsecase_CreateRole_DuplicateName(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
-	req := domain.RoleCreateRequest{
+	req := dto.RoleCreateRequest{
 		NamaRole: "admin",
 		Permissions: map[string][]string{
 			"projects": {"read"},
@@ -334,7 +334,7 @@ func TestRoleUsecase_CreateRole_EmptyPermissions(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
-	req := domain.RoleCreateRequest{
+	req := dto.RoleCreateRequest{
 		NamaRole:    "editor",
 		Permissions: map[string][]string{},
 	}
@@ -353,7 +353,7 @@ func TestRoleUsecase_CreateRole_CreateRepoError(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
-	req := domain.RoleCreateRequest{
+	req := dto.RoleCreateRequest{
 		NamaRole: "editor",
 		Permissions: map[string][]string{
 			"projects": {"read"},
@@ -379,7 +379,7 @@ func TestRoleUsecase_CreateRole_SetPermissionsError(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
-	req := domain.RoleCreateRequest{
+	req := dto.RoleCreateRequest{
 		NamaRole: "editor",
 		Permissions: map[string][]string{
 			"projects": {"read"},
@@ -411,7 +411,7 @@ func TestRoleUsecase_CreateRole_SavePolicyError(t *testing.T) {
 
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
-	req := domain.RoleCreateRequest{
+	req := dto.RoleCreateRequest{
 		NamaRole: "editor",
 		Permissions: map[string][]string{
 			"projects": {"read"},
@@ -451,7 +451,7 @@ func TestRoleUsecase_UpdateRole_UpdateRepoError(t *testing.T) {
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
 	roleID := uint(1)
-	req := domain.RoleUpdateRequest{
+	req := dto.RoleUpdateRequest{
 		NamaRole: "editor_updated",
 		Permissions: map[string][]string{
 			"projects": {"read"},
@@ -480,7 +480,7 @@ func TestRoleUsecase_UpdateRole_RemovePermissionsError(t *testing.T) {
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
 	roleID := uint(1)
-	req := domain.RoleUpdateRequest{
+	req := dto.RoleUpdateRequest{
 		NamaRole: "editor_updated",
 		Permissions: map[string][]string{
 			"projects": {"read"},
@@ -511,7 +511,7 @@ func TestRoleUsecase_UpdateRole_EmptyPermissions(t *testing.T) {
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
 	roleID := uint(1)
-	req := domain.RoleUpdateRequest{
+	req := dto.RoleUpdateRequest{
 		NamaRole:    "editor",
 		Permissions: map[string][]string{},
 	}
@@ -531,7 +531,7 @@ func TestRoleUsecase_UpdateRole_SameNameNoConflict(t *testing.T) {
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
 	roleID := uint(1)
-	req := domain.RoleUpdateRequest{
+	req := dto.RoleUpdateRequest{
 		NamaRole: "editor",
 		Permissions: map[string][]string{
 			"projects": {"read"},
@@ -648,7 +648,7 @@ func TestRoleUsecase_UpdateRole_Success(t *testing.T) {
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
 	roleID := uint(1)
-	req := domain.RoleUpdateRequest{
+	req := dto.RoleUpdateRequest{
 		NamaRole: "editor_updated",
 		Permissions: map[string][]string{
 			"projects": {"read", "update"},
@@ -713,7 +713,7 @@ func TestRoleUsecase_UpdateRole_NotFound(t *testing.T) {
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
 	roleID := uint(999)
-	req := domain.RoleUpdateRequest{
+	req := dto.RoleUpdateRequest{
 		NamaRole: "editor_updated",
 		Permissions: map[string][]string{
 			"projects": {"read"},
@@ -739,7 +739,7 @@ func TestRoleUsecase_UpdateRole_DuplicateName(t *testing.T) {
 	roleUC := NewRoleUsecase(mockRoleRepo, mockPermissionRepo, mockRolePermissionRepo, mockCasbinEnforcer)
 
 	roleID := uint(1)
-	req := domain.RoleUpdateRequest{
+	req := dto.RoleUpdateRequest{
 		NamaRole: "admin",
 		Permissions: map[string][]string{
 			"projects": {"read"},

@@ -8,6 +8,7 @@ import (
 
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
@@ -18,17 +19,17 @@ import (
 )
 
 type TusUploadUsecase interface {
-	CheckUploadSlot(userID string) (*domain.TusUploadSlotResponse, error)
+	CheckUploadSlot(userID string) (*dto.TusUploadSlotResponse, error)
 	ResetUploadQueue(userID string) error
-	InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error)
+	InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error)
 	HandleChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
-	GetUploadInfo(uploadID string, userID string) (*domain.TusUploadInfoResponse, error)
+	GetUploadInfo(uploadID string, userID string) (*dto.TusUploadInfoResponse, error)
 	CancelUpload(uploadID string, userID string) error
 	GetUploadStatus(uploadID string, userID string) (int64, int64, error)
-	InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error)
+	InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error)
 	HandleProjectUpdateChunk(projectID uint, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
 	GetProjectUpdateUploadStatus(projectID uint, uploadID string, userID string) (int64, int64, error)
-	GetProjectUpdateUploadInfo(projectID uint, uploadID string, userID string) (*domain.TusUploadInfoResponse, error)
+	GetProjectUpdateUploadInfo(projectID uint, uploadID string, userID string) (*dto.TusUploadInfoResponse, error)
 	CancelProjectUpdateUpload(projectID uint, uploadID string, userID string) error
 }
 
@@ -59,10 +60,10 @@ func NewTusUploadUsecase(
 	}
 }
 
-func (uc *tusUploadUsecase) CheckUploadSlot(userID string) (*domain.TusUploadSlotResponse, error) {
+func (uc *tusUploadUsecase) CheckUploadSlot(userID string) (*dto.TusUploadSlotResponse, error) {
 	response := uc.tusManager.CheckUploadSlot()
 
-	return &domain.TusUploadSlotResponse{
+	return &dto.TusUploadSlotResponse{
 		Available:     response.Available,
 		Message:       response.Message,
 		QueueLength:   response.QueueLength,
@@ -87,11 +88,11 @@ func (uc *tusUploadUsecase) ResetUploadQueue(userID string) error {
 	return nil
 }
 
-func (uc *tusUploadUsecase) InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error) {
+func (uc *tusUploadUsecase) InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
 	return uc.initiateUpload(userID, fileSize, metadata, domain.UploadTypeProjectCreate, nil)
 }
 
-func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error) {
+func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
 	project, err := uc.projectRepo.GetByID(projectID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
@@ -117,7 +118,7 @@ func (uc *tusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID s
 	return uc.initiateUpload(userID, fileSize, metadata, domain.UploadTypeProjectUpdate, &projectID)
 }
 
-func (uc *tusUploadUsecase) initiateUpload(userID string, fileSize int64, metadata domain.TusUploadInitRequest, uploadType string, projectID *uint) (*domain.TusUploadResponse, error) {
+func (uc *tusUploadUsecase) initiateUpload(userID string, fileSize int64, metadata dto.TusUploadInitRequest, uploadType string, projectID *uint) (*dto.TusUploadResponse, error) {
 	if fileSize > uc.config.Upload.MaxSizeProject {
 		return nil, apperrors.NewPayloadTooLargeError(fmt.Sprintf("ukuran file melebihi batas maksimal %d MB", uc.config.Upload.MaxSizeProject/(1024*1024)))
 	}
@@ -149,17 +150,21 @@ func (uc *tusUploadUsecase) initiateUpload(userID string, fileSize int64, metada
 	}
 
 	tusUpload := &domain.TusUpload{
-		ID:             uploadID,
-		UserID:         userID,
-		ProjectID:      projectID,
-		UploadType:     uploadType,
-		UploadURL:      uploadURL,
-		UploadMetadata: metadata,
-		FileSize:       fileSize,
-		CurrentOffset:  0,
-		Status:         domain.UploadStatusPending,
-		Progress:       0,
-		ExpiresAt:      expiresAt,
+		ID:         uploadID,
+		UserID:     userID,
+		ProjectID:  projectID,
+		UploadType: uploadType,
+		UploadURL:  uploadURL,
+		UploadMetadata: domain.TusUploadMetadata{
+			NamaProject: metadata.NamaProject,
+			Kategori:    metadata.Kategori,
+			Semester:    metadata.Semester,
+		},
+		FileSize:      fileSize,
+		CurrentOffset: 0,
+		Status:        domain.UploadStatusPending,
+		Progress:      0,
+		ExpiresAt:     expiresAt,
 	}
 
 	if err := uc.tusUploadRepo.Create(tusUpload); err != nil {
@@ -183,7 +188,7 @@ func (uc *tusUploadUsecase) initiateUpload(userID string, fileSize int64, metada
 
 	uc.tusManager.AddToQueue(uploadID)
 
-	return &domain.TusUploadResponse{
+	return &dto.TusUploadResponse{
 		UploadID:  uploadID,
 		UploadURL: uploadURL,
 		Offset:    0,
@@ -327,21 +332,21 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload, fina
 	return project.ID, nil
 }
 
-func (uc *tusUploadUsecase) GetUploadInfo(uploadID string, userID string) (*domain.TusUploadInfoResponse, error) {
+func (uc *tusUploadUsecase) GetUploadInfo(uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
 	return uc.getUploadInfo(uploadID, userID, nil)
 }
 
-func (uc *tusUploadUsecase) GetProjectUpdateUploadInfo(projectID uint, uploadID string, userID string) (*domain.TusUploadInfoResponse, error) {
+func (uc *tusUploadUsecase) GetProjectUpdateUploadInfo(projectID uint, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
 	return uc.getUploadInfo(uploadID, userID, &projectID)
 }
 
-func (uc *tusUploadUsecase) getUploadInfo(uploadID string, userID string, projectID *uint) (*domain.TusUploadInfoResponse, error) {
+func (uc *tusUploadUsecase) getUploadInfo(uploadID string, userID string, projectID *uint) (*dto.TusUploadInfoResponse, error) {
 	upload, err := uc.getOwnedUpload(uploadID, userID, projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	response := &domain.TusUploadInfoResponse{
+	response := &dto.TusUploadInfoResponse{
 		UploadID:    upload.ID,
 		NamaProject: upload.UploadMetadata.NamaProject,
 		Kategori:    upload.UploadMetadata.Kategori,

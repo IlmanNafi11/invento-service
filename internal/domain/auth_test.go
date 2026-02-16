@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 
@@ -36,12 +37,12 @@ func TestUser_Creation(t *testing.T) {
 func TestAuthRequest_Validation(t *testing.T) {
 	tests := []struct {
 		name    string
-		request AuthRequest
+		request dto.AuthRequest
 		valid   bool
 	}{
 		{
 			name: "valid auth request",
-			request: AuthRequest{
+			request: dto.AuthRequest{
 				Email:    "test@example.com",
 				Password: "password123",
 			},
@@ -49,7 +50,7 @@ func TestAuthRequest_Validation(t *testing.T) {
 		},
 		{
 			name: "empty email",
-			request: AuthRequest{
+			request: dto.AuthRequest{
 				Email:    "",
 				Password: "password123",
 			},
@@ -57,7 +58,7 @@ func TestAuthRequest_Validation(t *testing.T) {
 		},
 		{
 			name: "empty password",
-			request: AuthRequest{
+			request: dto.AuthRequest{
 				Email:    "test@example.com",
 				Password: "",
 			},
@@ -85,12 +86,12 @@ func TestAuthRequest_Validation(t *testing.T) {
 func TestRegisterRequest_Validation(t *testing.T) {
 	tests := []struct {
 		name    string
-		request RegisterRequest
+		request dto.RegisterRequest
 		valid   bool
 	}{
 		{
 			name: "valid register request",
-			request: RegisterRequest{
+			request: dto.RegisterRequest{
 				Name:     "Test User",
 				Email:    "test@example.com",
 				Password: "password123",
@@ -99,7 +100,7 @@ func TestRegisterRequest_Validation(t *testing.T) {
 		},
 		{
 			name: "empty name",
-			request: RegisterRequest{
+			request: dto.RegisterRequest{
 				Name:     "",
 				Email:    "test@example.com",
 				Password: "password123",
@@ -108,7 +109,7 @@ func TestRegisterRequest_Validation(t *testing.T) {
 		},
 		{
 			name: "empty email",
-			request: RegisterRequest{
+			request: dto.RegisterRequest{
 				Name:     "Test User",
 				Email:    "",
 				Password: "password123",
@@ -117,7 +118,7 @@ func TestRegisterRequest_Validation(t *testing.T) {
 		},
 		{
 			name: "empty password",
-			request: RegisterRequest{
+			request: dto.RegisterRequest{
 				Name:     "Test User",
 				Email:    "test@example.com",
 				Password: "",
@@ -141,7 +142,7 @@ func TestRegisterRequest_Validation(t *testing.T) {
 }
 
 func TestAuthResponse_Structure(t *testing.T) {
-	user := AuthUserResponse{
+	user := dto.AuthUserResponse{
 		ID:        "user-123",
 		Email:     "test@example.com",
 		Name:      "Test User",
@@ -149,7 +150,7 @@ func TestAuthResponse_Structure(t *testing.T) {
 		CreatedAt: time.Now().Format(time.RFC3339),
 	}
 
-	authResponse := AuthResponse{
+	authResponse := dto.AuthResponse{
 		User:        &user,
 		AccessToken: "access_token_123",
 		TokenType:   "Bearer",
@@ -166,7 +167,7 @@ func TestAuthResponse_Structure(t *testing.T) {
 }
 
 func TestRefreshTokenResponse_Structure(t *testing.T) {
-	response := RefreshTokenResponse{
+	response := dto.RefreshTokenResponse{
 		AccessToken: "new_access_token",
 		TokenType:   "Bearer",
 		ExpiresIn:   3600,

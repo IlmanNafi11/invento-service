@@ -2,6 +2,7 @@ package repo
 
 import (
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -45,7 +46,7 @@ func (r *roleRepository) Delete(id uint) error {
 	return r.db.Delete(&domain.Role{}, id).Error
 }
 
-func (r *roleRepository) GetAll(search string, page, limit int) ([]domain.RoleListItem, int, error) {
+func (r *roleRepository) GetAll(search string, page, limit int) ([]dto.RoleListItem, int, error) {
 	var total int64
 
 	query := r.db.Model(&domain.Role{})
@@ -60,7 +61,7 @@ func (r *roleRepository) GetAll(search string, page, limit int) ([]domain.RoleLi
 	}
 
 	offset := (page - 1) * limit
-	var roleListItems []domain.RoleListItem
+	var roleListItems []dto.RoleListItem
 
 	listQuery := r.db.Model(&domain.Role{}).
 		Select("roles.id, roles.nama_role, roles.updated_at as tanggal_diperbarui, COUNT(role_permissions.id) as jumlah_permission").
@@ -80,7 +81,7 @@ func (r *roleRepository) GetAll(search string, page, limit int) ([]domain.RoleLi
 	}
 
 	if roleListItems == nil {
-		roleListItems = []domain.RoleListItem{}
+		roleListItems = []dto.RoleListItem{}
 	}
 
 	return roleListItems, int(total), nil

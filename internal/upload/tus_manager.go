@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"invento-service/config"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 
@@ -31,12 +31,12 @@ func NewTusManager(store *TusStore, queue *TusQueue, fileManager *storage.FileMa
 	}
 }
 
-func (tm *TusManager) CheckUploadSlot() *domain.TusUploadSlotResponse {
+func (tm *TusManager) CheckUploadSlot() *dto.TusUploadSlotResponse {
 	hasActiveUpload := tm.queue.HasActiveUpload()
 	queueLength := tm.queue.GetQueueLength()
 	canAccept := tm.queue.CanAcceptUpload()
 
-	response := &domain.TusUploadSlotResponse{
+	response := &dto.TusUploadSlotResponse{
 		Available:     canAccept,
 		QueueLength:   queueLength,
 		ActiveUpload:  hasActiveUpload,

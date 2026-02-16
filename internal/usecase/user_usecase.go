@@ -3,7 +3,7 @@ package usecase
 import (
 	"errors"
 	"invento-service/config"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/rbac"
@@ -16,15 +16,15 @@ import (
 )
 
 type UserUsecase interface {
-	GetUserList(params domain.UserListQueryParams) (*domain.UserListData, error)
+	GetUserList(params dto.UserListQueryParams) (*dto.UserListData, error)
 	UpdateUserRole(userID string, roleName string) error
 	DeleteUser(userID string) error
-	GetUserFiles(userID string, params domain.UserFilesQueryParams) (*domain.UserFilesData, error)
-	GetProfile(userID string) (*domain.ProfileData, error)
-	UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*domain.ProfileData, error)
-	GetUserPermissions(userID string) ([]domain.UserPermissionItem, error)
+	GetUserFiles(userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error)
+	GetProfile(userID string) (*dto.ProfileData, error)
+	UpdateProfile(userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error)
+	GetUserPermissions(userID string) ([]dto.UserPermissionItem, error)
 	DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error)
-	GetUsersForRole(roleID uint) ([]domain.UserListItem, error)
+	GetUsersForRole(roleID uint) ([]dto.UserListItem, error)
 	BulkAssignRole(userIDs []string, roleID uint) error
 }
 
@@ -62,7 +62,7 @@ func NewUserUsecase(
 	}
 }
 
-func (uc *userUsecase) GetUserList(params domain.UserListQueryParams) (*domain.UserListData, error) {
+func (uc *userUsecase) GetUserList(params dto.UserListQueryParams) (*dto.UserListData, error) {
 	normalizedParams := httputil.NormalizePaginationParams(params.Page, params.Limit)
 	params.Page = normalizedParams.Page
 	params.Limit = normalizedParams.Limit
@@ -74,7 +74,7 @@ func (uc *userUsecase) GetUserList(params domain.UserListQueryParams) (*domain.U
 
 	pagination := httputil.CalculatePagination(params.Page, params.Limit, total)
 
-	return &domain.UserListData{
+	return &dto.UserListData{
 		Items:      users,
 		Pagination: pagination,
 	}, nil
@@ -141,7 +141,7 @@ func (uc *userUsecase) DeleteUser(userID string) error {
 	return nil
 }
 
-func (uc *userUsecase) GetUserFiles(userID string, params domain.UserFilesQueryParams) (*domain.UserFilesData, error) {
+func (uc *userUsecase) GetUserFiles(userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error) {
 	_, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -167,13 +167,13 @@ func (uc *userUsecase) GetUserFiles(userID string, params domain.UserFilesQueryP
 
 	pagination := httputil.CalculatePagination(params.Page, params.Limit, total)
 
-	return &domain.UserFilesData{
+	return &dto.UserFilesData{
 		Items:      items,
 		Pagination: pagination,
 	}, nil
 }
 
-func (uc *userUsecase) GetProfile(userID string) (*domain.ProfileData, error) {
+func (uc *userUsecase) GetProfile(userID string) (*dto.ProfileData, error) {
 	user, jumlahProject, jumlahModul, err := uc.userRepo.GetProfileWithCounts(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -185,7 +185,7 @@ func (uc *userUsecase) GetProfile(userID string) (*domain.ProfileData, error) {
 	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
-func (uc *userUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*domain.ProfileData, error) {
+func (uc *userUsecase) UpdateProfile(userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error) {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -222,7 +222,7 @@ func (uc *userUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequ
 	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
-func (uc *userUsecase) GetUserPermissions(userID string) ([]domain.UserPermissionItem, error) {
+func (uc *userUsecase) GetUserPermissions(userID string) ([]dto.UserPermissionItem, error) {
 	user, err := uc.userRepo.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -232,12 +232,12 @@ func (uc *userUsecase) GetUserPermissions(userID string) ([]domain.UserPermissio
 	}
 
 	if user.Role == nil {
-		return []domain.UserPermissionItem{}, nil
+		return []dto.UserPermissionItem{}, nil
 	}
 
 	// Handle nil casbinEnforcer gracefully
 	if uc.casbinEnforcer == nil {
-		return []domain.UserPermissionItem{}, nil
+		return []dto.UserPermissionItem{}, nil
 	}
 
 	permissions, err := uc.casbinEnforcer.GetPermissionsForRole(user.Role.NamaRole)
@@ -306,7 +306,7 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 	return zipPath, nil
 }
 
-func (uc *userUsecase) GetUsersForRole(roleID uint) ([]domain.UserListItem, error) {
+func (uc *userUsecase) GetUsersForRole(roleID uint) ([]dto.UserListItem, error) {
 	_, err := uc.roleRepo.GetByID(roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

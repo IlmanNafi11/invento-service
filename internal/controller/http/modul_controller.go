@@ -4,7 +4,7 @@ import (
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/controller/base"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
@@ -46,7 +46,7 @@ func NewModulController(
 // @Param filter_status query string false "Filter by status (pending, completed)"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} dto.SuccessResponse{data=domain.ModulListData} "List retrieved successfully"
+// @Success 200 {object} dto.SuccessResponse{data=dto.ModulListData} "List retrieved successfully"
 // @Failure 400 {object} dto.ErrorResponse "Invalid query parameters"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
@@ -57,7 +57,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 		return nil
 	}
 
-	var params domain.ModulListQueryParams
+	var params dto.ModulListQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
@@ -122,7 +122,7 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Module ID (UUID)"
-// @Param request body domain.ModulUpdateRequest true "Update request"
+// @Param request body dto.UpdateModulRequest true "Update request"
 // @Success 200 {object} dto.SuccessResponse "Metadata updated successfully"
 // @Failure 400 {object} dto.ErrorResponse "Invalid request format"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
@@ -141,7 +141,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 		return nil
 	}
 
-	var req domain.ModulUpdateRequest
+	var req dto.UpdateModulRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
@@ -170,7 +170,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 // @Accept json
 // @Produce application/zip
 // @Security BearerAuth
-// @Param request body domain.ModulDownloadRequest true "Download request with module IDs"
+// @Param request body dto.ModulDownloadRequest true "Download request with module IDs"
 // @Success 200 {file} binary "ZIP file containing module files"
 // @Failure 400 {object} dto.ErrorResponse "Invalid request format or empty IDs"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
@@ -183,7 +183,7 @@ func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 		return nil
 	}
 
-	var req domain.ModulDownloadRequest
+	var req dto.ModulDownloadRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}

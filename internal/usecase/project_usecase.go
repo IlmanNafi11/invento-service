@@ -17,9 +17,9 @@ import (
 )
 
 type ProjectUsecase interface {
-	GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error)
-	GetByID(projectID uint, userID string) (*domain.ProjectResponse, error)
-	UpdateMetadata(projectID uint, userID string, req domain.ProjectUpdateRequest) error
+	GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error)
+	GetByID(projectID uint, userID string) (*dto.ProjectResponse, error)
+	UpdateMetadata(projectID uint, userID string, req dto.UpdateProjectRequest) error
 	Delete(projectID uint, userID string) error
 	Download(userID string, projectIDs []uint) (string, error)
 }
@@ -36,7 +36,7 @@ func NewProjectUsecase(projectRepo repo.ProjectRepository, fileManager *storage.
 	}
 }
 
-func (uc *projectUsecase) GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error) {
+func (uc *projectUsecase) GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -51,7 +51,7 @@ func (uc *projectUsecase) GetList(userID string, search string, filterSemester i
 
 	totalPages := (total + limit - 1) / limit
 
-	return &domain.ProjectListData{
+	return &dto.ProjectListData{
 		Items: projects,
 		Pagination: dto.PaginationData{
 			Page:       page,
@@ -62,13 +62,13 @@ func (uc *projectUsecase) GetList(userID string, search string, filterSemester i
 	}, nil
 }
 
-func (uc *projectUsecase) GetByID(projectID uint, userID string) (*domain.ProjectResponse, error) {
+func (uc *projectUsecase) GetByID(projectID uint, userID string) (*dto.ProjectResponse, error) {
 	project, err := uc.getOwnedProject(projectID, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &domain.ProjectResponse{
+	return &dto.ProjectResponse{
 		ID:          project.ID,
 		NamaProject: project.NamaProject,
 		Kategori:    project.Kategori,
@@ -80,7 +80,7 @@ func (uc *projectUsecase) GetByID(projectID uint, userID string) (*domain.Projec
 	}, nil
 }
 
-func (uc *projectUsecase) UpdateMetadata(projectID uint, userID string, req domain.ProjectUpdateRequest) error {
+func (uc *projectUsecase) UpdateMetadata(projectID uint, userID string, req dto.UpdateProjectRequest) error {
 	project, err := uc.getOwnedProject(projectID, userID)
 	if err != nil {
 		return err

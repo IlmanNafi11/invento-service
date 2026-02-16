@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"mime/multipart"
 )
 
@@ -20,7 +21,7 @@ func NewUserHelper(pathResolver *PathResolver, cfg *config.Config) *UserHelper {
 	}
 }
 
-func (uh *UserHelper) BuildProfileData(user *domain.User, jumlahProject, jumlahModul int) *domain.ProfileData {
+func (uh *UserHelper) BuildProfileData(user *domain.User, jumlahProject, jumlahModul int) *dto.ProfileData {
 	roleName := ""
 	if user.Role != nil {
 		roleName = user.Role.NamaRole
@@ -31,7 +32,7 @@ func (uh *UserHelper) BuildProfileData(user *domain.User, jumlahProject, jumlahM
 		fotoProfilPath = uh.pathResolver.ConvertToAPIPath(user.FotoProfil)
 	}
 
-	return &domain.ProfileData{
+	return &dto.ProfileData{
 		Name:          user.Name,
 		Email:         user.Email,
 		JenisKelamin:  user.JenisKelamin,
@@ -43,7 +44,7 @@ func (uh *UserHelper) BuildProfileData(user *domain.User, jumlahProject, jumlahM
 	}
 }
 
-func (uh *UserHelper) AggregateUserPermissions(permissions [][]string) []domain.UserPermissionItem {
+func (uh *UserHelper) AggregateUserPermissions(permissions [][]string) []dto.UserPermissionItem {
 	resourceMap := make(map[string][]string)
 
 	for _, perm := range permissions {
@@ -54,9 +55,9 @@ func (uh *UserHelper) AggregateUserPermissions(permissions [][]string) []domain.
 		}
 	}
 
-	var result []domain.UserPermissionItem
+	var result []dto.UserPermissionItem
 	for resource, actions := range resourceMap {
-		result = append(result, domain.UserPermissionItem{
+		result = append(result, dto.UserPermissionItem{
 			Resource: resource,
 			Actions:  actions,
 		})

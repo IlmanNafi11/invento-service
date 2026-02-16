@@ -24,44 +24,44 @@ type MockRoleUsecase struct {
 	mock.Mock
 }
 
-func (m *MockRoleUsecase) GetAvailablePermissions() ([]domain.ResourcePermissions, error) {
+func (m *MockRoleUsecase) GetAvailablePermissions() ([]dto.ResourcePermissions, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]domain.ResourcePermissions), args.Error(1)
+	return args.Get(0).([]dto.ResourcePermissions), args.Error(1)
 }
 
-func (m *MockRoleUsecase) GetRoleList(params domain.RoleListQueryParams) (*domain.RoleListData, error) {
+func (m *MockRoleUsecase) GetRoleList(params dto.RoleListQueryParams) (*dto.RoleListData, error) {
 	args := m.Called(params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.RoleListData), args.Error(1)
+	return args.Get(0).(*dto.RoleListData), args.Error(1)
 }
 
-func (m *MockRoleUsecase) CreateRole(req domain.RoleCreateRequest) (*domain.RoleDetailResponse, error) {
+func (m *MockRoleUsecase) CreateRole(req dto.RoleCreateRequest) (*dto.RoleDetailResponse, error) {
 	args := m.Called(req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.RoleDetailResponse), args.Error(1)
+	return args.Get(0).(*dto.RoleDetailResponse), args.Error(1)
 }
 
-func (m *MockRoleUsecase) GetRoleDetail(id uint) (*domain.RoleDetailResponse, error) {
+func (m *MockRoleUsecase) GetRoleDetail(id uint) (*dto.RoleDetailResponse, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.RoleDetailResponse), args.Error(1)
+	return args.Get(0).(*dto.RoleDetailResponse), args.Error(1)
 }
 
-func (m *MockRoleUsecase) UpdateRole(id uint, req domain.RoleUpdateRequest) (*domain.RoleDetailResponse, error) {
+func (m *MockRoleUsecase) UpdateRole(id uint, req dto.RoleUpdateRequest) (*dto.RoleDetailResponse, error) {
 	args := m.Called(id, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.RoleDetailResponse), args.Error(1)
+	return args.Get(0).(*dto.RoleDetailResponse), args.Error(1)
 }
 
 func (m *MockRoleUsecase) DeleteRole(id uint) error {
@@ -76,10 +76,10 @@ func TestRoleController_GetAvailablePermissions_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/role/permissions", controller.GetAvailablePermissions)
 
-	expectedPermissions := []domain.ResourcePermissions{
+	expectedPermissions := []dto.ResourcePermissions{
 		{
 			Name: "user",
-			Permissions: []domain.PermissionItem{
+			Permissions: []dto.PermissionItem{
 				{Action: "create", Label: "Buat User"},
 				{Action: "read", Label: "Lihat User"},
 			},
@@ -102,8 +102,8 @@ func TestRoleController_GetRoleList_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/role", controller.GetRoleList)
 
-	expectedResult := &domain.RoleListData{
-		Items: []domain.RoleListItem{
+	expectedResult := &dto.RoleListData{
+		Items: []dto.RoleListItem{
 			{ID: 1, NamaRole: "admin", JumlahPermission: 5, TanggalDiperbarui: time.Now()},
 		},
 		Pagination: dto.PaginationData{Page: 1, Limit: 10, TotalPages: 1, TotalItems: 1},
@@ -125,14 +125,14 @@ func TestRoleController_CreateRole_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/role", controller.CreateRole)
 
-	reqBody := domain.RoleCreateRequest{
+	reqBody := dto.RoleCreateRequest{
 		NamaRole:    "editor",
 		Permissions: map[string][]string{"user": {"read"}},
 	}
 
-	expectedResponse := &domain.RoleDetailResponse{
+	expectedResponse := &dto.RoleDetailResponse{
 		ID: 1, NamaRole: "editor",
-		Permissions:      []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read"}}},
+		Permissions:      []dto.RolePermissionDetail{{Resource: "user", Actions: []string{"read"}}},
 		JumlahPermission: 1,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
@@ -156,9 +156,9 @@ func TestRoleController_GetRoleDetail_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/role/:id", controller.GetRoleDetail)
 
-	expectedResponse := &domain.RoleDetailResponse{
+	expectedResponse := &dto.RoleDetailResponse{
 		ID: 1, NamaRole: "admin",
-		Permissions:      []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read"}}},
+		Permissions:      []dto.RolePermissionDetail{{Resource: "user", Actions: []string{"read"}}},
 		JumlahPermission: 1,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
@@ -180,14 +180,14 @@ func TestRoleController_UpdateRole_Success(t *testing.T) {
 	app := fiber.New()
 	app.Put("/role/:id", controller.UpdateRole)
 
-	reqBody := domain.RoleUpdateRequest{
+	reqBody := dto.RoleUpdateRequest{
 		NamaRole:    "superadmin",
 		Permissions: map[string][]string{"user": {"read", "create"}},
 	}
 
-	expectedResponse := &domain.RoleDetailResponse{
+	expectedResponse := &dto.RoleDetailResponse{
 		ID: 1, NamaRole: "superadmin",
-		Permissions:      []domain.RolePermissionDetail{{Resource: "user", Actions: []string{"read", "create"}}},
+		Permissions:      []dto.RolePermissionDetail{{Resource: "user", Actions: []string{"read", "create"}}},
 		JumlahPermission: 1,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
@@ -231,7 +231,7 @@ func TestRoleController_ErrorCases(t *testing.T) {
 		{
 			name: "GetAvailablePermissions error",
 			testFunc: func(mockUC *MockRoleUsecase, app *fiber.App) (*http.Response, error) {
-				mockUC.On("GetAvailablePermissions").Return([]domain.ResourcePermissions{}, assert.AnError)
+				mockUC.On("GetAvailablePermissions").Return([]dto.ResourcePermissions{}, assert.AnError)
 				req := httptest.NewRequest("GET", "/role/permissions", nil)
 				return app.Test(req)
 			},
@@ -249,7 +249,7 @@ func TestRoleController_ErrorCases(t *testing.T) {
 		{
 			name: "CreateRole duplicate name",
 			testFunc: func(mockUC *MockRoleUsecase, app *fiber.App) (*http.Response, error) {
-				reqBody := domain.RoleCreateRequest{NamaRole: "admin", Permissions: map[string][]string{"user": {"read"}}}
+				reqBody := dto.RoleCreateRequest{NamaRole: "admin", Permissions: map[string][]string{"user": {"read"}}}
 				mockUC.On("CreateRole", reqBody).Return(nil, apperrors.NewConflictError("nama role sudah ada"))
 				bodyBytes, _ := json.Marshal(reqBody)
 				req := httptest.NewRequest("POST", "/role", bytes.NewReader(bodyBytes))
@@ -284,7 +284,7 @@ func TestRoleController_UpdateRole_NotFound(t *testing.T) {
 	app := fiber.New()
 	app.Put("/role/:id", controller.UpdateRole)
 
-	reqBody := domain.RoleUpdateRequest{
+	reqBody := dto.RoleUpdateRequest{
 		NamaRole:    "updated_role",
 		Permissions: map[string][]string{"user": {"read"}},
 	}
@@ -331,7 +331,7 @@ func TestRoleController_UpdateRole_DuplicateName(t *testing.T) {
 	app := fiber.New()
 	app.Put("/role/:id", controller.UpdateRole)
 
-	reqBody := domain.RoleUpdateRequest{
+	reqBody := dto.RoleUpdateRequest{
 		NamaRole:    "admin",
 		Permissions: map[string][]string{"user": {"read"}},
 	}

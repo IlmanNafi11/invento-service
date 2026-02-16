@@ -11,6 +11,7 @@ import (
 
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
@@ -22,16 +23,16 @@ import (
 )
 
 type TusModulUsecase interface {
-	InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
+	InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error)
 	HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
-	GetModulUploadInfo(uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error)
+	GetModulUploadInfo(uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error)
 	GetModulUploadStatus(uploadID string, userID string) (int64, int64, error)
 	CancelModulUpload(uploadID string, userID string) error
-	CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error)
-	InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error)
+	CheckModulUploadSlot(userID string) (*dto.TusModulUploadSlotResponse, error)
+	InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error)
 	HandleModulUpdateChunk(modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
 	GetModulUpdateUploadStatus(modulID string, uploadID string, userID string) (int64, int64, error)
-	GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error)
+	GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error)
 	CancelModulUpdateUpload(modulID string, uploadID string, userID string) error
 }
 
@@ -59,7 +60,7 @@ func NewTusModulUsecase(
 	}
 }
 
-func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error) {
+func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*dto.TusModulUploadSlotResponse, error) {
 	activeCount, err := uc.tusModulUploadRepo.CountActiveByUserID(userID)
 	if err != nil {
 		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.CheckModulUploadSlot: %w", err))
@@ -68,7 +69,7 @@ func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModul
 	maxQueue := int64(uc.config.Upload.MaxQueueModulPerUser)
 	available := activeCount < maxQueue
 
-	response := &domain.TusModulUploadSlotResponse{
+	response := &dto.TusModulUploadSlotResponse{
 		Available:   available,
 		QueueLength: int(activeCount),
 		MaxQueue:    uc.config.Upload.MaxQueueModulPerUser,
@@ -83,11 +84,11 @@ func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*domain.TusModul
 	return response, nil
 }
 
-func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
 	return uc.initiateUpload(userID, fileSize, uploadMetadata, domain.UploadTypeModulCreate, nil)
 }
 
-func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
 	modul, err := uc.modulRepo.GetByID(modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
@@ -103,7 +104,7 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID string, userID stri
 	return uc.initiateUpload(userID, fileSize, uploadMetadata, domain.UploadTypeModulUpdate, &modulID)
 }
 
-func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadMetadata string, uploadType string, modulID *string) (*domain.TusModulUploadResponse, error) {
+func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadMetadata string, uploadType string, modulID *string) (*dto.TusModulUploadResponse, error) {
 	slotCheck, err := uc.CheckModulUploadSlot(userID)
 	if err != nil {
 		return nil, err
@@ -129,17 +130,20 @@ func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadM
 
 	expiresAt := time.Now().Add(time.Duration(uc.config.Upload.IdleTimeout) * time.Second)
 	tusUpload := &domain.TusModulUpload{
-		ID:             uploadID,
-		UserID:         userID,
-		ModulID:        modulID,
-		UploadType:     uploadType,
-		UploadURL:      uploadURL,
-		UploadMetadata: *metadata,
-		FileSize:       fileSize,
-		CurrentOffset:  0,
-		Status:         domain.UploadStatusPending,
-		Progress:       0,
-		ExpiresAt:      expiresAt,
+		ID:         uploadID,
+		UserID:     userID,
+		ModulID:    modulID,
+		UploadType: uploadType,
+		UploadURL:  uploadURL,
+		UploadMetadata: domain.TusModulUploadMetadata{
+			Judul:     metadata.Judul,
+			Deskripsi: metadata.Deskripsi,
+		},
+		FileSize:      fileSize,
+		CurrentOffset: 0,
+		Status:        domain.UploadStatusPending,
+		Progress:      0,
+		ExpiresAt:     expiresAt,
 	}
 
 	if err := uc.tusModulUploadRepo.Create(tusUpload); err != nil {
@@ -160,7 +164,7 @@ func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadM
 		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.initiateUpload: init storage: %w", err))
 	}
 
-	return &domain.TusModulUploadResponse{
+	return &dto.TusModulUploadResponse{
 		UploadID:  uploadID,
 		UploadURL: uploadURL,
 		Offset:    0,
@@ -311,21 +315,21 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 	return modul.ID, nil
 }
 
-func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
+func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
 	return uc.getUploadInfo(uploadID, userID, nil)
 }
 
-func (uc *tusModulUsecase) GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
+func (uc *tusModulUsecase) GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
 	return uc.getUploadInfo(uploadID, userID, &modulID)
 }
 
-func (uc *tusModulUsecase) getUploadInfo(uploadID string, userID string, modulID *string) (*domain.TusModulUploadInfoResponse, error) {
+func (uc *tusModulUsecase) getUploadInfo(uploadID string, userID string, modulID *string) (*dto.TusModulUploadInfoResponse, error) {
 	tusUpload, err := uc.getOwnedUpload(uploadID, userID, modulID)
 	if err != nil {
 		return nil, err
 	}
 
-	response := &domain.TusModulUploadInfoResponse{
+	response := &dto.TusModulUploadInfoResponse{
 		UploadID:  tusUpload.ID,
 		Judul:     tusUpload.UploadMetadata.Judul,
 		Deskripsi: tusUpload.UploadMetadata.Deskripsi,
@@ -412,7 +416,7 @@ func (uc *tusModulUsecase) getOwnedUpload(uploadID string, userID string, modulI
 	return tusUpload, nil
 }
 
-func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*domain.TusModulUploadInitRequest, error) {
+func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*dto.TusModulUploadInitRequest, error) {
 	if metadataHeader == "" {
 		return nil, apperrors.NewValidationError("metadata wajib diisi", nil)
 	}
@@ -427,7 +431,7 @@ func (uc *tusModulUsecase) parseModulMetadata(metadataHeader string) (*domain.Tu
 		return nil, apperrors.NewValidationError("judul harus antara 3-255 karakter", nil)
 	}
 
-	return &domain.TusModulUploadInitRequest{
+	return &dto.TusModulUploadInitRequest{
 		Judul:     judul,
 		Deskripsi: metadataMap["deskripsi"],
 	}, nil

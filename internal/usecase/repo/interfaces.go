@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 )
 
 type UserRepository interface {
@@ -11,13 +12,13 @@ type UserRepository interface {
 	GetByID(id string) (*domain.User, error)
 	GetByIDs(userIDs []string) ([]*domain.User, error)
 	Create(user *domain.User) error
-	GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error)
+	GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error)
 	GetProfileWithCounts(userID string) (*domain.User, int, int, error)
-	GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error)
+	GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error)
 	UpdateRole(userID string, roleID *int) error
 	UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error
 	Delete(userID string) error
-	GetByRoleID(roleID uint) ([]domain.UserListItem, error)
+	GetByRoleID(roleID uint) ([]dto.UserListItem, error)
 	BulkUpdateRole(userIDs []string, roleID uint) error
 }
 
@@ -27,7 +28,7 @@ type RoleRepository interface {
 	GetByName(name string) (*domain.Role, error)
 	Update(role *domain.Role) error
 	Delete(id uint) error
-	GetAll(search string, page, limit int) ([]domain.RoleListItem, int, error)
+	GetAll(search string, page, limit int) ([]dto.RoleListItem, int, error)
 }
 
 type PermissionRepository interface {
@@ -36,7 +37,7 @@ type PermissionRepository interface {
 	GetByResourceAndAction(resource, action string) (*domain.Permission, error)
 	GetAllByResourceActions(permissions map[string][]string) ([]domain.Permission, error)
 	GetAll() ([]domain.Permission, error)
-	GetAvailablePermissions() ([]domain.ResourcePermissions, error)
+	GetAvailablePermissions() ([]dto.ResourcePermissions, error)
 	BulkCreate(permissions []domain.Permission) error
 }
 
@@ -52,7 +53,7 @@ type ProjectRepository interface {
 	Create(project *domain.Project) error
 	GetByID(id uint) (*domain.Project, error)
 	GetByIDs(ids []uint, userID string) ([]domain.Project, error)
-	GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error)
+	GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error)
 	CountByUserID(userID string) (int, error)
 	Update(project *domain.Project) error
 	Delete(id uint) error
@@ -62,7 +63,7 @@ type ModulRepository interface {
 	Create(modul *domain.Modul) error
 	GetByID(id string) (*domain.Modul, error)
 	GetByIDs(ids []string, userID string) ([]domain.Modul, error)
-	GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]domain.ModulListItem, int, error)
+	GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error)
 	CountByUserID(userID string) (int, error)
 	Update(modul *domain.Modul) error
 	Delete(id string) error

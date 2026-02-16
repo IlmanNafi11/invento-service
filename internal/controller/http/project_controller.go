@@ -3,7 +3,7 @@ package http
 import (
 	"errors"
 	"invento-service/internal/controller/base"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/rbac"
@@ -36,7 +36,7 @@ func NewProjectController(projectUsecase usecase.ProjectUsecase, supabaseURL str
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Project ID"
-// @Param request body domain.ProjectUpdateRequest true "Update request"
+// @Param request body dto.UpdateProjectRequest true "Update request"
 // @Success 200 {object} dto.SuccessResponse "Metadata updated successfully"
 // @Failure 400 {object} dto.ErrorResponse "Invalid request format"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
@@ -58,7 +58,7 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 	}
 
 	// Parse request body
-	var req domain.ProjectUpdateRequest
+	var req dto.UpdateProjectRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
@@ -149,7 +149,7 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 	}
 
 	// Parse query parameters
-	var params domain.ProjectListQueryParams
+	var params dto.ProjectListQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
@@ -222,7 +222,7 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 // @Accept json
 // @Produce application/zip
 // @Security BearerAuth
-// @Param request body domain.ProjectDownloadRequest true "Download request with project IDs"
+// @Param request body dto.ProjectDownloadRequest true "Download request with project IDs"
 // @Success 200 {file} binary "ZIP file containing project files"
 // @Failure 400 {object} dto.ErrorResponse "Invalid request format or empty IDs"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
@@ -237,7 +237,7 @@ func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
 	}
 
 	// Parse request body
-	var req domain.ProjectDownloadRequest
+	var req dto.ProjectDownloadRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}

@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-// AuthService defines the authentication operations interface.
-// This interface allows for dependency injection and mocking in tests.
 type AuthService interface {
 	VerifyJWT(token string) (AuthClaims, error)
 	Login(ctx context.Context, email, password string) (*AuthServiceResponse, error)
@@ -21,20 +19,17 @@ type AuthClaims interface {
 	GetUserID() string
 }
 
-// AuthServiceRegisterRequest represents the registration request for auth service.
 type AuthServiceRegisterRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-	Name     string `json:"name" validate:"required"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Name     string `json:"name"`
 }
 
-// AuthServiceLoginRequest represents the login request for auth service.
 type AuthServiceLoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
-// AuthServiceResponse represents the response from auth service operations.
 type AuthServiceResponse struct {
 	AccessToken  string               `json:"access_token"`
 	RefreshToken string               `json:"refresh_token,omitempty"`
@@ -43,7 +38,6 @@ type AuthServiceResponse struct {
 	User         *AuthServiceUserInfo `json:"user"`
 }
 
-// AuthServiceUserInfo represents user information from auth service.
 type AuthServiceUserInfo struct {
 	ID           string                 `json:"id"`
 	Email        string                 `json:"email"`
@@ -64,51 +58,6 @@ type User struct {
 	Role         *Role     `json:"role,omitempty" gorm:"foreignKey:RoleID"`
 }
 
-// TableName specifies the table name for User model to match Supabase schema
 func (User) TableName() string {
 	return "user_profiles"
-}
-
-type AuthRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8"`
-}
-
-type RegisterRequest struct {
-	Name     string `json:"name" validate:"required,min=2,max=100"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8"`
-}
-
-type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required"`
-}
-
-type ResetPasswordRequest struct {
-	Email string `json:"email" validate:"required,email"`
-}
-
-// AuthUserResponse represents safe user data returned in auth responses.
-// Excludes sensitive fields like RoleID, IsActive from client exposure.
-type AuthUserResponse struct {
-	ID        string `json:"id"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	Role      string `json:"role,omitempty"`
-	CreatedAt string `json:"created_at,omitempty"`
-}
-
-type AuthResponse struct {
-	User        *AuthUserResponse `json:"user"`
-	AccessToken string            `json:"access_token"`
-	TokenType   string            `json:"token_type"`
-	ExpiresIn   int               `json:"expires_in"`
-	ExpiresAt   int64             `json:"expires_at"`
-}
-
-type RefreshTokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-	ExpiresAt   int64  `json:"expires_at"`
 }

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"strings"
 
 	"gorm.io/gorm"
@@ -68,23 +69,23 @@ func (r *permissionRepository) GetAll() ([]domain.Permission, error) {
 	return permissions, nil
 }
 
-func (r *permissionRepository) GetAvailablePermissions() ([]domain.ResourcePermissions, error) {
+func (r *permissionRepository) GetAvailablePermissions() ([]dto.ResourcePermissions, error) {
 	var permissions []domain.Permission
 	if err := r.db.Order("resource ASC, action ASC").Find(&permissions).Error; err != nil {
 		return nil, err
 	}
 
-	resourceMap := make(map[string][]domain.PermissionItem)
+	resourceMap := make(map[string][]dto.PermissionItem)
 	for _, perm := range permissions {
-		resourceMap[perm.Resource] = append(resourceMap[perm.Resource], domain.PermissionItem{
+		resourceMap[perm.Resource] = append(resourceMap[perm.Resource], dto.PermissionItem{
 			Action: perm.Action,
 			Label:  perm.Label,
 		})
 	}
 
-	var result []domain.ResourcePermissions
+	var result []dto.ResourcePermissions
 	for resource, perms := range resourceMap {
-		result = append(result, domain.ResourcePermissions{
+		result = append(result, dto.ResourcePermissions{
 			Name:        resource,
 			Permissions: perms,
 		})

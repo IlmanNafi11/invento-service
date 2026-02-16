@@ -3,6 +3,7 @@ package rbac
 import (
 	"errors"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 )
 
 // RBACPermissionRepository defines the permission repo methods needed by RBACHelper.
@@ -33,7 +34,7 @@ func (rh *RBACHelper) SetRolePermissions(
 	permissions map[string][]string,
 	permissionRepo RBACPermissionRepository,
 	rolePermissionRepo RBACRolePermissionRepository,
-) ([]domain.RolePermissionDetail, int, error) {
+) ([]dto.RolePermissionDetail, int, error) {
 	dbPermissions, err := permissionRepo.GetAllByResourceActions(permissions)
 	if err != nil {
 		return nil, 0, errors.New("gagal mengambil data permission")
@@ -46,7 +47,7 @@ func (rh *RBACHelper) SetRolePermissions(
 	}
 
 	var rolePermissions []domain.RolePermission
-	var permissionDetails []domain.RolePermissionDetail
+	var permissionDetails []dto.RolePermissionDetail
 	permissionCount := 0
 
 	for resource, actions := range permissions {
@@ -72,7 +73,7 @@ func (rh *RBACHelper) SetRolePermissions(
 		}
 
 		if len(resourceActions) > 0 {
-			permissionDetails = append(permissionDetails, domain.RolePermissionDetail{
+			permissionDetails = append(permissionDetails, dto.RolePermissionDetail{
 				Resource: resource,
 				Actions:  resourceActions,
 			})
@@ -100,21 +101,21 @@ func (rh *RBACHelper) RemoveAllRolePermissions(roleID uint, roleName string, rol
 	return nil
 }
 
-func (rh *RBACHelper) BuildRoleDetailResponse(role *domain.Role, permissions []domain.Permission) *domain.RoleDetailResponse {
+func (rh *RBACHelper) BuildRoleDetailResponse(role *domain.Role, permissions []domain.Permission) *dto.RoleDetailResponse {
 	resourceMap := make(map[string][]string)
 	for _, perm := range permissions {
 		resourceMap[perm.Resource] = append(resourceMap[perm.Resource], perm.Action)
 	}
 
-	var permissionDetails []domain.RolePermissionDetail
+	var permissionDetails []dto.RolePermissionDetail
 	for resource, actions := range resourceMap {
-		permissionDetails = append(permissionDetails, domain.RolePermissionDetail{
+		permissionDetails = append(permissionDetails, dto.RolePermissionDetail{
 			Resource: resource,
 			Actions:  actions,
 		})
 	}
 
-	return &domain.RoleDetailResponse{
+	return &dto.RoleDetailResponse{
 		ID:               role.ID,
 		NamaRole:         role.NamaRole,
 		Permissions:      permissionDetails,

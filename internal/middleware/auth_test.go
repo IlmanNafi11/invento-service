@@ -85,7 +85,7 @@ func (m *mockUserRepository) GetProfileWithCounts(userID string) (*domain.User, 
 	return nil, 0, 0, nil
 }
 
-func (m *mockUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error) {
+func (m *mockUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -97,7 +97,7 @@ func (m *mockUserRepository) Create(user *domain.User) error {
 	return errors.New("not implemented")
 }
 
-func (m *mockUserRepository) GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error) {
+func (m *mockUserRepository) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	return nil, 0, errors.New("not implemented")
 }
 
@@ -113,7 +113,7 @@ func (m *mockUserRepository) Delete(userID string) error {
 	return errors.New("not implemented")
 }
 
-func (m *mockUserRepository) GetByRoleID(roleID uint) ([]domain.UserListItem, error) {
+func (m *mockUserRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
 	return nil, errors.New("not implemented")
 }
 

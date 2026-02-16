@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 
 	"github.com/rs/zerolog"
@@ -51,8 +52,8 @@ func (r *modulRepository) GetByIDs(ids []string, userID string) ([]domain.Modul,
 	return moduls, nil
 }
 
-func (r *modulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]domain.ModulListItem, int, error) {
-	var modulListItems []domain.ModulListItem
+func (r *modulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
+	var modulListItems []dto.ModulListItem
 	var total int64
 
 	offset := (page - 1) * limit

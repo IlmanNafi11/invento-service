@@ -2,7 +2,7 @@ package http
 
 import (
 	"invento-service/internal/controller/base"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
@@ -73,7 +73,7 @@ func (ctrl *RoleController) GetAvailablePermissions(c *fiber.Ctx) error {
 // @Router   /role [get]
 // @Security  BearerAuth
 func (ctrl *RoleController) GetRoleList(c *fiber.Ctx) error {
-	var params domain.RoleListQueryParams
+	var params dto.RoleListQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
@@ -93,7 +93,7 @@ func (ctrl *RoleController) GetRoleList(c *fiber.Ctx) error {
 // @Tags   Roles
 // @Accept   json
 // @Produce  json
-// @Param   request body  domain.RoleCreateRequest true "Role creation request"
+// @Param   request body  dto.RoleCreateRequest true "Role creation request"
 // @Success  201  {object} dto.SuccessResponse "Role created successfully"
 // @Failure  400  {object} dto.ErrorResponse "Invalid request format"
 // @Failure  409  {object} dto.ErrorResponse "Role name already exists"
@@ -101,7 +101,7 @@ func (ctrl *RoleController) GetRoleList(c *fiber.Ctx) error {
 // @Router   /role [post]
 // @Security  BearerAuth
 func (ctrl *RoleController) CreateRole(c *fiber.Ctx) error {
-	var req domain.RoleCreateRequest
+	var req dto.RoleCreateRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
@@ -154,7 +154,7 @@ func (ctrl *RoleController) GetRoleDetail(c *fiber.Ctx) error {
 // @Accept   json
 // @Produce  json
 // @Param   id  path  int      true "Role ID"
-// @Param   request body  domain.RoleUpdateRequest true "Role update request"
+// @Param   request body  dto.RoleUpdateRequest true "Role update request"
 // @Success  200  {object} dto.SuccessResponse "Role updated successfully"
 // @Failure  400  {object} dto.ErrorResponse "Invalid request format"
 // @Failure  404  {object} dto.ErrorResponse "Role not found"
@@ -168,7 +168,7 @@ func (ctrl *RoleController) UpdateRole(c *fiber.Ctx) error {
 		return err
 	}
 
-	var req domain.RoleUpdateRequest
+	var req dto.RoleUpdateRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}

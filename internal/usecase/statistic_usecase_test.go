@@ -38,8 +38,8 @@ type statisticUsecaseWithInterface struct {
 	db             *gorm.DB
 }
 
-func (su *statisticUsecaseWithInterface) GetStatistics(userID string, userRole string) (*domain.StatisticData, error) {
-	result := &domain.StatisticData{}
+func (su *statisticUsecaseWithInterface) GetStatistics(userID string, userRole string) (*dto.StatisticData, error) {
+	result := &dto.StatisticData{}
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")
 	hasModulRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Modul", "read")

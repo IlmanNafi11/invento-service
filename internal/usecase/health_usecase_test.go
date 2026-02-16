@@ -55,7 +55,7 @@ func TestHealthUsecase_GetBasicHealth_Success(t *testing.T) {
 	result := healthUsecase.GetBasicHealth()
 
 	assert.NotNil(t, result)
-	assert.Equal(t, domain.HealthStatusHealthy, result.Status)
+	assert.Equal(t, dto.HealthStatusHealthy, result.Status)
 	assert.Equal(t, "test-app", result.App)
 	assert.WithinDuration(t, time.Now(), result.Timestamp, time.Second)
 }
@@ -76,9 +76,9 @@ func TestHealthUsecase_GetComprehensiveHealth_Success(t *testing.T) {
 	assert.Equal(t, "1.0.0", result.App.Version)
 	assert.Equal(t, "test", result.App.Environment)
 	assert.NotEmpty(t, result.App.Uptime)
-	assert.Equal(t, domain.HealthStatusUnhealthy, result.Status)
+	assert.Equal(t, dto.HealthStatusUnhealthy, result.Status)
 
-	assert.Equal(t, domain.ServiceStatusError, result.Database.Status)
+	assert.Equal(t, dto.ServiceStatusError, result.Database.Status)
 	assert.WithinDuration(t, time.Now(), result.Timestamp, time.Second)
 }
 
@@ -104,7 +104,7 @@ func TestHealthUsecase_GetSystemMetrics_Success(t *testing.T) {
 	assert.NotEmpty(t, result.System.Runtime.GoVersion)
 	assert.NotEmpty(t, result.System.Runtime.OS)
 	assert.Greater(t, result.Http.TotalRequests, int64(0))
-	assert.Equal(t, domain.ServiceStatusError, result.Database.Status)
+	assert.Equal(t, dto.ServiceStatusError, result.Database.Status)
 }
 
 func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
@@ -125,7 +125,7 @@ func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
 	assert.Equal(t, "running", result.App.Status)
 	assert.NotEmpty(t, result.App.Uptime)
 	assert.Equal(t, "MySQL", result.Services.Database.Name)
-	assert.Equal(t, domain.ServiceStatusUnhealthy, result.Services.Database.Status)
+	assert.Equal(t, dto.ServiceStatusUnhealthy, result.Services.Database.Status)
 
 	assert.NotEmpty(t, result.Dependencies)
 	assert.Greater(t, len(result.Dependencies), 0)
@@ -133,7 +133,7 @@ func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
 	for _, dep := range result.Dependencies {
 		assert.NotEmpty(t, dep.Name)
 		assert.NotEmpty(t, dep.Version)
-		assert.Equal(t, domain.ServiceStatusLoaded, dep.Status)
+		assert.Equal(t, dto.ServiceStatusLoaded, dep.Status)
 	}
 }
 

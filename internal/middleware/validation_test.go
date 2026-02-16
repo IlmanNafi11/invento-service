@@ -17,11 +17,11 @@ import (
 // TestValidateRequest_ValidJSON tests successful validation with valid JSON
 func TestValidateRequest_ValidJSON(t *testing.T) {
 	app := fiber.New()
-	app.Use(ValidateRequest(&domain.AuthRequest{}))
+	app.Use(ValidateRequest(&dto.AuthRequest{}))
 
-	var validatedRequest *domain.AuthRequest
+	var validatedRequest *dto.AuthRequest
 	app.Post("/login", func(c *fiber.Ctx) error {
-		validatedRequest = c.Locals("request").(*domain.AuthRequest)
+		validatedRequest = c.Locals("request").(*dto.AuthRequest)
 		return c.JSON(validatedRequest)
 	})
 
@@ -41,7 +41,7 @@ func TestValidateRequest_ValidJSON(t *testing.T) {
 // TestValidateRequest_InvalidJSONFormat tests that invalid JSON returns 400 error
 func TestValidateRequest_InvalidJSONFormat(t *testing.T) {
 	app := fiber.New()
-	app.Use(ValidateRequest(&domain.AuthRequest{}))
+	app.Use(ValidateRequest(&dto.AuthRequest{}))
 
 	app.Post("/login", func(c *fiber.Ctx) error {
 		return c.SendString("Should not reach here")
@@ -61,7 +61,7 @@ func TestValidateRequest_InvalidJSONFormat(t *testing.T) {
 // TestValidateRequest_ValidationFailures tests that validation errors return 422
 func TestValidateRequest_ValidationFailures(t *testing.T) {
 	app := fiber.New()
-	app.Use(ValidateRequest(&domain.AuthRequest{}))
+	app.Use(ValidateRequest(&dto.AuthRequest{}))
 
 	app.Post("/login", func(c *fiber.Ctx) error {
 		return c.SendString("Should not reach here")
@@ -115,7 +115,7 @@ func TestValidateRequest_ValidationFailures(t *testing.T) {
 // TestValidateRequest_RequiredFieldValidation tests required field validation
 func TestValidateRequest_RequiredFieldValidation(t *testing.T) {
 	app := fiber.New()
-	app.Use(ValidateRequest(&domain.RegisterRequest{}))
+	app.Use(ValidateRequest(&dto.RegisterRequest{}))
 
 	app.Post("/register", func(c *fiber.Ctx) error {
 		return c.SendString("Should not reach here")
@@ -203,13 +203,13 @@ func TestValidateRequest_EmailValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := fiber.New()
-			app.Use(ValidateRequest(&domain.AuthRequest{}))
+			app.Use(ValidateRequest(&dto.AuthRequest{}))
 
-			var validatedRequest *domain.AuthRequest
+			var validatedRequest *dto.AuthRequest
 			app.Post("/login", func(c *fiber.Ctx) error {
 				// Get validated request if successful
 				if req := c.Locals("request"); req != nil {
-					validatedRequest = req.(*domain.AuthRequest)
+					validatedRequest = req.(*dto.AuthRequest)
 				}
 				return c.SendString("OK")
 			})
@@ -269,7 +269,7 @@ func TestValidateRequest_MinMaxValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := fiber.New()
-			app.Use(ValidateRequest(&domain.RegisterRequest{}))
+			app.Use(ValidateRequest(&dto.RegisterRequest{}))
 
 			app.Post("/register", func(c *fiber.Ctx) error {
 				return c.SendString("OK")
@@ -300,7 +300,7 @@ func TestValidateStruct(t *testing.T) {
 	}{
 		{
 			name: "valid auth request",
-			data: &domain.AuthRequest{
+			data: &dto.AuthRequest{
 				Email:    "test@example.com",
 				Password: "password123",
 			},
@@ -308,14 +308,14 @@ func TestValidateStruct(t *testing.T) {
 		},
 		{
 			name: "invalid auth request - missing email",
-			data: &domain.AuthRequest{
+			data: &dto.AuthRequest{
 				Password: "password123",
 			},
 			hasErrors: true,
 		},
 		{
 			name: "invalid auth request - invalid email",
-			data: &domain.AuthRequest{
+			data: &dto.AuthRequest{
 				Email:    "invalid-email",
 				Password: "password123",
 			},
@@ -323,7 +323,7 @@ func TestValidateStruct(t *testing.T) {
 		},
 		{
 			name: "valid register request",
-			data: &domain.RegisterRequest{
+			data: &dto.RegisterRequest{
 				Name:     "Test User",
 				Email:    "test@example.com",
 				Password: "password123",
@@ -332,7 +332,7 @@ func TestValidateStruct(t *testing.T) {
 		},
 		{
 			name: "invalid register request - name too short",
-			data: &domain.RegisterRequest{
+			data: &dto.RegisterRequest{
 				Name:     "T",
 				Email:    "test@example.com",
 				Password: "password123",
@@ -586,7 +586,7 @@ func TestValidateRequest_EdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := fiber.New()
-			app.Use(ValidateRequest(&domain.AuthRequest{}))
+			app.Use(ValidateRequest(&dto.AuthRequest{}))
 
 			app.Post("/login", func(c *fiber.Ctx) error {
 				return c.SendString("OK")
@@ -607,11 +607,11 @@ func TestValidateRequest_EdgeCases(t *testing.T) {
 func TestValidateRequest_MultipleEndpoints(t *testing.T) {
 	app := fiber.New()
 
-	app.Post("/login", ValidateRequest(&domain.AuthRequest{}), func(c *fiber.Ctx) error {
+	app.Post("/login", ValidateRequest(&dto.AuthRequest{}), func(c *fiber.Ctx) error {
 		return c.SendString("Login OK")
 	})
 
-	app.Post("/register", ValidateRequest(&domain.RegisterRequest{}), func(c *fiber.Ctx) error {
+	app.Post("/register", ValidateRequest(&dto.RegisterRequest{}), func(c *fiber.Ctx) error {
 		return c.SendString("Register OK")
 	})
 
@@ -694,7 +694,7 @@ func TestParseValidationErrorMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app := fiber.New()
-			app.Use(ValidateRequest(&domain.AuthRequest{}))
+			app.Use(ValidateRequest(&dto.AuthRequest{}))
 
 			app.Post("/login", func(c *fiber.Ctx) error {
 				return c.SendString("OK")

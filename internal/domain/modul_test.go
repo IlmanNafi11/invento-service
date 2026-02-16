@@ -63,8 +63,8 @@ func TestModulStruct(t *testing.T) {
 }
 
 func TestModulRequestStructs(t *testing.T) {
-	t.Run("ModulUpdateRequest", func(t *testing.T) {
-		req := ModulUpdateRequest{
+	t.Run("dto.UpdateModulRequest", func(t *testing.T) {
+		req := dto.UpdateModulRequest{
 			Judul:     "updated_module.pdf",
 			Deskripsi: "Updated description",
 		}
@@ -77,8 +77,8 @@ func TestModulRequestStructs(t *testing.T) {
 		}
 	})
 
-	t.Run("ModulUpdateRequest with partial data", func(t *testing.T) {
-		req := ModulUpdateRequest{
+	t.Run("dto.UpdateModulRequest with partial data", func(t *testing.T) {
+		req := dto.UpdateModulRequest{
 			Deskripsi: "Only description updated",
 		}
 
@@ -92,8 +92,8 @@ func TestModulRequestStructs(t *testing.T) {
 }
 
 func TestModulListQueryParams(t *testing.T) {
-	t.Run("ModulListQueryParams with all fields", func(t *testing.T) {
-		params := ModulListQueryParams{
+	t.Run("dto.ModulListQueryParams with all fields", func(t *testing.T) {
+		params := dto.ModulListQueryParams{
 			Search:       "test",
 			FilterType:   "application/pdf",
 			FilterStatus: "completed",
@@ -118,8 +118,8 @@ func TestModulListQueryParams(t *testing.T) {
 		}
 	})
 
-	t.Run("ModulListQueryParams with default values", func(t *testing.T) {
-		params := ModulListQueryParams{}
+	t.Run("dto.ModulListQueryParams with default values", func(t *testing.T) {
+		params := dto.ModulListQueryParams{}
 
 		if params.Search != "" {
 			t.Errorf("Expected empty Search, got %s", params.Search)
@@ -131,9 +131,9 @@ func TestModulListQueryParams(t *testing.T) {
 }
 
 func TestModulResponseStructs(t *testing.T) {
-	t.Run("ModulListItem", func(t *testing.T) {
+	t.Run("dto.ModulListItem", func(t *testing.T) {
 		now := time.Now()
-		item := ModulListItem{
+		item := dto.ModulListItem{
 			ID:                 "550e8400-e29b-41d4-a716-446655440002",
 			Judul:              "Test Module",
 			Deskripsi:          "Test Description",
@@ -152,12 +152,12 @@ func TestModulResponseStructs(t *testing.T) {
 		}
 	})
 
-	t.Run("ModulListData with pagination", func(t *testing.T) {
-		items := []ModulListItem{
+	t.Run("dto.ModulListData with pagination", func(t *testing.T) {
+		items := []dto.ModulListItem{
 			{ID: "550e8400-e29b-41d4-a716-446655440003", Judul: "test1.pdf", MimeType: "application/pdf", Status: "completed"},
 			{ID: "550e8400-e29b-41d4-a716-446655440004", Judul: "test2.pdf", MimeType: "application/pdf", Status: "completed"},
 		}
-		data := ModulListData{
+		data := dto.ModulListData{
 			Items: items,
 			Pagination: dto.PaginationData{
 				Page:       1,
@@ -175,9 +175,9 @@ func TestModulResponseStructs(t *testing.T) {
 		}
 	})
 
-	t.Run("ModulResponse", func(t *testing.T) {
+	t.Run("dto.ModulResponse", func(t *testing.T) {
 		now := time.Now()
-		resp := ModulResponse{
+		resp := dto.ModulResponse{
 			ID:        "550e8400-e29b-41d4-a716-446655440005",
 			Judul:     "test.pdf",
 			Deskripsi: "Test description",
@@ -197,8 +197,8 @@ func TestModulResponseStructs(t *testing.T) {
 }
 
 func TestModulDownloadRequest(t *testing.T) {
-	t.Run("ModulDownloadRequest with multiple IDs", func(t *testing.T) {
-		req := ModulDownloadRequest{
+	t.Run("dto.ModulDownloadRequest with multiple IDs", func(t *testing.T) {
+		req := dto.ModulDownloadRequest{
 			IDs: []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440002", "550e8400-e29b-41d4-a716-446655440003"},
 		}
 
@@ -210,8 +210,8 @@ func TestModulDownloadRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("ModulDownloadRequest with single ID", func(t *testing.T) {
-		req := ModulDownloadRequest{
+	t.Run("dto.ModulDownloadRequest with single ID", func(t *testing.T) {
+		req := dto.ModulDownloadRequest{
 			IDs: []string{"550e8400-e29b-41d4-a716-446655440100"},
 		}
 

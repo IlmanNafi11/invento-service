@@ -3,7 +3,7 @@ package http
 import (
 	"invento-service/config"
 	base "invento-service/internal/controller/base"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"invento-service/internal/upload"
 	"invento-service/internal/usecase"
 	"strconv"
@@ -96,7 +96,7 @@ func (ctrl *TusController) initiateUpload(c *fiber.Ctx, projectID *uint) error {
 	}
 
 	uploadMetadata := c.Get(upload.HeaderUploadMetadata)
-	metadata := domain.TusUploadInitRequest{}
+	metadata := dto.TusUploadInitRequest{}
 	if projectID == nil || uploadMetadata != "" {
 		metadata, err = ctrl.parseUploadMetadata(uploadMetadata)
 		if err != nil {
@@ -107,7 +107,7 @@ func (ctrl *TusController) initiateUpload(c *fiber.Ctx, projectID *uint) error {
 		}
 	}
 
-	var result *domain.TusUploadResponse
+	var result *dto.TusUploadResponse
 	if projectID == nil {
 		result, err = ctrl.tusUsecase.InitiateUpload(userID, userEmail, userRole, fileSize, metadata)
 	} else {
@@ -244,7 +244,7 @@ func (ctrl *TusController) getUploadInfo(c *fiber.Ctx, projectID *uint) error {
 	}
 
 	var (
-		result *domain.TusUploadInfoResponse
+		result *dto.TusUploadInfoResponse
 		err    error
 	)
 	if projectID == nil {
@@ -321,8 +321,8 @@ func (ctrl *TusController) parseUploadLength(c *fiber.Ctx) (int64, error) {
 	return fileSize, nil
 }
 
-func (ctrl *TusController) parseUploadMetadata(metadataHeader string) (domain.TusUploadInitRequest, error) {
-	var metadata domain.TusUploadInitRequest
+func (ctrl *TusController) parseUploadMetadata(metadataHeader string) (dto.TusUploadInitRequest, error) {
+	var metadata dto.TusUploadInitRequest
 
 	if metadataHeader == "" {
 		return metadata, fiber.NewError(fiber.StatusBadRequest, "Upload-Metadata header required")

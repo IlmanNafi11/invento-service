@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 )
@@ -137,8 +138,8 @@ func TestUploadTypeConstants(t *testing.T) {
 }
 
 func TestTusUploadInitRequest(t *testing.T) {
-	t.Run("TusUploadInitRequest with valid data", func(t *testing.T) {
-		req := TusUploadInitRequest{
+	t.Run("TusUploadMetadata with valid data", func(t *testing.T) {
+		req := TusUploadMetadata{
 			NamaProject: "My Awesome Project",
 			Kategori:    "website",
 			Semester:    3,
@@ -155,11 +156,11 @@ func TestTusUploadInitRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("TusUploadInitRequest with different kategori", func(t *testing.T) {
+	t.Run("TusUploadMetadata with different kategori", func(t *testing.T) {
 		validKategories := []string{"website", "mobile", "iot", "machine_learning", "deep_learning"}
 
 		for _, kategori := range validKategories {
-			req := TusUploadInitRequest{
+			req := TusUploadMetadata{
 				NamaProject: "Test Project",
 				Kategori:    kategori,
 				Semester:    1,
@@ -173,8 +174,8 @@ func TestTusUploadInitRequest(t *testing.T) {
 }
 
 func TestTusUploadResponse(t *testing.T) {
-	t.Run("TusUploadResponse struct", func(t *testing.T) {
-		resp := TusUploadResponse{
+	t.Run("dto.TusUploadResponse struct", func(t *testing.T) {
+		resp := dto.TusUploadResponse{
 			UploadID:  "upload-123",
 			UploadURL: "https://example.com/tus/upload-123",
 			Offset:    0,
@@ -192,8 +193,8 @@ func TestTusUploadResponse(t *testing.T) {
 		}
 	})
 
-	t.Run("TusUploadResponse with progress", func(t *testing.T) {
-		resp := TusUploadResponse{
+	t.Run("dto.TusUploadResponse with progress", func(t *testing.T) {
+		resp := dto.TusUploadResponse{
 			UploadID:  "upload-456",
 			UploadURL: "https://example.com/tus/upload-456",
 			Offset:    512000,
@@ -211,11 +212,11 @@ func TestTusUploadResponse(t *testing.T) {
 }
 
 func TestTusUploadInfoResponse(t *testing.T) {
-	t.Run("TusUploadInfoResponse struct", func(t *testing.T) {
+	t.Run("dto.TusUploadInfoResponse struct", func(t *testing.T) {
 		now := time.Now()
 		projectID := uint(100)
 
-		resp := TusUploadInfoResponse{
+		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-123",
 			ProjectID:   projectID,
 			NamaProject: "Test Project",
@@ -243,8 +244,8 @@ func TestTusUploadInfoResponse(t *testing.T) {
 		}
 	})
 
-	t.Run("TusUploadInfoResponse without ProjectID", func(t *testing.T) {
-		resp := TusUploadInfoResponse{
+	t.Run("dto.TusUploadInfoResponse without ProjectID", func(t *testing.T) {
+		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-456",
 			NamaProject: "New Project",
 			Kategori:    "iot",
@@ -260,8 +261,8 @@ func TestTusUploadInfoResponse(t *testing.T) {
 }
 
 func TestTusUploadSlotResponse(t *testing.T) {
-	t.Run("TusUploadSlotResponse available", func(t *testing.T) {
-		resp := TusUploadSlotResponse{
+	t.Run("dto.TusUploadSlotResponse available", func(t *testing.T) {
+		resp := dto.TusUploadSlotResponse{
 			Available:     true,
 			Message:       "Upload slot available",
 			QueueLength:   2,
@@ -286,8 +287,8 @@ func TestTusUploadSlotResponse(t *testing.T) {
 		}
 	})
 
-	t.Run("TusUploadSlotResponse not available", func(t *testing.T) {
-		resp := TusUploadSlotResponse{
+	t.Run("dto.TusUploadSlotResponse not available", func(t *testing.T) {
+		resp := dto.TusUploadSlotResponse{
 			Available:     false,
 			Message:       "No upload slots available",
 			QueueLength:   10,
@@ -354,7 +355,7 @@ func TestTusUploadStatusTransitions(t *testing.T) {
 func TestTusUploadMetadata(t *testing.T) {
 	t.Run("TusUpload with metadata", func(t *testing.T) {
 		now := time.Now()
-		metadata := TusUploadInitRequest{
+		metadata := TusUploadMetadata{
 			NamaProject: "Test Project",
 			Kategori:    "machine_learning",
 			Semester:    7,
@@ -386,7 +387,7 @@ func TestTusUploadMetadata(t *testing.T) {
 
 func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 	t.Run("Minimum valid NamaProject length", func(t *testing.T) {
-		req := TusUploadInitRequest{
+		req := TusUploadMetadata{
 			NamaProject: "ABC", // min=3
 			Kategori:    "website",
 			Semester:    1,
@@ -404,7 +405,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 			longName = longName[:i] + "A" + longName[i+1:]
 		}
 
-		req := TusUploadInitRequest{
+		req := TusUploadMetadata{
 			NamaProject: longName, // max=255
 			Kategori:    "mobile",
 			Semester:    1,
@@ -416,7 +417,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Minimum valid Semester", func(t *testing.T) {
-		req := TusUploadInitRequest{
+		req := TusUploadMetadata{
 			NamaProject: "Test Project",
 			Kategori:    "iot",
 			Semester:    1, // min=1
@@ -428,7 +429,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Maximum valid Semester", func(t *testing.T) {
-		req := TusUploadInitRequest{
+		req := TusUploadMetadata{
 			NamaProject: "Test Project",
 			Kategori:    "deep_learning",
 			Semester:    8, // max=8
@@ -449,7 +450,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 		}
 
 		for _, kategori := range validCategories {
-			req := TusUploadInitRequest{
+			req := TusUploadMetadata{
 				NamaProject: "Test Project",
 				Kategori:    kategori,
 				Semester:    1,
@@ -464,7 +465,7 @@ func TestTusUploadInitRequest_EdgeCases(t *testing.T) {
 
 func TestTusUploadResponse_EdgeCases(t *testing.T) {
 	t.Run("Zero offset and length", func(t *testing.T) {
-		resp := TusUploadResponse{
+		resp := dto.TusUploadResponse{
 			UploadID:  "upload-zero",
 			UploadURL: "https://example.com/tus/upload-zero",
 			Offset:    0,
@@ -480,7 +481,7 @@ func TestTusUploadResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty upload ID", func(t *testing.T) {
-		resp := TusUploadResponse{
+		resp := dto.TusUploadResponse{
 			UploadID:  "",
 			UploadURL: "https://example.com/tus/",
 			Offset:    0,
@@ -493,7 +494,7 @@ func TestTusUploadResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty upload URL", func(t *testing.T) {
-		resp := TusUploadResponse{
+		resp := dto.TusUploadResponse{
 			UploadID:  "upload-123",
 			UploadURL: "",
 			Offset:    0,
@@ -506,7 +507,7 @@ func TestTusUploadResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Large file size", func(t *testing.T) {
-		resp := TusUploadResponse{
+		resp := dto.TusUploadResponse{
 			UploadID:  "upload-large",
 			UploadURL: "https://example.com/tus/upload-large",
 			Offset:    0,
@@ -522,7 +523,7 @@ func TestTusUploadResponse_EdgeCases(t *testing.T) {
 
 func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	t.Run("Zero ProjectID", func(t *testing.T) {
-		resp := TusUploadInfoResponse{
+		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-zero-project",
 			ProjectID:   0,
 			NamaProject: "Test Project",
@@ -538,7 +539,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Invalid progress - negative value", func(t *testing.T) {
-		resp := TusUploadInfoResponse{
+		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-negative-progress",
 			ProjectID:   1,
 			NamaProject: "Test Project",
@@ -554,7 +555,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Invalid progress - exceeds 100", func(t *testing.T) {
-		resp := TusUploadInfoResponse{
+		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-excess-progress",
 			ProjectID:   1,
 			NamaProject: "Test Project",
@@ -570,7 +571,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero progress", func(t *testing.T) {
-		resp := TusUploadInfoResponse{
+		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-zero-progress",
 			ProjectID:   1,
 			NamaProject: "Test Project",
@@ -586,7 +587,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Exact 100 percent progress", func(t *testing.T) {
-		resp := TusUploadInfoResponse{
+		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-complete-progress",
 			ProjectID:   1,
 			NamaProject: "Test Project",
@@ -602,7 +603,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero offset and length", func(t *testing.T) {
-		resp := TusUploadInfoResponse{
+		resp := dto.TusUploadInfoResponse{
 			UploadID:    "upload-zero-offset",
 			ProjectID:   1,
 			NamaProject: "Test Project",
@@ -625,7 +626,7 @@ func TestTusUploadInfoResponse_EdgeCases(t *testing.T) {
 
 func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
 	t.Run("Zero queue length", func(t *testing.T) {
-		resp := TusUploadSlotResponse{
+		resp := dto.TusUploadSlotResponse{
 			Available:     true,
 			Message:       "No uploads in queue",
 			QueueLength:   0,
@@ -639,7 +640,7 @@ func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero max concurrent", func(t *testing.T) {
-		resp := TusUploadSlotResponse{
+		resp := dto.TusUploadSlotResponse{
 			Available:     false,
 			Message:       "Uploads disabled",
 			QueueLength:   0,
@@ -653,7 +654,7 @@ func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty message", func(t *testing.T) {
-		resp := TusUploadSlotResponse{
+		resp := dto.TusUploadSlotResponse{
 			Available:     true,
 			Message:       "",
 			QueueLength:   1,
@@ -667,7 +668,7 @@ func TestTusUploadSlotResponse_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Large queue length", func(t *testing.T) {
-		resp := TusUploadSlotResponse{
+		resp := dto.TusUploadSlotResponse{
 			Available:     false,
 			Message:       "Very long queue",
 			QueueLength:   1000,

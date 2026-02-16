@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 
 	"gorm.io/gorm"
@@ -50,8 +51,8 @@ func (r *projectRepository) GetByIDs(ids []uint, userID string) ([]domain.Projec
 	return projects, nil
 }
 
-func (r *projectRepository) GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error) {
-	var projectListItems []domain.ProjectListItem
+func (r *projectRepository) GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error) {
+	var projectListItems []dto.ProjectListItem
 	var total int64
 
 	offset := (page - 1) * limit

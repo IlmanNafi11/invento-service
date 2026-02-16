@@ -21,12 +21,12 @@ type MockStatisticUsecase struct {
 	mock.Mock
 }
 
-func (m *MockStatisticUsecase) GetStatistics(userID string, userRole string) (*domain.StatisticData, error) {
+func (m *MockStatisticUsecase) GetStatistics(userID string, userRole string) (*dto.StatisticData, error) {
 	args := m.Called(userID, userRole)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.StatisticData), args.Error(1)
+	return args.Get(0).(*dto.StatisticData), args.Error(1)
 }
 
 // Helper function to create a test app with authenticated context for StatisticController
@@ -62,7 +62,7 @@ func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 	totalUser := 5
 	totalRole := 3
 
-	expectedData := &domain.StatisticData{
+	expectedData := &dto.StatisticData{
 		TotalProject: &totalProject,
 		TotalModul:   &totalModul,
 		TotalUser:    &totalUser,
@@ -107,7 +107,7 @@ func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T)
 	totalModul := 10
 
 	// Regular user only gets project and modul statistics
-	expectedData := &domain.StatisticData{
+	expectedData := &dto.StatisticData{
 		TotalProject: &totalProject,
 		TotalModul:   &totalModul,
 		TotalUser:    nil,
@@ -148,7 +148,7 @@ func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	// User with no data gets nil for all fields
-	expectedData := &domain.StatisticData{
+	expectedData := &dto.StatisticData{
 		TotalProject: nil,
 		TotalModul:   nil,
 		TotalUser:    nil,
@@ -261,7 +261,7 @@ func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	totalProject := 10
-	expectedData := &domain.StatisticData{
+	expectedData := &dto.StatisticData{
 		TotalProject: &totalProject,
 	}
 
@@ -297,7 +297,7 @@ func TestStatisticController_GetStatistics_ResponseStructure(t *testing.T) {
 	totalProject := 10
 	totalModul := 25
 
-	expectedData := &domain.StatisticData{
+	expectedData := &dto.StatisticData{
 		TotalProject: &totalProject,
 		TotalModul:   &totalModul,
 	}

@@ -111,7 +111,7 @@ func TestUserUsecase_ListUsers_Success(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
-	users := []domain.UserListItem{
+	users := []dto.UserListItem{
 		{
 			ID:         "user-1",
 			Email:      "user1@example.com",
@@ -128,7 +128,7 @@ func TestUserUsecase_ListUsers_Success(t *testing.T) {
 
 	total := 2
 
-	params := domain.UserListQueryParams{
+	params := dto.UserListQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -163,7 +163,7 @@ func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
-	users := []domain.UserListItem{
+	users := []dto.UserListItem{
 		{
 			ID:         "user-1",
 			Email:      "admin@example.com",
@@ -174,7 +174,7 @@ func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
 
 	total := 1
 
-	params := domain.UserListQueryParams{
+	params := dto.UserListQueryParams{
 		Search:     "admin",
 		FilterRole: "admin",
 		Page:       1,
@@ -224,7 +224,7 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 		CreatedAt:    time.Now(),
 	}
 
-	req := domain.UpdateProfileRequest{
+	req := dto.UpdateProfileRequest{
 		Name:         "Updated User",
 		JenisKelamin: "Perempuan",
 	}
@@ -261,7 +261,7 @@ func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
 
 	userID := "user-999"
 
-	req := domain.UpdateProfileRequest{
+	req := dto.UpdateProfileRequest{
 		Name: "Updated Name",
 	}
 
@@ -674,7 +674,7 @@ func TestUserUsecase_GetUserFiles_Success(t *testing.T) {
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-1"
-	params := domain.UserFilesQueryParams{
+	params := dto.UserFilesQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -689,7 +689,7 @@ func TestUserUsecase_GetUserFiles_Success(t *testing.T) {
 		CreatedAt:    time.Now(),
 	}
 
-	items := []domain.UserFileItem{
+	items := []dto.UserFileItem{
 		{
 			ID:          "project-1",
 			NamaFile:    "project-file.pdf",
@@ -735,7 +735,7 @@ func TestUserUsecase_GetUserFiles_UserNotFound(t *testing.T) {
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-999"
-	params := domain.UserFilesQueryParams{
+	params := dto.UserFilesQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -767,7 +767,7 @@ func TestUserUsecase_GetUserFiles_RepoError(t *testing.T) {
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
 	userID := "user-1"
-	params := domain.UserFilesQueryParams{
+	params := dto.UserFilesQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -815,7 +815,7 @@ func TestUserUsecase_GetUsersForRole_Success(t *testing.T) {
 		NamaRole: "admin",
 	}
 
-	users := []domain.UserListItem{
+	users := []dto.UserListItem{
 		{
 			ID:         "user-1",
 			Email:      "admin@example.com",
@@ -1139,7 +1139,7 @@ func TestUserUsecase_UpdateProfile_RepoUpdateError(t *testing.T) {
 		CreatedAt:    time.Now(),
 	}
 
-	req := domain.UpdateProfileRequest{
+	req := dto.UpdateProfileRequest{
 		Name:         "Updated User",
 		JenisKelamin: "Perempuan",
 	}

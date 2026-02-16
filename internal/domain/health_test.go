@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 
@@ -8,37 +9,37 @@ import (
 )
 
 func TestHealthStatus_Constants(t *testing.T) {
-	assert.Equal(t, HealthStatus("healthy"), HealthStatusHealthy)
-	assert.Equal(t, HealthStatus("unhealthy"), HealthStatusUnhealthy)
-	assert.Equal(t, HealthStatus("degraded"), HealthStatusDegraded)
+	assert.Equal(t, dto.HealthStatus("healthy"), dto.HealthStatusHealthy)
+	assert.Equal(t, dto.HealthStatus("unhealthy"), dto.HealthStatusUnhealthy)
+	assert.Equal(t, dto.HealthStatus("degraded"), dto.HealthStatusDegraded)
 }
 
 func TestServiceStatus_Constants(t *testing.T) {
-	assert.Equal(t, ServiceStatus("healthy"), ServiceStatusHealthy)
-	assert.Equal(t, ServiceStatus("unhealthy"), ServiceStatusUnhealthy)
-	assert.Equal(t, ServiceStatus("connected"), ServiceStatusConnected)
-	assert.Equal(t, ServiceStatus("disconnected"), ServiceStatusDisconnected)
-	assert.Equal(t, ServiceStatus("error"), ServiceStatusError)
-	assert.Equal(t, ServiceStatus("loaded"), ServiceStatusLoaded)
-	assert.Equal(t, ServiceStatus("running"), ServiceStatusRunning)
+	assert.Equal(t, dto.ServiceStatus("healthy"), dto.ServiceStatusHealthy)
+	assert.Equal(t, dto.ServiceStatus("unhealthy"), dto.ServiceStatusUnhealthy)
+	assert.Equal(t, dto.ServiceStatus("connected"), dto.ServiceStatusConnected)
+	assert.Equal(t, dto.ServiceStatus("disconnected"), dto.ServiceStatusDisconnected)
+	assert.Equal(t, dto.ServiceStatus("error"), dto.ServiceStatusError)
+	assert.Equal(t, dto.ServiceStatus("loaded"), dto.ServiceStatusLoaded)
+	assert.Equal(t, dto.ServiceStatus("running"), dto.ServiceStatusRunning)
 }
 
 func TestBasicHealthCheck_Structure(t *testing.T) {
 	timestamp := time.Now()
-	health := BasicHealthCheck{
-		Status:    HealthStatusHealthy,
+	health := dto.BasicHealthCheck{
+		Status:    dto.HealthStatusHealthy,
 		App:       "test-app",
 		Timestamp: timestamp,
 	}
 
-	assert.Equal(t, HealthStatusHealthy, health.Status)
+	assert.Equal(t, dto.HealthStatusHealthy, health.Status)
 	assert.Equal(t, "test-app", health.App)
 	assert.Equal(t, timestamp, health.Timestamp)
 }
 
 func TestAppInfo_Structure(t *testing.T) {
 	startTime := time.Now()
-	appInfo := AppInfo{
+	appInfo := dto.AppInfo{
 		Name:        "invento-service",
 		Version:     "1.0.0",
 		Environment: "test",
@@ -56,8 +57,8 @@ func TestAppInfo_Structure(t *testing.T) {
 }
 
 func TestDatabaseStatus_Structure(t *testing.T) {
-	dbStatus := DatabaseStatus{
-		Status:          ServiceStatusConnected,
+	dbStatus := dto.DatabaseStatus{
+		Status:          dto.ServiceStatusConnected,
 		PingTime:        "2ms",
 		OpenConnections: 5,
 		IdleConnections: 3,
@@ -67,7 +68,7 @@ func TestDatabaseStatus_Structure(t *testing.T) {
 		Version:         "15.3",
 	}
 
-	assert.Equal(t, ServiceStatusConnected, dbStatus.Status)
+	assert.Equal(t, dto.ServiceStatusConnected, dbStatus.Status)
 	assert.Equal(t, "2ms", dbStatus.PingTime)
 	assert.Equal(t, 5, dbStatus.OpenConnections)
 	assert.Equal(t, 3, dbStatus.IdleConnections)
@@ -78,7 +79,7 @@ func TestDatabaseStatus_Structure(t *testing.T) {
 }
 
 func TestSystemInfo_Structure(t *testing.T) {
-	systemInfo := SystemInfo{
+	systemInfo := dto.SystemInfo{
 		MemoryUsage: "45.2MB",
 		CPUCores:    4,
 		Goroutines:  12,
@@ -90,18 +91,18 @@ func TestSystemInfo_Structure(t *testing.T) {
 }
 
 func TestDetailedSystemInfo_Structure(t *testing.T) {
-	systemInfo := DetailedSystemInfo{
-		Memory: MemoryInfo{
+	systemInfo := dto.DetailedSystemInfo{
+		Memory: dto.MemoryInfo{
 			Allocated:      "45.2MB",
 			TotalAllocated: "120.5MB",
 			System:         "256MB",
 			GCCount:        15,
 		},
-		CPU: CPUInfo{
+		CPU: dto.CPUInfo{
 			Cores:      4,
 			Goroutines: 12,
 		},
-		Runtime: RuntimeInfo{
+		Runtime: dto.RuntimeInfo{
 			GoVersion: "go1.21",
 			Compiler:  "gc",
 			Arch:      "amd64",
@@ -122,10 +123,10 @@ func TestDetailedSystemInfo_Structure(t *testing.T) {
 }
 
 func TestHttpMetrics_Structure(t *testing.T) {
-	httpMetrics := HttpMetrics{
+	httpMetrics := dto.HttpMetrics{
 		TotalRequests:  5420,
 		ActiveRequests: 3,
-		ResponseTimes: ResponseTimes{
+		ResponseTimes: dto.ResponseTimes{
 			Min: "5ms",
 			Max: "150ms",
 			Avg: "25ms",
@@ -140,33 +141,33 @@ func TestHttpMetrics_Structure(t *testing.T) {
 }
 
 func TestDependency_Structure(t *testing.T) {
-	dependency := Dependency{
+	dependency := dto.Dependency{
 		Name:    "fiber",
 		Version: "v2.50.0",
-		Status:  ServiceStatusLoaded,
+		Status:  dto.ServiceStatusLoaded,
 	}
 
 	assert.Equal(t, "fiber", dependency.Name)
 	assert.Equal(t, "v2.50.0", dependency.Version)
-	assert.Equal(t, ServiceStatusLoaded, dependency.Status)
+	assert.Equal(t, dto.ServiceStatusLoaded, dependency.Status)
 }
 
 func TestComprehensiveHealthCheck_Structure(t *testing.T) {
 	timestamp := time.Now()
-	healthCheck := ComprehensiveHealthCheck{
-		Status: HealthStatusHealthy,
-		App: AppInfo{
+	healthCheck := dto.ComprehensiveHealthCheck{
+		Status: dto.HealthStatusHealthy,
+		App: dto.AppInfo{
 			Name:        "test-app",
 			Version:     "1.0.0",
 			Environment: "test",
 			Uptime:      "1h",
 		},
-		Database: DatabaseStatus{
-			Status:          ServiceStatusConnected,
+		Database: dto.DatabaseStatus{
+			Status:          dto.ServiceStatusConnected,
 			PingTime:        "2ms",
 			OpenConnections: 5,
 		},
-		System: SystemInfo{
+		System: dto.SystemInfo{
 			MemoryUsage: "45MB",
 			CPUCores:    4,
 			Goroutines:  10,
@@ -174,9 +175,9 @@ func TestComprehensiveHealthCheck_Structure(t *testing.T) {
 		Timestamp: timestamp,
 	}
 
-	assert.Equal(t, HealthStatusHealthy, healthCheck.Status)
+	assert.Equal(t, dto.HealthStatusHealthy, healthCheck.Status)
 	assert.Equal(t, "test-app", healthCheck.App.Name)
-	assert.Equal(t, ServiceStatusConnected, healthCheck.Database.Status)
+	assert.Equal(t, dto.ServiceStatusConnected, healthCheck.Database.Status)
 	assert.Equal(t, 4, healthCheck.System.CPUCores)
 	assert.Equal(t, timestamp, healthCheck.Timestamp)
 }

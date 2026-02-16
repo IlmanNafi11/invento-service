@@ -3,7 +3,7 @@ package http
 import (
 	"invento-service/config"
 	base "invento-service/internal/controller/base"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"invento-service/internal/upload"
 	"invento-service/internal/usecase"
 
@@ -71,7 +71,7 @@ func (ctrl *TusModulController) initiateUpload(c *fiber.Ctx, modulID *string) er
 		return upload.SendTusValidationErrorResponse(c, "Header Upload-Metadata wajib diisi")
 	}
 
-	var result *domain.TusModulUploadResponse
+	var result *dto.TusModulUploadResponse
 	if modulID == nil {
 		result, err = ctrl.tusModulUsecase.InitiateModulUpload(userID, tusHeaders.UploadLength, tusHeaders.UploadMetadata)
 	} else {
@@ -205,7 +205,7 @@ func (ctrl *TusModulController) getUploadInfo(c *fiber.Ctx, modulID *string) err
 	}
 
 	var (
-		info *domain.TusModulUploadInfoResponse
+		info *dto.TusModulUploadInfoResponse
 		err  error
 	)
 	if modulID == nil {

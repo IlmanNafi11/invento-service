@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	supabaseAuth "invento-service/internal/supabase"
 	"invento-service/internal/usecase/repo"
@@ -18,10 +19,10 @@ import (
 )
 
 type AuthUsecase interface {
-	Register(req domain.RegisterRequest) (string, *domain.AuthResponse, error)
-	Login(req domain.AuthRequest) (string, *domain.AuthResponse, error)
-	RefreshToken(refreshToken string) (string, *domain.RefreshTokenResponse, error)
-	RequestPasswordReset(req domain.ResetPasswordRequest) error
+	Register(req dto.RegisterRequest) (string, *dto.AuthResponse, error)
+	Login(req dto.AuthRequest) (string, *dto.AuthResponse, error)
+	RefreshToken(refreshToken string) (string, *dto.RefreshTokenResponse, error)
+	RequestPasswordReset(req dto.ResetPasswordRequest) error
 	Logout(token string) error
 }
 
@@ -76,7 +77,7 @@ func NewAuthUsecaseWithDeps(
 	}
 }
 
-func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.AuthResponse, error) {
+func (uc *authUsecase) Register(req dto.RegisterRequest) (string, *dto.AuthResponse, error) {
 	ctx := context.Background()
 
 	emailInfo, err := validatePolijeEmail(req.Email)
@@ -141,8 +142,8 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 		roleName = user.Role.NamaRole
 	}
 
-	domainAuthResp := &domain.AuthResponse{
-		User: &domain.AuthUserResponse{
+	domainAuthResp := &dto.AuthResponse{
+		User: &dto.AuthUserResponse{
 			ID:        user.ID,
 			Email:     user.Email,
 			Name:      user.Name,
@@ -158,7 +159,7 @@ func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.Aut
 	return authResp.RefreshToken, domainAuthResp, nil
 }
 
-func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthResponse, error) {
+func (uc *authUsecase) Login(req dto.AuthRequest) (string, *dto.AuthResponse, error) {
 	ctx := context.Background()
 
 	authResp, err := uc.authService.Login(ctx, req.Email, req.Password)
@@ -213,8 +214,8 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 		roleName = user.Role.NamaRole
 	}
 
-	domainAuthResp := &domain.AuthResponse{
-		User: &domain.AuthUserResponse{
+	domainAuthResp := &dto.AuthResponse{
+		User: &dto.AuthUserResponse{
 			ID:        user.ID,
 			Email:     user.Email,
 			Name:      user.Name,
@@ -230,7 +231,7 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 	return authResp.RefreshToken, domainAuthResp, nil
 }
 
-func (uc *authUsecase) RefreshToken(refreshToken string) (string, *domain.RefreshTokenResponse, error) {
+func (uc *authUsecase) RefreshToken(refreshToken string) (string, *dto.RefreshTokenResponse, error) {
 	ctx := context.Background()
 
 	authResp, err := uc.authService.RefreshToken(ctx, refreshToken)
@@ -238,7 +239,7 @@ func (uc *authUsecase) RefreshToken(refreshToken string) (string, *domain.Refres
 		return "", nil, apperrors.NewUnauthorizedError("Refresh token tidak valid atau sudah expired")
 	}
 
-	domainResp := &domain.RefreshTokenResponse{
+	domainResp := &dto.RefreshTokenResponse{
 		AccessToken: authResp.AccessToken,
 		TokenType:   authResp.TokenType,
 		ExpiresIn:   authResp.ExpiresIn,
@@ -248,7 +249,7 @@ func (uc *authUsecase) RefreshToken(refreshToken string) (string, *domain.Refres
 	return authResp.RefreshToken, domainResp, nil
 }
 
-func (uc *authUsecase) RequestPasswordReset(req domain.ResetPasswordRequest) error {
+func (uc *authUsecase) RequestPasswordReset(req dto.ResetPasswordRequest) error {
 	ctx := context.Background()
 
 	redirectURL := uc.config.App.CorsOriginDev + "/reset-password"

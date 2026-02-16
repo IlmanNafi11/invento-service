@@ -25,23 +25,23 @@ type MockProjectUsecase struct {
 	mock.Mock
 }
 
-func (m *MockProjectUsecase) GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*domain.ProjectListData, error) {
+func (m *MockProjectUsecase) GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
 	args := m.Called(userID, search, filterSemester, filterKategori, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.ProjectListData), args.Error(1)
+	return args.Get(0).(*dto.ProjectListData), args.Error(1)
 }
 
-func (m *MockProjectUsecase) GetByID(projectID uint, userID string) (*domain.ProjectResponse, error) {
+func (m *MockProjectUsecase) GetByID(projectID uint, userID string) (*dto.ProjectResponse, error) {
 	args := m.Called(projectID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.ProjectResponse), args.Error(1)
+	return args.Get(0).(*dto.ProjectResponse), args.Error(1)
 }
 
-func (m *MockProjectUsecase) UpdateMetadata(projectID uint, userID string, req domain.ProjectUpdateRequest) error {
+func (m *MockProjectUsecase) UpdateMetadata(projectID uint, userID string, req dto.UpdateProjectRequest) error {
 	args := m.Called(projectID, userID, req)
 	return args.Error(0)
 }
@@ -61,7 +61,7 @@ func TestProjectController_GetByID_Success(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-	expectedProject := &domain.ProjectResponse{
+	expectedProject := &dto.ProjectResponse{
 		ID:          1,
 		NamaProject: "Test Project",
 		Kategori:    "website",
@@ -146,8 +146,8 @@ func TestProjectController_GetList_WithFilters(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-	expectedData := &domain.ProjectListData{
-		Items: []domain.ProjectListItem{
+	expectedData := &dto.ProjectListData{
+		Items: []dto.ProjectListItem{
 			{
 				ID:                 1,
 				NamaProject:        "Test Project",
@@ -198,7 +198,7 @@ func TestProjectController_UpdateMetadata_Success(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-	updateReq := domain.ProjectUpdateRequest{
+	updateReq := dto.UpdateProjectRequest{
 		NamaProject: "Updated Project",
 		Kategori:    "mobile",
 		Semester:    2,
@@ -272,7 +272,7 @@ func TestProjectController_Download_SingleFile(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-	downloadReq := domain.ProjectDownloadRequest{
+	downloadReq := dto.ProjectDownloadRequest{
 		IDs: []uint{1},
 	}
 
@@ -305,7 +305,7 @@ func TestProjectController_UpdateMetadata_AccessDenied(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-	updateReq := domain.ProjectUpdateRequest{
+	updateReq := dto.UpdateProjectRequest{
 		NamaProject: "Updated Project",
 	}
 
@@ -372,8 +372,8 @@ func TestProjectController_GetList_PaginationEdgeCases(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
 			controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-			expectedData := &domain.ProjectListData{
-				Items: []domain.ProjectListItem{},
+			expectedData := &dto.ProjectListData{
+				Items: []dto.ProjectListItem{},
 				Pagination: dto.PaginationData{
 					Page:       tt.expectedPage,
 					Limit:      tt.expectedLimit,
@@ -444,7 +444,7 @@ func TestProjectController_UpdateMetadata_ValidationFailure(t *testing.T) {
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
 	// Invalid update request (name too short, invalid semester)
-	updateReq := domain.ProjectUpdateRequest{
+	updateReq := dto.UpdateProjectRequest{
 		NamaProject: "ab", // too short
 		Kategori:    "invalid_category",
 		Semester:    0, // invalid semester
@@ -522,7 +522,7 @@ func TestProjectController_Download_EmptyIDs(t *testing.T) {
 
 	token := app_testing.GenerateTestToken("user-1", "test@example.com", "user")
 	// Empty IDs array
-	bodyBytes, _ := json.Marshal(domain.ProjectDownloadRequest{IDs: []uint{}})
+	bodyBytes, _ := json.Marshal(dto.ProjectDownloadRequest{IDs: []uint{}})
 	req := httptest.NewRequest("POST", "/api/v1/project/download", bytes.NewReader(bodyBytes))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("Content-Type", "application/json")
@@ -566,7 +566,7 @@ func TestProjectController_Download_ProjectNotFound(t *testing.T) {
 	mockUC := new(MockProjectUsecase)
 	controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-	downloadReq := domain.ProjectDownloadRequest{
+	downloadReq := dto.ProjectDownloadRequest{
 		IDs: []uint{1, 2},
 	}
 
@@ -663,8 +663,8 @@ func TestProjectController_GetList_FilterSemesterBoundaryCases(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
 			controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-			expectedData := &domain.ProjectListData{
-				Items: []domain.ProjectListItem{
+			expectedData := &dto.ProjectListData{
+				Items: []dto.ProjectListItem{
 					{
 						ID:                 1,
 						NamaProject:        "Test Project",
@@ -760,8 +760,8 @@ func TestProjectController_GetList_FilterKategoriBoundaryCases(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
 			controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-			expectedData := &domain.ProjectListData{
-				Items: []domain.ProjectListItem{
+			expectedData := &dto.ProjectListData{
+				Items: []dto.ProjectListItem{
 					{
 						ID:                 1,
 						NamaProject:        "Test Project",
@@ -862,8 +862,8 @@ func TestProjectController_GetList_PaginationBoundaries(t *testing.T) {
 			mockUC := new(MockProjectUsecase)
 			controller := httpcontroller.NewProjectController(mockUC, "https://test.supabase.co", nil)
 
-			expectedData := &domain.ProjectListData{
-				Items: []domain.ProjectListItem{},
+			expectedData := &dto.ProjectListData{
+				Items: []dto.ProjectListItem{},
 				Pagination: dto.PaginationData{
 					Page:       tt.expectedPage,
 					Limit:      tt.expectedLimit,

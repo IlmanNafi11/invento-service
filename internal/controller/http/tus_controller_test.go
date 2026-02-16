@@ -28,12 +28,12 @@ type MockTusUploadUsecase struct {
 	mock.Mock
 }
 
-func (m *MockTusUploadUsecase) CheckUploadSlot(userID string) (*domain.TusUploadSlotResponse, error) {
+func (m *MockTusUploadUsecase) CheckUploadSlot(userID string) (*dto.TusUploadSlotResponse, error) {
 	args := m.Called(userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusUploadSlotResponse), args.Error(1)
+	return args.Get(0).(*dto.TusUploadSlotResponse), args.Error(1)
 }
 
 func (m *MockTusUploadUsecase) ResetUploadQueue(userID string) error {
@@ -41,12 +41,12 @@ func (m *MockTusUploadUsecase) ResetUploadQueue(userID string) error {
 	return args.Error(0)
 }
 
-func (m *MockTusUploadUsecase) InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error) {
+func (m *MockTusUploadUsecase) InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
 	args := m.Called(userID, userEmail, userRole, fileSize, metadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusUploadResponse), args.Error(1)
+	return args.Get(0).(*dto.TusUploadResponse), args.Error(1)
 }
 
 func (m *MockTusUploadUsecase) HandleChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
@@ -57,12 +57,12 @@ func (m *MockTusUploadUsecase) HandleChunk(uploadID string, userID string, offse
 	return args.Get(0).(int64), nil
 }
 
-func (m *MockTusUploadUsecase) GetUploadInfo(uploadID string, userID string) (*domain.TusUploadInfoResponse, error) {
+func (m *MockTusUploadUsecase) GetUploadInfo(uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
 	args := m.Called(uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusUploadInfoResponse), args.Error(1)
+	return args.Get(0).(*dto.TusUploadInfoResponse), args.Error(1)
 }
 
 func (m *MockTusUploadUsecase) CancelUpload(uploadID string, userID string) error {
@@ -75,12 +75,12 @@ func (m *MockTusUploadUsecase) GetUploadStatus(uploadID string, userID string) (
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata domain.TusUploadInitRequest) (*domain.TusUploadResponse, error) {
+func (m *MockTusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
 	args := m.Called(projectID, userID, fileSize, metadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusUploadResponse), args.Error(1)
+	return args.Get(0).(*dto.TusUploadResponse), args.Error(1)
 }
 
 func (m *MockTusUploadUsecase) HandleProjectUpdateChunk(projectID uint, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
@@ -96,12 +96,12 @@ func (m *MockTusUploadUsecase) GetProjectUpdateUploadStatus(projectID uint, uplo
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusUploadUsecase) GetProjectUpdateUploadInfo(projectID uint, uploadID string, userID string) (*domain.TusUploadInfoResponse, error) {
+func (m *MockTusUploadUsecase) GetProjectUpdateUploadInfo(projectID uint, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
 	args := m.Called(projectID, uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusUploadInfoResponse), args.Error(1)
+	return args.Get(0).(*dto.TusUploadInfoResponse), args.Error(1)
 }
 
 func (m *MockTusUploadUsecase) CancelProjectUpdateUpload(projectID uint, uploadID string, userID string) error {
@@ -170,13 +170,13 @@ func TestInitiateUpload_Success(t *testing.T) {
 	})
 	app.Post("/api/v1/tus/upload", controller.InitiateUpload)
 
-	metadata := domain.TusUploadInitRequest{
+	metadata := dto.TusUploadInitRequest{
 		NamaProject: "Test Project",
 		Kategori:    "website",
 		Semester:    1,
 	}
 
-	expectedResponse := &domain.TusUploadResponse{
+	expectedResponse := &dto.TusUploadResponse{
 		UploadID:  "test-upload-id",
 		UploadURL: "/project/upload/test-upload-id",
 		Offset:    0,
@@ -443,7 +443,7 @@ func TestGetUploadInfo_Success(t *testing.T) {
 	})
 	app.Get("/api/v1/tus/upload/:id", controller.GetUploadInfo)
 
-	expectedInfo := &domain.TusUploadInfoResponse{
+	expectedInfo := &dto.TusUploadInfoResponse{
 		UploadID:    "test-upload-id",
 		NamaProject: "Test Project",
 		Kategori:    "website",
@@ -555,14 +555,14 @@ func TestInitiateProjectUpdateUpload_Success(t *testing.T) {
 	})
 	app.Post("/api/v1/tus/project/:id/upload", controller.InitiateProjectUpdateUpload)
 
-	expectedResponse := &domain.TusUploadResponse{
+	expectedResponse := &dto.TusUploadResponse{
 		UploadID:  "test-update-upload-id",
 		UploadURL: "/project/1/update/test-update-upload-id",
 		Offset:    0,
 		Length:    1048576,
 	}
 
-	metadata := domain.TusUploadInitRequest{
+	metadata := dto.TusUploadInitRequest{
 		NamaProject: "Updated Project",
 		Kategori:    "mobile",
 		Semester:    2,
@@ -605,7 +605,7 @@ func TestInitiateProjectUpdateUpload_ProjectNotFound(t *testing.T) {
 	})
 	app.Post("/api/v1/tus/project/:id/upload", controller.InitiateProjectUpdateUpload)
 
-	metadata := domain.TusUploadInitRequest{}
+	metadata := dto.TusUploadInitRequest{}
 	mockUC.On("InitiateProjectUpdateUpload", uint(999), "user-123", int64(1048576), metadata).Return(nil, apperrors.NewNotFoundError("project"))
 
 	req := httptest.NewRequest("POST", "/api/v1/tus/project/999/upload", nil)
@@ -727,7 +727,7 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 	})
 	app.Get("/api/v1/tus/slot", controller.CheckUploadSlot)
 
-	expectedSlot := &domain.TusUploadSlotResponse{
+	expectedSlot := &dto.TusUploadSlotResponse{
 		Available:     true,
 		Message:       "Slot tersedia",
 		QueueLength:   0,
@@ -780,7 +780,7 @@ func TestGetProjectUpdateUploadInfo_Success(t *testing.T) {
 	})
 	app.Get("/api/v1/project/:id/upload/:upload_id", controller.GetProjectUpdateUploadInfo)
 
-	expectedInfo := &domain.TusUploadInfoResponse{
+	expectedInfo := &dto.TusUploadInfoResponse{
 		UploadID:  "test-project-upload-id",
 		Status:    domain.UploadStatusUploading,
 		Progress:  50.0,
@@ -911,12 +911,12 @@ type MockTusModulControllerUsecase struct {
 	mock.Mock
 }
 
-func (m *MockTusModulControllerUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (m *MockTusModulControllerUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
 	args := m.Called(userID, fileSize, uploadMetadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusModulUploadResponse), args.Error(1)
+	return args.Get(0).(*dto.TusModulUploadResponse), args.Error(1)
 }
 
 func (m *MockTusModulControllerUsecase) HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
@@ -924,12 +924,12 @@ func (m *MockTusModulControllerUsecase) HandleModulChunk(uploadID string, userID
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) GetModulUploadInfo(uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
+func (m *MockTusModulControllerUsecase) GetModulUploadInfo(uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
 	args := m.Called(uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusModulUploadInfoResponse), args.Error(1)
+	return args.Get(0).(*dto.TusModulUploadInfoResponse), args.Error(1)
 }
 
 func (m *MockTusModulControllerUsecase) GetModulUploadStatus(uploadID string, userID string) (int64, int64, error) {
@@ -942,20 +942,20 @@ func (m *MockTusModulControllerUsecase) CancelModulUpload(uploadID string, userI
 	return args.Error(0)
 }
 
-func (m *MockTusModulControllerUsecase) CheckModulUploadSlot(userID string) (*domain.TusModulUploadSlotResponse, error) {
+func (m *MockTusModulControllerUsecase) CheckModulUploadSlot(userID string) (*dto.TusModulUploadSlotResponse, error) {
 	args := m.Called(userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusModulUploadSlotResponse), args.Error(1)
+	return args.Get(0).(*dto.TusModulUploadSlotResponse), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*domain.TusModulUploadResponse, error) {
+func (m *MockTusModulControllerUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
 	args := m.Called(modulID, userID, fileSize, uploadMetadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusModulUploadResponse), args.Error(1)
+	return args.Get(0).(*dto.TusModulUploadResponse), args.Error(1)
 }
 
 func (m *MockTusModulControllerUsecase) HandleModulUpdateChunk(modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
@@ -968,12 +968,12 @@ func (m *MockTusModulControllerUsecase) GetModulUpdateUploadStatus(modulID strin
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusModulControllerUsecase) GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*domain.TusModulUploadInfoResponse, error) {
+func (m *MockTusModulControllerUsecase) GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
 	args := m.Called(modulID, uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.TusModulUploadInfoResponse), args.Error(1)
+	return args.Get(0).(*dto.TusModulUploadInfoResponse), args.Error(1)
 }
 
 func (m *MockTusModulControllerUsecase) CancelModulUpdateUpload(modulID string, uploadID string, userID string) error {
@@ -999,7 +999,7 @@ func TestTusModulController_InitiateUpload_Success(t *testing.T) {
 		"deskripsi": "Deskripsi modul",
 	})
 
-	mockUC.On("InitiateModulUpload", "user-123", int64(2048), metadataHeader).Return(&domain.TusModulUploadResponse{
+	mockUC.On("InitiateModulUpload", "user-123", int64(2048), metadataHeader).Return(&dto.TusModulUploadResponse{
 		UploadID:  "modul-upload-id",
 		UploadURL: "/modul/upload/modul-upload-id",
 		Offset:    0,
@@ -1089,7 +1089,7 @@ func TestTusModulController_GetUploadInfo_Success(t *testing.T) {
 	})
 	app.Get("/api/v1/tus/modul/:upload_id", controller.GetUploadInfo)
 
-	mockUC.On("GetModulUploadInfo", "modul-upload-id", "user-123").Return(&domain.TusModulUploadInfoResponse{
+	mockUC.On("GetModulUploadInfo", "modul-upload-id", "user-123").Return(&dto.TusModulUploadInfoResponse{
 		UploadID:  "modul-upload-id",
 		Judul:     "Modul Dasar",
 		Deskripsi: "Deskripsi modul",
@@ -1152,7 +1152,7 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 	modulID := "550e8400-e29b-41d4-a716-446655440099"
 	metadataHeader := encodeTusMetadata(map[string]string{"judul": "Modul Rev", "deskripsi": "rev"})
 
-	mockUC.On("InitiateModulUpdateUpload", modulID, "user-123", int64(4096), metadataHeader).Return(&domain.TusModulUploadResponse{
+	mockUC.On("InitiateModulUpdateUpload", modulID, "user-123", int64(4096), metadataHeader).Return(&dto.TusModulUploadResponse{
 		UploadID:  "update-upload-id",
 		UploadURL: "/modul/" + modulID + "/update/update-upload-id",
 		Offset:    0,
@@ -1160,7 +1160,7 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 	}, nil).Once()
 	mockUC.On("HandleModulUpdateChunk", modulID, "update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(4), nil).Once()
 	mockUC.On("GetModulUpdateUploadStatus", modulID, "update-upload-id", "user-123").Return(int64(4), int64(4096), nil).Once()
-	mockUC.On("GetModulUpdateUploadInfo", modulID, "update-upload-id", "user-123").Return(&domain.TusModulUploadInfoResponse{UploadID: "update-upload-id"}, nil).Once()
+	mockUC.On("GetModulUpdateUploadInfo", modulID, "update-upload-id", "user-123").Return(&dto.TusModulUploadInfoResponse{UploadID: "update-upload-id"}, nil).Once()
 	mockUC.On("CancelModulUpdateUpload", modulID, "update-upload-id", "user-123").Return(nil).Once()
 
 	initReq := httptest.NewRequest("POST", "/api/v1/tus/modul/"+modulID+"/update", nil)

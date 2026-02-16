@@ -95,7 +95,7 @@ func TestTusUploadUsecase(t *testing.T) {
 	})
 
 	t.Run("InitiateUpload", func(t *testing.T) {
-		metadata := domain.TusUploadInitRequest{NamaProject: "Project Alpha", Kategori: "website", Semester: 2}
+		metadata := dto.TusUploadInitRequest{NamaProject: "Project Alpha", Kategori: "website", Semester: 2}
 
 		t.Run("happy path", func(t *testing.T) {
 			uc, tusRepo, _, manager := newTusUploadTestDeps(t)
@@ -190,7 +190,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				ID:             uploadID,
 				UserID:         "u1",
 				UploadType:     domain.UploadTypeProjectCreate,
-				UploadMetadata: domain.TusUploadInitRequest{NamaProject: "Final", Kategori: "mobile", Semester: 3},
+				UploadMetadata: dto.TusUploadInitRequest{NamaProject: "Final", Kategori: "mobile", Semester: 3},
 				FileSize:       4,
 				CurrentOffset:  0,
 				Status:         domain.UploadStatusUploading,
@@ -255,7 +255,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				ID:             "info-id",
 				UserID:         "u1",
 				ProjectID:      &projectID,
-				UploadMetadata: domain.TusUploadInitRequest{NamaProject: "P", Kategori: "iot", Semester: 4},
+				UploadMetadata: dto.TusUploadInitRequest{NamaProject: "P", Kategori: "iot", Semester: 4},
 				Status:         domain.UploadStatusUploading,
 				Progress:       50,
 				CurrentOffset:  5,
@@ -345,7 +345,7 @@ func TestTusUploadUsecase(t *testing.T) {
 	})
 
 	t.Run("InitiateProjectUpdateUpload", func(t *testing.T) {
-		metadata := domain.TusUploadInitRequest{NamaProject: "Update", Kategori: "mobile", Semester: 5}
+		metadata := dto.TusUploadInitRequest{NamaProject: "Update", Kategori: "mobile", Semester: 5}
 
 		t.Run("happy path", func(t *testing.T) {
 			uc, tusRepo, projectRepo, _ := newTusUploadTestDeps(t)
@@ -397,7 +397,7 @@ func TestTusUploadUsecase(t *testing.T) {
 					upload.UploadType == domain.UploadTypeProjectUpdate
 			})).Return(nil).Once()
 
-			res, err := uc.InitiateProjectUpdateUpload(9, "u1", 512, domain.TusUploadInitRequest{})
+			res, err := uc.InitiateProjectUpdateUpload(9, "u1", 512, dto.TusUploadInitRequest{})
 			require.NoError(t, err)
 			require.NotNil(t, res)
 			assert.Contains(t, res.UploadURL, "/project/9/update/")
@@ -439,7 +439,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				UserID:         "u1",
 				ProjectID:      &projectID,
 				UploadType:     domain.UploadTypeProjectUpdate,
-				UploadMetadata: domain.TusUploadInitRequest{NamaProject: "New", Kategori: "iot", Semester: 6},
+				UploadMetadata: dto.TusUploadInitRequest{NamaProject: "New", Kategori: "iot", Semester: 6},
 				FileSize:       4,
 				Status:         domain.UploadStatusUploading,
 			}, nil).Once()
@@ -546,7 +546,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				ID:             "project-info-id",
 				UserID:         "u1",
 				ProjectID:      &projectID,
-				UploadMetadata: domain.TusUploadInitRequest{NamaProject: "P", Kategori: "iot", Semester: 4},
+				UploadMetadata: dto.TusUploadInitRequest{NamaProject: "P", Kategori: "iot", Semester: 4},
 				Status:         domain.UploadStatusUploading,
 				Progress:       60,
 				CurrentOffset:  6,

@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"invento-service/config"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"fmt"
 	"runtime"
 	"time"
@@ -11,10 +11,10 @@ import (
 )
 
 type HealthUsecase interface {
-	GetBasicHealth() *domain.BasicHealthCheck
-	GetComprehensiveHealth() *domain.ComprehensiveHealthCheck
-	GetSystemMetrics() *domain.SystemMetrics
-	GetApplicationStatus() *domain.ApplicationStatus
+	GetBasicHealth() *dto.BasicHealthCheck
+	GetComprehensiveHealth() *dto.ComprehensiveHealthCheck
+	GetSystemMetrics() *dto.SystemMetrics
+	GetApplicationStatus() *dto.ApplicationStatus
 }
 
 type healthUsecase struct {
@@ -31,26 +31,26 @@ func NewHealthUsecase(db *gorm.DB, config *config.Config) HealthUsecase {
 	}
 }
 
-func (uc *healthUsecase) GetBasicHealth() *domain.BasicHealthCheck {
-	return &domain.BasicHealthCheck{
-		Status:    domain.HealthStatusHealthy,
+func (uc *healthUsecase) GetBasicHealth() *dto.BasicHealthCheck {
+	return &dto.BasicHealthCheck{
+		Status:    dto.HealthStatusHealthy,
 		App:       uc.config.App.Name,
 		Timestamp: time.Now(),
 	}
 }
 
-func (uc *healthUsecase) GetComprehensiveHealth() *domain.ComprehensiveHealthCheck {
+func (uc *healthUsecase) GetComprehensiveHealth() *dto.ComprehensiveHealthCheck {
 	appInfo := uc.getAppInfo()
 	dbStatus := uc.getDatabaseStatus()
 	systemInfo := uc.getSystemInfo()
 
-	status := domain.HealthStatusHealthy
-	if dbStatus.Status == domain.ServiceStatusDisconnected ||
-		dbStatus.Status == domain.ServiceStatusError {
-		status = domain.HealthStatusUnhealthy
+	status := dto.HealthStatusHealthy
+	if dbStatus.Status == dto.ServiceStatusDisconnected ||
+		dbStatus.Status == dto.ServiceStatusError {
+		status = dto.HealthStatusUnhealthy
 	}
 
-	return &domain.ComprehensiveHealthCheck{
+	return &dto.ComprehensiveHealthCheck{
 		Status:    status,
 		App:       appInfo,
 		Database:  dbStatus,
@@ -59,11 +59,11 @@ func (uc *healthUsecase) GetComprehensiveHealth() *domain.ComprehensiveHealthChe
 	}
 }
 
-func (uc *healthUsecase) GetSystemMetrics() *domain.SystemMetrics {
+func (uc *healthUsecase) GetSystemMetrics() *dto.SystemMetrics {
 	appInfo := uc.getAppInfo()
 	appInfo.StartTime = uc.startTime
 
-	return &domain.SystemMetrics{
+	return &dto.SystemMetrics{
 		App:      appInfo,
 		System:   uc.getDetailedSystemInfo(),
 		Database: uc.getDetailedDatabaseStatus(),
@@ -71,21 +71,21 @@ func (uc *healthUsecase) GetSystemMetrics() *domain.SystemMetrics {
 	}
 }
 
-func (uc *healthUsecase) GetApplicationStatus() *domain.ApplicationStatus {
+func (uc *healthUsecase) GetApplicationStatus() *dto.ApplicationStatus {
 	appInfo := uc.getAppInfo()
 	appInfo.StartTime = uc.startTime
 	appInfo.Status = "running"
 
-	return &domain.ApplicationStatus{
+	return &dto.ApplicationStatus{
 		App:          appInfo,
 		Services:     uc.getServicesStatus(),
 		Dependencies: uc.getDependencies(),
 	}
 }
 
-func (uc *healthUsecase) getAppInfo() domain.AppInfo {
+func (uc *healthUsecase) getAppInfo() dto.AppInfo {
 	uptime := time.Since(uc.startTime)
-	return domain.AppInfo{
+	return dto.AppInfo{
 		Name:        uc.config.App.Name,
 		Version:     "1.0.0",
 		Environment: uc.config.App.Env,
@@ -93,26 +93,26 @@ func (uc *healthUsecase) getAppInfo() domain.AppInfo {
 	}
 }
 
-func (uc *healthUsecase) getDatabaseStatus() domain.DatabaseStatus {
+func (uc *healthUsecase) getDatabaseStatus() dto.DatabaseStatus {
 	if uc.db == nil {
-		return domain.DatabaseStatus{
-			Status: domain.ServiceStatusError,
+		return dto.DatabaseStatus{
+			Status: dto.ServiceStatusError,
 			Error:  "Koneksi database tidak tersedia",
 		}
 	}
 
 	sqlDB, err := uc.db.DB()
 	if err != nil {
-		return domain.DatabaseStatus{
-			Status: domain.ServiceStatusError,
+		return dto.DatabaseStatus{
+			Status: dto.ServiceStatusError,
 			Error:  "Gagal mendapatkan koneksi database",
 		}
 	}
 
 	start := time.Now()
 	if err := sqlDB.Ping(); err != nil {
-		return domain.DatabaseStatus{
-			Status: domain.ServiceStatusDisconnected,
+		return dto.DatabaseStatus{
+			Status: dto.ServiceStatusDisconnected,
 			Error:  "Koneksi database terputus",
 		}
 	}
@@ -120,18 +120,18 @@ func (uc *healthUsecase) getDatabaseStatus() domain.DatabaseStatus {
 
 	stats := sqlDB.Stats()
 
-	return domain.DatabaseStatus{
-		Status:          domain.ServiceStatusConnected,
+	return dto.DatabaseStatus{
+		Status:          dto.ServiceStatusConnected,
 		PingTime:        fmt.Sprintf("%dms", pingTime.Milliseconds()),
 		OpenConnections: stats.OpenConnections,
 		MaxConnections:  stats.MaxOpenConnections,
 	}
 }
 
-func (uc *healthUsecase) getDetailedDatabaseStatus() domain.DatabaseStatus {
+func (uc *healthUsecase) getDetailedDatabaseStatus() dto.DatabaseStatus {
 	dbStatus := uc.getDatabaseStatus()
 
-	if dbStatus.Status == domain.ServiceStatusConnected && uc.db != nil {
+	if dbStatus.Status == dto.ServiceStatusConnected && uc.db != nil {
 		sqlDB, _ := uc.db.DB()
 		stats := sqlDB.Stats()
 		dbStatus.IdleConnections = stats.Idle
@@ -141,33 +141,33 @@ func (uc *healthUsecase) getDetailedDatabaseStatus() domain.DatabaseStatus {
 	return dbStatus
 }
 
-func (uc *healthUsecase) getSystemInfo() domain.SystemInfo {
+func (uc *healthUsecase) getSystemInfo() dto.SystemInfo {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	return domain.SystemInfo{
+	return dto.SystemInfo{
 		MemoryUsage: fmt.Sprintf("%.1fMB", float64(m.Alloc)/1024/1024),
 		CPUCores:    runtime.NumCPU(),
 		Goroutines:  runtime.NumGoroutine(),
 	}
 }
 
-func (uc *healthUsecase) getDetailedSystemInfo() domain.DetailedSystemInfo {
+func (uc *healthUsecase) getDetailedSystemInfo() dto.DetailedSystemInfo {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	return domain.DetailedSystemInfo{
-		Memory: domain.MemoryInfo{
+	return dto.DetailedSystemInfo{
+		Memory: dto.MemoryInfo{
 			Allocated:      fmt.Sprintf("%.1fMB", float64(m.Alloc)/1024/1024),
 			TotalAllocated: fmt.Sprintf("%.1fMB", float64(m.TotalAlloc)/1024/1024),
 			System:         fmt.Sprintf("%.1fMB", float64(m.Sys)/1024/1024),
 			GCCount:        m.NumGC,
 		},
-		CPU: domain.CPUInfo{
+		CPU: dto.CPUInfo{
 			Cores:      runtime.NumCPU(),
 			Goroutines: runtime.NumGoroutine(),
 		},
-		Runtime: domain.RuntimeInfo{
+		Runtime: dto.RuntimeInfo{
 			GoVersion: runtime.Version(),
 			Compiler:  runtime.Compiler,
 			Arch:      runtime.GOARCH,
@@ -176,11 +176,11 @@ func (uc *healthUsecase) getDetailedSystemInfo() domain.DetailedSystemInfo {
 	}
 }
 
-func (uc *healthUsecase) getHttpMetrics() domain.HttpMetrics {
-	return domain.HttpMetrics{
+func (uc *healthUsecase) getHttpMetrics() dto.HttpMetrics {
+	return dto.HttpMetrics{
 		TotalRequests:  5420,
 		ActiveRequests: 3,
-		ResponseTimes: domain.ResponseTimes{
+		ResponseTimes: dto.ResponseTimes{
 			Min: "5ms",
 			Max: "150ms",
 			Avg: "25ms",
@@ -188,33 +188,33 @@ func (uc *healthUsecase) getHttpMetrics() domain.HttpMetrics {
 	}
 }
 
-func (uc *healthUsecase) getServicesStatus() domain.ServicesStatus {
+func (uc *healthUsecase) getServicesStatus() dto.ServicesStatus {
 	dbStatus := uc.getDatabaseStatus()
 	emailStatus := uc.getEmailServiceStatus()
 
-	services := domain.ServicesStatus{
-		Database: domain.DatabaseService{
+	services := dto.ServicesStatus{
+		Database: dto.DatabaseService{
 			Name:     "MySQL",
-			Status:   domain.ServiceStatusHealthy,
+			Status:   dto.ServiceStatusHealthy,
 			Version:  "8.0",
 			PingTime: dbStatus.PingTime,
 		},
 		Email: emailStatus,
 	}
 
-	if dbStatus.Status != domain.ServiceStatusConnected {
-		services.Database.Status = domain.ServiceStatusUnhealthy
+	if dbStatus.Status != dto.ServiceStatusConnected {
+		services.Database.Status = dto.ServiceStatusUnhealthy
 	}
 
 	return services
 }
 
-func (uc *healthUsecase) getEmailServiceStatus() domain.EmailService {
+func (uc *healthUsecase) getEmailServiceStatus() dto.EmailService {
 	// Email service is disabled - using Supabase Auth for emails
-	return domain.EmailService{
+	return dto.EmailService{
 		Name:      "Email Service",
 		Provider:  "Supabase Auth",
-		Status:    domain.ServiceStatusConnected,
+		Status:    dto.ServiceStatusConnected,
 		APIKeySet: true,
 	}
 }
@@ -224,32 +224,32 @@ func (uc *healthUsecase) checkResendAPI() bool {
 	return true
 }
 
-func (uc *healthUsecase) getDependencies() []domain.Dependency {
-	return []domain.Dependency{
+func (uc *healthUsecase) getDependencies() []dto.Dependency {
+	return []dto.Dependency{
 		{
 			Name:    "fiber",
 			Version: "v2.50.0",
-			Status:  domain.ServiceStatusLoaded,
+			Status:  dto.ServiceStatusLoaded,
 		},
 		{
 			Name:    "gorm",
 			Version: "v1.25.4",
-			Status:  domain.ServiceStatusLoaded,
+			Status:  dto.ServiceStatusLoaded,
 		},
 		{
 			Name:    "mysql",
 			Version: "v1.5.7",
-			Status:  domain.ServiceStatusLoaded,
+			Status:  dto.ServiceStatusLoaded,
 		},
 		{
 			Name:    "jwt-go",
 			Version: "v5.0.0",
-			Status:  domain.ServiceStatusLoaded,
+			Status:  dto.ServiceStatusLoaded,
 		},
 		{
 			Name:    "bcrypt",
 			Version: "v0.14.0",
-			Status:  domain.ServiceStatusLoaded,
+			Status:  dto.ServiceStatusLoaded,
 		},
 	}
 }

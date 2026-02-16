@@ -9,7 +9,7 @@ import (
 )
 
 func TestValidateStruct_ValidData(t *testing.T) {
-	req := domain.RegisterRequest{
+	req := dto.RegisterRequest{
 		Name:     "Test User",
 		Email:    "test@example.com",
 		Password: "password123",
@@ -21,7 +21,7 @@ func TestValidateStruct_ValidData(t *testing.T) {
 }
 
 func TestValidateStruct_InvalidData(t *testing.T) {
-	req := domain.RegisterRequest{
+	req := dto.RegisterRequest{
 		Name:     "",
 		Email:    "invalid-email",
 		Password: "123",
@@ -39,7 +39,7 @@ func TestValidateStruct_InvalidData(t *testing.T) {
 }
 
 func TestValidateStruct_EmptyEmail(t *testing.T) {
-	req := domain.AuthRequest{
+	req := dto.AuthRequest{
 		Email:    "",
 		Password: "password123",
 	}
@@ -51,7 +51,7 @@ func TestValidateStruct_EmptyEmail(t *testing.T) {
 }
 
 func TestValidateStruct_ShortPassword(t *testing.T) {
-	req := domain.AuthRequest{
+	req := dto.AuthRequest{
 		Email:    "test@example.com",
 		Password: "123",
 	}
@@ -63,14 +63,14 @@ func TestValidateStruct_ShortPassword(t *testing.T) {
 }
 
 func TestValidateStruct_ResetPasswordRequest(t *testing.T) {
-	validReq := domain.ResetPasswordRequest{
+	validReq := dto.ResetPasswordRequest{
 		Email: "test@example.com",
 	}
 
 	validErrors := httputil.ValidateStruct(validReq)
 	assert.Empty(t, validErrors)
 
-	invalidReq := domain.ResetPasswordRequest{
+	invalidReq := dto.ResetPasswordRequest{
 		Email: "invalid-email",
 	}
 
@@ -79,14 +79,14 @@ func TestValidateStruct_ResetPasswordRequest(t *testing.T) {
 }
 
 func TestValidateStruct_RefreshTokenRequest(t *testing.T) {
-	validReq := domain.RefreshTokenRequest{
+	validReq := dto.RefreshTokenRequest{
 		RefreshToken: "valid_token_123",
 	}
 
 	validErrors := httputil.ValidateStruct(validReq)
 	assert.Empty(t, validErrors)
 
-	invalidReq := domain.RefreshTokenRequest{
+	invalidReq := dto.RefreshTokenRequest{
 		RefreshToken: "",
 	}
 

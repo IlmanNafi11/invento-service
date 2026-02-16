@@ -80,8 +80,8 @@ func TestRolePermissionStruct(t *testing.T) {
 }
 
 func TestRoleCreateRequest(t *testing.T) {
-	t.Run("RoleCreateRequest with permissions", func(t *testing.T) {
-		req := RoleCreateRequest{
+	t.Run("dto.RoleCreateRequest with permissions", func(t *testing.T) {
+		req := dto.RoleCreateRequest{
 			NamaRole: "Editor",
 			Permissions: map[string][]string{
 				"projects": {"create", "read", "update"},
@@ -100,8 +100,8 @@ func TestRoleCreateRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("RoleCreateRequest empty permissions", func(t *testing.T) {
-		req := RoleCreateRequest{
+	t.Run("dto.RoleCreateRequest empty permissions", func(t *testing.T) {
+		req := dto.RoleCreateRequest{
 			NamaRole:    "Viewer",
 			Permissions: map[string][]string{},
 		}
@@ -116,8 +116,8 @@ func TestRoleCreateRequest(t *testing.T) {
 }
 
 func TestRoleUpdateRequest(t *testing.T) {
-	t.Run("RoleUpdateRequest with updated permissions", func(t *testing.T) {
-		req := RoleUpdateRequest{
+	t.Run("dto.RoleUpdateRequest with updated permissions", func(t *testing.T) {
+		req := dto.RoleUpdateRequest{
 			NamaRole: "SuperAdmin",
 			Permissions: map[string][]string{
 				"projects": {"create", "read", "update", "delete"},
@@ -136,8 +136,8 @@ func TestRoleUpdateRequest(t *testing.T) {
 }
 
 func TestRoleListQueryParams(t *testing.T) {
-	t.Run("RoleListQueryParams with all fields", func(t *testing.T) {
-		params := RoleListQueryParams{
+	t.Run("dto.RoleListQueryParams with all fields", func(t *testing.T) {
+		params := dto.RoleListQueryParams{
 			Search: "admin",
 			Page:   1,
 			Limit:  25,
@@ -154,8 +154,8 @@ func TestRoleListQueryParams(t *testing.T) {
 		}
 	})
 
-	t.Run("RoleListQueryParams default values", func(t *testing.T) {
-		params := RoleListQueryParams{}
+	t.Run("dto.RoleListQueryParams default values", func(t *testing.T) {
+		params := dto.RoleListQueryParams{}
 
 		if params.Search != "" {
 			t.Errorf("Expected empty Search, got %s", params.Search)
@@ -167,9 +167,9 @@ func TestRoleListQueryParams(t *testing.T) {
 }
 
 func TestRoleListItem(t *testing.T) {
-	t.Run("RoleListItem struct", func(t *testing.T) {
+	t.Run("dto.RoleListItem struct", func(t *testing.T) {
 		now := time.Now()
-		item := RoleListItem{
+		item := dto.RoleListItem{
 			ID:                1,
 			NamaRole:          "Admin",
 			JumlahPermission:  15,
@@ -189,8 +189,8 @@ func TestRoleListItem(t *testing.T) {
 }
 
 func TestRolePermissionDetail(t *testing.T) {
-	t.Run("RolePermissionDetail struct", func(t *testing.T) {
-		detail := RolePermissionDetail{
+	t.Run("dto.RolePermissionDetail struct", func(t *testing.T) {
+		detail := dto.RolePermissionDetail{
 			Resource: "projects",
 			Actions:  []string{"create", "read", "update", "delete"},
 		}
@@ -205,14 +205,14 @@ func TestRolePermissionDetail(t *testing.T) {
 }
 
 func TestRoleDetailResponse(t *testing.T) {
-	t.Run("RoleDetailResponse with permissions", func(t *testing.T) {
+	t.Run("dto.RoleDetailResponse with permissions", func(t *testing.T) {
 		now := time.Now()
-		permissions := []RolePermissionDetail{
+		permissions := []dto.RolePermissionDetail{
 			{Resource: "projects", Actions: []string{"create", "read"}},
 			{Resource: "users", Actions: []string{"read", "update"}},
 		}
 
-		resp := RoleDetailResponse{
+		resp := dto.RoleDetailResponse{
 			ID:               1,
 			NamaRole:         "Editor",
 			Permissions:      permissions,
@@ -234,8 +234,8 @@ func TestRoleDetailResponse(t *testing.T) {
 }
 
 func TestPermissionItem(t *testing.T) {
-	t.Run("PermissionItem struct", func(t *testing.T) {
-		item := PermissionItem{
+	t.Run("dto.PermissionItem struct", func(t *testing.T) {
+		item := dto.PermissionItem{
 			Action: "delete",
 			Label:  "Delete resource",
 		}
@@ -250,14 +250,14 @@ func TestPermissionItem(t *testing.T) {
 }
 
 func TestResourcePermissions(t *testing.T) {
-	t.Run("ResourcePermissions struct", func(t *testing.T) {
-		perms := []PermissionItem{
+	t.Run("dto.ResourcePermissions struct", func(t *testing.T) {
+		perms := []dto.PermissionItem{
 			{Action: "create", Label: "Create"},
 			{Action: "read", Label: "Read"},
 			{Action: "update", Label: "Update"},
 		}
 
-		res := ResourcePermissions{
+		res := dto.ResourcePermissions{
 			Name:        "projects",
 			Permissions: perms,
 		}
@@ -272,13 +272,13 @@ func TestResourcePermissions(t *testing.T) {
 }
 
 func TestRoleListData(t *testing.T) {
-	t.Run("RoleListData with pagination", func(t *testing.T) {
-		items := []RoleListItem{
+	t.Run("dto.RoleListData with pagination", func(t *testing.T) {
+		items := []dto.RoleListItem{
 			{ID: 1, NamaRole: "Admin", JumlahPermission: 10},
 			{ID: 2, NamaRole: "Editor", JumlahPermission: 5},
 		}
 
-		data := RoleListData{
+		data := dto.RoleListData{
 			Items: items,
 			Pagination: dto.PaginationData{
 				Page:       1,

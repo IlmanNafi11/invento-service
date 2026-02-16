@@ -100,7 +100,7 @@ func TestTusUploadRepository_Create_Success(t *testing.T) {
 		ID:         "test-upload-id",
 		UserID:     "user-1",
 		UploadType: domain.UploadTypeProjectCreate,
-		UploadMetadata: domain.TusUploadInitRequest{
+		UploadMetadata: dto.TusUploadInitRequest{
 			NamaProject: "Test Project",
 			Kategori:    "website",
 			Semester:    3,
@@ -132,7 +132,7 @@ func TestTusUploadRepository_GetByID_Success(t *testing.T) {
 		ID:         uploadID,
 		UserID:     "user-1",
 		UploadType: domain.UploadTypeProjectCreate,
-		UploadMetadata: domain.TusUploadInitRequest{
+		UploadMetadata: dto.TusUploadInitRequest{
 			NamaProject: "Test Project",
 			Kategori:    "website",
 			Semester:    3,
@@ -179,7 +179,7 @@ func TestTusUploadRepository_GetByUploadID_Success(t *testing.T) {
 			ID:         "upload-2",
 			UserID:     "user-2",
 			UploadType: domain.UploadTypeProjectCreate,
-			UploadMetadata: domain.TusUploadInitRequest{
+			UploadMetadata: dto.TusUploadInitRequest{
 				NamaProject: "Project 1",
 				Kategori:    "website",
 				Semester:    3,
@@ -195,7 +195,7 @@ func TestTusUploadRepository_GetByUploadID_Success(t *testing.T) {
 			ID:         "upload-2",
 			UserID:     userID,
 			UploadType: domain.UploadTypeProjectUpdate,
-			UploadMetadata: domain.TusUploadInitRequest{
+			UploadMetadata: dto.TusUploadInitRequest{
 				NamaProject: "Project 2",
 				Kategori:    "mobile",
 				Semester:    4,
@@ -228,7 +228,7 @@ func TestTusUploadRepository_Update_Success(t *testing.T) {
 		ID:         "test-upload-id",
 		UserID:     "user-1",
 		UploadType: domain.UploadTypeProjectCreate,
-		UploadMetadata: domain.TusUploadInitRequest{
+		UploadMetadata: dto.TusUploadInitRequest{
 			NamaProject: "Updated Project",
 			Kategori:    "website",
 			Semester:    3,
@@ -451,7 +451,7 @@ func TestTusModulUploadRepository_Create_Success(t *testing.T) {
 		ID:         "test-modul-upload-id",
 		UserID:     "user-1",
 		UploadType: domain.UploadTypeModulCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
+		UploadMetadata: dto.TusModulUploadInitRequest{
 			Judul:     "Test Modul",
 			Deskripsi: "Test Deskripsi",
 		},
@@ -483,7 +483,7 @@ func TestTusModulUploadRepository_GetByID_Success(t *testing.T) {
 		ID:         uploadID,
 		UserID:     "user-1",
 		UploadType: domain.UploadTypeModulCreate,
-		UploadMetadata: domain.TusModulUploadInitRequest{
+		UploadMetadata: dto.TusModulUploadInitRequest{
 			Judul:     "Test Modul",
 			Deskripsi: "Test Deskripsi",
 		},
@@ -519,7 +519,7 @@ func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
 			ID:         "modul-upload-1",
 			UserID:     userID,
 			UploadType: domain.UploadTypeModulCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
+			UploadMetadata: dto.TusModulUploadInitRequest{
 				Judul:     "Modul 1",
 				Deskripsi: "Deskripsi 1",
 			},
@@ -534,7 +534,7 @@ func TestTusModulUploadRepository_GetByModulID_Success(t *testing.T) {
 			ID:         "modul-upload-2",
 			UserID:     userID,
 			UploadType: domain.UploadTypeModulUpdate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
+			UploadMetadata: dto.TusModulUploadInitRequest{
 				Judul:     "Modul 2",
 				Deskripsi: "Deskripsi 2",
 			},
@@ -612,7 +612,7 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 			ID:         "active-upload-1",
 			UserID:     userID,
 			UploadType: domain.UploadTypeModulCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
+			UploadMetadata: dto.TusModulUploadInitRequest{
 				Judul:     "Active Modul 1",
 				Deskripsi: "Deskripsi 1",
 			},
@@ -627,7 +627,7 @@ func TestTusModulUploadRepository_ListActiveUploads_Success(t *testing.T) {
 			ID:         "active-upload-2",
 			UserID:     userID,
 			UploadType: domain.UploadTypeModulCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
+			UploadMetadata: dto.TusModulUploadInitRequest{
 				Judul:     "Active Modul 2",
 				Deskripsi: "Deskripsi 2",
 			},
@@ -663,7 +663,7 @@ func TestTusModulUploadRepository_GetExpiredUploads_Success(t *testing.T) {
 			ID:         "expired-modul-upload-1",
 			UserID:     "user-1",
 			UploadType: domain.UploadTypeModulCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
+			UploadMetadata: dto.TusModulUploadInitRequest{
 				Judul:     "Expired Modul",
 				Deskripsi: "Expired Deskripsi",
 			},
@@ -728,7 +728,7 @@ func TestTusModulUploadRepository_GetAbandonedUploads_Success(t *testing.T) {
 			ID:         "abandoned-upload-1",
 			UserID:     "user-1",
 			UploadType: domain.UploadTypeModulCreate,
-			UploadMetadata: domain.TusModulUploadInitRequest{
+			UploadMetadata: dto.TusModulUploadInitRequest{
 				Judul:     "Abandoned Modul",
 				Deskripsi: "Abandoned Deskripsi",
 			},

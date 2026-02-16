@@ -26,12 +26,12 @@ type MockUserUsecase struct {
 	mock.Mock
 }
 
-func (m *MockUserUsecase) GetUserList(params domain.UserListQueryParams) (*domain.UserListData, error) {
+func (m *MockUserUsecase) GetUserList(params dto.UserListQueryParams) (*dto.UserListData, error) {
 	args := m.Called(params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.UserListData), args.Error(1)
+	return args.Get(0).(*dto.UserListData), args.Error(1)
 }
 
 func (m *MockUserUsecase) UpdateUserRole(userID string, roleName string) error {
@@ -44,36 +44,36 @@ func (m *MockUserUsecase) DeleteUser(userID string) error {
 	return args.Error(0)
 }
 
-func (m *MockUserUsecase) GetUserFiles(userID string, params domain.UserFilesQueryParams) (*domain.UserFilesData, error) {
+func (m *MockUserUsecase) GetUserFiles(userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error) {
 	args := m.Called(userID, params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.UserFilesData), args.Error(1)
+	return args.Get(0).(*dto.UserFilesData), args.Error(1)
 }
 
-func (m *MockUserUsecase) GetProfile(userID string) (*domain.ProfileData, error) {
+func (m *MockUserUsecase) GetProfile(userID string) (*dto.ProfileData, error) {
 	args := m.Called(userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.ProfileData), args.Error(1)
+	return args.Get(0).(*dto.ProfileData), args.Error(1)
 }
 
-func (m *MockUserUsecase) UpdateProfile(userID string, req domain.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*domain.ProfileData, error) {
+func (m *MockUserUsecase) UpdateProfile(userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error) {
 	args := m.Called(userID, req, fotoProfil)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.ProfileData), args.Error(1)
+	return args.Get(0).(*dto.ProfileData), args.Error(1)
 }
 
-func (m *MockUserUsecase) GetUserPermissions(userID string) ([]domain.UserPermissionItem, error) {
+func (m *MockUserUsecase) GetUserPermissions(userID string) ([]dto.UserPermissionItem, error) {
 	args := m.Called(userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]domain.UserPermissionItem), args.Error(1)
+	return args.Get(0).([]dto.UserPermissionItem), args.Error(1)
 }
 
 func (m *MockUserUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error) {
@@ -84,12 +84,12 @@ func (m *MockUserUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modu
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockUserUsecase) GetUsersForRole(roleID uint) ([]domain.UserListItem, error) {
+func (m *MockUserUsecase) GetUsersForRole(roleID uint) ([]dto.UserListItem, error) {
 	args := m.Called(roleID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]domain.UserListItem), args.Error(1)
+	return args.Get(0).([]dto.UserListItem), args.Error(1)
 }
 
 func (m *MockUserUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
@@ -129,8 +129,8 @@ func TestUserController_GetUserList_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
 
-	expectedData := &domain.UserListData{
-		Items: []domain.UserListItem{
+	expectedData := &dto.UserListData{
+		Items: []dto.UserListItem{
 			{
 				ID:         "00000000-0000-0000-0000-000000000001",
 				Email:      "user1@example.com",
@@ -152,7 +152,7 @@ func TestUserController_GetUserList_Success(t *testing.T) {
 		},
 	}
 
-	params := domain.UserListQueryParams{
+	params := dto.UserListQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -185,8 +185,8 @@ func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
 
-	expectedData := &domain.UserListData{
-		Items: []domain.UserListItem{
+	expectedData := &dto.UserListData{
+		Items: []dto.UserListItem{
 			{
 				ID:         "00000000-0000-0000-0000-000000000001",
 				Email:      "admin@example.com",
@@ -202,7 +202,7 @@ func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 		},
 	}
 
-	params := domain.UserListQueryParams{
+	params := dto.UserListQueryParams{
 		Search:     "admin",
 		FilterRole: "admin",
 		Page:       1,
@@ -238,7 +238,7 @@ func TestUserController_UpdateUserRole_Success(t *testing.T) {
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
 
-	reqBody := domain.UpdateUserRoleRequest{
+	reqBody := dto.UpdateUserRoleRequest{
 		Role: "admin",
 	}
 
@@ -270,7 +270,7 @@ func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
 
-	reqBody := domain.UpdateUserRoleRequest{
+	reqBody := dto.UpdateUserRoleRequest{
 		Role: "admin",
 	}
 
@@ -323,8 +323,8 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
 
-	expectedData := &domain.UserFilesData{
-		Items: []domain.UserFileItem{
+	expectedData := &dto.UserFilesData{
+		Items: []dto.UserFileItem{
 			{
 				ID:          "00000000-0001-0000-0000-000000000001",
 				NamaFile:    "project1.zip",
@@ -346,7 +346,7 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 		},
 	}
 
-	params := domain.UserFilesQueryParams{
+	params := dto.UserFilesQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -379,8 +379,8 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
 
-	expectedData := &domain.UserFilesData{
-		Items: []domain.UserFileItem{
+	expectedData := &dto.UserFilesData{
+		Items: []dto.UserFileItem{
 			{
 				ID:          "00000000-0001-0000-0000-000000000001",
 				NamaFile:    "project1.zip",
@@ -396,7 +396,7 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 		},
 	}
 
-	params := domain.UserFilesQueryParams{
+	params := dto.UserFilesQueryParams{
 		Search: "project",
 		Page:   1,
 		Limit:  10,
@@ -430,7 +430,7 @@ func TestUserController_GetProfile_Success(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Get("/api/v1/profile", controller.GetProfile)
 
-	expectedData := &domain.ProfileData{
+	expectedData := &dto.ProfileData{
 		Name:          "Test User",
 		Email:         "test@example.com",
 		JenisKelamin:  stringPtr("Laki-laki"),
@@ -470,7 +470,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
-	expectedData := &domain.ProfileData{
+	expectedData := &dto.ProfileData{
 		Name:          "Updated User",
 		Email:         "test@example.com",
 		JenisKelamin:  stringPtr("Perempuan"),
@@ -481,7 +481,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 		JumlahModul:   7,
 	}
 
-	reqBody := domain.UpdateProfileRequest{
+	reqBody := dto.UpdateProfileRequest{
 		Name:         "Updated User",
 		JenisKelamin: "Perempuan",
 	}
@@ -517,7 +517,7 @@ func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
-	expectedData := &domain.ProfileData{
+	expectedData := &dto.ProfileData{
 		Name:          "Test User",
 		Email:         "test@example.com",
 		JenisKelamin:  stringPtr("Laki-laki"),
@@ -528,7 +528,7 @@ func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 		JumlahModul:   10,
 	}
 
-	reqBody := domain.UpdateProfileRequest{
+	reqBody := dto.UpdateProfileRequest{
 		Name:         "Test User",
 		JenisKelamin: "Laki-laki",
 	}
@@ -566,7 +566,7 @@ func TestUserController_GetUserPermissions_Success(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
 
-	expectedData := []domain.UserPermissionItem{
+	expectedData := []dto.UserPermissionItem{
 		{
 			Resource: "users",
 			Actions:  []string{"read", "create", "update", "delete"},
@@ -610,7 +610,7 @@ func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
 
-	expectedData := []domain.UserPermissionItem{}
+	expectedData := []dto.UserPermissionItem{}
 
 	mockUserUC.On("GetUserPermissions", "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
 
@@ -640,7 +640,7 @@ func TestUserController_DownloadUserFiles_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
 
-	reqBody := domain.DownloadUserFilesRequest{
+	reqBody := dto.DownloadUserFilesRequest{
 		ProjectIDs: []uint{1, 2},
 		ModulIDs:   []uint{3, 4},
 	}
@@ -676,7 +676,7 @@ func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
 
-	reqBody := domain.DownloadUserFilesRequest{
+	reqBody := dto.DownloadUserFilesRequest{
 		ProjectIDs: []uint{},
 		ModulIDs:   []uint{},
 	}
@@ -705,7 +705,7 @@ func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
 
-	reqBody := domain.DownloadUserFilesRequest{
+	reqBody := dto.DownloadUserFilesRequest{
 		ProjectIDs: []uint{1, 2},
 		ModulIDs:   []uint{},
 	}
@@ -733,7 +733,7 @@ func TestUserController_GetUserList_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
 
-	params := domain.UserListQueryParams{
+	params := dto.UserListQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -782,7 +782,7 @@ func TestUserController_GetUserFiles_UserNotFound(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
 
-	params := domain.UserFilesQueryParams{
+	params := dto.UserFilesQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -810,7 +810,7 @@ func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
-	reqBody := domain.UpdateProfileRequest{
+	reqBody := dto.UpdateProfileRequest{
 		Name:         "Updated User",
 		JenisKelamin: "Perempuan",
 	}
@@ -866,7 +866,7 @@ func TestUserController_UpdateProfile_InvalidJenisKelamin(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
-	reqBody := domain.UpdateProfileRequest{
+	reqBody := dto.UpdateProfileRequest{
 		Name:         "Test User",
 		JenisKelamin: "Invalid", // Invalid value
 	}
@@ -892,7 +892,7 @@ func TestUserController_UpdateUserRole_Forbidden(t *testing.T) {
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
 
-	reqBody := domain.UpdateUserRoleRequest{
+	reqBody := dto.UpdateUserRoleRequest{
 		Role: "admin",
 	}
 
@@ -960,7 +960,7 @@ func TestUserController_GetUserFiles_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
 
-	params := domain.UserFilesQueryParams{
+	params := dto.UserFilesQueryParams{
 		Page:  1,
 		Limit: 10,
 	}
@@ -987,7 +987,7 @@ func TestUserController_UpdateUserRole_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
 
-	reqBody := domain.UpdateUserRoleRequest{
+	reqBody := dto.UpdateUserRoleRequest{
 		Role: "admin",
 	}
 
@@ -1013,7 +1013,7 @@ func TestUserController_DownloadUserFiles_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
 
-	reqBody := domain.DownloadUserFilesRequest{
+	reqBody := dto.DownloadUserFilesRequest{
 		ProjectIDs: []uint{1},
 		ModulIDs:   []uint{},
 	}
@@ -1129,7 +1129,7 @@ func TestUserController_GetUsersForRole_Success(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
 
-	expectedData := []domain.UserListItem{
+	expectedData := []dto.UserListItem{
 		{
 			ID:         "00000000-0000-0000-0000-000000000001",
 			Email:      "admin@example.com",
@@ -1193,7 +1193,7 @@ func TestUserController_BulkAssignRole_Success(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
 
-	reqBody := domain.BulkAssignRoleRequest{
+	reqBody := dto.BulkAssignRoleRequest{
 		UserIDs: []string{"user-1", "user-2"},
 	}
 
@@ -1224,7 +1224,7 @@ func TestUserController_BulkAssignRole_NotFound(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
 
-	reqBody := domain.BulkAssignRoleRequest{
+	reqBody := dto.BulkAssignRoleRequest{
 		UserIDs: []string{"user-1", "user-2"},
 	}
 
@@ -1250,7 +1250,7 @@ func TestUserController_BulkAssignRole_ValidationError(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
 
-	reqBody := domain.BulkAssignRoleRequest{
+	reqBody := dto.BulkAssignRoleRequest{
 		UserIDs: []string{},
 	}
 
@@ -1271,7 +1271,7 @@ func TestUserController_BulkAssignRole_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
 
-	reqBody := domain.BulkAssignRoleRequest{
+	reqBody := dto.BulkAssignRoleRequest{
 		UserIDs: []string{"user-1", "user-2"},
 	}
 
@@ -1296,7 +1296,7 @@ func TestUserController_UpdateProfile_InternalError(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Put("/api/v1/profile", controller.UpdateProfile)
 
-	reqBody := domain.UpdateProfileRequest{
+	reqBody := dto.UpdateProfileRequest{
 		Name:         "Updated User",
 		JenisKelamin: "Perempuan",
 	}

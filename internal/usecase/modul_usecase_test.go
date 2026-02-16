@@ -109,7 +109,7 @@ func TestListModuls_Success(t *testing.T) {
 	page := 1
 	limit := 10
 
-	expectedModuls := []domain.ModulListItem{
+	expectedModuls := []dto.ModulListItem{
 		{
 			ID:                 "550e8400-e29b-41d4-a716-446655440001",
 			Judul:              "Test Modul 1",
@@ -216,7 +216,7 @@ func TestUpdateModul_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 
-	req := domain.ModulUpdateRequest{
+	req := dto.UpdateModulRequest{
 		Judul:     "Updated Judul",
 		Deskripsi: "Updated Deskripsi",
 	}
@@ -361,7 +361,7 @@ func TestUploadChunk_Success(t *testing.T) {
 		UserID:         userID,
 		UploadType:     domain.UploadTypeModulCreate,
 		UploadURL:      "/modul/upload/" + uploadID,
-		UploadMetadata: domain.TusModulUploadInitRequest{Judul: "Test Modul", Deskripsi: "Test Deskripsi"},
+		UploadMetadata: dto.TusModulUploadInitRequest{Judul: "Test Modul", Deskripsi: "Test Deskripsi"},
 		FileSize:       1024 * 1024,
 		CurrentOffset:  0,
 		Status:         domain.UploadStatusPending,
@@ -399,7 +399,7 @@ func TestModulUsecase_GetList_Success(t *testing.T) {
 	page := 1
 	limit := 10
 
-	expectedModuls := []domain.ModulListItem{
+	expectedModuls := []dto.ModulListItem{
 		{
 			ID:                 "550e8400-e29b-41d4-a716-446655440001",
 			Judul:              "Test Modul 1",
@@ -462,7 +462,7 @@ func TestModulUsecase_GetList_WithFilters(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	expectedModuls := []domain.ModulListItem{
+	expectedModuls := []dto.ModulListItem{
 		{
 			ID:                 "550e8400-e29b-41d4-a716-446655440001",
 			Judul:              "Test Modul",
@@ -654,7 +654,7 @@ func TestModulUsecase_UpdateMetadata_NotFound(t *testing.T) {
 
 	modulID := "550e8400-e29b-41d4-a716-446655440999"
 	userID := "user-1"
-	req := domain.ModulUpdateRequest{Judul: "Baru"}
+	req := dto.UpdateModulRequest{Judul: "Baru"}
 
 	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
 
@@ -672,7 +672,7 @@ func TestModulUsecase_UpdateMetadata_Unauthorized(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulID := "550e8400-e29b-41d4-a716-446655440001"
-	req := domain.ModulUpdateRequest{Judul: "Baru"}
+	req := dto.UpdateModulRequest{Judul: "Baru"}
 
 	mockModulRepo.On("GetByID", modulID).Return(&domain.Modul{ID: modulID, UserID: "owner"}, nil).Once()
 
@@ -741,7 +741,7 @@ func TestModulUsecase_GetList_InvalidPagination(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	mockModulRepo.On("GetByUserID", "user-1", "", "", "", 1, 10).
-		Return([]domain.ModulListItem{}, 0, nil).Once()
+		Return([]dto.ModulListItem{}, 0, nil).Once()
 
 	result, err := modulUC.GetList("user-1", "", "", "", 0, 0)
 	require.NoError(t, err)

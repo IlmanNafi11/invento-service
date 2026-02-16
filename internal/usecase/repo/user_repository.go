@@ -2,6 +2,7 @@ package repo
 
 import (
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 
 	"gorm.io/gorm"
 )
@@ -62,8 +63,8 @@ func (r *userRepository) buildUserListQuery(search, filterRole string) *gorm.DB 
 	return query
 }
 
-func (r *userRepository) GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error) {
-	var userListItems []domain.UserListItem
+func (r *userRepository) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
+	var userListItems []dto.UserListItem
 	var total int64
 
 	baseQuery := r.buildUserListQuery(search, filterRole)
@@ -99,8 +100,8 @@ func (r *userRepository) GetProfileWithCounts(userID string) (*domain.User, int,
 	return &user, int(projectCount), int(modulCount), nil
 }
 
-func (r *userRepository) GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error) {
-	var items []domain.UserFileItem
+func (r *userRepository) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+	var items []dto.UserFileItem
 	var total int64
 
 	countQuery := r.db.Raw(`
@@ -171,8 +172,8 @@ func (r *userRepository) Delete(userID string) error {
 	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
 }
 
-func (r *userRepository) GetByRoleID(roleID uint) ([]domain.UserListItem, error) {
-	var userListItems []domain.UserListItem
+func (r *userRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
+	var userListItems []dto.UserListItem
 
 	err := r.db.Table("user_profiles").
 		Select("user_profiles.id, user_profiles.email, user_profiles.created_at as dibuat_pada, COALESCE(roles.nama_role, '') as role").

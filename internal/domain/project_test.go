@@ -62,8 +62,8 @@ func TestProjectStruct(t *testing.T) {
 }
 
 func TestProjectCreateRequest(t *testing.T) {
-	t.Run("ProjectCreateRequest with valid data", func(t *testing.T) {
-		req := ProjectCreateRequest{
+	t.Run("dto.CreateProjectRequest with valid data", func(t *testing.T) {
+		req := dto.CreateProjectRequest{
 			NamaProject: "AI Chatbot",
 			Semester:    7,
 		}
@@ -76,8 +76,8 @@ func TestProjectCreateRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectCreateRequest with minimum semester", func(t *testing.T) {
-		req := ProjectCreateRequest{
+	t.Run("dto.CreateProjectRequest with minimum semester", func(t *testing.T) {
+		req := dto.CreateProjectRequest{
 			NamaProject: "IoT Dashboard",
 			Semester:    1,
 		}
@@ -87,8 +87,8 @@ func TestProjectCreateRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectCreateRequest with maximum semester", func(t *testing.T) {
-		req := ProjectCreateRequest{
+	t.Run("dto.CreateProjectRequest with maximum semester", func(t *testing.T) {
+		req := dto.CreateProjectRequest{
 			NamaProject: "Deep Learning Model",
 			Semester:    8,
 		}
@@ -100,8 +100,8 @@ func TestProjectCreateRequest(t *testing.T) {
 }
 
 func TestProjectUpdateRequest(t *testing.T) {
-	t.Run("ProjectUpdateRequest with all fields", func(t *testing.T) {
-		req := ProjectUpdateRequest{
+	t.Run("dto.UpdateProjectRequest with all fields", func(t *testing.T) {
+		req := dto.UpdateProjectRequest{
 			NamaProject: "Updated Project Name",
 			Kategori:    "machine_learning",
 			Semester:    6,
@@ -118,8 +118,8 @@ func TestProjectUpdateRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectUpdateRequest with partial data", func(t *testing.T) {
-		req := ProjectUpdateRequest{
+	t.Run("dto.UpdateProjectRequest with partial data", func(t *testing.T) {
+		req := dto.UpdateProjectRequest{
 			Semester: 4,
 		}
 
@@ -134,11 +134,11 @@ func TestProjectUpdateRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectUpdateRequest with valid kategori values", func(t *testing.T) {
+	t.Run("dto.UpdateProjectRequest with valid kategori values", func(t *testing.T) {
 		validKategories := []string{"website", "mobile", "iot", "machine_learning", "deep_learning"}
 
 		for _, kategori := range validKategories {
-			req := ProjectUpdateRequest{
+			req := dto.UpdateProjectRequest{
 				Kategori: kategori,
 			}
 
@@ -150,8 +150,8 @@ func TestProjectUpdateRequest(t *testing.T) {
 }
 
 func TestProjectListQueryParams(t *testing.T) {
-	t.Run("ProjectListQueryParams with all fields", func(t *testing.T) {
-		params := ProjectListQueryParams{
+	t.Run("dto.ProjectListQueryParams with all fields", func(t *testing.T) {
+		params := dto.ProjectListQueryParams{
 			Search:         "ecommerce",
 			FilterSemester: 3,
 			FilterKategori: "website",
@@ -176,8 +176,8 @@ func TestProjectListQueryParams(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectListQueryParams with default values", func(t *testing.T) {
-		params := ProjectListQueryParams{}
+	t.Run("dto.ProjectListQueryParams with default values", func(t *testing.T) {
+		params := dto.ProjectListQueryParams{}
 
 		if params.Search != "" {
 			t.Errorf("Expected empty Search, got %s", params.Search)
@@ -192,9 +192,9 @@ func TestProjectListQueryParams(t *testing.T) {
 }
 
 func TestProjectListItem(t *testing.T) {
-	t.Run("ProjectListItem struct", func(t *testing.T) {
+	t.Run("dto.ProjectListItem struct", func(t *testing.T) {
 		now := time.Now()
-		item := ProjectListItem{
+		item := dto.ProjectListItem{
 			ID:                 1,
 			NamaProject:        "Smart Home System",
 			Kategori:           "iot",
@@ -220,14 +220,14 @@ func TestProjectListItem(t *testing.T) {
 }
 
 func TestProjectListData(t *testing.T) {
-	t.Run("ProjectListData with pagination", func(t *testing.T) {
-		items := []ProjectListItem{
+	t.Run("dto.ProjectListData with pagination", func(t *testing.T) {
+		items := []dto.ProjectListItem{
 			{ID: 1, NamaProject: "Project A", Kategori: "website", Semester: 1},
 			{ID: 2, NamaProject: "Project B", Kategori: "mobile", Semester: 2},
 			{ID: 3, NamaProject: "Project C", Kategori: "iot", Semester: 3},
 		}
 
-		data := ProjectListData{
+		data := dto.ProjectListData{
 			Items: items,
 			Pagination: dto.PaginationData{
 				Page:       1,
@@ -245,9 +245,9 @@ func TestProjectListData(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectListData empty", func(t *testing.T) {
-		data := ProjectListData{
-			Items: []ProjectListItem{},
+	t.Run("dto.ProjectListData empty", func(t *testing.T) {
+		data := dto.ProjectListData{
+			Items: []dto.ProjectListItem{},
 			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
@@ -263,9 +263,9 @@ func TestProjectListData(t *testing.T) {
 }
 
 func TestProjectResponse(t *testing.T) {
-	t.Run("ProjectResponse struct", func(t *testing.T) {
+	t.Run("dto.ProjectResponse struct", func(t *testing.T) {
 		now := time.Now()
-		resp := ProjectResponse{
+		resp := dto.ProjectResponse{
 			ID:          1,
 			NamaProject: "Data Analytics Platform",
 			Kategori:    "machine_learning",
@@ -289,8 +289,8 @@ func TestProjectResponse(t *testing.T) {
 }
 
 func TestProjectDownloadRequest(t *testing.T) {
-	t.Run("ProjectDownloadRequest with multiple IDs", func(t *testing.T) {
-		req := ProjectDownloadRequest{
+	t.Run("dto.ProjectDownloadRequest with multiple IDs", func(t *testing.T) {
+		req := dto.ProjectDownloadRequest{
 			IDs: []uint{1, 2, 3, 4, 5},
 		}
 
@@ -305,8 +305,8 @@ func TestProjectDownloadRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectDownloadRequest with single ID", func(t *testing.T) {
-		req := ProjectDownloadRequest{
+	t.Run("dto.ProjectDownloadRequest with single ID", func(t *testing.T) {
+		req := dto.ProjectDownloadRequest{
 			IDs: []uint{100},
 		}
 
@@ -363,8 +363,8 @@ func TestProjectKategoriValidation(t *testing.T) {
 }
 
 func TestProjectUpdateMetadataRequest(t *testing.T) {
-	t.Run("ProjectUpdateRequest struct", func(t *testing.T) {
-		req := ProjectUpdateRequest{
+	t.Run("dto.UpdateProjectRequest struct", func(t *testing.T) {
+		req := dto.UpdateProjectRequest{
 			NamaProject: "Updated Metadata Project",
 			Kategori:    "deep_learning",
 			Semester:    8,
@@ -426,7 +426,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty filter strings", func(t *testing.T) {
-		params := ProjectListQueryParams{
+		params := dto.ProjectListQueryParams{
 			Search:         "",
 			FilterKategori: "",
 		}
@@ -455,7 +455,7 @@ func TestProjectEdgeCases(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				params := ProjectListQueryParams{
+				params := dto.ProjectListQueryParams{
 					Page:  tc.page,
 					Limit: tc.limit,
 				}
@@ -471,7 +471,7 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Nil project list", func(t *testing.T) {
-		data := ProjectListData{
+		data := dto.ProjectListData{
 			Items: nil,
 			Pagination: dto.PaginationData{
 				Page:       1,
@@ -487,8 +487,8 @@ func TestProjectEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty project list", func(t *testing.T) {
-		data := ProjectListData{
-			Items: []ProjectListItem{},
+		data := dto.ProjectListData{
+			Items: []dto.ProjectListItem{},
 			Pagination: dto.PaginationData{
 				Page:       1,
 				Limit:      10,
@@ -599,9 +599,9 @@ func TestProjectTimestampFields(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectListItem timestamp", func(t *testing.T) {
+	t.Run("dto.ProjectListItem timestamp", func(t *testing.T) {
 		now := time.Now()
-		item := ProjectListItem{
+		item := dto.ProjectListItem{
 			TerakhirDiperbarui: now,
 		}
 
@@ -610,11 +610,11 @@ func TestProjectTimestampFields(t *testing.T) {
 		}
 	})
 
-	t.Run("ProjectResponse timestamps", func(t *testing.T) {
+	t.Run("dto.ProjectResponse timestamps", func(t *testing.T) {
 		created := time.Now().Add(-7 * 24 * time.Hour)
 		updated := time.Now()
 
-		resp := ProjectResponse{
+		resp := dto.ProjectResponse{
 			CreatedAt: created,
 			UpdatedAt: updated,
 		}
@@ -680,7 +680,7 @@ func TestProjectPaginationData(t *testing.T) {
 
 func TestProjectDownloadRequestEdgeCases(t *testing.T) {
 	t.Run("Empty IDs array", func(t *testing.T) {
-		req := ProjectDownloadRequest{
+		req := dto.ProjectDownloadRequest{
 			IDs: []uint{},
 		}
 
@@ -690,7 +690,7 @@ func TestProjectDownloadRequestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Nil IDs", func(t *testing.T) {
-		req := ProjectDownloadRequest{
+		req := dto.ProjectDownloadRequest{
 			IDs: nil,
 		}
 
@@ -705,7 +705,7 @@ func TestProjectDownloadRequestEdgeCases(t *testing.T) {
 			ids[i] = uint(i + 1)
 		}
 
-		req := ProjectDownloadRequest{
+		req := dto.ProjectDownloadRequest{
 			IDs: ids,
 		}
 
@@ -721,7 +721,7 @@ func TestProjectDownloadRequestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Duplicate IDs", func(t *testing.T) {
-		req := ProjectDownloadRequest{
+		req := dto.ProjectDownloadRequest{
 			IDs: []uint{1, 2, 2, 3, 3, 3},
 		}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"time"
 
 	"github.com/stretchr/testify/mock"
@@ -89,10 +90,10 @@ func (m *MockUserRepository) GetProfileWithCounts(userID string) (*domain.User, 
 	return nil, args.Int(1), args.Int(2), args.Error(3)
 }
 
-func (m *MockUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]domain.UserFileItem, int, error) {
+func (m *MockUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	args := m.Called(userID, search, page, limit)
 	if args.Get(0) != nil {
-		return args.Get(0).([]domain.UserFileItem), args.Int(1), args.Error(2)
+		return args.Get(0).([]dto.UserFileItem), args.Int(1), args.Error(2)
 	}
 	return nil, args.Int(1), args.Error(2)
 }
@@ -115,12 +116,12 @@ func (m *MockUserRepository) UpdateProfile(userID string, name string, jenisKela
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) GetAll(search, filterRole string, page, limit int) ([]domain.UserListItem, int, error) {
+func (m *MockUserRepository) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	args := m.Called(search, filterRole, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]domain.UserListItem), args.Int(1), args.Error(2)
+	return args.Get(0).([]dto.UserListItem), args.Int(1), args.Error(2)
 }
 
 func (m *MockUserRepository) UpdateRole(userID string, roleID *int) error {
@@ -133,12 +134,12 @@ func (m *MockUserRepository) Delete(userID string) error {
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) GetByRoleID(roleID uint) ([]domain.UserListItem, error) {
+func (m *MockUserRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
 	args := m.Called(roleID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]domain.UserListItem), args.Error(1)
+	return args.Get(0).([]dto.UserListItem), args.Error(1)
 }
 
 func (m *MockUserRepository) BulkUpdateRole(userIDs []string, roleID uint) error {
@@ -182,12 +183,12 @@ func (m *MockRoleRepository) Delete(id uint) error {
 	return args.Error(0)
 }
 
-func (m *MockRoleRepository) GetAll(search string, page, limit int) ([]domain.RoleListItem, int, error) {
+func (m *MockRoleRepository) GetAll(search string, page, limit int) ([]dto.RoleListItem, int, error) {
 	args := m.Called(search, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]domain.RoleListItem), args.Int(1), args.Error(2)
+	return args.Get(0).([]dto.RoleListItem), args.Int(1), args.Error(2)
 }
 
 // MockProjectRepository is a mock for ProjectRepository
@@ -200,12 +201,12 @@ func (m *MockProjectRepository) Create(project *domain.Project) error {
 	return args.Error(0)
 }
 
-func (m *MockProjectRepository) GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]domain.ProjectListItem, int, error) {
+func (m *MockProjectRepository) GetByUserID(userID string, search string, filterSemester int, filterKategori string, page, limit int) ([]dto.ProjectListItem, int, error) {
 	args := m.Called(userID, search, filterSemester, filterKategori, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]domain.ProjectListItem), args.Int(1), args.Error(2)
+	return args.Get(0).([]dto.ProjectListItem), args.Int(1), args.Error(2)
 }
 
 func (m *MockProjectRepository) GetByID(id uint) (*domain.Project, error) {
@@ -273,12 +274,12 @@ func (m *MockModulRepository) GetByIDs(ids []string, userID string) ([]domain.Mo
 	return args.Get(0).([]domain.Modul), args.Error(1)
 }
 
-func (m *MockModulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]domain.ModulListItem, int, error) {
+func (m *MockModulRepository) GetByUserID(userID string, search string, filterType string, filterStatus string, page, limit int) ([]dto.ModulListItem, int, error) {
 	args := m.Called(userID, search, filterType, filterStatus, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
 	}
-	return args.Get(0).([]domain.ModulListItem), args.Int(1), args.Error(2)
+	return args.Get(0).([]dto.ModulListItem), args.Int(1), args.Error(2)
 }
 
 func (m *MockModulRepository) CountByUserID(userID string) (int, error) {
@@ -553,12 +554,12 @@ func (m *MockPermissionRepository) GetAll() ([]domain.Permission, error) {
 	return args.Get(0).([]domain.Permission), args.Error(1)
 }
 
-func (m *MockPermissionRepository) GetAvailablePermissions() ([]domain.ResourcePermissions, error) {
+func (m *MockPermissionRepository) GetAvailablePermissions() ([]dto.ResourcePermissions, error) {
 	args := m.Called()
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]domain.ResourcePermissions), args.Error(1)
+	return args.Get(0).([]dto.ResourcePermissions), args.Error(1)
 }
 
 func (m *MockPermissionRepository) BulkCreate(permissions []domain.Permission) error {

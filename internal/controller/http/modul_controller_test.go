@@ -26,23 +26,23 @@ type MockModulUsecase struct {
 	mock.Mock
 }
 
-func (m *MockModulUsecase) GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*domain.ModulListData, error) {
+func (m *MockModulUsecase) GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error) {
 	args := m.Called(userID, search, filterType, filterStatus, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.ModulListData), args.Error(1)
+	return args.Get(0).(*dto.ModulListData), args.Error(1)
 }
 
-func (m *MockModulUsecase) GetByID(modulID string, userID string) (*domain.ModulResponse, error) {
+func (m *MockModulUsecase) GetByID(modulID string, userID string) (*dto.ModulResponse, error) {
 	args := m.Called(modulID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.ModulResponse), args.Error(1)
+	return args.Get(0).(*dto.ModulResponse), args.Error(1)
 }
 
-func (m *MockModulUsecase) UpdateMetadata(modulID string, userID string, req domain.ModulUpdateRequest) error {
+func (m *MockModulUsecase) UpdateMetadata(modulID string, userID string, req dto.UpdateModulRequest) error {
 	args := m.Called(modulID, userID, req)
 	return args.Error(0)
 }
@@ -90,8 +90,8 @@ func TestModulController_GetList_Success(t *testing.T) {
 
 	app.Get("/api/v1/modul", controller.GetList)
 
-	expectedData := &domain.ModulListData{
-		Items: []domain.ModulListItem{
+	expectedData := &dto.ModulListData{
+		Items: []dto.ModulListItem{
 			{
 				ID:                 "550e8400-e29b-41d4-a716-446655440001",
 				Judul:              "Modul 1",
@@ -145,8 +145,8 @@ func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 	})
 	app.Get("/api/v1/modul", controller.GetList)
 
-	expectedData := &domain.ModulListData{
-		Items: []domain.ModulListItem{
+	expectedData := &dto.ModulListData{
+		Items: []dto.ModulListItem{
 			{
 				ID:                 "550e8400-e29b-41d4-a716-446655440001",
 				Judul:              "Matematika Dasar",
@@ -213,7 +213,7 @@ func TestModulController_UpdateMetadata_Success(t *testing.T) {
 	})
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
 
-	reqBody := domain.ModulUpdateRequest{
+	reqBody := dto.UpdateModulRequest{
 		Judul:     "Modul Updated",
 		Deskripsi: "Deskripsi Updated",
 	}
@@ -244,7 +244,7 @@ func TestModulController_UpdateMetadata_NotFound(t *testing.T) {
 	})
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
 
-	reqBody := domain.ModulUpdateRequest{
+	reqBody := dto.UpdateModulRequest{
 		Judul: "Updated Name",
 	}
 
@@ -273,7 +273,7 @@ func TestModulController_UpdateMetadata_ValidationError(t *testing.T) {
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
 
 	// Invalid: judul too short
-	reqBody := domain.ModulUpdateRequest{
+	reqBody := dto.UpdateModulRequest{
 		Judul: "ab",
 	}
 
@@ -387,7 +387,7 @@ func TestModulController_Download_Success(t *testing.T) {
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
 
-	reqBody := domain.ModulDownloadRequest{
+	reqBody := dto.ModulDownloadRequest{
 		IDs: []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440002"},
 	}
 
@@ -418,7 +418,7 @@ func TestModulController_Download_EmptyIDs(t *testing.T) {
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
 
-	reqBody := domain.ModulDownloadRequest{
+	reqBody := dto.ModulDownloadRequest{
 		IDs: []string{},
 	}
 
@@ -441,7 +441,7 @@ func TestModulController_Download_NotFound(t *testing.T) {
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
 
-	reqBody := domain.ModulDownloadRequest{
+	reqBody := dto.ModulDownloadRequest{
 		IDs: []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440999"},
 	}
 
@@ -465,7 +465,7 @@ func TestModulController_Download_Unauthorized(t *testing.T) {
 	app := fiber.New()
 	app.Post("/api/v1/modul/download", controller.Download)
 
-	reqBody := domain.ModulDownloadRequest{
+	reqBody := dto.ModulDownloadRequest{
 		IDs: []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440002"},
 	}
 
@@ -488,7 +488,7 @@ func TestModulController_Download_InternalError(t *testing.T) {
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
 
-	reqBody := domain.ModulDownloadRequest{
+	reqBody := dto.ModulDownloadRequest{
 		IDs: []string{"550e8400-e29b-41d4-a716-446655440001"},
 	}
 

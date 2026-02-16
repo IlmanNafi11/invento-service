@@ -3,7 +3,7 @@ package http
 import (
 	"errors"
 	"invento-service/internal/controller/base"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
@@ -41,12 +41,12 @@ func NewUserController(userUsecase usecase.UserUsecase) *UserController {
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Param search query string false "Search keyword"
-// @Success 200 {object} dto.SuccessResponse{data=domain.UserListData}
+// @Success 200 {object} dto.SuccessResponse{data=dto.UserListData}
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /user [get]
 func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
-	var params domain.UserListQueryParams
+	var params dto.UserListQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
@@ -71,7 +71,7 @@ func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param request body domain.UpdateUserRoleRequest true "Role update request"
+// @Param request body dto.UpdateUserRoleRequest true "Role update request"
 // @Success 200 {object} dto.SuccessResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
@@ -84,7 +84,7 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 		return err // error response already sent
 	}
 
-	var req domain.UpdateUserRoleRequest
+	var req dto.UpdateUserRoleRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
@@ -147,7 +147,7 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 // @Param id path int true "User ID"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} dto.SuccessResponse{data=domain.UserFilesData}
+// @Success 200 {object} dto.SuccessResponse{data=dto.UserFilesData}
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
@@ -159,7 +159,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 		return err // error response already sent
 	}
 
-	var params domain.UserFilesQueryParams
+	var params dto.UserFilesQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
@@ -183,7 +183,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} dto.SuccessResponse{data=domain.ProfileData}
+// @Success 200 {object} dto.SuccessResponse{data=dto.ProfileData}
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /profile [get]
@@ -212,9 +212,9 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param request body domain.UpdateProfileRequest true "Profile update request"
+// @Param request body dto.UpdateProfileRequest true "Profile update request"
 // @Param foto_profil formData file false "Profile photo (optional)"
-// @Success 200 {object} dto.SuccessResponse{data=domain.ProfileData}
+// @Success 200 {object} dto.SuccessResponse{data=dto.ProfileData}
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
@@ -225,7 +225,7 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 		return nil // unauthorized response already sent
 	}
 
-	var req domain.UpdateProfileRequest
+	var req dto.UpdateProfileRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
@@ -255,7 +255,7 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} dto.SuccessResponse{data=[]domain.UserPermissionItem}
+// @Success 200 {object} dto.SuccessResponse{data=[]dto.UserPermissionItem}
 // @Failure 401 {object} dto.ErrorResponse
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /user/permissions [get]
@@ -285,7 +285,7 @@ func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 // @Produce application/octet-stream
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param request body domain.DownloadUserFilesRequest true "Download request"
+// @Param request body dto.DownloadUserFilesRequest true "Download request"
 // @Success 200 {file} binary
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
@@ -298,7 +298,7 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 		return err // error response already sent
 	}
 
-	var req domain.DownloadUserFilesRequest
+	var req dto.DownloadUserFilesRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}
@@ -356,7 +356,7 @@ func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
 		return err
 	}
 
-	var req domain.BulkAssignRoleRequest
+	var req dto.BulkAssignRoleRequest
 	if err := c.BodyParser(&req); err != nil {
 		return ctrl.SendBadRequest(c, "Format request tidak valid")
 	}

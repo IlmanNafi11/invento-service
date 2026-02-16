@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 )
@@ -137,8 +138,8 @@ func TestModulUploadTypeConstants(t *testing.T) {
 }
 
 func TestTusModulUploadInitRequest(t *testing.T) {
-	t.Run("TusModulUploadInitRequest with valid data", func(t *testing.T) {
-		req := TusModulUploadInitRequest{
+	t.Run("TusModulUploadMetadata with valid data", func(t *testing.T) {
+		req := TusModulUploadMetadata{
 			Judul:     "Introduction to Algorithms",
 			Deskripsi: "A comprehensive guide to algorithms",
 		}
@@ -151,8 +152,8 @@ func TestTusModulUploadInitRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("TusModulUploadInitRequest with empty deskripsi", func(t *testing.T) {
-		req := TusModulUploadInitRequest{
+	t.Run("TusModulUploadMetadata with empty deskripsi", func(t *testing.T) {
+		req := TusModulUploadMetadata{
 			Judul:     "Test Module",
 			Deskripsi: "",
 		}
@@ -167,8 +168,8 @@ func TestTusModulUploadInitRequest(t *testing.T) {
 }
 
 func TestTusModulUploadResponse(t *testing.T) {
-	t.Run("TusModulUploadResponse struct", func(t *testing.T) {
-		resp := TusModulUploadResponse{
+	t.Run("dto.TusModulUploadResponse struct", func(t *testing.T) {
+		resp := dto.TusModulUploadResponse{
 			UploadID:  "modul-upload-123",
 			UploadURL: "https://example.com/tus/modul-upload-123",
 			Offset:    0,
@@ -186,8 +187,8 @@ func TestTusModulUploadResponse(t *testing.T) {
 		}
 	})
 
-	t.Run("TusModulUploadResponse with progress", func(t *testing.T) {
-		resp := TusModulUploadResponse{
+	t.Run("dto.TusModulUploadResponse with progress", func(t *testing.T) {
+		resp := dto.TusModulUploadResponse{
 			UploadID:  "modul-upload-456",
 			UploadURL: "https://example.com/tus/modul-upload-456",
 			Offset:    256000,
@@ -205,10 +206,10 @@ func TestTusModulUploadResponse(t *testing.T) {
 }
 
 func TestTusModulUploadInfoResponse(t *testing.T) {
-	t.Run("TusModulUploadInfoResponse struct", func(t *testing.T) {
+	t.Run("dto.TusModulUploadInfoResponse struct", func(t *testing.T) {
 		now := time.Now()
 
-		resp := TusModulUploadInfoResponse{
+		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "modul-upload-123",
 			ModulID:   "550e8400-e29b-41d4-a716-446655440100",
 			Judul:     "Data Structures",
@@ -241,8 +242,8 @@ func TestTusModulUploadInfoResponse(t *testing.T) {
 		}
 	})
 
-	t.Run("TusModulUploadInfoResponse with empty ModulID", func(t *testing.T) {
-		resp := TusModulUploadInfoResponse{
+	t.Run("dto.TusModulUploadInfoResponse with empty ModulID", func(t *testing.T) {
+		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "modul-upload-456",
 			ModulID:   "",
 			Judul:     "New Module",
@@ -261,8 +262,8 @@ func TestTusModulUploadInfoResponse(t *testing.T) {
 }
 
 func TestTusModulUploadSlotResponse(t *testing.T) {
-	t.Run("TusModulUploadSlotResponse available", func(t *testing.T) {
-		resp := TusModulUploadSlotResponse{
+	t.Run("dto.TusModulUploadSlotResponse available", func(t *testing.T) {
+		resp := dto.TusModulUploadSlotResponse{
 			Available:   true,
 			Message:     "Upload slot available",
 			QueueLength: 1,
@@ -283,8 +284,8 @@ func TestTusModulUploadSlotResponse(t *testing.T) {
 		}
 	})
 
-	t.Run("TusModulUploadSlotResponse not available", func(t *testing.T) {
-		resp := TusModulUploadSlotResponse{
+	t.Run("dto.TusModulUploadSlotResponse not available", func(t *testing.T) {
+		resp := dto.TusModulUploadSlotResponse{
 			Available:   false,
 			Message:     "Queue is full",
 			QueueLength: 10,
@@ -350,7 +351,7 @@ func TestTusModulUploadStatusTransitions(t *testing.T) {
 func TestTusModulUploadMetadata(t *testing.T) {
 	t.Run("TusModulUpload with metadata", func(t *testing.T) {
 		now := time.Now()
-		metadata := TusModulUploadInitRequest{
+		metadata := TusModulUploadMetadata{
 			Judul:     "Machine Learning Basics",
 			Deskripsi: "Introduction to machine learning concepts",
 		}
@@ -544,7 +545,7 @@ func TestTusModulUploadEdgeCases(t *testing.T) {
 
 func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
 	t.Run("Minimum valid Judul length", func(t *testing.T) {
-		req := TusModulUploadInitRequest{
+		req := TusModulUploadMetadata{
 			Judul:     "ABC",
 			Deskripsi: "A description",
 		}
@@ -556,7 +557,7 @@ func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
 
 	t.Run("Long valid Judul", func(t *testing.T) {
 		longName := "A" + " very long module name that describes the content in detail " + "B"
-		req := TusModulUploadInitRequest{
+		req := TusModulUploadMetadata{
 			Judul:     longName,
 			Deskripsi: "Description for long module name",
 		}
@@ -567,7 +568,7 @@ func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Empty deskripsi allowed", func(t *testing.T) {
-		req := TusModulUploadInitRequest{
+		req := TusModulUploadMetadata{
 			Judul:     "Module Without Description",
 			Deskripsi: "",
 		}
@@ -580,7 +581,7 @@ func TestTusModulUploadInitRequestEdgeCases(t *testing.T) {
 
 func TestTusModulUploadResponseEdgeCases(t *testing.T) {
 	t.Run("Zero offset for new upload", func(t *testing.T) {
-		resp := TusModulUploadResponse{
+		resp := dto.TusModulUploadResponse{
 			UploadID:  "new-upload",
 			UploadURL: "https://example.com/tus/new-upload",
 			Offset:    0,
@@ -593,7 +594,7 @@ func TestTusModulUploadResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Offset equals length for completed upload", func(t *testing.T) {
-		resp := TusModulUploadResponse{
+		resp := dto.TusModulUploadResponse{
 			UploadID:  "completed-upload",
 			UploadURL: "https://example.com/tus/completed-upload",
 			Offset:    1000000,
@@ -606,7 +607,7 @@ func TestTusModulUploadResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero length upload", func(t *testing.T) {
-		resp := TusModulUploadResponse{
+		resp := dto.TusModulUploadResponse{
 			UploadID:  "zero-length",
 			UploadURL: "https://example.com/tus/zero-length",
 			Offset:    0,
@@ -621,7 +622,7 @@ func TestTusModulUploadResponseEdgeCases(t *testing.T) {
 
 func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	t.Run("Empty ModulID for new modul", func(t *testing.T) {
-		resp := TusModulUploadInfoResponse{
+		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "new-modul-upload",
 			ModulID:   "",
 			Judul:     "New Module",
@@ -636,7 +637,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Non-empty ModulID for existing modul update", func(t *testing.T) {
-		resp := TusModulUploadInfoResponse{
+		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "update-modul-upload",
 			ModulID:   "550e8400-e29b-41d4-a716-446655440300",
 			Judul:     "Updated Module",
@@ -651,7 +652,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Zero progress for pending status", func(t *testing.T) {
-		resp := TusModulUploadInfoResponse{
+		resp := dto.TusModulUploadInfoResponse{
 			UploadID: "pending-upload",
 			Status:   UploadStatusPending,
 			Progress: 0,
@@ -663,7 +664,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Full progress for completed status", func(t *testing.T) {
-		resp := TusModulUploadInfoResponse{
+		resp := dto.TusModulUploadInfoResponse{
 			UploadID: "completed-upload",
 			Status:   UploadStatusCompleted,
 			Progress: 100.0,
@@ -676,7 +677,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 
 	t.Run("Timestamp fields present", func(t *testing.T) {
 		now := time.Now()
-		resp := TusModulUploadInfoResponse{
+		resp := dto.TusModulUploadInfoResponse{
 			UploadID:  "timestamp-test",
 			CreatedAt: now,
 			UpdatedAt: now,
@@ -693,7 +694,7 @@ func TestTusModulUploadInfoResponseEdgeCases(t *testing.T) {
 
 func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
 	t.Run("Zero queue length when empty", func(t *testing.T) {
-		resp := TusModulUploadSlotResponse{
+		resp := dto.TusModulUploadSlotResponse{
 			Available:   true,
 			Message:     "Queue is empty",
 			QueueLength: 0,
@@ -706,7 +707,7 @@ func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Queue length equals max queue when full", func(t *testing.T) {
-		resp := TusModulUploadSlotResponse{
+		resp := dto.TusModulUploadSlotResponse{
 			Available:   false,
 			Message:     "Queue is full",
 			QueueLength: 10,
@@ -722,7 +723,7 @@ func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("One below max queue", func(t *testing.T) {
-		resp := TusModulUploadSlotResponse{
+		resp := dto.TusModulUploadSlotResponse{
 			Available:   true,
 			Message:     "One slot remaining",
 			QueueLength: 9,
@@ -738,7 +739,7 @@ func TestTusModulUploadSlotResponseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Max queue zero for unlimited queue", func(t *testing.T) {
-		resp := TusModulUploadSlotResponse{
+		resp := dto.TusModulUploadSlotResponse{
 			Available:   true,
 			Message:     "Unlimited queue",
 			QueueLength: 0,

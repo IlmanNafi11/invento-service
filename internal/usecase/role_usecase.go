@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/rbac"
@@ -12,11 +13,11 @@ import (
 )
 
 type RoleUsecase interface {
-	GetAvailablePermissions() ([]domain.ResourcePermissions, error)
-	GetRoleList(params domain.RoleListQueryParams) (*domain.RoleListData, error)
-	CreateRole(req domain.RoleCreateRequest) (*domain.RoleDetailResponse, error)
-	GetRoleDetail(id uint) (*domain.RoleDetailResponse, error)
-	UpdateRole(id uint, req domain.RoleUpdateRequest) (*domain.RoleDetailResponse, error)
+	GetAvailablePermissions() ([]dto.ResourcePermissions, error)
+	GetRoleList(params dto.RoleListQueryParams) (*dto.RoleListData, error)
+	CreateRole(req dto.RoleCreateRequest) (*dto.RoleDetailResponse, error)
+	GetRoleDetail(id uint) (*dto.RoleDetailResponse, error)
+	UpdateRole(id uint, req dto.RoleUpdateRequest) (*dto.RoleDetailResponse, error)
 	DeleteRole(id uint) error
 }
 
@@ -45,7 +46,7 @@ func NewRoleUsecase(
 	}
 }
 
-func (uc *roleUsecase) GetAvailablePermissions() ([]domain.ResourcePermissions, error) {
+func (uc *roleUsecase) GetAvailablePermissions() ([]dto.ResourcePermissions, error) {
 	permissions, err := uc.permissionRepo.GetAvailablePermissions()
 	if err != nil {
 		return nil, apperrors.NewInternalError(err)
@@ -53,7 +54,7 @@ func (uc *roleUsecase) GetAvailablePermissions() ([]domain.ResourcePermissions, 
 	return permissions, nil
 }
 
-func (uc *roleUsecase) GetRoleList(params domain.RoleListQueryParams) (*domain.RoleListData, error) {
+func (uc *roleUsecase) GetRoleList(params dto.RoleListQueryParams) (*dto.RoleListData, error) {
 	paginationParams := httputil.NormalizePaginationParams(params.Page, params.Limit)
 
 	roles, total, err := uc.roleRepo.GetAll(params.Search, paginationParams.Page, paginationParams.Limit)
@@ -63,13 +64,13 @@ func (uc *roleUsecase) GetRoleList(params domain.RoleListQueryParams) (*domain.R
 
 	pagination := httputil.CalculatePagination(paginationParams.Page, paginationParams.Limit, total)
 
-	return &domain.RoleListData{
+	return &dto.RoleListData{
 		Items:      roles,
 		Pagination: pagination,
 	}, nil
 }
 
-func (uc *roleUsecase) CreateRole(req domain.RoleCreateRequest) (*domain.RoleDetailResponse, error) {
+func (uc *roleUsecase) CreateRole(req dto.RoleCreateRequest) (*dto.RoleDetailResponse, error) {
 	if err := uc.rbacHelper.ValidatePermissionFormat(req.Permissions); err != nil {
 		return nil, apperrors.NewValidationError(err.Error(), err)
 	}
@@ -102,7 +103,7 @@ func (uc *roleUsecase) CreateRole(req domain.RoleCreateRequest) (*domain.RoleDet
 		return nil, apperrors.NewInternalError(err)
 	}
 
-	return &domain.RoleDetailResponse{
+	return &dto.RoleDetailResponse{
 		ID:               role.ID,
 		NamaRole:         role.NamaRole,
 		Permissions:      permissionDetails,
@@ -112,7 +113,7 @@ func (uc *roleUsecase) CreateRole(req domain.RoleCreateRequest) (*domain.RoleDet
 	}, nil
 }
 
-func (uc *roleUsecase) GetRoleDetail(id uint) (*domain.RoleDetailResponse, error) {
+func (uc *roleUsecase) GetRoleDetail(id uint) (*dto.RoleDetailResponse, error) {
 	role, err := uc.roleRepo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -129,7 +130,7 @@ func (uc *roleUsecase) GetRoleDetail(id uint) (*domain.RoleDetailResponse, error
 	return uc.rbacHelper.BuildRoleDetailResponse(role, permissions), nil
 }
 
-func (uc *roleUsecase) UpdateRole(id uint, req domain.RoleUpdateRequest) (*domain.RoleDetailResponse, error) {
+func (uc *roleUsecase) UpdateRole(id uint, req dto.RoleUpdateRequest) (*dto.RoleDetailResponse, error) {
 	if err := uc.rbacHelper.ValidatePermissionFormat(req.Permissions); err != nil {
 		return nil, apperrors.NewValidationError(err.Error(), err)
 	}
@@ -175,7 +176,7 @@ func (uc *roleUsecase) UpdateRole(id uint, req domain.RoleUpdateRequest) (*domai
 		return nil, apperrors.NewInternalError(err)
 	}
 
-	return &domain.RoleDetailResponse{
+	return &dto.RoleDetailResponse{
 		ID:               role.ID,
 		NamaRole:         role.NamaRole,
 		Permissions:      permissionDetails,
