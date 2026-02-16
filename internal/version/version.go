@@ -7,10 +7,6 @@ const CurrentAPIVersion = "v1"
 const (
 	// V1 is the current stable version
 	V1 = "v1"
-
-	// Future version constants (for when we add v2, v3, etc.)
-	// V2 = "v2"
-	// V3 = "v3"
 )
 
 // APIVersion represents an API version
@@ -37,8 +33,6 @@ func (v APIVersion) IsDeprecated() bool {
 // GetSupportedVersions returns all currently supported API versions
 func GetSupportedVersions() []APIVersion {
 	return []APIVersion{V1}
-	// Add new versions when they're introduced
-	// return []APIVersion{V1, V2}
 }
 
 // GetDeprecationWarning returns a deprecation warning message if applicable
