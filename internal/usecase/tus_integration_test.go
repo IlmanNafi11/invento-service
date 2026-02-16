@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 
 	"invento-service/config"
 	"invento-service/internal/domain"
+	dto "invento-service/internal/dto"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
 	"invento-service/internal/usecase/repo"
@@ -151,8 +153,10 @@ func integrationModulMetadataHeader(judul, deskripsi string) string {
 
 func TestTusProjectUploadFullFlowIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	resp, err := env.uploadUsecase.InitiateUpload(
+		ctx,
 		env.userID,
 		"integration@test.local",
 		"mahasiswa",
@@ -162,24 +166,24 @@ func TestTusProjectUploadFullFlowIntegration(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 
-	info, err := env.uploadUsecase.GetUploadInfo(resp.UploadID, env.userID)
+	info, err := env.uploadUsecase.GetUploadInfo(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, domain.UploadStatusPending, info.Status)
 
-	offset, err := env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
+	offset, err := env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(1024), offset)
 
-	info, err = env.uploadUsecase.GetUploadInfo(resp.UploadID, env.userID)
+	info, err = env.uploadUsecase.GetUploadInfo(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, domain.UploadStatusUploading, info.Status)
 	assert.Equal(t, int64(1024), info.Offset)
 
-	offset, err = env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, offset, createTestChunk(1024))
+	offset, err = env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, offset, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(2048), offset)
 
-	offset, err = env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, offset, createTestChunk(1024))
+	offset, err = env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, offset, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(3072), offset)
 
@@ -199,8 +203,10 @@ func TestTusProjectUploadFullFlowIntegration(t *testing.T) {
 
 func TestTusProjectUploadResumeAfterPauseIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	resp, err := env.uploadUsecase.InitiateUpload(
+		ctx,
 		env.userID,
 		"integration@test.local",
 		"mahasiswa",
@@ -209,20 +215,20 @@ func TestTusProjectUploadResumeAfterPauseIntegration(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	offset, err := env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
+	offset, err := env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(1024), offset)
 
-	pausedOffset, length, err := env.uploadUsecase.GetUploadStatus(resp.UploadID, env.userID)
+	pausedOffset, length, err := env.uploadUsecase.GetUploadStatus(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, int64(1024), pausedOffset)
 	assert.Equal(t, int64(3072), length)
 
-	offset, err = env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, pausedOffset, createTestChunk(1024))
+	offset, err = env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, pausedOffset, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(2048), offset)
 
-	offset, err = env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, offset, createTestChunk(1024))
+	offset, err = env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, offset, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(3072), offset)
 
@@ -233,8 +239,10 @@ func TestTusProjectUploadResumeAfterPauseIntegration(t *testing.T) {
 
 func TestTusProjectUploadCancelIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	resp, err := env.uploadUsecase.InitiateUpload(
+		ctx,
 		env.userID,
 		"integration@test.local",
 		"mahasiswa",
@@ -243,13 +251,13 @@ func TestTusProjectUploadCancelIntegration(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	_, err = env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
+	_, err = env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
 
 	tempUploadPath := env.pathResolver.GetUploadPath(resp.UploadID)
 	assert.DirExists(t, tempUploadPath)
 
-	err = env.uploadUsecase.CancelUpload(resp.UploadID, env.userID)
+	err = env.uploadUsecase.CancelUpload(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 
 	var upload domain.TusUpload
@@ -264,8 +272,10 @@ func TestTusProjectUploadCancelIntegration(t *testing.T) {
 
 func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	resp, err := env.modulUsecase.InitiateModulUpload(
+		ctx,
 		env.userID,
 		2*1024,
 		integrationModulMetadataHeader("modul-integration", "deskripsi integration"),
@@ -273,20 +283,20 @@ func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 
-	info, err := env.modulUsecase.GetModulUploadInfo(resp.UploadID, env.userID)
+	info, err := env.modulUsecase.GetModulUploadInfo(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, domain.UploadStatusPending, info.Status)
 
-	offset, err := env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
+	offset, err := env.modulUsecase.HandleModulChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(1024), offset)
 
-	info, err = env.modulUsecase.GetModulUploadInfo(resp.UploadID, env.userID)
+	info, err = env.modulUsecase.GetModulUploadInfo(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, domain.UploadStatusUploading, info.Status)
 	assert.Equal(t, int64(1024), info.Offset)
 
-	offset, err = env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, offset, createTestChunk(1024))
+	offset, err = env.modulUsecase.HandleModulChunk(ctx, resp.UploadID, env.userID, offset, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(2048), offset)
 
@@ -306,28 +316,30 @@ func TestTusModulUploadFullFlowIntegration(t *testing.T) {
 
 func TestTusModulUploadResumeAfterPauseIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	resp, err := env.modulUsecase.InitiateModulUpload(
+		ctx,
 		env.userID,
 		3*1024,
 		integrationModulMetadataHeader("modul-resume", "deskripsi resume"),
 	)
 	require.NoError(t, err)
 
-	offset, err := env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
+	offset, err := env.modulUsecase.HandleModulChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(1024), offset)
 
-	pausedOffset, length, err := env.modulUsecase.GetModulUploadStatus(resp.UploadID, env.userID)
+	pausedOffset, length, err := env.modulUsecase.GetModulUploadStatus(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, int64(1024), pausedOffset)
 	assert.Equal(t, int64(3072), length)
 
-	offset, err = env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, pausedOffset, createTestChunk(1024))
+	offset, err = env.modulUsecase.HandleModulChunk(ctx, resp.UploadID, env.userID, pausedOffset, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(2048), offset)
 
-	offset, err = env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, offset, createTestChunk(1024))
+	offset, err = env.modulUsecase.HandleModulChunk(ctx, resp.UploadID, env.userID, offset, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(3072), offset)
 
@@ -338,21 +350,23 @@ func TestTusModulUploadResumeAfterPauseIntegration(t *testing.T) {
 
 func TestTusModulUploadCancelIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	resp, err := env.modulUsecase.InitiateModulUpload(
+		ctx,
 		env.userID,
 		2*1024,
 		integrationModulMetadataHeader("modul-cancel", "deskripsi cancel"),
 	)
 	require.NoError(t, err)
 
-	_, err = env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
+	_, err = env.modulUsecase.HandleModulChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
 
 	tempUploadPath := env.pathResolver.GetUploadPath(resp.UploadID)
 	assert.DirExists(t, tempUploadPath)
 
-	err = env.modulUsecase.CancelModulUpload(resp.UploadID, env.userID)
+	err = env.modulUsecase.CancelModulUpload(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 
 	var upload domain.TusModulUpload
@@ -365,16 +379,17 @@ func TestTusModulUploadCancelIntegration(t *testing.T) {
 
 func TestTusUploadConcurrentSlotsIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	meta := dto.TusUploadInitRequest{NamaProject: "Concurrent", Kategori: "website", Semester: 1}
 	secondUserID := "22222222-2222-2222-2222-222222222222"
 
-	first, err := env.uploadUsecase.InitiateUpload(env.userID, "integration@test.local", "mahasiswa", 1024, meta)
+	first, err := env.uploadUsecase.InitiateUpload(ctx, env.userID, "integration@test.local", "mahasiswa", 1024, meta)
 	require.NoError(t, err)
-	second, err := env.uploadUsecase.InitiateUpload(secondUserID, "integration-2@test.local", "mahasiswa", 1024, meta)
+	second, err := env.uploadUsecase.InitiateUpload(ctx, secondUserID, "integration-2@test.local", "mahasiswa", 1024, meta)
 	require.NoError(t, err)
 
-	_, err = env.uploadUsecase.InitiateUpload("33333333-3333-3333-3333-333333333333", "integration-3@test.local", "mahasiswa", 1024, meta)
+	_, err = env.uploadUsecase.InitiateUpload(ctx, "33333333-3333-3333-3333-333333333333", "integration-3@test.local", "mahasiswa", 1024, meta)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "slot upload tidak tersedia")
 
@@ -390,8 +405,10 @@ func TestTusUploadConcurrentSlotsIntegration(t *testing.T) {
 
 func TestTusUploadInvalidFileSizeIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	_, err := env.uploadUsecase.InitiateUpload(
+		ctx,
 		env.userID,
 		"integration@test.local",
 		"mahasiswa",
@@ -404,19 +421,21 @@ func TestTusUploadInvalidFileSizeIntegration(t *testing.T) {
 
 func TestTusUploadOffsetMismatchIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	resp, err := env.modulUsecase.InitiateModulUpload(
+		ctx,
 		env.userID,
 		2*1024,
 		integrationModulMetadataHeader("offset-check", "deskripsi offset check"),
 	)
 	require.NoError(t, err)
 
-	offset, err := env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
+	offset, err := env.modulUsecase.HandleModulChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(1024), offset)
 
-	returnedOffset, err := env.modulUsecase.HandleModulChunk(resp.UploadID, env.userID, 0, createTestChunk(512))
+	returnedOffset, err := env.modulUsecase.HandleModulChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(512))
 	require.Error(t, err)
 	assert.Equal(t, int64(1024), returnedOffset)
 	assert.Contains(t, err.Error(), "offset")
@@ -424,8 +443,10 @@ func TestTusUploadOffsetMismatchIntegration(t *testing.T) {
 
 func TestTusUploadStatusTransitionsIntegration(t *testing.T) {
 	env := setupTusIntegrationTest(t)
+	ctx := context.Background()
 
 	resp, err := env.uploadUsecase.InitiateUpload(
+		ctx,
 		env.userID,
 		"integration@test.local",
 		"mahasiswa",
@@ -434,31 +455,32 @@ func TestTusUploadStatusTransitionsIntegration(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	info, err := env.uploadUsecase.GetUploadInfo(resp.UploadID, env.userID)
+	info, err := env.uploadUsecase.GetUploadInfo(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, domain.UploadStatusPending, info.Status)
 
-	offset, err := env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, 0, createTestChunk(1024))
+	offset, err := env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, 0, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(1024), offset)
 
-	info, err = env.uploadUsecase.GetUploadInfo(resp.UploadID, env.userID)
+	info, err = env.uploadUsecase.GetUploadInfo(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, domain.UploadStatusUploading, info.Status)
 
-	offset, err = env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, offset, createTestChunk(1024))
+	offset, err = env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, offset, createTestChunk(1024))
 	require.NoError(t, err)
 	assert.Equal(t, int64(2048), offset)
 
-	info, err = env.uploadUsecase.GetUploadInfo(resp.UploadID, env.userID)
+	info, err = env.uploadUsecase.GetUploadInfo(ctx, resp.UploadID, env.userID)
 	require.NoError(t, err)
 	assert.Equal(t, domain.UploadStatusCompleted, info.Status)
 
-	_, err = env.uploadUsecase.HandleChunk(resp.UploadID, env.userID, offset, createTestChunk(128))
+	_, err = env.uploadUsecase.HandleChunk(ctx, resp.UploadID, env.userID, offset, createTestChunk(128))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "sudah selesai")
 
 	cancelResp, err := env.uploadUsecase.InitiateUpload(
+		ctx,
 		env.userID,
 		"integration@test.local",
 		"mahasiswa",
@@ -467,14 +489,14 @@ func TestTusUploadStatusTransitionsIntegration(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	err = env.uploadUsecase.CancelUpload(cancelResp.UploadID, env.userID)
+	err = env.uploadUsecase.CancelUpload(ctx, cancelResp.UploadID, env.userID)
 	require.NoError(t, err)
 
 	var cancelledUpload domain.TusUpload
 	require.NoError(t, env.db.Where("id = ?", cancelResp.UploadID).First(&cancelledUpload).Error)
 	assert.Equal(t, domain.UploadStatusCancelled, cancelledUpload.Status)
 
-	_, err = env.uploadUsecase.HandleChunk(cancelResp.UploadID, env.userID, 0, createTestChunk(128))
+	_, err = env.uploadUsecase.HandleChunk(ctx, cancelResp.UploadID, env.userID, 0, createTestChunk(128))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "tidak dapat dilanjutkan")
 }

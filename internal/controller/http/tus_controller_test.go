@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"io"
 	"net/http/httptest"
@@ -17,6 +18,7 @@ import (
 	base "invento-service/internal/controller/base"
 	httpcontroller "invento-service/internal/controller/http"
 	"invento-service/internal/domain"
+	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/rbac"
 	app_testing "invento-service/internal/testing"
@@ -28,84 +30,84 @@ type MockTusUploadUsecase struct {
 	mock.Mock
 }
 
-func (m *MockTusUploadUsecase) CheckUploadSlot(userID string) (*dto.TusUploadSlotResponse, error) {
-	args := m.Called(userID)
+func (m *MockTusUploadUsecase) CheckUploadSlot(ctx context.Context, userID string) (*dto.TusUploadSlotResponse, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusUploadSlotResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) ResetUploadQueue(userID string) error {
-	args := m.Called(userID)
+func (m *MockTusUploadUsecase) ResetUploadQueue(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
 
-func (m *MockTusUploadUsecase) InitiateUpload(userID string, userEmail string, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
-	args := m.Called(userID, userEmail, userRole, fileSize, metadata)
+func (m *MockTusUploadUsecase) InitiateUpload(ctx context.Context, userID string, userEmail string, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
+	args := m.Called(ctx, userID, userEmail, userRole, fileSize, metadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusUploadResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) HandleChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	args := m.Called(uploadID, userID, offset, mock.Anything)
+func (m *MockTusUploadUsecase) HandleChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	args := m.Called(ctx, uploadID, userID, offset, mock.Anything)
 	if args.Get(1) != nil {
 		return args.Get(0).(int64), args.Error(1)
 	}
 	return args.Get(0).(int64), nil
 }
 
-func (m *MockTusUploadUsecase) GetUploadInfo(uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
-	args := m.Called(uploadID, userID)
+func (m *MockTusUploadUsecase) GetUploadInfo(ctx context.Context, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
+	args := m.Called(ctx, uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusUploadInfoResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) CancelUpload(uploadID string, userID string) error {
-	args := m.Called(uploadID, userID)
+func (m *MockTusUploadUsecase) CancelUpload(ctx context.Context, uploadID string, userID string) error {
+	args := m.Called(ctx, uploadID, userID)
 	return args.Error(0)
 }
 
-func (m *MockTusUploadUsecase) GetUploadStatus(uploadID string, userID string) (int64, int64, error) {
-	args := m.Called(uploadID, userID)
+func (m *MockTusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error) {
+	args := m.Called(ctx, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusUploadUsecase) InitiateProjectUpdateUpload(projectID uint, userID string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
-	args := m.Called(projectID, userID, fileSize, metadata)
+func (m *MockTusUploadUsecase) InitiateProjectUpdateUpload(ctx context.Context, projectID uint, userID string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
+	args := m.Called(ctx, projectID, userID, fileSize, metadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusUploadResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) HandleProjectUpdateChunk(projectID uint, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	args := m.Called(projectID, uploadID, userID, offset, mock.Anything)
+func (m *MockTusUploadUsecase) HandleProjectUpdateChunk(ctx context.Context, projectID uint, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	args := m.Called(ctx, projectID, uploadID, userID, offset, mock.Anything)
 	if args.Get(1) != nil {
 		return args.Get(0).(int64), args.Error(1)
 	}
 	return args.Get(0).(int64), nil
 }
 
-func (m *MockTusUploadUsecase) GetProjectUpdateUploadStatus(projectID uint, uploadID string, userID string) (int64, int64, error) {
-	args := m.Called(projectID, uploadID, userID)
+func (m *MockTusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID string, userID string) (int64, int64, error) {
+	args := m.Called(ctx, projectID, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusUploadUsecase) GetProjectUpdateUploadInfo(projectID uint, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
-	args := m.Called(projectID, uploadID, userID)
+func (m *MockTusUploadUsecase) GetProjectUpdateUploadInfo(ctx context.Context, projectID uint, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
+	args := m.Called(ctx, projectID, uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusUploadInfoResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) CancelProjectUpdateUpload(projectID uint, uploadID string, userID string) error {
-	args := m.Called(projectID, uploadID, userID)
+func (m *MockTusUploadUsecase) CancelProjectUpdateUpload(ctx context.Context, projectID uint, uploadID string, userID string) error {
+	args := m.Called(ctx, projectID, uploadID, userID)
 	return args.Error(0)
 }
 
@@ -183,7 +185,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 		Length:    1048576,
 	}
 
-	mockUC.On("InitiateUpload", "user-123", "test@example.com", "user", int64(1048576), metadata).Return(expectedResponse, nil)
+	mockUC.On("InitiateUpload", mock.Anything, "user-123", "test@example.com", "user", int64(1048576), metadata).Return(expectedResponse, nil)
 
 	metadataHeader := encodeTusMetadata(map[string]string{
 		"nama_project": "Test Project",
@@ -282,7 +284,7 @@ func TestUploadChunk_Success(t *testing.T) {
 	app.Patch("/api/v1/tus/upload/:id", controller.UploadChunk)
 
 	chunkData := []byte("test chunk data")
-	mockUC.On("HandleChunk", "test-upload-id", "user-123", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
+	mockUC.On("HandleChunk", mock.Anything, "test-upload-id", "user-123", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
 
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/upload/test-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -315,7 +317,7 @@ func TestUploadChunk_InvalidOffset(t *testing.T) {
 	app.Patch("/api/v1/tus/upload/:id", controller.UploadChunk)
 
 	appErr := apperrors.NewTusOffsetError(500, 0)
-	mockUC.On("HandleChunk", "test-upload-id", "user-123", int64(0), mock.Anything).Return(int64(500), appErr)
+	mockUC.On("HandleChunk", mock.Anything, "test-upload-id", "user-123", int64(0), mock.Anything).Return(int64(500), appErr)
 
 	chunkData := []byte("test chunk data")
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/upload/test-upload-id", bytes.NewReader(chunkData))
@@ -388,7 +390,7 @@ func TestGetUploadStatus_Success(t *testing.T) {
 	})
 	app.Head("/api/v1/tus/upload/:id", controller.GetUploadStatus)
 
-	mockUC.On("GetUploadStatus", "test-upload-id", "user-123").Return(int64(524288), int64(1048576), nil)
+	mockUC.On("GetUploadStatus", mock.Anything, "test-upload-id", "user-123").Return(int64(524288), int64(1048576), nil)
 
 	req := httptest.NewRequest("HEAD", "/api/v1/tus/upload/test-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -418,7 +420,7 @@ func TestGetUploadStatus_NotFound(t *testing.T) {
 	})
 	app.Head("/api/v1/tus/upload/:id", controller.GetUploadStatus)
 
-	mockUC.On("GetUploadStatus", "nonexistent-id", "user-123").Return(int64(0), int64(0), apperrors.NewNotFoundError("upload"))
+	mockUC.On("GetUploadStatus", mock.Anything, "nonexistent-id", "user-123").Return(int64(0), int64(0), apperrors.NewNotFoundError("upload"))
 
 	req := httptest.NewRequest("HEAD", "/api/v1/tus/upload/nonexistent-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -456,7 +458,7 @@ func TestGetUploadInfo_Success(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
-	mockUC.On("GetUploadInfo", "test-upload-id", "user-123").Return(expectedInfo, nil)
+	mockUC.On("GetUploadInfo", mock.Anything, "test-upload-id", "user-123").Return(expectedInfo, nil)
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/tus/upload/test-upload-id", nil, "")
 
@@ -479,7 +481,7 @@ func TestGetUploadInfo_Forbidden(t *testing.T) {
 	})
 	app.Get("/api/v1/tus/upload/:id", controller.GetUploadInfo)
 
-	mockUC.On("GetUploadInfo", "test-upload-id", "user-456").Return(nil, apperrors.NewForbiddenError("tidak memiliki akses ke upload ini"))
+	mockUC.On("GetUploadInfo", mock.Anything, "test-upload-id", "user-456").Return(nil, apperrors.NewForbiddenError("tidak memiliki akses ke upload ini"))
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/tus/upload/test-upload-id", nil, "")
 
@@ -501,7 +503,7 @@ func TestCancelUpload_Success(t *testing.T) {
 	})
 	app.Delete("/api/v1/tus/upload/:id", controller.CancelUpload)
 
-	mockUC.On("CancelUpload", "test-upload-id", "user-123").Return(nil)
+	mockUC.On("CancelUpload", mock.Anything, "test-upload-id", "user-123").Return(nil)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/tus/upload/test-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -526,7 +528,7 @@ func TestCancelUpload_AlreadyCompleted(t *testing.T) {
 	})
 	app.Delete("/api/v1/tus/upload/:id", controller.CancelUpload)
 
-	mockUC.On("CancelUpload", "test-upload-id", "user-123").Return(apperrors.NewTusCompletedError())
+	mockUC.On("CancelUpload", mock.Anything, "test-upload-id", "user-123").Return(apperrors.NewTusCompletedError())
 
 	req := httptest.NewRequest("DELETE", "/api/v1/tus/upload/test-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -568,7 +570,7 @@ func TestInitiateProjectUpdateUpload_Success(t *testing.T) {
 		Semester:    2,
 	}
 
-	mockUC.On("InitiateProjectUpdateUpload", uint(1), "user-123", int64(1048576), metadata).Return(expectedResponse, nil)
+	mockUC.On("InitiateProjectUpdateUpload", mock.Anything, uint(1), "user-123", int64(1048576), metadata).Return(expectedResponse, nil)
 
 	metadataHeader := encodeTusMetadata(map[string]string{
 		"nama_project": "Updated Project",
@@ -606,7 +608,7 @@ func TestInitiateProjectUpdateUpload_ProjectNotFound(t *testing.T) {
 	app.Post("/api/v1/tus/project/:id/upload", controller.InitiateProjectUpdateUpload)
 
 	metadata := dto.TusUploadInitRequest{}
-	mockUC.On("InitiateProjectUpdateUpload", uint(999), "user-123", int64(1048576), metadata).Return(nil, apperrors.NewNotFoundError("project"))
+	mockUC.On("InitiateProjectUpdateUpload", mock.Anything, uint(999), "user-123", int64(1048576), metadata).Return(nil, apperrors.NewNotFoundError("project"))
 
 	req := httptest.NewRequest("POST", "/api/v1/tus/project/999/upload", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -633,7 +635,7 @@ func TestUploadProjectUpdateChunk_Success(t *testing.T) {
 	app.Patch("/api/v1/tus/project/:id/upload/:upload_id", controller.UploadProjectUpdateChunk)
 
 	chunkData := []byte("test chunk data")
-	mockUC.On("HandleProjectUpdateChunk", uint(1), "test-update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
+	mockUC.On("HandleProjectUpdateChunk", mock.Anything, uint(1), "test-update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
 
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/project/1/upload/test-update-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -664,7 +666,7 @@ func TestUploadProjectUpdateChunk_ProjectMismatch(t *testing.T) {
 	})
 	app.Patch("/api/v1/tus/project/:id/upload/:upload_id", controller.UploadProjectUpdateChunk)
 
-	mockUC.On("HandleProjectUpdateChunk", uint(1), "test-update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(0), apperrors.NewValidationError("project ID tidak cocok", nil))
+	mockUC.On("HandleProjectUpdateChunk", mock.Anything, uint(1), "test-update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(0), apperrors.NewValidationError("project ID tidak cocok", nil))
 
 	chunkData := []byte("test chunk data")
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/project/1/upload/test-update-upload-id", bytes.NewReader(chunkData))
@@ -693,7 +695,7 @@ func TestGetProjectUpdateUploadStatus_Success(t *testing.T) {
 	})
 	app.Head("/api/v1/tus/project/:id/upload/:upload_id", controller.GetProjectUpdateUploadStatus)
 
-	mockUC.On("GetProjectUpdateUploadStatus", uint(1), "test-update-upload-id", "user-123").Return(int64(524288), int64(1048576), nil)
+	mockUC.On("GetProjectUpdateUploadStatus", mock.Anything, uint(1), "test-update-upload-id", "user-123").Return(int64(524288), int64(1048576), nil)
 
 	req := httptest.NewRequest("HEAD", "/api/v1/tus/project/1/upload/test-update-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -735,7 +737,7 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 		MaxConcurrent: 3,
 	}
 
-	mockUC.On("CheckUploadSlot", "user-123").Return(expectedSlot, nil)
+	mockUC.On("CheckUploadSlot", mock.Anything, "user-123").Return(expectedSlot, nil)
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/tus/slot", nil, "")
 
@@ -758,7 +760,7 @@ func TestResetUploadQueue_Success(t *testing.T) {
 	})
 	app.Post("/api/v1/tus/reset", controller.ResetUploadQueue)
 
-	mockUC.On("ResetUploadQueue", "user-123").Return(nil)
+	mockUC.On("ResetUploadQueue", mock.Anything, "user-123").Return(nil)
 
 	resp := app_testing.MakeRequest(app, "POST", "/api/v1/tus/reset", nil, "")
 
@@ -790,7 +792,7 @@ func TestGetProjectUpdateUploadInfo_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 
-	mockUC.On("GetProjectUpdateUploadInfo", uint(1), "test-project-upload-id", "user-123").Return(expectedInfo, nil)
+	mockUC.On("GetProjectUpdateUploadInfo", mock.Anything, uint(1), "test-project-upload-id", "user-123").Return(expectedInfo, nil)
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/project/1/upload/test-project-upload-id", nil, "")
 
@@ -829,7 +831,7 @@ func TestGetProjectUpdateUploadInfo_NotFound(t *testing.T) {
 	})
 	app.Get("/api/v1/project/:id/upload/:upload_id", controller.GetProjectUpdateUploadInfo)
 
-	mockUC.On("GetProjectUpdateUploadInfo", uint(1), "nonexistent-upload-id", "user-123").Return(nil, apperrors.NewNotFoundError("Upload not found"))
+	mockUC.On("GetProjectUpdateUploadInfo", mock.Anything, uint(1), "nonexistent-upload-id", "user-123").Return(nil, apperrors.NewNotFoundError("Upload not found"))
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/project/1/upload/nonexistent-upload-id", nil, "")
 
@@ -851,7 +853,7 @@ func TestCancelProjectUpdateUpload_Success(t *testing.T) {
 	})
 	app.Delete("/api/v1/project/:id/upload/:upload_id", controller.CancelProjectUpdateUpload)
 
-	mockUC.On("CancelProjectUpdateUpload", uint(1), "test-project-upload-id", "user-123").Return(nil)
+	mockUC.On("CancelProjectUpdateUpload", mock.Anything, uint(1), "test-project-upload-id", "user-123").Return(nil)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/test-project-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -895,7 +897,7 @@ func TestCancelProjectUpdateUpload_NotFound(t *testing.T) {
 	})
 	app.Delete("/api/v1/project/:id/upload/:upload_id", controller.CancelProjectUpdateUpload)
 
-	mockUC.On("CancelProjectUpdateUpload", uint(1), "nonexistent-upload-id", "user-123").Return(apperrors.NewNotFoundError("Upload not found"))
+	mockUC.On("CancelProjectUpdateUpload", mock.Anything, uint(1), "nonexistent-upload-id", "user-123").Return(apperrors.NewNotFoundError("Upload not found"))
 
 	req := httptest.NewRequest("DELETE", "/api/v1/project/1/upload/nonexistent-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -911,73 +913,73 @@ type MockTusModulControllerUsecase struct {
 	mock.Mock
 }
 
-func (m *MockTusModulControllerUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
-	args := m.Called(userID, fileSize, uploadMetadata)
+func (m *MockTusModulControllerUsecase) InitiateModulUpload(ctx context.Context, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
+	args := m.Called(ctx, userID, fileSize, uploadMetadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusModulUploadResponse), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	args := m.Called(uploadID, userID, offset, mock.Anything)
+func (m *MockTusModulControllerUsecase) HandleModulChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	args := m.Called(ctx, uploadID, userID, offset, mock.Anything)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) GetModulUploadInfo(uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
-	args := m.Called(uploadID, userID)
+func (m *MockTusModulControllerUsecase) GetModulUploadInfo(ctx context.Context, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
+	args := m.Called(ctx, uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusModulUploadInfoResponse), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) GetModulUploadStatus(uploadID string, userID string) (int64, int64, error) {
-	args := m.Called(uploadID, userID)
+func (m *MockTusModulControllerUsecase) GetModulUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error) {
+	args := m.Called(ctx, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusModulControllerUsecase) CancelModulUpload(uploadID string, userID string) error {
-	args := m.Called(uploadID, userID)
+func (m *MockTusModulControllerUsecase) CancelModulUpload(ctx context.Context, uploadID string, userID string) error {
+	args := m.Called(ctx, uploadID, userID)
 	return args.Error(0)
 }
 
-func (m *MockTusModulControllerUsecase) CheckModulUploadSlot(userID string) (*dto.TusModulUploadSlotResponse, error) {
-	args := m.Called(userID)
+func (m *MockTusModulControllerUsecase) CheckModulUploadSlot(ctx context.Context, userID string) (*dto.TusModulUploadSlotResponse, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusModulUploadSlotResponse), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
-	args := m.Called(modulID, userID, fileSize, uploadMetadata)
+func (m *MockTusModulControllerUsecase) InitiateModulUpdateUpload(ctx context.Context, modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
+	args := m.Called(ctx, modulID, userID, fileSize, uploadMetadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusModulUploadResponse), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) HandleModulUpdateChunk(modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	args := m.Called(modulID, uploadID, userID, offset, mock.Anything)
+func (m *MockTusModulControllerUsecase) HandleModulUpdateChunk(ctx context.Context, modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	args := m.Called(ctx, modulID, uploadID, userID, offset, mock.Anything)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) GetModulUpdateUploadStatus(modulID string, uploadID string, userID string) (int64, int64, error) {
-	args := m.Called(modulID, uploadID, userID)
+func (m *MockTusModulControllerUsecase) GetModulUpdateUploadStatus(ctx context.Context, modulID string, uploadID string, userID string) (int64, int64, error) {
+	args := m.Called(ctx, modulID, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusModulControllerUsecase) GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
-	args := m.Called(modulID, uploadID, userID)
+func (m *MockTusModulControllerUsecase) GetModulUpdateUploadInfo(ctx context.Context, modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
+	args := m.Called(ctx, modulID, uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.TusModulUploadInfoResponse), args.Error(1)
 }
 
-func (m *MockTusModulControllerUsecase) CancelModulUpdateUpload(modulID string, uploadID string, userID string) error {
-	args := m.Called(modulID, uploadID, userID)
+func (m *MockTusModulControllerUsecase) CancelModulUpdateUpload(ctx context.Context, modulID string, uploadID string, userID string) error {
+	args := m.Called(ctx, modulID, uploadID, userID)
 	return args.Error(0)
 }
 
@@ -999,7 +1001,7 @@ func TestTusModulController_InitiateUpload_Success(t *testing.T) {
 		"deskripsi": "Deskripsi modul",
 	})
 
-	mockUC.On("InitiateModulUpload", "user-123", int64(2048), metadataHeader).Return(&dto.TusModulUploadResponse{
+	mockUC.On("InitiateModulUpload", mock.Anything, "user-123", int64(2048), metadataHeader).Return(&dto.TusModulUploadResponse{
 		UploadID:  "modul-upload-id",
 		UploadURL: "/modul/upload/modul-upload-id",
 		Offset:    0,
@@ -1033,7 +1035,7 @@ func TestTusModulController_UploadChunk_Success(t *testing.T) {
 	app.Patch("/api/v1/tus/modul/:upload_id", controller.UploadChunk)
 
 	chunkData := []byte("abcde")
-	mockUC.On("HandleModulChunk", "modul-upload-id", "user-123", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
+	mockUC.On("HandleModulChunk", mock.Anything, "modul-upload-id", "user-123", int64(0), mock.Anything).Return(int64(len(chunkData)), nil)
 
 	req := httptest.NewRequest("PATCH", "/api/v1/tus/modul/modul-upload-id", bytes.NewReader(chunkData))
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -1062,7 +1064,7 @@ func TestTusModulController_GetUploadStatus_Success(t *testing.T) {
 	})
 	app.Head("/api/v1/tus/modul/:upload_id", controller.GetUploadStatus)
 
-	mockUC.On("GetModulUploadStatus", "modul-upload-id", "user-123").Return(int64(512), int64(1024), nil)
+	mockUC.On("GetModulUploadStatus", mock.Anything, "modul-upload-id", "user-123").Return(int64(512), int64(1024), nil)
 
 	req := httptest.NewRequest("HEAD", "/api/v1/tus/modul/modul-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -1089,7 +1091,7 @@ func TestTusModulController_GetUploadInfo_Success(t *testing.T) {
 	})
 	app.Get("/api/v1/tus/modul/:upload_id", controller.GetUploadInfo)
 
-	mockUC.On("GetModulUploadInfo", "modul-upload-id", "user-123").Return(&dto.TusModulUploadInfoResponse{
+	mockUC.On("GetModulUploadInfo", mock.Anything, "modul-upload-id", "user-123").Return(&dto.TusModulUploadInfoResponse{
 		UploadID:  "modul-upload-id",
 		Judul:     "Modul Dasar",
 		Deskripsi: "Deskripsi modul",
@@ -1120,7 +1122,7 @@ func TestTusModulController_CancelUpload_Success(t *testing.T) {
 	})
 	app.Delete("/api/v1/tus/modul/:upload_id", controller.CancelUpload)
 
-	mockUC.On("CancelModulUpload", "modul-upload-id", "user-123").Return(nil)
+	mockUC.On("CancelModulUpload", mock.Anything, "modul-upload-id", "user-123").Return(nil)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/tus/modul/modul-upload-id", nil)
 	req.Header.Set("Tus-Resumable", "1.0.0")
@@ -1152,16 +1154,16 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 	modulID := "550e8400-e29b-41d4-a716-446655440099"
 	metadataHeader := encodeTusMetadata(map[string]string{"judul": "Modul Rev", "deskripsi": "rev"})
 
-	mockUC.On("InitiateModulUpdateUpload", modulID, "user-123", int64(4096), metadataHeader).Return(&dto.TusModulUploadResponse{
+	mockUC.On("InitiateModulUpdateUpload", mock.Anything, modulID, "user-123", int64(4096), metadataHeader).Return(&dto.TusModulUploadResponse{
 		UploadID:  "update-upload-id",
 		UploadURL: "/modul/" + modulID + "/update/update-upload-id",
 		Offset:    0,
 		Length:    4096,
 	}, nil).Once()
-	mockUC.On("HandleModulUpdateChunk", modulID, "update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(4), nil).Once()
-	mockUC.On("GetModulUpdateUploadStatus", modulID, "update-upload-id", "user-123").Return(int64(4), int64(4096), nil).Once()
-	mockUC.On("GetModulUpdateUploadInfo", modulID, "update-upload-id", "user-123").Return(&dto.TusModulUploadInfoResponse{UploadID: "update-upload-id"}, nil).Once()
-	mockUC.On("CancelModulUpdateUpload", modulID, "update-upload-id", "user-123").Return(nil).Once()
+	mockUC.On("HandleModulUpdateChunk", mock.Anything, modulID, "update-upload-id", "user-123", int64(0), mock.Anything).Return(int64(4), nil).Once()
+	mockUC.On("GetModulUpdateUploadStatus", mock.Anything, modulID, "update-upload-id", "user-123").Return(int64(4), int64(4096), nil).Once()
+	mockUC.On("GetModulUpdateUploadInfo", mock.Anything, modulID, "update-upload-id", "user-123").Return(&dto.TusModulUploadInfoResponse{UploadID: "update-upload-id"}, nil).Once()
+	mockUC.On("CancelModulUpdateUpload", mock.Anything, modulID, "update-upload-id", "user-123").Return(nil).Once()
 
 	initReq := httptest.NewRequest("POST", "/api/v1/tus/modul/"+modulID+"/update", nil)
 	initReq.Header.Set("Tus-Resumable", "1.0.0")

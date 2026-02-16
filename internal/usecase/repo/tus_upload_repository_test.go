@@ -38,7 +38,7 @@ func newTusUpload(id, userID, status string, expiresAt time.Time) domain.TusUplo
 		UserID:     userID,
 		UploadType: domain.UploadTypeProjectCreate,
 		UploadURL:  "https://example.com/upload/" + id,
-		UploadMetadata: dto.TusUploadInitRequest{
+		UploadMetadata: domain.TusUploadMetadata{
 			NamaProject: "Project " + id,
 			Kategori:    "website",
 			Semester:    1,
