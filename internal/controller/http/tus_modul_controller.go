@@ -24,6 +24,16 @@ func NewTusModulController(tusModulUsecase usecase.TusModulUsecase, cfg *config.
 	}
 }
 
+// CheckUploadSlot handles GET /api/v1/modul/upload/check-slot - Check modul upload slot availability
+// @Summary Check modul upload slot
+// @Description Check if a modul upload slot is available for the authenticated user
+// @Tags TUS Modul Upload
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.SuccessResponse{data=dto.TusModulUploadSlotResponse} "Slot status"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/upload/check-slot [get]
 func (ctrl *TusModulController) CheckUploadSlot(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	userID := ctrl.base.GetAuthenticatedUserID(c)
@@ -39,10 +49,47 @@ func (ctrl *TusModulController) CheckUploadSlot(c *fiber.Ctx) error {
 	return ctrl.base.SendSuccess(c, response, "Status slot upload berhasil didapat")
 }
 
+// InitiateUpload handles POST /api/v1/modul/upload/ - Initiate new modul upload
+// @Summary Initiate modul upload
+// @Description Start a new TUS resumable upload for a module file
+// @Tags TUS Modul Upload
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Length header int true "Total file size in bytes"
+// @Param Upload-Metadata header string true "Upload metadata (judul, deskripsi)"
+// @Success 201 {object} dto.SuccessResponse{data=dto.TusModulUploadResponse} "Upload initiated"
+// @Header 201 {string} Location "Upload URL"
+// @Header 201 {string} Tus-Resumable "TUS protocol version"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 409 {object} dto.ErrorResponse "No upload slot available"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/upload/ [post]
 func (ctrl *TusModulController) InitiateUpload(c *fiber.Ctx) error {
 	return ctrl.initiateUpload(c, nil)
 }
 
+// InitiateModulUpdateUpload handles POST /api/v1/modul/{id}/upload - Initiate modul update upload
+// @Summary Initiate modul update upload
+// @Description Start a new TUS resumable upload to update an existing module file
+// @Tags TUS Modul Upload
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Modul ID (UUID)"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Length header int true "Total file size in bytes"
+// @Param Upload-Metadata header string true "Upload metadata (judul, deskripsi)"
+// @Success 201 {object} dto.SuccessResponse{data=dto.TusModulUploadResponse} "Update upload initiated"
+// @Header 201 {string} Location "Upload URL"
+// @Header 201 {string} Tus-Resumable "TUS protocol version"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Modul not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/{id}/upload [post]
 func (ctrl *TusModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
@@ -94,10 +141,49 @@ func (ctrl *TusModulController) initiateUpload(c *fiber.Ctx, modulID *string) er
 	return ctrl.base.SendCreated(c, result, message)
 }
 
+// UploadChunk handles PATCH /api/v1/modul/upload/{upload_id} - Upload modul file chunk
+// @Summary Upload modul file chunk
+// @Description Upload a chunk of data for a TUS resumable modul upload
+// @Tags TUS Modul Upload
+// @Accept application/offset+octet-stream
+// @Security BearerAuth
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Offset header int true "Byte offset for this chunk"
+// @Param Content-Type header string true "Content type" default(application/offset+octet-stream)
+// @Success 204 "Chunk uploaded"
+// @Header 204 {string} Upload-Offset "New byte offset after chunk"
+// @Header 204 {string} Tus-Resumable "TUS protocol version"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Upload not found"
+// @Failure 409 {object} dto.ErrorResponse "Offset mismatch"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/upload/{upload_id} [patch]
 func (ctrl *TusModulController) UploadChunk(c *fiber.Ctx) error {
 	return ctrl.uploadChunk(c, nil)
 }
 
+// UploadModulUpdateChunk handles PATCH /api/v1/modul/{id}/update/{upload_id} - Upload modul update chunk
+// @Summary Upload modul update file chunk
+// @Description Upload a chunk of data for a TUS resumable modul update upload
+// @Tags TUS Modul Upload
+// @Accept application/offset+octet-stream
+// @Security BearerAuth
+// @Param id path string true "Modul ID (UUID)"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Param Upload-Offset header int true "Byte offset for this chunk"
+// @Param Content-Type header string true "Content type" default(application/offset+octet-stream)
+// @Success 204 "Chunk uploaded"
+// @Header 204 {string} Upload-Offset "New byte offset after chunk"
+// @Header 204 {string} Tus-Resumable "TUS protocol version"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Upload not found"
+// @Failure 409 {object} dto.ErrorResponse "Offset mismatch"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/{id}/update/{upload_id} [patch]
 func (ctrl *TusModulController) UploadModulUpdateChunk(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
@@ -140,10 +226,42 @@ func (ctrl *TusModulController) uploadChunk(c *fiber.Ctx, modulID *string) error
 	return upload.SendTusChunkResponse(c, newOffset)
 }
 
+// GetUploadStatus handles HEAD /api/v1/modul/upload/{upload_id} - Get modul upload status
+// @Summary Get modul upload status
+// @Description Get the current offset and length of a TUS modul upload via HEAD request
+// @Tags TUS Modul Upload
+// @Security BearerAuth
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 200 "Upload status"
+// @Header 200 {string} Upload-Offset "Current byte offset"
+// @Header 200 {string} Upload-Length "Total file size"
+// @Header 200 {string} Tus-Resumable "TUS protocol version"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Upload not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/upload/{upload_id} [head]
 func (ctrl *TusModulController) GetUploadStatus(c *fiber.Ctx) error {
 	return ctrl.getUploadStatus(c, nil)
 }
 
+// GetModulUpdateUploadStatus handles HEAD /api/v1/modul/{id}/update/{upload_id} - Get modul update upload status
+// @Summary Get modul update upload status
+// @Description Get the current offset and length of a TUS modul update upload via HEAD request
+// @Tags TUS Modul Upload
+// @Security BearerAuth
+// @Param id path string true "Modul ID (UUID)"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 200 "Upload status"
+// @Header 200 {string} Upload-Offset "Current byte offset"
+// @Header 200 {string} Upload-Length "Total file size"
+// @Header 200 {string} Tus-Resumable "TUS protocol version"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Upload not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/{id}/update/{upload_id} [head]
 func (ctrl *TusModulController) GetModulUpdateUploadStatus(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
@@ -185,10 +303,37 @@ func (ctrl *TusModulController) getUploadStatus(c *fiber.Ctx, modulID *string) e
 	return upload.SendTusHeadResponse(c, offset, length)
 }
 
+// GetUploadInfo handles GET /api/v1/modul/upload/:upload_id - Get modul upload info
+// @Summary Get modul upload info
+// @Description Mendapatkan informasi detail upload modul berdasarkan upload ID
+// @Tags TUS Modul Upload
+// @Produce json
+// @Security BearerAuth
+// @Param upload_id path string true "Upload ID"
+// @Success 200 {object} dto.SuccessResponse{data=dto.TusModulUploadInfoResponse} "Informasi upload berhasil didapat"
+// @Failure 400 {object} dto.ErrorResponse "Upload ID tidak valid"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Upload not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/upload/{upload_id} [get]
 func (ctrl *TusModulController) GetUploadInfo(c *fiber.Ctx) error {
 	return ctrl.getUploadInfo(c, nil)
 }
 
+// GetModulUpdateUploadInfo handles GET /api/v1/modul/:id/update/:upload_id - Get modul update upload info
+// @Summary Get modul update upload info
+// @Description Mendapatkan informasi detail upload update modul berdasarkan modul ID dan upload ID
+// @Tags TUS Modul Upload
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Modul ID (UUID)"
+// @Param upload_id path string true "Upload ID"
+// @Success 200 {object} dto.SuccessResponse{data=dto.TusModulUploadInfoResponse} "Informasi update upload berhasil didapat"
+// @Failure 400 {object} dto.ErrorResponse "ID modul tidak valid"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Upload not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/{id}/update/{upload_id} [get]
 func (ctrl *TusModulController) GetModulUpdateUploadInfo(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
@@ -230,10 +375,39 @@ func (ctrl *TusModulController) getUploadInfo(c *fiber.Ctx, modulID *string) err
 	return ctrl.base.SendSuccess(c, info, message)
 }
 
+// CancelUpload handles DELETE /api/v1/modul/upload/:upload_id - Cancel modul upload
+// @Summary Cancel modul upload
+// @Description Membatalkan upload modul yang sedang berlangsung berdasarkan upload ID
+// @Tags TUS Modul Upload
+// @Produce json
+// @Security BearerAuth
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 204 "Upload berhasil dibatalkan"
+// @Failure 400 {object} dto.ErrorResponse "Upload ID tidak valid"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Upload not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/upload/{upload_id} [delete]
 func (ctrl *TusModulController) CancelUpload(c *fiber.Ctx) error {
 	return ctrl.cancelUpload(c, nil)
 }
 
+// CancelModulUpdateUpload handles DELETE /api/v1/modul/:id/update/:upload_id - Cancel modul update upload
+// @Summary Cancel modul update upload
+// @Description Membatalkan upload update modul yang sedang berlangsung berdasarkan modul ID dan upload ID
+// @Tags TUS Modul Upload
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Modul ID (UUID)"
+// @Param upload_id path string true "Upload ID"
+// @Param Tus-Resumable header string true "TUS protocol version" default(1.0.0)
+// @Success 204 "Upload update berhasil dibatalkan"
+// @Failure 400 {object} dto.ErrorResponse "ID modul tidak valid"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Upload not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /modul/{id}/update/{upload_id} [delete]
 func (ctrl *TusModulController) CancelModulUpdateUpload(c *fiber.Ctx) error {
 	modulID, err := ctrl.base.ParsePathUUID(c)
 	if err != nil {
