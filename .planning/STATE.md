@@ -106,6 +106,7 @@ Recent decisions affecting current work:
 - [05-08]: TestVerify_ClockSkewTolerance NOT parallelized - modifies global jwt.TimeFunc
 - [05-10]: Removed only blank lines and redundant comments to trim files — zero test cases deleted
 - [05-08]: Fixed pre-existing mock bugs from 05-04 context propagation (args.Get index, missing mock.Anything)
+- [Phase 05-09]: Thread ctx through health private helpers (getDatabaseStatus, getDetailedDatabaseStatus, getServicesStatus) for full context propagation; PingContext(ctx) for database checks
 
 ### Pending Todos
 
@@ -119,5 +120,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 05-10-PLAN.md -- All 5 test files trimmed under 500 lines, Phase 5 gap closure complete
+Stopped at: Completed 05-09-PLAN.md -- context.Context added to Auth/Health/Statistic usecase interfaces, all 9/9 usecases done
 Resume file: None
