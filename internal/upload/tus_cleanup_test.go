@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 	"time"
@@ -17,45 +18,45 @@ import (
 
 type mockTusUploadRepository struct{ mock.Mock }
 
-func (m *mockTusUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusUpload, error) {
-	args := m.Called(before)
+func (m *mockTusUploadRepository) GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusUpload, error) {
+	args := m.Called(ctx, before)
 	return args.Get(0).([]domain.TusUpload), args.Error(1)
 }
 
-func (m *mockTusUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error) {
-	args := m.Called(timeout)
+func (m *mockTusUploadRepository) GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusUpload, error) {
+	args := m.Called(ctx, timeout)
 	return args.Get(0).([]domain.TusUpload), args.Error(1)
 }
 
-func (m *mockTusUploadRepository) UpdateStatus(id string, status string) error {
-	args := m.Called(id, status)
+func (m *mockTusUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+	args := m.Called(ctx, id, status)
 	return args.Error(0)
 }
 
-func (m *mockTusUploadRepository) Delete(id string) error {
-	args := m.Called(id)
+func (m *mockTusUploadRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
 type mockTusModulUploadCleanupRepository struct{ mock.Mock }
 
-func (m *mockTusModulUploadCleanupRepository) GetExpiredUploads(before time.Time) ([]domain.TusModulUpload, error) {
-	args := m.Called(before)
+func (m *mockTusModulUploadCleanupRepository) GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusModulUpload, error) {
+	args := m.Called(ctx, before)
 	return args.Get(0).([]domain.TusModulUpload), args.Error(1)
 }
 
-func (m *mockTusModulUploadCleanupRepository) GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error) {
-	args := m.Called(timeout)
+func (m *mockTusModulUploadCleanupRepository) GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusModulUpload, error) {
+	args := m.Called(ctx, timeout)
 	return args.Get(0).([]domain.TusModulUpload), args.Error(1)
 }
 
-func (m *mockTusModulUploadCleanupRepository) UpdateStatus(id string, status string) error {
-	args := m.Called(id, status)
+func (m *mockTusModulUploadCleanupRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+	args := m.Called(ctx, id, status)
 	return args.Error(0)
 }
 
-func (m *mockTusModulUploadCleanupRepository) Delete(id string) error {
-	args := m.Called(id)
+func (m *mockTusModulUploadCleanupRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
@@ -93,10 +94,10 @@ func TestTusCleanup_NewTusCleanup_InitializesConfig(t *testing.T) {
 func TestTusCleanup_StartStop_ManagesGoroutineLifecycle(t *testing.T) {
 	cleanup, _, projectRepo, modulRepo := newTestTusCleanup(t)
 
-	projectRepo.On("GetExpiredUploads", mock.Anything).Return([]domain.TusUpload{}, nil)
-	projectRepo.On("GetAbandonedUploads", mock.Anything).Return([]domain.TusUpload{}, nil)
-	modulRepo.On("GetExpiredUploads", mock.Anything).Return([]domain.TusModulUpload{}, nil)
-	modulRepo.On("GetAbandonedUploads", mock.Anything).Return([]domain.TusModulUpload{}, nil)
+	projectRepo.On("GetExpiredUploads", mock.Anything, mock.Anything).Return([]domain.TusUpload{}, nil)
+	projectRepo.On("GetAbandonedUploads", mock.Anything, mock.Anything).Return([]domain.TusUpload{}, nil)
+	modulRepo.On("GetExpiredUploads", mock.Anything, mock.Anything).Return([]domain.TusModulUpload{}, nil)
+	modulRepo.On("GetAbandonedUploads", mock.Anything, mock.Anything).Return([]domain.TusModulUpload{}, nil)
 
 	cleanup.Start()
 	assert.True(t, cleanup.isRunning)
@@ -115,9 +116,9 @@ func TestTusCleanup_CleanupExpiredProjects_UpdatesExpiredStatuses(t *testing.T) 
 	cleanup, _, projectRepo, _ := newTestTusCleanup(t)
 
 	expired := []domain.TusUpload{{ID: "p1"}, {ID: "p2"}}
-	projectRepo.On("GetExpiredUploads", mock.Anything).Return(expired, nil).Once()
-	projectRepo.On("UpdateStatus", "p1", domain.UploadStatusExpired).Return(nil).Once()
-	projectRepo.On("UpdateStatus", "p2", domain.UploadStatusExpired).Return(nil).Once()
+	projectRepo.On("GetExpiredUploads", mock.Anything, mock.Anything).Return(expired, nil).Once()
+	projectRepo.On("UpdateStatus", mock.Anything, "p1", domain.UploadStatusExpired).Return(nil).Once()
+	projectRepo.On("UpdateStatus", mock.Anything, "p2", domain.UploadStatusExpired).Return(nil).Once()
 
 	err := cleanup.CleanupExpiredProjects()
 	require.NoError(t, err)
@@ -127,22 +128,22 @@ func TestTusCleanup_CleanupExpiredProjects_UpdatesExpiredStatuses(t *testing.T) 
 func TestTusCleanup_CleanupAbandonedProjects_UpdatesFailedForIdleUploads(t *testing.T) {
 	cleanup, _, projectRepo, _ := newTestTusCleanup(t)
 
-	projectRepo.On("GetAbandonedUploads", cleanup.idleTimeout).Return([]domain.TusUpload{{ID: "old"}}, nil).Once()
-	projectRepo.On("UpdateStatus", "old", domain.UploadStatusFailed).Return(nil).Once()
+	projectRepo.On("GetAbandonedUploads", mock.Anything, cleanup.idleTimeout).Return([]domain.TusUpload{{ID: "old"}}, nil).Once()
+	projectRepo.On("UpdateStatus", mock.Anything, "old", domain.UploadStatusFailed).Return(nil).Once()
 
 	err := cleanup.CleanupAbandonedProjects()
 	require.NoError(t, err)
 	projectRepo.AssertExpectations(t)
-	projectRepo.AssertNotCalled(t, "UpdateStatus", "recent", domain.UploadStatusFailed)
+	projectRepo.AssertNotCalled(t, "UpdateStatus", mock.Anything, "recent", domain.UploadStatusFailed)
 }
 
 func TestTusCleanup_CleanupExpiredModuls_UpdatesExpiredStatuses(t *testing.T) {
 	cleanup, _, _, modulRepo := newTestTusCleanup(t)
 
 	expired := []domain.TusModulUpload{{ID: "m1"}, {ID: "m2"}}
-	modulRepo.On("GetExpiredUploads", mock.Anything).Return(expired, nil).Once()
-	modulRepo.On("UpdateStatus", "m1", domain.UploadStatusExpired).Return(nil).Once()
-	modulRepo.On("UpdateStatus", "m2", domain.UploadStatusExpired).Return(nil).Once()
+	modulRepo.On("GetExpiredUploads", mock.Anything, mock.Anything).Return(expired, nil).Once()
+	modulRepo.On("UpdateStatus", mock.Anything, "m1", domain.UploadStatusExpired).Return(nil).Once()
+	modulRepo.On("UpdateStatus", mock.Anything, "m2", domain.UploadStatusExpired).Return(nil).Once()
 
 	err := cleanup.CleanupExpiredModuls()
 	require.NoError(t, err)
@@ -153,8 +154,8 @@ func TestTusCleanup_CleanupAbandonedModuls_UpdatesFailedStatuses(t *testing.T) {
 	cleanup, _, _, modulRepo := newTestTusCleanup(t)
 
 	abandoned := []domain.TusModulUpload{{ID: "m1"}}
-	modulRepo.On("GetAbandonedUploads", cleanup.idleTimeout).Return(abandoned, nil).Once()
-	modulRepo.On("UpdateStatus", "m1", domain.UploadStatusFailed).Return(nil).Once()
+	modulRepo.On("GetAbandonedUploads", mock.Anything, cleanup.idleTimeout).Return(abandoned, nil).Once()
+	modulRepo.On("UpdateStatus", mock.Anything, "m1", domain.UploadStatusFailed).Return(nil).Once()
 
 	err := cleanup.CleanupAbandonedModuls()
 	require.NoError(t, err)
@@ -165,7 +166,7 @@ func TestTusCleanup_CleanupUpload_TerminatesStoreAndDeletesRecord(t *testing.T) 
 	cleanup, store, projectRepo, _ := newTestTusCleanup(t)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "p-clean", Size: 10, Metadata: map[string]string{}}))
 
-	projectRepo.On("Delete", "p-clean").Return(nil).Once()
+	projectRepo.On("Delete", mock.Anything, "p-clean").Return(nil).Once()
 
 	err := cleanup.CleanupUpload("p-clean")
 	require.NoError(t, err)
@@ -179,7 +180,7 @@ func TestTusCleanup_CleanupModulUpload_TerminatesStoreAndDeletesRecord(t *testin
 	cleanup, store, _, modulRepo := newTestTusCleanup(t)
 	require.NoError(t, store.NewUpload(TusFileInfo{ID: "m-clean", Size: 10, Metadata: map[string]string{}}))
 
-	modulRepo.On("Delete", "m-clean").Return(nil).Once()
+	modulRepo.On("Delete", mock.Anything, "m-clean").Return(nil).Once()
 
 	err := cleanup.CleanupModulUpload("m-clean")
 	require.NoError(t, err)
@@ -200,10 +201,10 @@ func TestTusCleanup_CleanupModulUpload_NilModulRepoNoError(t *testing.T) {
 func TestTusCleanup_PerformCleanup_ExecutesCycleAndCleansStaleLocks(t *testing.T) {
 	cleanup, store, projectRepo, modulRepo := newTestTusCleanup(t)
 
-	projectRepo.On("GetExpiredUploads", mock.Anything).Return([]domain.TusUpload{}, nil).Once()
-	projectRepo.On("GetAbandonedUploads", cleanup.idleTimeout).Return([]domain.TusUpload{}, nil).Once()
-	modulRepo.On("GetExpiredUploads", mock.Anything).Return([]domain.TusModulUpload{}, nil).Once()
-	modulRepo.On("GetAbandonedUploads", cleanup.idleTimeout).Return([]domain.TusModulUpload{}, nil).Once()
+	projectRepo.On("GetExpiredUploads", mock.Anything, mock.Anything).Return([]domain.TusUpload{}, nil).Once()
+	projectRepo.On("GetAbandonedUploads", mock.Anything, cleanup.idleTimeout).Return([]domain.TusUpload{}, nil).Once()
+	modulRepo.On("GetExpiredUploads", mock.Anything, mock.Anything).Return([]domain.TusModulUpload{}, nil).Once()
+	modulRepo.On("GetAbandonedUploads", mock.Anything, cleanup.idleTimeout).Return([]domain.TusModulUpload{}, nil).Once()
 
 	_ = store.getLock("stale")
 	store.locksMutex.Lock()

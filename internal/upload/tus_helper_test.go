@@ -2,6 +2,7 @@ package upload_test
 
 import (
 	"bytes"
+	"context"
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/storage"
@@ -29,14 +30,14 @@ type MockTusUploadRepository struct {
 	getError    bool
 }
 
-func (m *MockTusUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusUpload, error) {
+func (m *MockTusUploadRepository) GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusUpload, error) {
 	if m.getError {
 		return nil, assert.AnError
 	}
 	return m.expired, nil
 }
 
-func (m *MockTusUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error) {
+func (m *MockTusUploadRepository) GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusUpload, error) {
 	if m.getError {
 		return nil, assert.AnError
 	}
@@ -50,7 +51,7 @@ func (m *MockTusUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]
 	return result, nil
 }
 
-func (m *MockTusUploadRepository) UpdateStatus(id string, status string) error {
+func (m *MockTusUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
 	if m.updateError {
 		return assert.AnError
 	}
@@ -61,7 +62,7 @@ func (m *MockTusUploadRepository) UpdateStatus(id string, status string) error {
 	return nil
 }
 
-func (m *MockTusUploadRepository) Delete(id string) error {
+func (m *MockTusUploadRepository) Delete(ctx context.Context, id string) error {
 	if m.deleteError {
 		return assert.AnError
 	}

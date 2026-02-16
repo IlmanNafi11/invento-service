@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -56,7 +57,7 @@ func TestTusUploadRepository_Create(t *testing.T) {
 
 	upload := newTusUpload("test-upload-1", "user-1", domain.UploadStatusPending, time.Now().Add(time.Hour))
 
-	require.NoError(t, repository.Create(&upload))
+	require.NoError(t, repository.Create(context.Background(), &upload))
 
 	var saved domain.TusUpload
 	require.NoError(t, db.First(&saved, "id = ?", "test-upload-1").Error)
@@ -71,12 +72,12 @@ func TestTusUploadRepository_GetByID(t *testing.T) {
 	upload := newTusUpload("test-upload-2", "user-1", domain.UploadStatusPending, time.Now().Add(time.Hour))
 	require.NoError(t, db.Create(&upload).Error)
 
-	found, err := repository.GetByID("test-upload-2")
+	found, err := repository.GetByID(context.Background(), "test-upload-2")
 	require.NoError(t, err)
 	require.NotNil(t, found)
 	assert.Equal(t, "test-upload-2", found.ID)
 
-	notFound, err := repository.GetByID("missing-upload")
+	notFound, err := repository.GetByID(context.Background(), "missing-upload")
 	require.Error(t, err)
 	assert.Nil(t, notFound)
 }
@@ -93,11 +94,11 @@ func TestTusUploadRepository_GetByUserID(t *testing.T) {
 	require.NoError(t, db.Create(&upload2).Error)
 	require.NoError(t, db.Create(&upload3).Error)
 
-	uploads, err := repository.GetByUserID("user-1")
+	uploads, err := repository.GetByUserID(context.Background(), "user-1")
 	require.NoError(t, err)
 	assert.Len(t, uploads, 2)
 
-	empty, err := repository.GetByUserID("unknown-user")
+	empty, err := repository.GetByUserID(context.Background(), "unknown-user")
 	require.NoError(t, err)
 	assert.Len(t, empty, 0)
 }
@@ -109,9 +110,9 @@ func TestTusUploadRepository_UpdateOffset(t *testing.T) {
 	upload := newTusUpload("test-upload-6", "user-1", domain.UploadStatusUploading, time.Now().Add(time.Hour))
 	require.NoError(t, db.Create(&upload).Error)
 
-	require.NoError(t, repository.UpdateOffset("test-upload-6", 512, 50.0))
+	require.NoError(t, repository.UpdateOffset(context.Background(), "test-upload-6", 512, 50.0))
 
-	updated, err := repository.GetByID("test-upload-6")
+	updated, err := repository.GetByID(context.Background(), "test-upload-6")
 	require.NoError(t, err)
 	require.NotNil(t, updated)
 	assert.Equal(t, int64(512), updated.CurrentOffset)
@@ -125,10 +126,10 @@ func TestTusUploadRepository_UpdateStatus(t *testing.T) {
 	upload := newTusUpload("test-upload-7", "user-1", domain.UploadStatusPending, time.Now().Add(time.Hour))
 	require.NoError(t, db.Create(&upload).Error)
 
-	require.NoError(t, repository.UpdateStatus("test-upload-7", domain.UploadStatusUploading))
-	require.NoError(t, repository.UpdateStatus("test-upload-7", domain.UploadStatusCompleted))
+	require.NoError(t, repository.UpdateStatus(context.Background(), "test-upload-7", domain.UploadStatusUploading))
+	require.NoError(t, repository.UpdateStatus(context.Background(), "test-upload-7", domain.UploadStatusCompleted))
 
-	updated, err := repository.GetByID("test-upload-7")
+	updated, err := repository.GetByID(context.Background(), "test-upload-7")
 	require.NoError(t, err)
 	require.NotNil(t, updated)
 	assert.Equal(t, domain.UploadStatusCompleted, updated.Status)
@@ -142,9 +143,9 @@ func TestTusUploadRepository_Complete(t *testing.T) {
 	upload.CurrentOffset = 512
 	require.NoError(t, db.Create(&upload).Error)
 
-	require.NoError(t, repository.Complete("test-upload-complete", 99, "/tmp/project-99.zip"))
+	require.NoError(t, repository.Complete(context.Background(), "test-upload-complete", 99, "/tmp/project-99.zip"))
 
-	updated, err := repository.GetByID("test-upload-complete")
+	updated, err := repository.GetByID(context.Background(), "test-upload-complete")
 	require.NoError(t, err)
 	require.NotNil(t, updated)
 	require.NotNil(t, updated.ProjectID)
@@ -174,7 +175,7 @@ func TestTusUploadRepository_GetExpiredUploads(t *testing.T) {
 	require.NoError(t, db.Create(&expiredCancelled).Error)
 	require.NoError(t, db.Create(&expiredAlreadyExpired).Error)
 
-	uploads, err := repository.GetExpiredUploads(now)
+	uploads, err := repository.GetExpiredUploads(context.Background(), now)
 	require.NoError(t, err)
 
 	ids := make([]string, 0, len(uploads))
@@ -209,7 +210,7 @@ func TestTusUploadRepository_GetAbandonedUploads(t *testing.T) {
 	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "not-abandoned-completed").Update("updated_at", oldTime).Error)
 	require.NoError(t, db.Model(&domain.TusUpload{}).Where("id = ?", "not-abandoned-recent").Update("updated_at", now).Error)
 
-	uploads, err := repository.GetAbandonedUploads(10 * time.Minute)
+	uploads, err := repository.GetAbandonedUploads(context.Background(), 10 * time.Minute)
 	require.NoError(t, err)
 
 	ids := make([]string, 0, len(uploads))
@@ -237,7 +238,7 @@ func TestTusUploadRepository_GetActiveByUserID(t *testing.T) {
 	require.NoError(t, db.Create(&notActiveCompleted).Error)
 	require.NoError(t, db.Create(&otherUser).Error)
 
-	uploads, err := repository.GetActiveByUserID("user-1")
+	uploads, err := repository.GetActiveByUserID(context.Background(), "user-1")
 	require.NoError(t, err)
 	require.Len(t, uploads, 3)
 
@@ -247,7 +248,7 @@ func TestTusUploadRepository_GetActiveByUserID(t *testing.T) {
 	}
 	assert.ElementsMatch(t, []string{"test-upload-active-1", "test-upload-active-2", "test-upload-active-3"}, ids)
 
-	empty, err := repository.GetActiveByUserID("missing-user")
+	empty, err := repository.GetActiveByUserID(context.Background(), "missing-user")
 	require.NoError(t, err)
 	assert.Len(t, empty, 0)
 }
@@ -259,9 +260,9 @@ func TestTusUploadRepository_Delete(t *testing.T) {
 	upload := newTusUpload("test-upload-18", "user-1", domain.UploadStatusPending, time.Now().Add(time.Hour))
 	require.NoError(t, db.Create(&upload).Error)
 
-	require.NoError(t, repository.Delete("test-upload-18"))
+	require.NoError(t, repository.Delete(context.Background(), "test-upload-18"))
 
-	_, err := repository.GetByID("test-upload-18")
+	_, err := repository.GetByID(context.Background(), "test-upload-18")
 	require.Error(t, err)
 }
 
@@ -279,7 +280,7 @@ func TestTusUploadRepository_ListActive(t *testing.T) {
 	require.NoError(t, db.Create(&pending).Error)
 	require.NoError(t, db.Create(&completed).Error)
 
-	uploads, err := repository.ListActive()
+	uploads, err := repository.ListActive(context.Background())
 	require.NoError(t, err)
 
 	ids := make([]string, 0, len(uploads))
@@ -306,11 +307,11 @@ func TestTusUploadRepository_CountActiveByUserID(t *testing.T) {
 		require.NoError(t, db.Create(&records[i]).Error)
 	}
 
-	count, err := repository.CountActiveByUserID("user-1")
+	count, err := repository.CountActiveByUserID(context.Background(), "user-1")
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), count)
 
-	emptyCount, err := repository.CountActiveByUserID("user-unknown")
+	emptyCount, err := repository.CountActiveByUserID(context.Background(), "user-unknown")
 	require.NoError(t, err)
 	assert.Equal(t, int64(0), emptyCount)
 }
@@ -330,7 +331,7 @@ func TestTusUploadRepository_GetActiveUploadIDs(t *testing.T) {
 		require.NoError(t, db.Create(&records[i]).Error)
 	}
 
-	ids, err := repository.GetActiveUploadIDs()
+	ids, err := repository.GetActiveUploadIDs(context.Background())
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []string{"test-upload-30", "test-upload-31", "test-upload-32"}, ids)
 }
@@ -349,7 +350,7 @@ func TestTusUploadRepository_ConcurrentGetByID(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			_, err := repository.GetByID("test-upload-34")
+			_, err := repository.GetByID(context.Background(), "test-upload-34")
 			errs <- err
 		}()
 	}
