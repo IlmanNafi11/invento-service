@@ -117,6 +117,11 @@ Recent decisions affecting current work:
 
 - [06-03]: TUS Upload tag for project endpoints, TUS Modul Upload for modul endpoints, Role Management for user role endpoints
 - [06-03]: Modul IDs use string type (UUID) in Swagger @Param, project IDs use int
+
+- [06-04]: 3 //nolint:gocritic suppressions for sloppyReassign — genuine conflict with govet shadow checker (govet wins)
+- [06-04]: golangci-lint --fix used for gofumpt instead of standalone gofumpt (embedded version differs from v0.9.2)
+- [06-04]: unparam fixes cascade — removing one param exposes more constant-valued params in callers (3 iterations needed)
+
 - [06-05]: Swagger annotations use dto.* prefix (not domain.*) after Phase 5 type migration
 - [06-05]: Memory baseline: 9.8MB idle, 12.7MB under 100 concurrent requests — PASS with >95% headroom
 - [06-05]: .env.example verified complete (46 env vars, no gaps)
