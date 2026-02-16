@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"invento-service/internal/domain"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	customValidator "invento-service/internal/validator"
 	"reflect"
 
@@ -55,13 +55,13 @@ func ValidateRequest(requestType interface{}) fiber.Handler {
 
 		// Parse request body
 		if err := c.BodyParser(req); err != nil {
-			return helper.SendBadRequestResponse(c, "Format request tidak valid")
+			return httputil.SendBadRequestResponse(c, "Format request tidak valid")
 		}
 
 		// Validate the request
 		if err := validate.Struct(req); err != nil {
 			validationErrors := parseValidationErrors(err)
-			return helper.SendValidationErrorResponse(c, validationErrors)
+			return httputil.SendValidationErrorResponse(c, validationErrors)
 		}
 
 		// Store validated request in context
@@ -120,7 +120,7 @@ func parseValidationErrors(err error) []domain.ValidationError {
 		return errors
 	}
 	// Fallback to helper for other error types
-	return helper.ValidateStruct(struct{}{})
+	return httputil.ValidateStruct(struct{}{})
 }
 
 // getCustomValidationMessage returns Indonesian validation messages for custom validators.

@@ -5,7 +5,7 @@ import (
 	"invento-service/internal/controller/base"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
 	"strconv"
 
@@ -55,7 +55,7 @@ func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -97,7 +97,7 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -129,7 +129,7 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -168,7 +168,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -197,7 +197,7 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -240,7 +240,7 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -269,7 +269,7 @@ func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -322,7 +322,7 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -341,7 +341,7 @@ func (ctrl *UserController) GetUsersForRole(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -369,7 +369,7 @@ func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}

@@ -8,6 +8,7 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/supabase"
 	testutil "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
@@ -63,8 +64,8 @@ func testSupabaseClaims(userID string) domain.AuthClaims {
 	}
 }
 
-func testCookieHelper() *helper.CookieHelper {
-	return helper.NewCookieHelper(&config.Config{App: config.AppConfig{Env: "development"}})
+func testCookieHelper() *httputil.CookieHelper {
+	return httputil.NewCookieHelper(&config.Config{App: config.AppConfig{Env: "development"}})
 }
 
 // mockUserRepository implements repo.UserRepository for testing
@@ -322,7 +323,7 @@ func TestSupabaseAuthMiddleware_ValidTokenFromCookie_Fallback(t *testing.T) {
 	})
 
 	req := httptest.NewRequest("GET", "/test", nil)
-	req.AddCookie(&http.Cookie{Name: helper.AccessTokenCookieName, Value: "cookie-token"})
+	req.AddCookie(&http.Cookie{Name: httputil.AccessTokenCookieName, Value: "cookie-token"})
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
@@ -348,7 +349,7 @@ func TestSupabaseAuthMiddleware_HeaderPrecedenceOverCookie(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer header-token")
-	req.AddCookie(&http.Cookie{Name: helper.AccessTokenCookieName, Value: "cookie-token"})
+	req.AddCookie(&http.Cookie{Name: httputil.AccessTokenCookieName, Value: "cookie-token"})
 	resp, err := app.Test(req)
 	require.NoError(t, err)
 	assert.Equal(t, fiber.StatusOK, resp.StatusCode)

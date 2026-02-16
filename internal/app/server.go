@@ -8,6 +8,7 @@ import (
 	"invento-service/internal/controller/base"
 	"invento-service/internal/controller/http"
 	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	supabaseAuth "invento-service/internal/supabase"
 	"invento-service/internal/usecase"
@@ -79,7 +80,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 				c.Set("Tus-Resumable", cfg.Upload.TusVersion)
 				return c.SendStatus(fiber.StatusInternalServerError)
 			}
-			return helper.SendInternalServerErrorResponse(c)
+			return httputil.SendInternalServerErrorResponse(c)
 		},
 	})
 
@@ -120,7 +121,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	}))
 
 	pathResolver := helper.NewPathResolver(cfg)
-	cookieHelper := helper.NewCookieHelper(cfg)
+	cookieHelper := httputil.NewCookieHelper(cfg)
 	app.Static("/uploads", pathResolver.GetBasePath())
 
 	userRepo := repo.NewUserRepository(db)

@@ -5,6 +5,7 @@ import (
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase/repo"
 
 	"gorm.io/gorm"
@@ -53,14 +54,14 @@ func (uc *roleUsecase) GetAvailablePermissions() ([]domain.ResourcePermissions, 
 }
 
 func (uc *roleUsecase) GetRoleList(params domain.RoleListQueryParams) (*domain.RoleListData, error) {
-	paginationParams := helper.NormalizePaginationParams(params.Page, params.Limit)
+	paginationParams := httputil.NormalizePaginationParams(params.Page, params.Limit)
 
 	roles, total, err := uc.roleRepo.GetAll(params.Search, paginationParams.Page, paginationParams.Limit)
 	if err != nil {
 		return nil, apperrors.NewInternalError(err)
 	}
 
-	pagination := helper.CalculatePagination(paginationParams.Page, paginationParams.Limit, total)
+	pagination := httputil.CalculatePagination(paginationParams.Page, paginationParams.Limit, total)
 
 	return &domain.RoleListData{
 		Items:      roles,

@@ -4,7 +4,7 @@ import (
 	"invento-service/internal/controller/base"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
@@ -217,7 +217,7 @@ func (ctrl *RoleController) DeleteRole(c *fiber.Ctx) error {
 // Uses type-safe error handling with AppError types.
 func (ctrl *RoleController) handleRoleError(c *fiber.Ctx, err error) error {
 	if appErr, ok := err.(*apperrors.AppError); ok {
-		return helper.SendAppError(c, appErr)
+		return httputil.SendAppError(c, appErr)
 	}
 	return ctrl.SendInternalError(c)
 }

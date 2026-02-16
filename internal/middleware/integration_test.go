@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"net/http/httptest"
 	"testing"
 
@@ -22,9 +22,9 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		app := fiber.New(fiber.Config{
 			ErrorHandler: func(c *fiber.Ctx, err error) error {
 				if appErr, ok := err.(*apperrors.AppError); ok {
-					return helper.SendAppError(c, appErr)
+					return httputil.SendAppError(c, appErr)
 				}
-				return helper.SendInternalServerErrorResponse(c)
+				return httputil.SendInternalServerErrorResponse(c)
 			},
 		})
 
@@ -34,7 +34,7 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		// Add test handler
 		app.Get("/api/test", func(c *fiber.Ctx) error {
 			requestID := GetRequestID(c)
-			return helper.SendSuccessResponse(c, fiber.StatusOK, "Success", fiber.Map{
+			return httputil.SendSuccessResponse(c, fiber.StatusOK, "Success", fiber.Map{
 				"request_id": requestID,
 				"message":    "Test successful",
 			})
@@ -109,14 +109,14 @@ func TestIntegrationMiddlewareRequestFlow(t *testing.T) {
 		app.Post("/test", func(c *fiber.Ctx) error {
 			var req TestRequest
 			if err := c.BodyParser(&req); err != nil {
-				return helper.SendBadRequestResponse(c, "Invalid format")
+				return httputil.SendBadRequestResponse(c, "Invalid format")
 			}
 
 			if errs := ValidateStruct(&req); len(errs) > 0 {
-				return helper.SendValidationErrorResponse(c, errs)
+				return httputil.SendValidationErrorResponse(c, errs)
 			}
 
-			return helper.SendSuccessResponse(c, fiber.StatusOK, "OK", nil)
+			return httputil.SendSuccessResponse(c, fiber.StatusOK, "OK", nil)
 		})
 
 		// Send invalid request
@@ -142,9 +142,9 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
-				return helper.SendAppError(c, appErr)
+				return httputil.SendAppError(c, appErr)
 			}
-			return helper.SendInternalServerErrorResponse(c)
+			return httputil.SendInternalServerErrorResponse(c)
 		},
 	})
 
@@ -153,31 +153,31 @@ func TestIntegrationMiddlewareErrorScenarios(t *testing.T) {
 
 	// Define error routes
 	app.Get("/error/notfound", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewNotFoundError("Resource"))
+		return httputil.SendAppError(c, apperrors.NewNotFoundError("Resource"))
 	})
 
 	app.Get("/error/validation", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewValidationError("Field tidak valid", nil))
+		return httputil.SendAppError(c, apperrors.NewValidationError("Field tidak valid", nil))
 	})
 
 	app.Get("/error/unauthorized", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewUnauthorizedError("Token tidak valid"))
+		return httputil.SendAppError(c, apperrors.NewUnauthorizedError("Token tidak valid"))
 	})
 
 	app.Get("/error/forbidden", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewForbiddenError("Akses ditolak"))
+		return httputil.SendAppError(c, apperrors.NewForbiddenError("Akses ditolak"))
 	})
 
 	app.Get("/error/conflict", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewConflictError("Data sudah ada"))
+		return httputil.SendAppError(c, apperrors.NewConflictError("Data sudah ada"))
 	})
 
 	app.Get("/error/internal", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewInternalError(helper.SendInternalServerErrorResponse(c)))
+		return httputil.SendAppError(c, apperrors.NewInternalError(httputil.SendInternalServerErrorResponse(c)))
 	})
 
 	app.Get("/error/payload", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewPayloadTooLargeError("Ukuran file terlalu besar"))
+		return httputil.SendAppError(c, apperrors.NewPayloadTooLargeError("Ukuran file terlalu besar"))
 	})
 
 	t.Run("ErrorScenario_NotFound", func(t *testing.T) {
@@ -370,9 +370,9 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
-				return helper.SendAppError(c, appErr)
+				return httputil.SendAppError(c, appErr)
 			}
-			return helper.SendInternalServerErrorResponse(c)
+			return httputil.SendInternalServerErrorResponse(c)
 		},
 	})
 
@@ -387,14 +387,14 @@ func TestIntegrationMiddlewareValidationIntegration(t *testing.T) {
 	app.Post("/users", func(c *fiber.Ctx) error {
 		var req CreateUserRequest
 		if err := c.BodyParser(&req); err != nil {
-			return helper.SendBadRequestResponse(c, "Format request tidak valid")
+			return httputil.SendBadRequestResponse(c, "Format request tidak valid")
 		}
 
 		if errs := ValidateStruct(&req); len(errs) > 0 {
-			return helper.SendValidationErrorResponse(c, errs)
+			return httputil.SendValidationErrorResponse(c, errs)
 		}
 
-		return helper.SendSuccessResponse(c, fiber.StatusCreated, "User berhasil dibuat", nil)
+		return httputil.SendSuccessResponse(c, fiber.StatusCreated, "User berhasil dibuat", nil)
 	})
 
 	t.Run("ValidRequest_PassesValidation", func(t *testing.T) {
@@ -514,9 +514,9 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
-				return helper.SendAppError(c, appErr)
+				return httputil.SendAppError(c, appErr)
 			}
-			return helper.SendInternalServerErrorResponse(c)
+			return httputil.SendInternalServerErrorResponse(c)
 		},
 	})
 
@@ -548,81 +548,81 @@ func TestIntegrationMiddlewareWithRealWorldScenarios(t *testing.T) {
 		for _, item := range items {
 			itemList = append(itemList, item)
 		}
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "Items retrieved", itemList)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "Items retrieved", itemList)
 	})
 
 	app.Get("/items/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		var itemID uint
 		if _, err := fmt.Sscanf(id, "%d", &itemID); err != nil {
-			return helper.SendBadRequestResponse(c, "Invalid ID")
+			return httputil.SendBadRequestResponse(c, "Invalid ID")
 		}
 
 		item, exists := items[itemID]
 		if !exists {
-			return helper.SendNotFoundResponse(c, "Item")
+			return httputil.SendNotFoundResponse(c, "Item")
 		}
 
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "Item found", item)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "Item found", item)
 	})
 
 	app.Post("/items", func(c *fiber.Ctx) error {
 		var req CreateItemRequest
 		if err := c.BodyParser(&req); err != nil {
-			return helper.SendBadRequestResponse(c, "Format request tidak valid")
+			return httputil.SendBadRequestResponse(c, "Format request tidak valid")
 		}
 
 		if errs := ValidateStruct(&req); len(errs) > 0 {
-			return helper.SendValidationErrorResponse(c, errs)
+			return httputil.SendValidationErrorResponse(c, errs)
 		}
 
 		item := Item{ID: nextID, Name: req.Name}
 		items[nextID] = item
 		nextID++
 
-		return helper.SendSuccessResponse(c, fiber.StatusCreated, "Item created", item)
+		return httputil.SendSuccessResponse(c, fiber.StatusCreated, "Item created", item)
 	})
 
 	app.Put("/items/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		var itemID uint
 		if _, err := fmt.Sscanf(id, "%d", &itemID); err != nil {
-			return helper.SendBadRequestResponse(c, "Invalid ID")
+			return httputil.SendBadRequestResponse(c, "Invalid ID")
 		}
 
 		_, exists := items[itemID]
 		if !exists {
-			return helper.SendNotFoundResponse(c, "Item")
+			return httputil.SendNotFoundResponse(c, "Item")
 		}
 
 		var req UpdateItemRequest
 		if err := c.BodyParser(&req); err != nil {
-			return helper.SendBadRequestResponse(c, "Format request tidak valid")
+			return httputil.SendBadRequestResponse(c, "Format request tidak valid")
 		}
 
 		if errs := ValidateStruct(&req); len(errs) > 0 {
-			return helper.SendValidationErrorResponse(c, errs)
+			return httputil.SendValidationErrorResponse(c, errs)
 		}
 
 		item := Item{ID: itemID, Name: req.Name}
 		items[itemID] = item
 
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "Item updated", item)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "Item updated", item)
 	})
 
 	app.Delete("/items/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		var itemID uint
 		if _, err := fmt.Sscanf(id, "%d", &itemID); err != nil {
-			return helper.SendBadRequestResponse(c, "Invalid ID")
+			return httputil.SendBadRequestResponse(c, "Invalid ID")
 		}
 
 		if _, exists := items[itemID]; !exists {
-			return helper.SendNotFoundResponse(c, "Item")
+			return httputil.SendNotFoundResponse(c, "Item")
 		}
 
 		delete(items, itemID)
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "Item deleted", nil)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "Item deleted", nil)
 	})
 
 	t.Run("Scenario_ListItems", func(t *testing.T) {

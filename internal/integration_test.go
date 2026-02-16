@@ -6,7 +6,7 @@ import (
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"fmt"
 	"net/http/httptest"
@@ -74,27 +74,27 @@ func TestIntegrationErrorHandling(t *testing.T) {
 
 	// Error handler that returns AppError
 	app.Get("/error/notfound", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewNotFoundError("Test Resource"))
+		return httputil.SendAppError(c, apperrors.NewNotFoundError("Test Resource"))
 	})
 
 	app.Get("/error/validation", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewValidationError("Field wajib diisi", nil))
+		return httputil.SendAppError(c, apperrors.NewValidationError("Field wajib diisi", nil))
 	})
 
 	app.Get("/error/unauthorized", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewUnauthorizedError("Token tidak valid"))
+		return httputil.SendAppError(c, apperrors.NewUnauthorizedError("Token tidak valid"))
 	})
 
 	app.Get("/error/forbidden", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewForbiddenError("Akses ditolak"))
+		return httputil.SendAppError(c, apperrors.NewForbiddenError("Akses ditolak"))
 	})
 
 	app.Get("/error/conflict", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewConflictError("Data sudah ada"))
+		return httputil.SendAppError(c, apperrors.NewConflictError("Data sudah ada"))
 	})
 
 	app.Get("/error/internal", func(c *fiber.Ctx) error {
-		return helper.SendAppError(c, apperrors.NewInternalError(fmt.Errorf("database error")))
+		return httputil.SendAppError(c, apperrors.NewInternalError(fmt.Errorf("database error")))
 	})
 
 	t.Run("NotFoundError", func(t *testing.T) {
@@ -202,15 +202,15 @@ func TestIntegrationDTOMiddleware(t *testing.T) {
 	app.Post("/test", func(c *fiber.Ctx) error {
 		var req TestRequest
 		if err := c.BodyParser(&req); err != nil {
-			return helper.SendBadRequestResponse(c, "Format request tidak valid")
+			return httputil.SendBadRequestResponse(c, "Format request tidak valid")
 		}
 
 		// Validate using middleware helper
 		if errs := middleware.ValidateStruct(&req); len(errs) > 0 {
-			return helper.SendValidationErrorResponse(c, errs)
+			return httputil.SendValidationErrorResponse(c, errs)
 		}
 
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "Data valid", req)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "Data valid", req)
 	})
 
 	t.Run("ValidRequest", func(t *testing.T) {
@@ -282,7 +282,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 	app.Get("/items", func(c *fiber.Ctx) error {
 		var pagReq dto.PaginationRequest
 		if err := c.QueryParser(&pagReq); err != nil {
-			return helper.SendBadRequestResponse(c, "Parameter tidak valid")
+			return httputil.SendBadRequestResponse(c, "Parameter tidak valid")
 		}
 
 		// Set defaults BEFORE validation
@@ -316,7 +316,7 @@ func TestIntegrationPaginationWithMiddleware(t *testing.T) {
 			TotalPages: totalPages,
 		}
 
-		return helper.SendListResponse(c, fiber.StatusOK, "Items retrieved", items, paginationData)
+		return httputil.SendListResponse(c, fiber.StatusOK, "Items retrieved", items, paginationData)
 	})
 
 	t.Run("ValidPagination_Default", func(t *testing.T) {
@@ -384,9 +384,9 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if appErr, ok := err.(*apperrors.AppError); ok {
-				return helper.SendAppError(c, appErr)
+				return httputil.SendAppError(c, appErr)
 			}
-			return helper.SendInternalServerErrorResponse(c)
+			return httputil.SendInternalServerErrorResponse(c)
 		},
 	})
 
@@ -407,11 +407,11 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 	app.Post("/users", func(c *fiber.Ctx) error {
 		var req CreateUserRequest
 		if err := c.BodyParser(&req); err != nil {
-			return helper.SendBadRequestResponse(c, "Format request tidak valid")
+			return httputil.SendBadRequestResponse(c, "Format request tidak valid")
 		}
 
 		if errs := middleware.ValidateStruct(&req); len(errs) > 0 {
-			return helper.SendValidationErrorResponse(c, errs)
+			return httputil.SendValidationErrorResponse(c, errs)
 		}
 
 		// Mock user creation
@@ -421,13 +421,13 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 			"email": req.Email,
 		}
 
-		return helper.SendSuccessResponse(c, fiber.StatusCreated, "User berhasil dibuat", user)
+		return httputil.SendSuccessResponse(c, fiber.StatusCreated, "User berhasil dibuat", user)
 	})
 
 	app.Get("/users/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		if id == "999" {
-			return helper.SendNotFoundResponse(c, "User")
+			return httputil.SendNotFoundResponse(c, "User")
 		}
 
 		user := map[string]interface{}{
@@ -436,17 +436,17 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 			"email": "john@example.com",
 		}
 
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "User ditemukan", user)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "User ditemukan", user)
 	})
 
 	app.Put("/users/:id", func(c *fiber.Ctx) error {
 		var req UpdateUserRequest
 		if err := c.BodyParser(&req); err != nil {
-			return helper.SendBadRequestResponse(c, "Format request tidak valid")
+			return httputil.SendBadRequestResponse(c, "Format request tidak valid")
 		}
 
 		if errs := middleware.ValidateStruct(&req); len(errs) > 0 {
-			return helper.SendValidationErrorResponse(c, errs)
+			return httputil.SendValidationErrorResponse(c, errs)
 		}
 
 		user := map[string]interface{}{
@@ -454,16 +454,16 @@ func TestIntegrationCompleteRequestCycle(t *testing.T) {
 			"name": req.Name,
 		}
 
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "User berhasil diupdate", user)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "User berhasil diupdate", user)
 	})
 
 	app.Delete("/users/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		if id == "999" {
-			return helper.SendNotFoundResponse(c, "User")
+			return httputil.SendNotFoundResponse(c, "User")
 		}
 
-		return helper.SendSuccessResponse(c, fiber.StatusOK, "User berhasil dihapus", nil)
+		return httputil.SendSuccessResponse(c, fiber.StatusOK, "User berhasil dihapus", nil)
 	})
 
 	t.Run("CreateUser_Success", func(t *testing.T) {

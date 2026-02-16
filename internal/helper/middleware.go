@@ -2,6 +2,7 @@ package helper
 
 import (
 	"invento-service/internal/domain"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase/repo"
 	"strconv"
 	"strings"
@@ -17,14 +18,14 @@ type CasbinPermissionChecker interface {
 }
 
 // SupabaseAuthMiddleware validates Supabase JWT tokens and extracts user info
-func SupabaseAuthMiddleware(authService domain.AuthService, userRepo repo.UserRepository, cookieHelper *CookieHelper) fiber.Handler {
+func SupabaseAuthMiddleware(authService domain.AuthService, userRepo repo.UserRepository, cookieHelper *httputil.CookieHelper) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		accessToken := ""
 		authHeader := c.Get("Authorization")
 		if authHeader != "" {
 			tokenParts := strings.Split(authHeader, " ")
 			if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-				return SendErrorResponse(c, fiber.StatusUnauthorized, "Format token tidak valid", nil)
+				return httputil.SendErrorResponse(c, fiber.StatusUnauthorized, "Format token tidak valid", nil)
 			}
 			accessToken = tokenParts[1]
 		}
@@ -34,21 +35,21 @@ func SupabaseAuthMiddleware(authService domain.AuthService, userRepo repo.UserRe
 		}
 
 		if accessToken == "" {
-			return SendUnauthorizedResponse(c)
+			return httputil.SendUnauthorizedResponse(c)
 		}
 
 		claims, err := authService.VerifyJWT(accessToken)
 		if err != nil {
-			return SendUnauthorizedResponse(c)
+			return httputil.SendUnauthorizedResponse(c)
 		}
 
 		user, err := userRepo.GetByID(claims.GetUserID())
 		if err != nil {
-			return SendUnauthorizedResponse(c)
+			return httputil.SendUnauthorizedResponse(c)
 		}
 
 		if !user.IsActive {
-			return SendUnauthorizedResponse(c)
+			return httputil.SendUnauthorizedResponse(c)
 		}
 
 		c.Locals("user_id", user.ID)
@@ -70,22 +71,22 @@ func RBACMiddleware(casbinEnforcer CasbinPermissionChecker, resource string, act
 	return func(c *fiber.Ctx) error {
 		roleVal := c.Locals("user_role")
 		if roleVal == nil {
-			return SendForbiddenResponse(c)
+			return httputil.SendForbiddenResponse(c)
 		}
 
 		role, ok := roleVal.(string)
 		if !ok || role == "" {
-			return SendForbiddenResponse(c)
+			return httputil.SendForbiddenResponse(c)
 		}
 
 		allowed, err := casbinEnforcer.CheckPermission(role, resource, action)
 		if err != nil {
 			zlog.Error().Err(err).Str("role", role).Str("resource", resource).Str("action", action).Msg("RBAC CheckPermission failed")
-			return SendInternalServerErrorResponse(c)
+			return httputil.SendInternalServerErrorResponse(c)
 		}
 
 		if !allowed {
-			return SendForbiddenResponse(c)
+			return httputil.SendForbiddenResponse(c)
 		}
 
 		return c.Next()

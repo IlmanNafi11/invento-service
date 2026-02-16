@@ -9,8 +9,8 @@ This roadmap transforms invento-service from a working-but-rough `fiber-boiler-p
 ## Phases
 
 - [x] **Phase 1: Foundation & Rename** - Establish correct module identity, eliminate crashes, and set safety baselines
-- [ ] **Phase 2: Memory & Performance Tuning** - Optimize runtime configuration for the 500MB RAM constraint
-- [ ] **Phase 3: Code Quality Standardization** - Standardize logging, error handling, and response patterns
+- [x] **Phase 2: Memory & Performance Tuning** - Optimize runtime configuration for the 500MB RAM constraint (completed 2026-02-16)
+- [x] **Phase 3: Code Quality Standardization** - Standardize logging, error handling, and response patterns (completed 2026-02-16)
 - [ ] **Phase 4: Architecture Restructuring** - Decompose the helper god-package into focused, single-responsibility packages
 - [ ] **Phase 5: Deep Architecture Improvements** - Propagate context through all layers and enforce file size limits
 - [ ] **Phase 6: Polish & Verification** - Remove dead code, verify memory under load, and finalize documentation
@@ -70,7 +70,7 @@ Plans:
 
 **Risk**: `ReduceMemoryUsage` adds ~10-15% CPU overhead. Mitigated by benchmarking request latency before/after.
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 02-01-PLAN.md -- Add PerformanceConfig struct, env var helpers, update Dockerfile GOGC and .env.example
@@ -101,7 +101,7 @@ Plans:
 
 **Risk**: Changing error handling patterns across all controllers has a wide blast radius. Mitigated by running `go test ./...` after each file change, never batching.
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 03-01-PLAN.md -- Zerolog foundation, response envelope update, replace internal/logger with zerolog in server.go
@@ -226,8 +226,8 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
 | 1. Foundation & Rename | 5/5 | ✓ Complete | 2026-02-15 |
-| 2. Memory & Performance Tuning | 0/2 | Planned | - |
-| 3. Code Quality Standardization | 0/3 | Planned | - |
+| 2. Memory & Performance Tuning | 0/2 | Complete    | 2026-02-16 |
+| 3. Code Quality Standardization | 0/3 | Complete    | 2026-02-16 |
 | 4. Architecture Restructuring | 0/6 | Planned | - |
 | 5. Deep Architecture Improvements | 0/TBD | Not started | - |
 | 6. Polish & Verification | 0/TBD | Not started | - |

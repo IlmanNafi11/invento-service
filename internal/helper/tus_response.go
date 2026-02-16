@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"invento-service/internal/httputil"
 	"strconv"
 	"time"
 
@@ -130,7 +131,7 @@ func SendTusErrorResponseWithLength(c *fiber.Ctx, statusCode int, tusVersion str
 //	    return helper.SendTusValidationErrorResponse(c, "Metadata upload wajib diisi")
 //	}
 func SendTusValidationErrorResponse(c *fiber.Ctx, message string) error {
-	return SendBadRequestResponse(c, message)
+	return httputil.SendBadRequestResponse(c, message)
 }
 
 // SendTusNotFoundErrorResponse sends a TUS not found error with JSON response.
@@ -149,7 +150,7 @@ func SendTusNotFoundErrorResponse(c *fiber.Ctx, message string) error {
 	if message == "" {
 		message = "Data tidak ditemukan"
 	}
-	return SendNotFoundResponse(c, message)
+	return httputil.SendNotFoundResponse(c, message)
 }
 
 // SendTusForbiddenErrorResponse sends a TUS forbidden error with JSON response.
@@ -164,7 +165,7 @@ func SendTusNotFoundErrorResponse(c *fiber.Ctx, message string) error {
 //	    return helper.SendTusForbiddenErrorResponse(c)
 //	}
 func SendTusForbiddenErrorResponse(c *fiber.Ctx) error {
-	return SendForbiddenResponse(c)
+	return httputil.SendForbiddenResponse(c)
 }
 
 // SendTusConflictErrorResponse sends a TUS conflict error with JSON response.
@@ -183,7 +184,7 @@ func SendTusConflictErrorResponse(c *fiber.Ctx, message string) error {
 	if message == "" {
 		message = "Data sudah ada"
 	}
-	return SendConflictResponse(c, message)
+	return httputil.SendConflictResponse(c, message)
 }
 
 // SendTusPayloadTooLargeErrorResponse sends a TUS payload too large error.
@@ -202,7 +203,7 @@ func SendTusPayloadTooLargeErrorResponse(c *fiber.Ctx, message string) error {
 	if message == "" {
 		message = "Ukuran data melebihi batas maksimal"
 	}
-	return SendPayloadTooLargeResponse(c, message)
+	return httputil.SendPayloadTooLargeResponse(c, message)
 }
 
 // SendTusTooManyRequestsErrorResponse sends a TUS too many requests error.
@@ -221,7 +222,7 @@ func SendTusTooManyRequestsErrorResponse(c *fiber.Ctx, message string) error {
 	if message == "" {
 		message = "Terlalu banyak permintaan, silakan coba lagi nanti"
 	}
-	return SendTooManyRequestsResponse(c, message)
+	return httputil.SendTooManyRequestsResponse(c, message)
 }
 
 // SendTusInternalErrorResponse sends a TUS internal server error with JSON response.
@@ -236,5 +237,5 @@ func SendTusTooManyRequestsErrorResponse(c *fiber.Ctx, message string) error {
 //	    return helper.SendTusInternalErrorResponse(c)
 //	}
 func SendTusInternalErrorResponse(c *fiber.Ctx) error {
-	return SendInternalServerErrorResponse(c)
+	return httputil.SendInternalServerErrorResponse(c)
 }

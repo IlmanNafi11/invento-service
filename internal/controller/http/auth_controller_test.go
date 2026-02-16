@@ -7,7 +7,7 @@ import (
 	httpcontroller "invento-service/internal/controller/http"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -82,7 +82,7 @@ func decodeBodyMap(t *testing.T, resp *http.Response) map[string]interface{} {
 func TestAuthController_Register_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
-	cookieHelper := helper.NewCookieHelper(cfg)
+	cookieHelper := httputil.NewCookieHelper(cfg)
 	controller := httpcontroller.NewAuthController(mockAuthUC, cookieHelper, cfg, zerolog.Nop())
 
 	app := fiber.New()
@@ -128,10 +128,10 @@ func TestAuthController_Register_Success(t *testing.T) {
 
 	var hasAccessCookie, hasRefreshCookie bool
 	for _, c := range resp.Cookies() {
-		if c.Name == helper.AccessTokenCookieName {
+		if c.Name == httputil.AccessTokenCookieName {
 			hasAccessCookie = true
 		}
-		if c.Name == helper.RefreshTokenCookieName {
+		if c.Name == httputil.RefreshTokenCookieName {
 			hasRefreshCookie = true
 		}
 	}
@@ -144,7 +144,7 @@ func TestAuthController_Register_Success(t *testing.T) {
 func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
-	controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 	app := fiber.New()
 	app.Post("/register", controller.Register)
@@ -165,7 +165,7 @@ func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
 func TestAuthController_Login_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
-	controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 	app := fiber.New()
 	app.Post("/login", controller.Login)
@@ -197,7 +197,7 @@ func TestAuthController_Login_Success(t *testing.T) {
 func TestAuthController_Login_InvalidCredentials(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
-	controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 	app := fiber.New()
 	app.Post("/login", controller.Login)
@@ -218,7 +218,7 @@ func TestAuthController_Login_InvalidCredentials(t *testing.T) {
 func TestAuthController_RefreshToken_Success(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
-	controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 	app := fiber.New()
 	app.Post("/api/v1/auth/refresh", controller.RefreshToken)
@@ -232,7 +232,7 @@ func TestAuthController_RefreshToken_Success(t *testing.T) {
 	mockAuthUC.On("RefreshToken", "old_refresh_token").Return("new_refresh_token", expectedResponse, nil)
 
 	req := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
-	req.AddCookie(&http.Cookie{Name: helper.RefreshTokenCookieName, Value: "old_refresh_token"})
+	req.AddCookie(&http.Cookie{Name: httputil.RefreshTokenCookieName, Value: "old_refresh_token"})
 
 	resp, err := app.Test(req)
 	require.NoError(t, err)
@@ -247,7 +247,7 @@ func TestAuthController_RefreshToken_Success(t *testing.T) {
 func TestAuthController_RefreshToken_MissingCookie(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
-	controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 	app := fiber.New()
 	app.Post("/api/v1/auth/refresh", controller.RefreshToken)
@@ -262,7 +262,7 @@ func TestAuthController_RefreshToken_MissingCookie(t *testing.T) {
 func TestAuthController_Logout_ClearsCookies(t *testing.T) {
 	mockAuthUC := new(MockAuthUsecase)
 	cfg := getTestConfig()
-	controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+	controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 	app := fiber.New()
 	app.Post("/logout", func(c *fiber.Ctx) error {
@@ -283,12 +283,12 @@ func TestAuthController_Logout_ClearsCookies(t *testing.T) {
 
 	cleared := map[string]bool{}
 	for _, c := range resp.Cookies() {
-		if c.Name == helper.AccessTokenCookieName || c.Name == helper.RefreshTokenCookieName {
+		if c.Name == httputil.AccessTokenCookieName || c.Name == httputil.RefreshTokenCookieName {
 			cleared[c.Name] = c.Value == ""
 		}
 	}
-	assert.True(t, cleared[helper.AccessTokenCookieName])
-	assert.True(t, cleared[helper.RefreshTokenCookieName])
+	assert.True(t, cleared[httputil.AccessTokenCookieName])
+	assert.True(t, cleared[httputil.RefreshTokenCookieName])
 
 	mockAuthUC.AssertExpectations(t)
 }
@@ -297,7 +297,7 @@ func TestAuthController_RequestPasswordReset(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
-		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+		controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 		app := fiber.New()
 		app.Post("/api/v1/auth/reset-password", controller.RequestPasswordReset)
@@ -323,7 +323,7 @@ func TestAuthController_RequestPasswordReset(t *testing.T) {
 	t.Run("validation error invalid email format", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
-		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+		controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 		app := fiber.New()
 		app.Post("/api/v1/auth/reset-password", controller.RequestPasswordReset)
@@ -349,7 +349,7 @@ func TestAuthController_Register_ValidationError(t *testing.T) {
 	t.Run("missing required fields", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
-		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+		controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 		app := fiber.New()
 		app.Post("/register", controller.Register)
@@ -373,7 +373,7 @@ func TestAuthController_Login_EmptyBody(t *testing.T) {
 	t.Run("empty body returns bad request", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
-		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+		controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 		app := fiber.New()
 		app.Post("/login", controller.Login)
@@ -397,7 +397,7 @@ func TestAuthController_RefreshToken_InvalidToken(t *testing.T) {
 	t.Run("expired or invalid refresh token", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
-		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+		controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 		app := fiber.New()
 		app.Post("/api/v1/auth/refresh", controller.RefreshToken)
@@ -405,7 +405,7 @@ func TestAuthController_RefreshToken_InvalidToken(t *testing.T) {
 		mockAuthUC.On("RefreshToken", "invalid_refresh_token").Return("", (*domain.RefreshTokenResponse)(nil), apperrors.NewUnauthorizedError("Refresh token tidak valid atau sudah expired"))
 
 		req := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
-		req.AddCookie(&http.Cookie{Name: helper.RefreshTokenCookieName, Value: "invalid_refresh_token"})
+		req.AddCookie(&http.Cookie{Name: httputil.RefreshTokenCookieName, Value: "invalid_refresh_token"})
 
 		resp, err := app.Test(req)
 		require.NoError(t, err)
@@ -423,7 +423,7 @@ func TestAuthController_Logout_WithoutAccessToken(t *testing.T) {
 	t.Run("logout succeeds and clears cookies without token", func(t *testing.T) {
 		mockAuthUC := new(MockAuthUsecase)
 		cfg := getTestConfig()
-		controller := httpcontroller.NewAuthController(mockAuthUC, helper.NewCookieHelper(cfg), cfg, zerolog.Nop())
+		controller := httpcontroller.NewAuthController(mockAuthUC, httputil.NewCookieHelper(cfg), cfg, zerolog.Nop())
 
 		app := fiber.New()
 		app.Post("/api/v1/auth/logout", controller.Logout)
@@ -439,12 +439,12 @@ func TestAuthController_Logout_WithoutAccessToken(t *testing.T) {
 
 		cleared := map[string]bool{}
 		for _, c := range resp.Cookies() {
-			if c.Name == helper.AccessTokenCookieName || c.Name == helper.RefreshTokenCookieName {
+			if c.Name == httputil.AccessTokenCookieName || c.Name == httputil.RefreshTokenCookieName {
 				cleared[c.Name] = c.Value == ""
 			}
 		}
-		assert.True(t, cleared[helper.AccessTokenCookieName])
-		assert.True(t, cleared[helper.RefreshTokenCookieName])
+		assert.True(t, cleared[httputil.AccessTokenCookieName])
+		assert.True(t, cleared[httputil.RefreshTokenCookieName])
 
 		mockAuthUC.AssertNotCalled(t, "Logout", mock.Anything)
 	})

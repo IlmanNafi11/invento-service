@@ -2,7 +2,7 @@ package http
 
 import (
 	"invento-service/internal/controller/base"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
@@ -56,7 +56,7 @@ func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 	healthData := ctrl.healthUsecase.GetComprehensiveHealth()
 
 	if healthData.Status == "unhealthy" {
-		return helper.SendErrorResponse(c, fiber.StatusServiceUnavailable, "Beberapa komponen sistem mengalami masalah", healthData)
+		return httputil.SendErrorResponse(c, fiber.StatusServiceUnavailable, "Beberapa komponen sistem mengalami masalah", healthData)
 	}
 
 	return ctrl.SendSuccess(c, healthData, "Pemeriksaan kesehatan sistem berhasil")

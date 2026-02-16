@@ -6,6 +6,7 @@ import (
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
@@ -72,7 +73,7 @@ func (ctrl *ProjectController) UpdateMetadata(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -114,7 +115,7 @@ func (ctrl *ProjectController) GetByID(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -163,7 +164,7 @@ func (ctrl *ProjectController) GetList(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -205,7 +206,7 @@ func (ctrl *ProjectController) Delete(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -256,7 +257,7 @@ func (ctrl *ProjectController) Download(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}

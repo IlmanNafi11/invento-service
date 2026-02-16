@@ -6,6 +6,7 @@ import (
 
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -104,12 +105,12 @@ func handleTusUsecaseError(c *fiber.Ctx, err error, tusVersion string) error {
 		if c.Method() == fiber.MethodPatch || c.Method() == fiber.MethodHead || c.Method() == fiber.MethodDelete {
 			return helper.SendTusErrorResponse(c, appErr.HTTPStatus, tusVersion)
 		}
-		return helper.SendAppError(c, appErr)
+		return httputil.SendAppError(c, appErr)
 	}
 
 	if c.Method() == fiber.MethodPatch || c.Method() == fiber.MethodHead || c.Method() == fiber.MethodDelete {
 		return helper.SendTusErrorResponse(c, fiber.StatusInternalServerError, tusVersion)
 	}
 
-	return helper.SendInternalServerErrorResponse(c)
+	return httputil.SendInternalServerErrorResponse(c)
 }

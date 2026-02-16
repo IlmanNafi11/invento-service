@@ -6,7 +6,7 @@ import (
 	"invento-service/internal/controller/base"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,14 +19,14 @@ import (
 type AuthController struct {
 	*base.BaseController
 	authUsecase  usecase.AuthUsecase
-	cookieHelper *helper.CookieHelper
+	cookieHelper *httputil.CookieHelper
 	logger       zerolog.Logger
 }
 
 // NewAuthController creates a new AuthController instance.
 // Initializes base controller without JWT/Casbin since auth endpoints
 // handle credentials directly (no authentication required).
-func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *helper.CookieHelper, cfg *config.Config, logger zerolog.Logger) *AuthController {
+func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *httputil.CookieHelper, cfg *config.Config, logger zerolog.Logger) *AuthController {
 	return &AuthController{
 		BaseController: base.NewBaseController(cfg.Supabase.URL, nil),
 		authUsecase:    authUsecase,
@@ -63,7 +63,7 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -101,7 +101,7 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -127,14 +127,14 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 	refreshToken := ctrl.cookieHelper.GetRefreshTokenFromCookie(c)
 	if refreshToken == "" {
-		return helper.SendErrorResponse(c, fiber.StatusUnauthorized, "Refresh token tidak ditemukan", nil)
+		return httputil.SendErrorResponse(c, fiber.StatusUnauthorized, "Refresh token tidak ditemukan", nil)
 	}
 
 	newRefreshToken, result, err := ctrl.authUsecase.RefreshToken(refreshToken)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}

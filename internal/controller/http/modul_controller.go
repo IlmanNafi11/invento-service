@@ -6,7 +6,7 @@ import (
 	"invento-service/internal/controller/base"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
 	"os"
 	"path/filepath"
@@ -66,7 +66,7 @@ func (ctrl *ModulController) GetList(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -105,7 +105,7 @@ func (ctrl *ModulController) Delete(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -154,7 +154,7 @@ func (ctrl *ModulController) UpdateMetadata(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}
@@ -200,7 +200,7 @@ func (ctrl *ModulController) Download(c *fiber.Ctx) error {
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
-			return helper.SendAppError(c, appErr)
+			return httputil.SendAppError(c, appErr)
 		}
 		return ctrl.SendInternalError(c)
 	}

@@ -6,6 +6,7 @@ import (
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
+	"invento-service/internal/httputil"
 	"invento-service/internal/usecase/repo"
 	"mime/multipart"
 	"strconv"
@@ -61,7 +62,7 @@ func NewUserUsecase(
 }
 
 func (uc *userUsecase) GetUserList(params domain.UserListQueryParams) (*domain.UserListData, error) {
-	normalizedParams := helper.NormalizePaginationParams(params.Page, params.Limit)
+	normalizedParams := httputil.NormalizePaginationParams(params.Page, params.Limit)
 	params.Page = normalizedParams.Page
 	params.Limit = normalizedParams.Limit
 
@@ -70,7 +71,7 @@ func (uc *userUsecase) GetUserList(params domain.UserListQueryParams) (*domain.U
 		return nil, apperrors.NewInternalError(err)
 	}
 
-	pagination := helper.CalculatePagination(params.Page, params.Limit, total)
+	pagination := httputil.CalculatePagination(params.Page, params.Limit, total)
 
 	return &domain.UserListData{
 		Items:      users,
@@ -148,7 +149,7 @@ func (uc *userUsecase) GetUserFiles(userID string, params domain.UserFilesQueryP
 		return nil, apperrors.NewInternalError(err)
 	}
 
-	normalizedParams := helper.NormalizePaginationParams(params.Page, params.Limit)
+	normalizedParams := httputil.NormalizePaginationParams(params.Page, params.Limit)
 	params.Page = normalizedParams.Page
 	params.Limit = normalizedParams.Limit
 
@@ -163,7 +164,7 @@ func (uc *userUsecase) GetUserFiles(userID string, params domain.UserFilesQueryP
 		}
 	}
 
-	pagination := helper.CalculatePagination(params.Page, params.Limit, total)
+	pagination := httputil.CalculatePagination(params.Page, params.Limit, total)
 
 	return &domain.UserFilesData{
 		Items:      items,
