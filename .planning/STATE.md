@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 5 of 6 (Deep Architecture Improvements)
-Plan: 6 of 8 complete
+Plan: 7 of 8 complete
 Status: In Progress
-Last activity: 2026-02-16 -- Plan 05-06 (Split oversized test files) complete
+Last activity: 2026-02-16 -- Plan 05-07 (Split remaining oversized test files) complete
 
-Progress: [███████░░░] 75% (6/8 plans)
+Progress: [████████░░] 87% (7/8 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
+- Total plans completed: 23
 - Average duration: ~9min
-- Total execution time: ~3.5 hours
+- Total execution time: ~4 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████░░░] 75% (6/8 plans)
 | 02-memory-performance-tuning | 2 | ~12min | ~6min |
 | 03-code-quality-standardization | 3 | ~25min | ~8min |
 | 04-architecture-restructuring | 6 | ~55min | ~9min |
-| 05-deep-architecture-improvements | 6 | ~131min | ~22min |
+| 05-deep-architecture-improvements | 7 | ~176min | ~25min |
 
 **Recent Trend:**
-- Last 5 plans: 05-02, 05-03, 05-04, 05-05, 05-06
-- Trend: Stable ~15-20min per plan
+- Last 5 plans: 05-03, 05-04, 05-05, 05-06, 05-07
+- Trend: Stable ~20-45min per plan
 
 ## Accumulated Context
 
@@ -99,6 +99,9 @@ Recent decisions affecting current work:
 - [05-06]: Shared test helpers extracted to *_helpers_test.go (setupTestDB, assertRoleUsecaseAppError)
 - [05-06]: Domain-specific mock naming: {domain}_mocks_test.go; test splits by concern: *_crud_test.go, *_status_test.go, etc.
 
+- [05-07]: Split rbac_helper_test.go with BuildRoleDetailResponse in check file to keep setup under 500 lines
+- [05-07]: TUS test split pattern: init (helpers, slot checks, initiate, info/status) vs chunk (handle chunk, completion, cancel)
+
 ### Pending Todos
 
 None yet.
@@ -111,5 +114,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 05-06-PLAN.md -- Split oversized test files complete, 13 test files + test_mocks.go split into 45 focused files under 500 lines
+Stopped at: Completed 05-07-PLAN.md -- Split remaining oversized test files complete, 14 test files split into 28 focused files under 500 lines
 Resume file: None
