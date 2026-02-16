@@ -1,6 +1,7 @@
 package repo_test
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
@@ -26,7 +27,8 @@ func TestProjectRepository_Create_Success(t *testing.T) {
 	}
 
 	projectRepo := repo.NewProjectRepository(db)
-	err = projectRepo.Create(project)
+	ctx := context.Background()
+	err = projectRepo.Create(ctx, project)
 	assert.NoError(t, err)
 	assert.NotZero(t, project.ID)
 }
@@ -49,7 +51,8 @@ func TestProjectRepository_GetByID_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	projectRepo := repo.NewProjectRepository(db)
-	result, err := projectRepo.GetByID(project.ID)
+	ctx := context.Background()
+	result, err := projectRepo.GetByID(ctx, project.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, project.ID, result.ID)
@@ -74,8 +77,9 @@ func TestProjectRepository_GetByIDs_Success(t *testing.T) {
 	}
 
 	projectRepo := repo.NewProjectRepository(db)
+	ctx := context.Background()
 	ids := []uint{projects[0].ID, projects[1].ID}
-	result, err := projectRepo.GetByIDs(ids, userID)
+	result, err := projectRepo.GetByIDs(ctx, ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 }
@@ -98,8 +102,9 @@ func TestProjectRepository_GetByIDsForUser_Success(t *testing.T) {
 	}
 
 	projectRepo := repo.NewProjectRepository(db)
+	ctx := context.Background()
 	ids := []uint{projects[0].ID, projects[1].ID}
-	result, err := projectRepo.GetByIDs(ids, userID)
+	result, err := projectRepo.GetByIDs(ctx, ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 }
@@ -124,27 +129,28 @@ func TestProjectRepository_GetByUserID_Success(t *testing.T) {
 	}
 
 	projectRepo := repo.NewProjectRepository(db)
+	ctx := context.Background()
 
 	// Test without filters
-	result, total, err := projectRepo.GetByUserID(userID, "", 0, "", 1, 10)
+	result, total, err := projectRepo.GetByUserID(ctx, userID, "", 0, "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 	assert.Equal(t, 2, total)
 
 	// Test with search
-	result, total, err = projectRepo.GetByUserID(userID, "Project 1", 0, "", 1, 10)
+	result, total, err = projectRepo.GetByUserID(ctx, userID, "Project 1", 0, "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with semester filter
-	result, total, err = projectRepo.GetByUserID(userID, "", 2, "", 1, 10)
+	result, total, err = projectRepo.GetByUserID(ctx, userID, "", 2, "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with category filter
-	result, total, err = projectRepo.GetByUserID(userID, "", 0, "website", 1, 10)
+	result, total, err = projectRepo.GetByUserID(ctx, userID, "", 0, "website", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
@@ -169,7 +175,8 @@ func TestProjectRepository_CountByUserID_Success(t *testing.T) {
 	}
 
 	projectRepo := repo.NewProjectRepository(db)
-	count, err := projectRepo.CountByUserID(userID)
+	ctx := context.Background()
+	count, err := projectRepo.CountByUserID(ctx, userID)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
 }
@@ -192,9 +199,10 @@ func TestProjectRepository_Update_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	projectRepo := repo.NewProjectRepository(db)
+	ctx := context.Background()
 	project.NamaProject = "New Name"
 	project.Kategori = "mobile"
-	err = projectRepo.Update(project)
+	err = projectRepo.Update(ctx, project)
 	assert.NoError(t, err)
 
 	// Verify update
@@ -223,7 +231,8 @@ func TestProjectRepository_Delete_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	projectRepo := repo.NewProjectRepository(db)
-	err = projectRepo.Delete(project.ID)
+	ctx := context.Background()
+	err = projectRepo.Delete(ctx, project.ID)
 	assert.NoError(t, err)
 
 	// Verify deletion

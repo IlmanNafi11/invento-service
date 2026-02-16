@@ -3,8 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	"errors"
-	
-	"invento-service/internal/domain"
+	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"net/http/httptest"
 	"testing"

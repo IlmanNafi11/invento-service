@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http/httptest"
@@ -14,7 +15,6 @@ import (
 
 	"invento-service/internal/controller/base"
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/rbac"
@@ -26,7 +26,7 @@ type MockModulUsecase struct {
 	mock.Mock
 }
 
-func (m *MockModulUsecase) GetList(userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error) {
+func (m *MockModulUsecase) GetList(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error) {
 	args := m.Called(userID, search, filterType, filterStatus, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -34,7 +34,7 @@ func (m *MockModulUsecase) GetList(userID string, search string, filterType stri
 	return args.Get(0).(*dto.ModulListData), args.Error(1)
 }
 
-func (m *MockModulUsecase) GetByID(modulID string, userID string) (*dto.ModulResponse, error) {
+func (m *MockModulUsecase) GetByID(ctx context.Context, modulID string, userID string) (*dto.ModulResponse, error) {
 	args := m.Called(modulID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -42,17 +42,17 @@ func (m *MockModulUsecase) GetByID(modulID string, userID string) (*dto.ModulRes
 	return args.Get(0).(*dto.ModulResponse), args.Error(1)
 }
 
-func (m *MockModulUsecase) UpdateMetadata(modulID string, userID string, req dto.UpdateModulRequest) error {
+func (m *MockModulUsecase) UpdateMetadata(ctx context.Context, modulID string, userID string, req dto.UpdateModulRequest) error {
 	args := m.Called(modulID, userID, req)
 	return args.Error(0)
 }
 
-func (m *MockModulUsecase) Delete(modulID string, userID string) error {
+func (m *MockModulUsecase) Delete(ctx context.Context, modulID string, userID string) error {
 	args := m.Called(modulID, userID)
 	return args.Error(0)
 }
 
-func (m *MockModulUsecase) Download(userID string, modulIDs []string) (string, error) {
+func (m *MockModulUsecase) Download(ctx context.Context, userID string, modulIDs []string) (string, error) {
 	args := m.Called(userID, modulIDs)
 	if args.Get(0) == nil {
 		return "", args.Error(1)

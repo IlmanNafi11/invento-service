@@ -1,6 +1,7 @@
 package repo_test
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
@@ -21,7 +22,8 @@ func TestRoleRepository_Create_Success(t *testing.T) {
 	}
 
 	roleRepo := repo.NewRoleRepository(db)
-	err = roleRepo.Create(role)
+	ctx := context.Background()
+	err = roleRepo.Create(ctx, role)
 	assert.NoError(t, err)
 	assert.NotZero(t, role.ID)
 
@@ -45,7 +47,8 @@ func TestRoleRepository_GetByID_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	roleRepo := repo.NewRoleRepository(db)
-	result, err := roleRepo.GetByID(role.ID)
+	ctx := context.Background()
+	result, err := roleRepo.GetByID(ctx, role.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, role.ID, result.ID)
@@ -65,7 +68,8 @@ func TestRoleRepository_GetByName_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	roleRepo := repo.NewRoleRepository(db)
-	result, err := roleRepo.GetByName("moderator")
+	ctx := context.Background()
+	result, err := roleRepo.GetByName(ctx, "moderator")
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, "moderator", result.NamaRole)
@@ -84,8 +88,9 @@ func TestRoleRepository_Update_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	roleRepo := repo.NewRoleRepository(db)
+	ctx := context.Background()
 	role.NamaRole = "newname"
-	err = roleRepo.Update(role)
+	err = roleRepo.Update(ctx, role)
 	assert.NoError(t, err)
 
 	// Verify update
@@ -108,7 +113,8 @@ func TestRoleRepository_Delete_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	roleRepo := repo.NewRoleRepository(db)
-	err = roleRepo.Delete(role.ID)
+	ctx := context.Background()
+	err = roleRepo.Delete(ctx, role.ID)
 	assert.NoError(t, err)
 
 	// Verify deletion
@@ -135,15 +141,16 @@ func TestRoleRepository_GetAll_Success(t *testing.T) {
 	}
 
 	roleRepo := repo.NewRoleRepository(db)
+	ctx := context.Background()
 
 	// Test without filters
-	result, total, err := roleRepo.GetAll("", 1, 10)
+	result, total, err := roleRepo.GetAll(ctx, "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 3)
 	assert.Equal(t, 3, total)
 
 	// Test pagination
-	result, total, err = roleRepo.GetAll("", 1, 2)
+	result, total, err = roleRepo.GetAll(ctx, "", 1, 2)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 	assert.Equal(t, 3, total)

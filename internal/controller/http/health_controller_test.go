@@ -3,7 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/domain"
+	dto "invento-service/internal/dto"
 	"net/http/httptest"
 	"testing"
 	"time"

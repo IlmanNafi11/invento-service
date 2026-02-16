@@ -157,7 +157,7 @@ func TestUserController_GetUserList_Success(t *testing.T) {
 		Limit: 10,
 	}
 
-	mockUserUC.On("GetUserList", params).Return(expectedData, nil)
+	mockUserUC.On("GetUserList", mock.Anything, params).Return(expectedData, nil)
 
 	req := app_testing.GetRequestURL("/api/v1/user", map[string]string{
 		"page":  "1",
@@ -209,7 +209,7 @@ func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 		Limit:      10,
 	}
 
-	mockUserUC.On("GetUserList", params).Return(expectedData, nil)
+	mockUserUC.On("GetUserList", mock.Anything, params).Return(expectedData, nil)
 
 	req := app_testing.GetRequestURL("/api/v1/user", map[string]string{
 		"search":      "admin",
@@ -242,7 +242,7 @@ func TestUserController_UpdateUserRole_Success(t *testing.T) {
 		Role: "admin",
 	}
 
-	mockUserUC.On("UpdateUserRole", "1", "admin").Return(nil)
+	mockUserUC.On("UpdateUserRole", mock.Anything, "1", "admin").Return(nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
@@ -275,7 +275,7 @@ func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("UpdateUserRole", "999", "admin").Return(appErr)
+	mockUserUC.On("UpdateUserRole", mock.Anything, "999", "admin").Return(appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("PUT", "/api/v1/user/999/role", bytes.NewReader(bodyBytes))
@@ -297,7 +297,7 @@ func TestUserController_DeleteUser_Success(t *testing.T) {
 	app := fiber.New()
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
 
-	mockUserUC.On("DeleteUser", "1").Return(nil)
+	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(nil)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/user/1", nil)
 
@@ -351,7 +351,7 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 		Limit: 10,
 	}
 
-	mockUserUC.On("GetUserFiles", "1", params).Return(expectedData, nil)
+	mockUserUC.On("GetUserFiles", mock.Anything, "1", params).Return(expectedData, nil)
 
 	req := app_testing.GetRequestURL("/api/v1/user/1/files", map[string]string{
 		"page":  "1",
@@ -402,7 +402,7 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 		Limit:  10,
 	}
 
-	mockUserUC.On("GetUserFiles", "1", params).Return(expectedData, nil)
+	mockUserUC.On("GetUserFiles", mock.Anything, "1", params).Return(expectedData, nil)
 
 	req := app_testing.GetRequestURL("/api/v1/user/1/files", map[string]string{
 		"search": "project",
@@ -441,7 +441,7 @@ func TestUserController_GetProfile_Success(t *testing.T) {
 		JumlahModul:   10,
 	}
 
-	mockUserUC.On("GetProfile", "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
+	mockUserUC.On("GetProfile", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
 	req := httptest.NewRequest("GET", "/api/v1/profile", nil)
@@ -486,7 +486,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 		JenisKelamin: "Perempuan",
 	}
 
-	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(expectedData, nil)
+	mockUserUC.On("UpdateProfile", mock.Anything, "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(expectedData, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "user")
@@ -542,7 +542,7 @@ func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 	part.Write([]byte("mock photo content"))
 	writer.Close()
 
-	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, mock.Anything).Return(expectedData, nil)
+	mockUserUC.On("UpdateProfile", mock.Anything, "00000000-0000-0000-0000-000000000001", reqBody, mock.Anything).Return(expectedData, nil)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
 	req := httptest.NewRequest("PUT", "/api/v1/profile", body)
@@ -581,7 +581,7 @@ func TestUserController_GetUserPermissions_Success(t *testing.T) {
 		},
 	}
 
-	mockUserUC.On("GetUserPermissions", "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
+	mockUserUC.On("GetUserPermissions", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
 	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
@@ -612,7 +612,7 @@ func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 
 	expectedData := []dto.UserPermissionItem{}
 
-	mockUserUC.On("GetUserPermissions", "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
+	mockUserUC.On("GetUserPermissions", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(expectedData, nil)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "user")
 	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
@@ -653,7 +653,7 @@ func TestUserController_DownloadUserFiles_Success(t *testing.T) {
 	assert.NoError(t, err)
 	tmpFile.Close()
 
-	mockUserUC.On("DownloadUserFiles", "1", []string{"1", "2"}, []string{"3", "4"}).Return(tmpFile.Name(), nil)
+	mockUserUC.On("DownloadUserFiles", mock.Anything, "1", []string{"1", "2"}, []string{"3", "4"}).Return(tmpFile.Name(), nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/user/1/download", bytes.NewReader(bodyBytes))
@@ -711,7 +711,7 @@ func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("DownloadUserFiles", "999", []string{"1", "2"}, []string{}).Return("", appErr)
+	mockUserUC.On("DownloadUserFiles", mock.Anything, "999", []string{"1", "2"}, []string{}).Return("", appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/user/999/download", bytes.NewReader(bodyBytes))
@@ -738,7 +738,7 @@ func TestUserController_GetUserList_InternalError(t *testing.T) {
 		Limit: 10,
 	}
 
-	mockUserUC.On("GetUserList", params).Return(nil, errors.New("database error"))
+	mockUserUC.On("GetUserList", mock.Anything, params).Return(nil, errors.New("database error"))
 
 	req := app_testing.GetRequestURL("/api/v1/user", map[string]string{
 		"page":  "1",
@@ -788,7 +788,7 @@ func TestUserController_GetUserFiles_UserNotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("GetUserFiles", "999", params).Return(nil, appErr)
+	mockUserUC.On("GetUserFiles", mock.Anything, "999", params).Return(nil, appErr)
 
 	req := app_testing.GetRequestURL("/api/v1/user/999/files", map[string]string{
 		"page":  "1",
@@ -816,7 +816,7 @@ func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(nil, appErr)
+	mockUserUC.On("UpdateProfile", mock.Anything, "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(nil, appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "user")
@@ -897,7 +897,7 @@ func TestUserController_UpdateUserRole_Forbidden(t *testing.T) {
 	}
 
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses untuk mengubah role ini")
-	mockUserUC.On("UpdateUserRole", "1", "admin").Return(appErr)
+	mockUserUC.On("UpdateUserRole", mock.Anything, "1", "admin").Return(appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
@@ -920,7 +920,7 @@ func TestUserController_DeleteUser_Forbidden(t *testing.T) {
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
 
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses untuk menghapus user ini")
-	mockUserUC.On("DeleteUser", "1").Return(appErr)
+	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(appErr)
 
 	req := httptest.NewRequest("DELETE", "/api/v1/user/1", nil)
 
@@ -940,7 +940,7 @@ func TestUserController_DeleteUser_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
 
-	mockUserUC.On("DeleteUser", "1").Return(errors.New("database error"))
+	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(errors.New("database error"))
 
 	req := httptest.NewRequest("DELETE", "/api/v1/user/1", nil)
 
@@ -965,7 +965,7 @@ func TestUserController_GetUserFiles_InternalError(t *testing.T) {
 		Limit: 10,
 	}
 
-	mockUserUC.On("GetUserFiles", "1", params).Return(nil, errors.New("database error"))
+	mockUserUC.On("GetUserFiles", mock.Anything, "1", params).Return(nil, errors.New("database error"))
 
 	req := app_testing.GetRequestURL("/api/v1/user/1/files", map[string]string{
 		"page":  "1",
@@ -991,7 +991,7 @@ func TestUserController_UpdateUserRole_InternalError(t *testing.T) {
 		Role: "admin",
 	}
 
-	mockUserUC.On("UpdateUserRole", "1", "admin").Return(errors.New("database error"))
+	mockUserUC.On("UpdateUserRole", mock.Anything, "1", "admin").Return(errors.New("database error"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
@@ -1018,7 +1018,7 @@ func TestUserController_DownloadUserFiles_InternalError(t *testing.T) {
 		ModulIDs:   []uint{},
 	}
 
-	mockUserUC.On("DownloadUserFiles", "1", []string{"1"}, []string{}).Return("", errors.New("zip creation failed"))
+	mockUserUC.On("DownloadUserFiles", mock.Anything, "1", []string{"1"}, []string{}).Return("", errors.New("zip creation failed"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/user/1/download", bytes.NewReader(bodyBytes))
@@ -1039,7 +1039,7 @@ func TestUserController_GetProfile_InternalError(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Get("/api/v1/profile", controller.GetProfile)
 
-	mockUserUC.On("GetProfile", "00000000-0000-0000-0000-000000000001").Return(nil, errors.New("database error"))
+	mockUserUC.On("GetProfile", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil, errors.New("database error"))
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
 	req := httptest.NewRequest("GET", "/api/v1/profile", nil)
@@ -1062,7 +1062,7 @@ func TestUserController_GetProfile_NotFound(t *testing.T) {
 	app.Get("/api/v1/profile", controller.GetProfile)
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("GetProfile", "00000000-0000-0000-0000-000000000001").Return(nil, appErr)
+	mockUserUC.On("GetProfile", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil, appErr)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
 	req := httptest.NewRequest("GET", "/api/v1/profile", nil)
@@ -1084,7 +1084,7 @@ func TestUserController_GetUserPermissions_InternalError(t *testing.T) {
 	app := setupTestAppWithAuthForUser(controller)
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
 
-	mockUserUC.On("GetUserPermissions", "00000000-0000-0000-0000-000000000001").Return(nil, errors.New("db error"))
+	mockUserUC.On("GetUserPermissions", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil, errors.New("db error"))
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
 	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
@@ -1107,7 +1107,7 @@ func TestUserController_GetUserPermissions_NotFound(t *testing.T) {
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("GetUserPermissions", "00000000-0000-0000-0000-000000000001").Return(nil, appErr)
+	mockUserUC.On("GetUserPermissions", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil, appErr)
 
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "admin")
 	req := httptest.NewRequest("GET", "/api/v1/user/permissions", nil)
@@ -1138,7 +1138,7 @@ func TestUserController_GetUsersForRole_Success(t *testing.T) {
 		},
 	}
 
-	mockUserUC.On("GetUsersForRole", uint(1)).Return(expectedData, nil)
+	mockUserUC.On("GetUsersForRole", mock.Anything, uint(1)).Return(expectedData, nil)
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/role/1/users", nil, "")
 
@@ -1161,7 +1161,7 @@ func TestUserController_GetUsersForRole_NotFound(t *testing.T) {
 	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
 
 	appErr := apperrors.NewNotFoundError("Role tidak ditemukan")
-	mockUserUC.On("GetUsersForRole", uint(999)).Return(nil, appErr)
+	mockUserUC.On("GetUsersForRole", mock.Anything, uint(999)).Return(nil, appErr)
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/role/999/users", nil, "")
 
@@ -1177,7 +1177,7 @@ func TestUserController_GetUsersForRole_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
 
-	mockUserUC.On("GetUsersForRole", uint(1)).Return(nil, errors.New("db error"))
+	mockUserUC.On("GetUsersForRole", mock.Anything, uint(1)).Return(nil, errors.New("db error"))
 
 	resp := app_testing.MakeRequest(app, "GET", "/api/v1/role/1/users", nil, "")
 
@@ -1197,7 +1197,7 @@ func TestUserController_BulkAssignRole_Success(t *testing.T) {
 		UserIDs: []string{"user-1", "user-2"},
 	}
 
-	mockUserUC.On("BulkAssignRole", []string{"user-1", "user-2"}, uint(1)).Return(nil)
+	mockUserUC.On("BulkAssignRole", mock.Anything, []string{"user-1", "user-2"}, uint(1)).Return(nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/role/1/users/bulk", bytes.NewReader(bodyBytes))
@@ -1229,7 +1229,7 @@ func TestUserController_BulkAssignRole_NotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("Role tidak ditemukan")
-	mockUserUC.On("BulkAssignRole", []string{"user-1", "user-2"}, uint(999)).Return(appErr)
+	mockUserUC.On("BulkAssignRole", mock.Anything, []string{"user-1", "user-2"}, uint(999)).Return(appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/role/999/users/bulk", bytes.NewReader(bodyBytes))
@@ -1275,7 +1275,7 @@ func TestUserController_BulkAssignRole_InternalError(t *testing.T) {
 		UserIDs: []string{"user-1", "user-2"},
 	}
 
-	mockUserUC.On("BulkAssignRole", []string{"user-1", "user-2"}, uint(1)).Return(errors.New("db error"))
+	mockUserUC.On("BulkAssignRole", mock.Anything, []string{"user-1", "user-2"}, uint(1)).Return(errors.New("db error"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/api/v1/role/1/users/bulk", bytes.NewReader(bodyBytes))
@@ -1301,7 +1301,7 @@ func TestUserController_UpdateProfile_InternalError(t *testing.T) {
 		JenisKelamin: "Perempuan",
 	}
 
-	mockUserUC.On("UpdateProfile", "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(nil, errors.New("db error"))
+	mockUserUC.On("UpdateProfile", mock.Anything, "00000000-0000-0000-0000-000000000001", reqBody, (*multipart.FileHeader)(nil)).Return(nil, errors.New("db error"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	token := app_testing.GenerateTestToken("00000000-0000-0000-0000-000000000001", "test@example.com", "user")

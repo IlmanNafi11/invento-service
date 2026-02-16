@@ -1,9 +1,11 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
@@ -35,9 +37,10 @@ func TestCreateModul_Success(t *testing.T) {
 		Status:    "pending",
 	}
 
-	mockModulRepo.On("Create", mock.AnythingOfType("*domain.Modul")).Return(nil)
+	mockModulRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Modul")).Return(nil)
 
-	err := mockModulRepo.Create(modul)
+	ctx := context.Background()
+	err := mockModulRepo.Create(ctx, modul)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, modul)
@@ -68,9 +71,10 @@ func TestGetModulByID_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 
-	mockModulRepo.On("GetByID", modulID).Return(expectedModul, nil)
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(expectedModul, nil)
 
-	modul, err := mockModulRepo.GetByID(modulID)
+	ctx := context.Background()
+	modul, err := mockModulRepo.GetByID(ctx, modulID)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, modul)
@@ -87,9 +91,10 @@ func TestGetModulByID_NotFound(t *testing.T) {
 
 	modulID := "550e8400-e29b-41d4-a716-446655440999"
 
-	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound)
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(nil, apperrors.ErrRecordNotFound)
 
-	modul, err := mockModulRepo.GetByID(modulID)
+	ctx := context.Background()
+	modul, err := mockModulRepo.GetByID(ctx, modulID)
 
 	assert.Error(t, err)
 	assert.Nil(t, modul)
@@ -134,10 +139,11 @@ func TestListModuls_Success(t *testing.T) {
 
 	total := int64(2)
 
-	mockModulRepo.On("GetByUserID", userID, search, filterType, filterStatus, page, limit).
+	mockModulRepo.On("GetByUserID", mock.Anything, userID, search, filterType, filterStatus, page, limit).
 		Return(expectedModuls, int(total), nil)
 
-	moduls, count, err := mockModulRepo.GetByUserID(userID, search, filterType, filterStatus, page, limit)
+	ctx := context.Background()
+	moduls, count, err := mockModulRepo.GetByUserID(ctx, userID, search, filterType, filterStatus, page, limit)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, moduls)
@@ -185,9 +191,10 @@ func TestListModulsByProject_Success(t *testing.T) {
 		},
 	}
 
-	mockModulRepo.On("GetByIDs", ids, userID).Return(expectedModuls, nil)
+	mockModulRepo.On("GetByIDs", mock.Anything, ids, userID).Return(expectedModuls, nil)
 
-	moduls, err := mockModulRepo.GetByIDs(ids, userID)
+	ctx := context.Background()
+	moduls, err := mockModulRepo.GetByIDs(ctx, ids, userID)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, moduls)
@@ -221,10 +228,10 @@ func TestUpdateModul_Success(t *testing.T) {
 		Deskripsi: "Updated Deskripsi",
 	}
 
-	mockModulRepo.On("GetByID", "550e8400-e29b-41d4-a716-446655440000").Return(existingModul, nil)
-	mockModulRepo.On("UpdateMetadata", mock.AnythingOfType("*domain.Modul")).Return(nil)
+	mockModulRepo.On("GetByID", mock.Anything, "550e8400-e29b-41d4-a716-446655440000").Return(existingModul, nil)
+	mockModulRepo.On("UpdateMetadata", mock.Anything, mock.AnythingOfType("*domain.Modul")).Return(nil)
 
-	err := modulUc.UpdateMetadata("550e8400-e29b-41d4-a716-446655440000", "user-1", req)
+	err := modulUc.UpdateMetadata(context.Background(), "550e8400-e29b-41d4-a716-446655440000", "user-1", req)
 
 	assert.NoError(t, err)
 	mockModulRepo.AssertExpectations(t)
@@ -252,10 +259,10 @@ func TestDeleteModul_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 
-	mockModulRepo.On("GetByID", modulID).Return(existingModul, nil)
-	mockModulRepo.On("Delete", modulID).Return(nil)
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(existingModul, nil)
+	mockModulRepo.On("Delete", mock.Anything, modulID).Return(nil)
 
-	err := modulUc.Delete(modulID, userID)
+	err := modulUc.Delete(context.Background(), modulID, userID)
 
 	assert.NoError(t, err)
 	mockModulRepo.AssertExpectations(t)
@@ -281,9 +288,10 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 
 	userID := "user-1"
 
-	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(int64(1), nil)
+	mockTusModulUploadRepo.On("CountActiveByUserID", mock.Anything, userID).Return(int64(1), nil)
 
-	response, err := mockTusModulUploadRepo.CountActiveByUserID(userID)
+	ctx := context.Background()
+	response, err := mockTusModulUploadRepo.CountActiveByUserID(ctx, userID)
 
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), response)
@@ -316,10 +324,10 @@ func TestInitiateUpload_Success(t *testing.T) {
 	// TUS metadata format: "key base64value,key2 base64value2"
 	metadata := "judul VGVzdCBKdWR1bA==,deskripsi VGVzdCBEZXNrcmlwc2k="
 
-	mockTusModulUploadRepo.On("CountActiveByUserID", userID).Return(int64(0), nil)
-	mockTusModulUploadRepo.On("Create", mock.AnythingOfType("*domain.TusModulUpload")).Return(nil)
+	mockTusModulUploadRepo.On("CountActiveByUserID", mock.Anything, userID).Return(int64(0), nil)
+	mockTusModulUploadRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.TusModulUpload")).Return(nil)
 
-	response, err := tusModulUc.InitiateModulUpload(userID, fileSize, metadata)
+	response, err := tusModulUc.InitiateModulUpload(context.Background(), userID, fileSize, metadata)
 
 	// Cleanup
 	if response != nil && response.UploadID != "" {
@@ -361,7 +369,7 @@ func TestUploadChunk_Success(t *testing.T) {
 		UserID:         userID,
 		UploadType:     domain.UploadTypeModulCreate,
 		UploadURL:      "/modul/upload/" + uploadID,
-		UploadMetadata: dto.TusModulUploadInitRequest{Judul: "Test Modul", Deskripsi: "Test Deskripsi"},
+		UploadMetadata: domain.TusModulUploadMetadata{Judul: "Test Modul", Deskripsi: "Test Deskripsi"},
 		FileSize:       1024 * 1024,
 		CurrentOffset:  0,
 		Status:         domain.UploadStatusPending,
@@ -374,14 +382,15 @@ func TestUploadChunk_Success(t *testing.T) {
 	newOffset := int64(512 * 1024) // 512 KB
 	progress := 50.0
 
-	mockTusModulUploadRepo.On("GetByID", uploadID).Return(existingUpload, nil)
-	mockTusModulUploadRepo.On("UpdateOffset", uploadID, newOffset, progress).Return(nil)
+	mockTusModulUploadRepo.On("GetByID", mock.Anything, uploadID).Return(existingUpload, nil)
+	mockTusModulUploadRepo.On("UpdateOffset", mock.Anything, uploadID, newOffset, progress).Return(nil)
 
-	upload, err := mockTusModulUploadRepo.GetByID(uploadID)
+	ctx := context.Background()
+	upload, err := mockTusModulUploadRepo.GetByID(ctx, uploadID)
 	assert.NoError(t, err)
 	assert.NotNil(t, upload)
 
-	err = mockTusModulUploadRepo.UpdateOffset(uploadID, newOffset, progress)
+	err = mockTusModulUploadRepo.UpdateOffset(ctx, uploadID, newOffset, progress)
 	assert.NoError(t, err)
 
 	mockTusModulUploadRepo.AssertExpectations(t)
@@ -422,10 +431,10 @@ func TestModulUsecase_GetList_Success(t *testing.T) {
 		},
 	}
 
-	mockModulRepo.On("GetByUserID", userID, search, filterType, filterStatus, page, limit).
+	mockModulRepo.On("GetByUserID", mock.Anything, userID, search, filterType, filterStatus, page, limit).
 		Return(expectedModuls, 2, nil)
 
-	result, err := modulUC.GetList(userID, search, filterType, filterStatus, page, limit)
+	result, err := modulUC.GetList(context.Background(), userID, search, filterType, filterStatus, page, limit)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -442,10 +451,10 @@ func TestModulUsecase_GetList_Error(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	mockModulRepo.On("GetByUserID", "user-1", "", "", "", 1, 10).
+	mockModulRepo.On("GetByUserID", mock.Anything, "user-1", "", "", "", 1, 10).
 		Return(nil, 0, assert.AnError)
 
-	result, err := modulUC.GetList("user-1", "", "", "", 1, 10)
+	result, err := modulUC.GetList(context.Background(), "user-1", "", "", "", 1, 10)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -475,10 +484,10 @@ func TestModulUsecase_GetList_WithFilters(t *testing.T) {
 		},
 	}
 
-	mockModulRepo.On("GetByUserID", "user-1", "test", "application/pdf", "completed", 1, 10).
+	mockModulRepo.On("GetByUserID", mock.Anything, "user-1", "test", "application/pdf", "completed", 1, 10).
 		Return(expectedModuls, 1, nil)
 
-	result, err := modulUC.GetList("user-1", "test", "application/pdf", "completed", 1, 10)
+	result, err := modulUC.GetList(context.Background(), "user-1", "test", "application/pdf", "completed", 1, 10)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -509,9 +518,9 @@ func TestModulUsecase_GetByID_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 
-	mockModulRepo.On("GetByID", modulID).Return(expectedModul, nil)
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(expectedModul, nil)
 
-	result, err := modulUC.GetByID(modulID, userID)
+	result, err := modulUC.GetByID(context.Background(), modulID, userID)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -529,9 +538,9 @@ func TestModulUsecase_GetByID_NotFound(t *testing.T) {
 	modulID := "550e8400-e29b-41d4-a716-446655440999"
 	userID := "user-1"
 
-	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound)
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(nil, apperrors.ErrRecordNotFound)
 
-	result, err := modulUC.GetByID(modulID, userID)
+	result, err := modulUC.GetByID(context.Background(), modulID, userID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -564,9 +573,9 @@ func TestModulUsecase_GetByID_Unauthorized(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 
-	mockModulRepo.On("GetByID", modulID).Return(expectedModul, nil)
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(expectedModul, nil)
 
-	result, err := modulUC.GetByID(modulID, userID)
+	result, err := modulUC.GetByID(context.Background(), modulID, userID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -600,9 +609,9 @@ func TestModulUsecase_Download_SingleFile(t *testing.T) {
 		},
 	}
 
-	mockModulRepo.On("GetByIDs", modulIDs, userID).Return(expectedModuls, nil)
+	mockModulRepo.On("GetByIDs", mock.Anything, modulIDs, userID).Return(expectedModuls, nil)
 
-	result, err := modulUC.Download(userID, modulIDs)
+	result, err := modulUC.Download(context.Background(), userID, modulIDs)
 
 	assert.NoError(t, err)
 	assert.Equal(t, tempFile.Name(), result)
@@ -618,7 +627,7 @@ func TestModulUsecase_Download_EmptyIDs(t *testing.T) {
 	userID := "user-1"
 	modulIDs := []string{}
 
-	result, err := modulUC.Download(userID, modulIDs)
+	result, err := modulUC.Download(context.Background(), userID, modulIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -635,9 +644,9 @@ func TestModulUsecase_Download_NotFound(t *testing.T) {
 	userID := "user-1"
 	modulIDs := []string{"550e8400-e29b-41d4-a716-446655440001", "550e8400-e29b-41d4-a716-446655440002"}
 
-	mockModulRepo.On("GetByIDs", modulIDs, userID).Return([]domain.Modul{}, nil)
+	mockModulRepo.On("GetByIDs", mock.Anything, modulIDs, userID).Return([]domain.Modul{}, nil)
 
-	result, err := modulUC.Download(userID, modulIDs)
+	result, err := modulUC.Download(context.Background(), userID, modulIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -656,9 +665,9 @@ func TestModulUsecase_UpdateMetadata_NotFound(t *testing.T) {
 	userID := "user-1"
 	req := dto.UpdateModulRequest{Judul: "Baru"}
 
-	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
 
-	err := modulUC.UpdateMetadata(modulID, userID, req)
+	err := modulUC.UpdateMetadata(context.Background(), modulID, userID, req)
 	require.Error(t, err)
 	var appErr *apperrors.AppError
 	require.True(t, errors.As(err, &appErr))
@@ -674,9 +683,9 @@ func TestModulUsecase_UpdateMetadata_Unauthorized(t *testing.T) {
 	modulID := "550e8400-e29b-41d4-a716-446655440001"
 	req := dto.UpdateModulRequest{Judul: "Baru"}
 
-	mockModulRepo.On("GetByID", modulID).Return(&domain.Modul{ID: modulID, UserID: "owner"}, nil).Once()
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(&domain.Modul{ID: modulID, UserID: "owner"}, nil).Once()
 
-	err := modulUC.UpdateMetadata(modulID, "user-1", req)
+	err := modulUC.UpdateMetadata(context.Background(), modulID, "user-1", req)
 	require.Error(t, err)
 	var appErr *apperrors.AppError
 	require.True(t, errors.As(err, &appErr))
@@ -691,9 +700,9 @@ func TestModulUsecase_Delete_NotFound(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulID := "550e8400-e29b-41d4-a716-446655440999"
-	mockModulRepo.On("GetByID", modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(nil, apperrors.ErrRecordNotFound).Once()
 
-	err := modulUC.Delete(modulID, "user-1")
+	err := modulUC.Delete(context.Background(), modulID, "user-1")
 	require.Error(t, err)
 	var appErr *apperrors.AppError
 	require.True(t, errors.As(err, &appErr))
@@ -707,9 +716,9 @@ func TestModulUsecase_Delete_Unauthorized(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulID := "550e8400-e29b-41d4-a716-446655440001"
-	mockModulRepo.On("GetByID", modulID).Return(&domain.Modul{ID: modulID, UserID: "owner"}, nil).Once()
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(&domain.Modul{ID: modulID, UserID: "owner"}, nil).Once()
 
-	err := modulUC.Delete(modulID, "user-1")
+	err := modulUC.Delete(context.Background(), modulID, "user-1")
 	require.Error(t, err)
 	var appErr *apperrors.AppError
 	require.True(t, errors.As(err, &appErr))
@@ -724,9 +733,9 @@ func TestModulUsecase_Download_RepositoryError(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulIDs := []string{"550e8400-e29b-41d4-a716-446655440001"}
-	mockModulRepo.On("GetByIDs", modulIDs, "user-1").Return(nil, assert.AnError).Once()
+	mockModulRepo.On("GetByIDs", mock.Anything, modulIDs, "user-1").Return(nil, assert.AnError).Once()
 
-	result, err := modulUC.Download("user-1", modulIDs)
+	result, err := modulUC.Download(context.Background(), "user-1", modulIDs)
 	require.Error(t, err)
 	assert.Empty(t, result)
 	var appErr *apperrors.AppError
@@ -740,10 +749,10 @@ func TestModulUsecase_GetList_InvalidPagination(t *testing.T) {
 	mockModulRepo := new(MockModulRepository)
 	modulUC := NewModulUsecase(mockModulRepo)
 
-	mockModulRepo.On("GetByUserID", "user-1", "", "", "", 1, 10).
+	mockModulRepo.On("GetByUserID", mock.Anything, "user-1", "", "", "", 1, 10).
 		Return([]dto.ModulListItem{}, 0, nil).Once()
 
-	result, err := modulUC.GetList("user-1", "", "", "", 0, 0)
+	result, err := modulUC.GetList(context.Background(), "user-1", "", "", "", 0, 0)
 	require.NoError(t, err)
 	require.NotNil(t, result)
 	assert.Equal(t, 1, result.Pagination.Page)
@@ -757,9 +766,9 @@ func TestModulUsecase_GetByID_RepositoryError(t *testing.T) {
 	modulUC := NewModulUsecase(mockModulRepo)
 
 	modulID := "550e8400-e29b-41d4-a716-446655440001"
-	mockModulRepo.On("GetByID", modulID).Return(nil, assert.AnError).Once()
+	mockModulRepo.On("GetByID", mock.Anything, modulID).Return(nil, assert.AnError).Once()
 
-	result, err := modulUC.GetByID(modulID, "user-1")
+	result, err := modulUC.GetByID(context.Background(), modulID, "user-1")
 	require.Error(t, err)
 	assert.Nil(t, result)
 	var appErr *apperrors.AppError

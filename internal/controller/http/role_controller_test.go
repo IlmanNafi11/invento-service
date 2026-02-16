@@ -231,7 +231,7 @@ func TestRoleController_ErrorCases(t *testing.T) {
 		{
 			name: "GetAvailablePermissions error",
 			testFunc: func(mockUC *MockRoleUsecase, app *fiber.App) (*http.Response, error) {
-				mockUC.On("GetAvailablePermissions").Return([]dto.ResourcePermissions{}, assert.AnError)
+				mockUC.On("GetAvailablePermissions", mock.Anything).Return([]dto.ResourcePermissions{}, assert.AnError)
 				req := httptest.NewRequest("GET", "/role/permissions", nil)
 				return app.Test(req)
 			},
@@ -240,7 +240,7 @@ func TestRoleController_ErrorCases(t *testing.T) {
 		{
 			name: "GetRoleDetail not found",
 			testFunc: func(mockUC *MockRoleUsecase, app *fiber.App) (*http.Response, error) {
-				mockUC.On("GetRoleDetail", uint(999)).Return(nil, apperrors.NewNotFoundError("role"))
+				mockUC.On("GetRoleDetail", mock.Anything, uint(999)).Return(nil, apperrors.NewNotFoundError("role"))
 				req := httptest.NewRequest("GET", "/role/999", nil)
 				return app.Test(req)
 			},
@@ -250,7 +250,7 @@ func TestRoleController_ErrorCases(t *testing.T) {
 			name: "CreateRole duplicate name",
 			testFunc: func(mockUC *MockRoleUsecase, app *fiber.App) (*http.Response, error) {
 				reqBody := dto.RoleCreateRequest{NamaRole: "admin", Permissions: map[string][]string{"user": {"read"}}}
-				mockUC.On("CreateRole", reqBody).Return(nil, apperrors.NewConflictError("nama role sudah ada"))
+				mockUC.On("CreateRole", mock.Anything, reqBody).Return(nil, apperrors.NewConflictError("nama role sudah ada"))
 				bodyBytes, _ := json.Marshal(reqBody)
 				req := httptest.NewRequest("POST", "/role", bytes.NewReader(bodyBytes))
 				req.Header.Set("Content-Type", "application/json")

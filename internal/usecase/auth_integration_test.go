@@ -4,6 +4,7 @@ import (
 	"context"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"testing"
 
@@ -76,67 +77,67 @@ func newIntegrationUserRepository(db *gorm.DB) *integrationUserRepository {
 	return &integrationUserRepository{db: db}
 }
 
-func (r *integrationUserRepository) GetByEmail(email string) (*domain.User, error) {
+func (r *integrationUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.Where("email = ? AND is_active = ?", email, true).Preload("Role").First(&user).Error
+	err := r.db.WithContext(ctx).Where("email = ? AND is_active = ?", email, true).Preload("Role").First(&user).Error
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *integrationUserRepository) GetByID(id string) (*domain.User, error) {
+func (r *integrationUserRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.Where("id = ? AND is_active = ?", id, true).Preload("Role").First(&user).Error
+	err := r.db.WithContext(ctx).Where("id = ? AND is_active = ?", id, true).Preload("Role").First(&user).Error
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *integrationUserRepository) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
+func (r *integrationUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
 	return nil, 0, 0, nil
 }
 
-func (r *integrationUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (r *integrationUserRepository) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	return nil, 0, nil
 }
 
-func (r *integrationUserRepository) GetByIDs(userIDs []string) ([]*domain.User, error) {
+func (r *integrationUserRepository) GetByIDs(ctx context.Context, userIDs []string) ([]*domain.User, error) {
 	return nil, nil
 }
 
-func (r *integrationUserRepository) Create(user *domain.User) error {
-	return r.db.Create(user).Error
+func (r *integrationUserRepository) Create(ctx context.Context, user *domain.User) error {
+	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *integrationUserRepository) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
+func (r *integrationUserRepository) GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	return nil, 0, nil
 }
 
-func (r *integrationUserRepository) UpdateRole(userID string, roleID *int) error {
-	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("role_id", roleID).Error
+func (r *integrationUserRepository) UpdateRole(ctx context.Context, userID string, roleID *int) error {
+	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", userID).Update("role_id", roleID).Error
 }
 
-func (r *integrationUserRepository) UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (r *integrationUserRepository) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
 	return nil
 }
 
-func (r *integrationUserRepository) Delete(userID string) error {
-	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
+func (r *integrationUserRepository) Delete(ctx context.Context, userID string) error {
+	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
 }
 
-func (r *integrationUserRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
+func (r *integrationUserRepository) GetByRoleID(ctx context.Context, roleID uint) ([]dto.UserListItem, error) {
 	var users []dto.UserListItem
-	err := r.db.Table("user_profiles").
+	err := r.db.WithContext(ctx).Table("user_profiles").
 		Select("id, email, name, role_id, is_active, created_at").
 		Where("role_id = ? AND is_active = ?", roleID, true).
 		Scan(&users).Error
 	return users, err
 }
 
-func (r *integrationUserRepository) BulkUpdateRole(userIDs []string, roleID uint) error {
-	return r.db.Model(&domain.User{}).Where("id IN ?", userIDs).Update("role_id", roleID).Error
+func (r *integrationUserRepository) BulkUpdateRole(ctx context.Context, userIDs []string, roleID uint) error {
+	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id IN ?", userIDs).Update("role_id", roleID).Error
 }
 
 type integrationRoleRepository struct {
@@ -147,37 +148,37 @@ func newIntegrationRoleRepository(db *gorm.DB) *integrationRoleRepository {
 	return &integrationRoleRepository{db: db}
 }
 
-func (r *integrationRoleRepository) Create(role *domain.Role) error {
-	return r.db.Create(role).Error
+func (r *integrationRoleRepository) Create(ctx context.Context, role *domain.Role) error {
+	return r.db.WithContext(ctx).Create(role).Error
 }
 
-func (r *integrationRoleRepository) GetByID(id uint) (*domain.Role, error) {
+func (r *integrationRoleRepository) GetByID(ctx context.Context, id uint) (*domain.Role, error) {
 	var role domain.Role
-	err := r.db.First(&role, id).Error
+	err := r.db.WithContext(ctx).First(&role, id).Error
 	if err != nil {
 		return nil, err
 	}
 	return &role, nil
 }
 
-func (r *integrationRoleRepository) GetByName(name string) (*domain.Role, error) {
+func (r *integrationRoleRepository) GetByName(ctx context.Context, name string) (*domain.Role, error) {
 	var role domain.Role
-	err := r.db.Where("nama_role = ?", name).First(&role).Error
+	err := r.db.WithContext(ctx).Where("nama_role = ?", name).First(&role).Error
 	if err != nil {
 		return nil, err
 	}
 	return &role, nil
 }
 
-func (r *integrationRoleRepository) Update(role *domain.Role) error {
-	return r.db.Save(role).Error
+func (r *integrationRoleRepository) Update(ctx context.Context, role *domain.Role) error {
+	return r.db.WithContext(ctx).Save(role).Error
 }
 
-func (r *integrationRoleRepository) Delete(id uint) error {
-	return r.db.Delete(&domain.Role{}, id).Error
+func (r *integrationRoleRepository) Delete(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Delete(&domain.Role{}, id).Error
 }
 
-func (r *integrationRoleRepository) GetAll(search string, page, limit int) ([]dto.RoleListItem, int, error) {
+func (r *integrationRoleRepository) GetAll(ctx context.Context, search string, page, limit int) ([]dto.RoleListItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -300,7 +301,7 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 		assert.Equal(t, "test@student.polije.ac.id", authResp.User.Email)
 
 		// Verify: User was created in database
-		savedUser, err := suite.userRepo.GetByEmail("test@student.polije.ac.id")
+		savedUser, err := suite.userRepo.GetByEmail(context.Background(), "test@student.polije.ac.id")
 		require.NoError(t, err)
 		assert.Equal(t, supabaseUserID, savedUser.ID)
 		assert.Equal(t, "Test User", savedUser.Name)

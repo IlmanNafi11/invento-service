@@ -1,7 +1,7 @@
 package httputil_test
 
 import (
-	"invento-service/internal/domain"
+	dto "invento-service/internal/dto"
 	"invento-service/internal/httputil"
 	"testing"
 

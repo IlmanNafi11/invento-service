@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"invento-service/internal/domain"
+	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
@@ -53,7 +54,7 @@ func TestTusUploadUsecase(t *testing.T) {
 		t.Run("available", func(t *testing.T) {
 			uc, _, _, _ := newTusUploadTestDeps(t)
 
-			res, err := uc.CheckUploadSlot("u1")
+			res, err := uc.CheckUploadSlot(context.Background(), "u1")
 			require.NoError(t, err)
 			assert.True(t, res.Available)
 			assert.False(t, res.ActiveUpload)
@@ -64,7 +65,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, _, _, manager := newTusUploadTestDeps(t)
 			manager.AddToQueue("busy-upload")
 
-			res, err := uc.CheckUploadSlot("u1")
+			res, err := uc.CheckUploadSlot(context.Background(), "u1")
 			require.NoError(t, err)
 			assert.False(t, res.Available)
 			assert.True(t, res.ActiveUpload)
@@ -76,7 +77,7 @@ func TestTusUploadUsecase(t *testing.T) {
 		seedTusUploadStore(t, manager, "active-id", 16, map[string]string{"user_id": "u1"})
 		manager.AddToQueue("active-id")
 
-		resBefore, err := uc.CheckUploadSlot("u1")
+		resBefore, err := uc.CheckUploadSlot(context.Background(), "u1")
 		require.NoError(t, err)
 		assert.False(t, resBefore.Available)
 
@@ -86,9 +87,9 @@ func TestTusUploadUsecase(t *testing.T) {
 		tusRepo.On("GetByID", mock.Anything, "active-id").Return(&domain.TusUpload{ID: "active-id", UserID: "u1", Status: domain.UploadStatusUploading}, nil).Once()
 		tusRepo.On("UpdateStatus", mock.Anything, "active-id", domain.UploadStatusCancelled).Return(nil).Once()
 
-		require.NoError(t, uc.ResetUploadQueue("u1"))
+		require.NoError(t, uc.ResetUploadQueue(context.Background(), "u1"))
 
-		resAfter, err := uc.CheckUploadSlot("u1")
+		resAfter, err := uc.CheckUploadSlot(context.Background(), "u1")
 		require.NoError(t, err)
 		assert.True(t, resAfter.Available)
 		assert.False(t, resAfter.ActiveUpload)
@@ -103,7 +104,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("GetActiveByUserID", mock.Anything, "u1").Return([]domain.TusUpload{}, nil).Once()
 			tusRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.TusUpload")).Return(nil).Once()
 
-			res, err := uc.InitiateUpload("u1", "u1@mail.com", "mahasiswa", 1024, metadata)
+			res, err := uc.InitiateUpload(context.Background(), "u1", "u1@mail.com", "mahasiswa", 1024, metadata)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 			assert.NotEmpty(t, res.UploadID)
@@ -118,7 +119,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetActiveByUserID", mock.Anything, "u1").Return([]domain.TusUpload{}, nil)
 
-			res, err := uc.InitiateUpload("u1", "u1@mail.com", "mahasiswa", uc.config.Upload.MaxSizeProject+1, metadata)
+			res, err := uc.InitiateUpload(context.Background(), "u1", "u1@mail.com", "mahasiswa", uc.config.Upload.MaxSizeProject+1, metadata)
 			require.Error(t, err)
 			assert.Nil(t, res)
 			assert.Contains(t, err.Error(), "ukuran file melebihi batas maksimal")
@@ -130,7 +131,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("GetActiveByUserID", mock.Anything, "u1").Return([]domain.TusUpload{}, nil)
 			manager.AddToQueue("active")
 
-			res, err := uc.InitiateUpload("u1", "u1@mail.com", "mahasiswa", 256, metadata)
+			res, err := uc.InitiateUpload(context.Background(), "u1", "u1@mail.com", "mahasiswa", 256, metadata)
 			require.Error(t, err)
 			assert.Nil(t, res)
 			assert.Contains(t, err.Error(), "slot upload tidak tersedia")
@@ -156,7 +157,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			})).Return(nil).Once()
 
 			seedTusUploadStore(t, manager, uploadID, 10, map[string]string{"user_id": "u1"})
-			newOffset, err := uc.HandleChunk(uploadID, "u1", 0, bytes.NewReader(chunk))
+			newOffset, err := uc.HandleChunk(context.Background(), uploadID, "u1", 0, bytes.NewReader(chunk))
 			require.NoError(t, err)
 			assert.Equal(t, int64(4), newOffset)
 			tusRepo.AssertExpectations(t)
@@ -177,7 +178,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("UpdateOffset", mock.Anything, uploadID, int64(3), mock.AnythingOfType("float64")).Return(nil).Once()
 
 			seedTusUploadStore(t, manager, uploadID, 10, map[string]string{"user_id": "u1"})
-			newOffset, err := uc.HandleChunk(uploadID, "u1", 0, bytes.NewReader([]byte("abc")))
+			newOffset, err := uc.HandleChunk(context.Background(), uploadID, "u1", 0, bytes.NewReader([]byte("abc")))
 			require.NoError(t, err)
 			assert.Equal(t, int64(3), newOffset)
 			tusRepo.AssertExpectations(t)
@@ -191,7 +192,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				ID:             uploadID,
 				UserID:         "u1",
 				UploadType:     domain.UploadTypeProjectCreate,
-				UploadMetadata: dto.TusUploadInitRequest{NamaProject: "Final", Kategori: "mobile", Semester: 3},
+				UploadMetadata: domain.TusUploadMetadata{NamaProject: "Final", Kategori: "mobile", Semester: 3},
 				FileSize:       4,
 				CurrentOffset:  0,
 				Status:         domain.UploadStatusUploading,
@@ -201,7 +202,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("Complete", mock.Anything, uploadID, mock.AnythingOfType("uint"), mock.AnythingOfType("string")).Return(nil).Once()
 
 			seedTusUploadStore(t, manager, uploadID, 4, map[string]string{"user_id": "u1"})
-			newOffset, err := uc.HandleChunk(uploadID, "u1", 0, bytes.NewReader([]byte("done")))
+			newOffset, err := uc.HandleChunk(context.Background(), uploadID, "u1", 0, bytes.NewReader([]byte("done")))
 			require.NoError(t, err)
 			assert.Equal(t, int64(4), newOffset)
 			tusRepo.AssertExpectations(t)
@@ -212,7 +213,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			newOffset, err := uc.HandleChunk("missing", "u1", 0, bytes.NewReader([]byte("x")))
+			newOffset, err := uc.HandleChunk(context.Background(), "missing", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Equal(t, int64(0), newOffset)
 			assert.Contains(t, err.Error(), "tidak ditemukan")
@@ -222,7 +223,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "u").Return(&domain.TusUpload{ID: "u", UserID: "owner", FileSize: 10, Status: domain.UploadStatusUploading}, nil).Once()
 
-			_, err := uc.HandleChunk("u", "intruder", 0, bytes.NewReader([]byte("x")))
+			_, err := uc.HandleChunk(context.Background(), "u", "intruder", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak memiliki akses")
 		})
@@ -231,7 +232,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "u").Return(&domain.TusUpload{ID: "u", UserID: "u1", FileSize: 10, Status: domain.UploadStatusCompleted}, nil).Once()
 
-			offset, err := uc.HandleChunk("u", "u1", 0, bytes.NewReader([]byte("x")))
+			offset, err := uc.HandleChunk(context.Background(), "u", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Equal(t, int64(10), offset)
 			assert.Contains(t, err.Error(), "sudah selesai")
@@ -241,7 +242,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "u").Return(&domain.TusUpload{ID: "u", UserID: "u1", FileSize: 10, Status: domain.UploadStatusCancelled}, nil).Once()
 
-			_, err := uc.HandleChunk("u", "u1", 0, bytes.NewReader([]byte("x")))
+			_, err := uc.HandleChunk(context.Background(), "u", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak dapat dilanjutkan")
 		})
@@ -256,7 +257,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				ID:             "info-id",
 				UserID:         "u1",
 				ProjectID:      &projectID,
-				UploadMetadata: dto.TusUploadInitRequest{NamaProject: "P", Kategori: "iot", Semester: 4},
+				UploadMetadata: domain.TusUploadMetadata{NamaProject: "P", Kategori: "iot", Semester: 4},
 				Status:         domain.UploadStatusUploading,
 				Progress:       50,
 				CurrentOffset:  5,
@@ -265,7 +266,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				UpdatedAt:      now,
 			}, nil).Once()
 
-			info, err := uc.GetUploadInfo("info-id", "u1")
+			info, err := uc.GetUploadInfo(context.Background(),"info-id", "u1")
 			require.NoError(t, err)
 			require.NotNil(t, info)
 			assert.Equal(t, uint(7), info.ProjectID)
@@ -276,7 +277,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			info, err := uc.GetUploadInfo("missing", "u1")
+			info, err := uc.GetUploadInfo(context.Background(),"missing", "u1")
 			require.Error(t, err)
 			assert.Nil(t, info)
 			assert.Contains(t, err.Error(), "tidak ditemukan")
@@ -286,7 +287,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "status-id").Return(&domain.TusUpload{ID: "status-id", UserID: "u1", CurrentOffset: 8, FileSize: 16}, nil).Once()
 
-			offset, length, err := uc.GetUploadStatus("status-id", "u1")
+			offset, length, err := uc.GetUploadStatus(context.Background(),"status-id", "u1")
 			require.NoError(t, err)
 			assert.Equal(t, int64(8), offset)
 			assert.Equal(t, int64(16), length)
@@ -296,7 +297,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			offset, length, err := uc.GetUploadStatus("missing", "u1")
+			offset, length, err := uc.GetUploadStatus(context.Background(),"missing", "u1")
 			require.Error(t, err)
 			assert.Equal(t, int64(0), offset)
 			assert.Equal(t, int64(0), length)
@@ -312,7 +313,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("GetByID", mock.Anything, "cancel-id").Return(&domain.TusUpload{ID: "cancel-id", UserID: "u1", Status: domain.UploadStatusUploading}, nil).Once()
 			tusRepo.On("UpdateStatus", mock.Anything, "cancel-id", domain.UploadStatusCancelled).Return(nil).Once()
 
-			err := uc.CancelUpload("cancel-id", "u1")
+			err := uc.CancelUpload(context.Background(),"cancel-id", "u1")
 			require.NoError(t, err)
 			tusRepo.AssertExpectations(t)
 		})
@@ -321,7 +322,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			err := uc.CancelUpload("missing", "u1")
+			err := uc.CancelUpload(context.Background(),"missing", "u1")
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak ditemukan")
 		})
@@ -330,7 +331,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "owner", Status: domain.UploadStatusUploading}, nil).Once()
 
-			err := uc.CancelUpload("id", "u1")
+			err := uc.CancelUpload(context.Background(),"id", "u1")
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak memiliki akses")
 		})
@@ -339,7 +340,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "u1", Status: domain.UploadStatusCompleted}, nil).Once()
 
-			err := uc.CancelUpload("id", "u1")
+			err := uc.CancelUpload(context.Background(),"id", "u1")
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "sudah selesai")
 		})
@@ -354,7 +355,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("GetActiveByUserID", mock.Anything, "u1").Return([]domain.TusUpload{}, nil).Once()
 			tusRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.TusUpload")).Return(nil).Once()
 
-			res, err := uc.InitiateProjectUpdateUpload(9, "u1", 512, metadata)
+			res, err := uc.InitiateProjectUpdateUpload(context.Background(),9, "u1", 512, metadata)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 			assert.Contains(t, res.UploadURL, "/project/9/update/")
@@ -364,7 +365,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, _, projectRepo, _ := newTusUploadTestDeps(t)
 			projectRepo.On("GetByID", mock.Anything, uint(9)).Return(nil, apperrors.ErrRecordNotFound).Once()
 
-			res, err := uc.InitiateProjectUpdateUpload(9, "u1", 512, metadata)
+			res, err := uc.InitiateProjectUpdateUpload(context.Background(),9, "u1", 512, metadata)
 			require.Error(t, err)
 			assert.Nil(t, res)
 			assert.Contains(t, err.Error(), "Project tidak ditemukan")
@@ -374,7 +375,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, _, projectRepo, _ := newTusUploadTestDeps(t)
 			projectRepo.On("GetByID", mock.Anything, uint(9)).Return(&domain.Project{ID: 9, UserID: "owner"}, nil).Once()
 
-			res, err := uc.InitiateProjectUpdateUpload(9, "u1", 512, metadata)
+			res, err := uc.InitiateProjectUpdateUpload(context.Background(),9, "u1", 512, metadata)
 			require.Error(t, err)
 			assert.Nil(t, res)
 			assert.Contains(t, err.Error(), "tidak memiliki akses")
@@ -398,7 +399,7 @@ func TestTusUploadUsecase(t *testing.T) {
 					upload.UploadType == domain.UploadTypeProjectUpdate
 			})).Return(nil).Once()
 
-			res, err := uc.InitiateProjectUpdateUpload(9, "u1", 512, dto.TusUploadInitRequest{})
+			res, err := uc.InitiateProjectUpdateUpload(context.Background(),9, "u1", 512, dto.TusUploadInitRequest{})
 			require.NoError(t, err)
 			require.NotNil(t, res)
 			assert.Contains(t, res.UploadURL, "/project/9/update/")
@@ -423,7 +424,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("UpdateOffset", mock.Anything, uploadID, int64(3), mock.AnythingOfType("float64")).Return(nil).Once()
 
 			seedTusUploadStore(t, manager, uploadID, 10, map[string]string{"user_id": "u1", "project_id": "1"})
-			offset, err := uc.HandleProjectUpdateChunk(projectID, uploadID, "u1", 0, bytes.NewReader(chunk))
+			offset, err := uc.HandleProjectUpdateChunk(context.Background(),projectID, uploadID, "u1", 0, bytes.NewReader(chunk))
 			require.NoError(t, err)
 			assert.Equal(t, int64(3), offset)
 		})
@@ -440,7 +441,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				UserID:         "u1",
 				ProjectID:      &projectID,
 				UploadType:     domain.UploadTypeProjectUpdate,
-				UploadMetadata: dto.TusUploadInitRequest{NamaProject: "New", Kategori: "iot", Semester: 6},
+				UploadMetadata: domain.TusUploadMetadata{NamaProject: "New", Kategori: "iot", Semester: 6},
 				FileSize:       4,
 				Status:         domain.UploadStatusUploading,
 			}, nil).Once()
@@ -448,7 +449,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("Complete", mock.Anything, uploadID, mock.AnythingOfType("uint"), mock.AnythingOfType("string")).Return(nil).Once()
 
 			seedTusUploadStore(t, manager, uploadID, 4, map[string]string{"user_id": "u1", "project_id": "2"})
-			offset, err := uc.HandleProjectUpdateChunk(projectID, uploadID, "u1", 0, bytes.NewReader([]byte("done")))
+			offset, err := uc.HandleProjectUpdateChunk(context.Background(),projectID, uploadID, "u1", 0, bytes.NewReader([]byte("done")))
 			require.NoError(t, err)
 			assert.Equal(t, int64(4), offset)
 		})
@@ -457,7 +458,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			_, err := uc.HandleProjectUpdateChunk(1, "missing", "u1", 0, bytes.NewReader([]byte("x")))
+			_, err := uc.HandleProjectUpdateChunk(context.Background(),1, "missing", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak ditemukan")
 		})
@@ -467,7 +468,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "owner", ProjectID: &projectID, FileSize: 8, Status: domain.UploadStatusUploading}, nil).Once()
 
-			_, err := uc.HandleProjectUpdateChunk(projectID, "id", "u1", 0, bytes.NewReader([]byte("x")))
+			_, err := uc.HandleProjectUpdateChunk(context.Background(),projectID, "id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak memiliki akses")
 		})
@@ -477,7 +478,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "u1", ProjectID: &projectID, FileSize: 8, Status: domain.UploadStatusCompleted}, nil).Once()
 
-			offset, err := uc.HandleProjectUpdateChunk(projectID, "id", "u1", 0, bytes.NewReader([]byte("x")))
+			offset, err := uc.HandleProjectUpdateChunk(context.Background(),projectID, "id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Equal(t, int64(8), offset)
 			assert.Contains(t, err.Error(), "sudah selesai")
@@ -488,7 +489,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "u1", ProjectID: &projectID, FileSize: 8, Status: domain.UploadStatusCancelled}, nil).Once()
 
-			_, err := uc.HandleProjectUpdateChunk(projectID, "id", "u1", 0, bytes.NewReader([]byte("x")))
+			_, err := uc.HandleProjectUpdateChunk(context.Background(),projectID, "id", "u1", 0, bytes.NewReader([]byte("x")))
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak dapat dilanjutkan")
 		})
@@ -504,7 +505,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			tusRepo.On("GetByID", mock.Anything, "cancel-proj").Return(&domain.TusUpload{ID: "cancel-proj", UserID: "u1", ProjectID: &projectID, Status: domain.UploadStatusUploading}, nil).Once()
 			tusRepo.On("UpdateStatus", mock.Anything, "cancel-proj", domain.UploadStatusCancelled).Return(nil).Once()
 
-			err := uc.CancelProjectUpdateUpload(projectID, "cancel-proj", "u1")
+			err := uc.CancelProjectUpdateUpload(context.Background(),projectID, "cancel-proj", "u1")
 			require.NoError(t, err)
 		})
 
@@ -512,7 +513,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			err := uc.CancelProjectUpdateUpload(1, "missing", "u1")
+			err := uc.CancelProjectUpdateUpload(context.Background(),1, "missing", "u1")
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak ditemukan")
 		})
@@ -522,7 +523,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "owner", ProjectID: &projectID, Status: domain.UploadStatusUploading}, nil).Once()
 
-			err := uc.CancelProjectUpdateUpload(projectID, "id", "u1")
+			err := uc.CancelProjectUpdateUpload(context.Background(),projectID, "id", "u1")
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "tidak memiliki akses")
 		})
@@ -532,7 +533,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			projectID := uint(1)
 			tusRepo.On("GetByID", mock.Anything, "id").Return(&domain.TusUpload{ID: "id", UserID: "u1", ProjectID: &projectID, Status: domain.UploadStatusCompleted}, nil).Once()
 
-			err := uc.CancelProjectUpdateUpload(projectID, "id", "u1")
+			err := uc.CancelProjectUpdateUpload(context.Background(),projectID, "id", "u1")
 			require.Error(t, err)
 			assert.Contains(t, err.Error(), "sudah selesai")
 		})
@@ -547,7 +548,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				ID:             "project-info-id",
 				UserID:         "u1",
 				ProjectID:      &projectID,
-				UploadMetadata: dto.TusUploadInitRequest{NamaProject: "P", Kategori: "iot", Semester: 4},
+				UploadMetadata: domain.TusUploadMetadata{NamaProject: "P", Kategori: "iot", Semester: 4},
 				Status:         domain.UploadStatusUploading,
 				Progress:       60,
 				CurrentOffset:  6,
@@ -556,7 +557,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				UpdatedAt:      now,
 			}, nil).Once()
 
-			info, err := uc.GetProjectUpdateUploadInfo(projectID, "project-info-id", "u1")
+			info, err := uc.GetProjectUpdateUploadInfo(context.Background(),projectID, "project-info-id", "u1")
 			require.NoError(t, err)
 			require.NotNil(t, info)
 			assert.Equal(t, uint(11), info.ProjectID)
@@ -567,7 +568,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			info, err := uc.GetProjectUpdateUploadInfo(11, "missing", "u1")
+			info, err := uc.GetProjectUpdateUploadInfo(context.Background(),11, "missing", "u1")
 			require.Error(t, err)
 			assert.Nil(t, info)
 			assert.Contains(t, err.Error(), "tidak ditemukan")
@@ -584,7 +585,7 @@ func TestTusUploadUsecase(t *testing.T) {
 				FileSize:      18,
 			}, nil).Once()
 
-			offset, length, err := uc.GetProjectUpdateUploadStatus(projectID, "project-status-id", "u1")
+			offset, length, err := uc.GetProjectUpdateUploadStatus(context.Background(),projectID, "project-status-id", "u1")
 			require.NoError(t, err)
 			assert.Equal(t, int64(9), offset)
 			assert.Equal(t, int64(18), length)
@@ -594,7 +595,7 @@ func TestTusUploadUsecase(t *testing.T) {
 			uc, tusRepo, _, _ := newTusUploadTestDeps(t)
 			tusRepo.On("GetByID", mock.Anything, "missing").Return(nil, gorm.ErrRecordNotFound).Once()
 
-			offset, length, err := uc.GetProjectUpdateUploadStatus(12, "missing", "u1")
+			offset, length, err := uc.GetProjectUpdateUploadStatus(context.Background(),12, "missing", "u1")
 			require.Error(t, err)
 			assert.Equal(t, int64(0), offset)
 			assert.Equal(t, int64(0), length)

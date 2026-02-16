@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
@@ -25,7 +25,7 @@ type MockProjectUsecase struct {
 	mock.Mock
 }
 
-func (m *MockProjectUsecase) GetList(userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
+func (m *MockProjectUsecase) GetList(ctx context.Context, userID string, search string, filterSemester int, filterKategori string, page, limit int) (*dto.ProjectListData, error) {
 	args := m.Called(userID, search, filterSemester, filterKategori, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -33,7 +33,7 @@ func (m *MockProjectUsecase) GetList(userID string, search string, filterSemeste
 	return args.Get(0).(*dto.ProjectListData), args.Error(1)
 }
 
-func (m *MockProjectUsecase) GetByID(projectID uint, userID string) (*dto.ProjectResponse, error) {
+func (m *MockProjectUsecase) GetByID(ctx context.Context, projectID uint, userID string) (*dto.ProjectResponse, error) {
 	args := m.Called(projectID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -41,17 +41,17 @@ func (m *MockProjectUsecase) GetByID(projectID uint, userID string) (*dto.Projec
 	return args.Get(0).(*dto.ProjectResponse), args.Error(1)
 }
 
-func (m *MockProjectUsecase) UpdateMetadata(projectID uint, userID string, req dto.UpdateProjectRequest) error {
+func (m *MockProjectUsecase) UpdateMetadata(ctx context.Context, projectID uint, userID string, req dto.UpdateProjectRequest) error {
 	args := m.Called(projectID, userID, req)
 	return args.Error(0)
 }
 
-func (m *MockProjectUsecase) Delete(projectID uint, userID string) error {
+func (m *MockProjectUsecase) Delete(ctx context.Context, projectID uint, userID string) error {
 	args := m.Called(projectID, userID)
 	return args.Error(0)
 }
 
-func (m *MockProjectUsecase) Download(userID string, projectIDs []uint) (string, error) {
+func (m *MockProjectUsecase) Download(ctx context.Context, userID string, projectIDs []uint) (string, error) {
 	args := m.Called(userID, projectIDs)
 	return args.String(0), args.Error(1)
 }

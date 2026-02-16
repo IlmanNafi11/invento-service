@@ -1,6 +1,7 @@
 package repo_test
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
@@ -29,7 +30,8 @@ func TestModulRepository_Create_Success(t *testing.T) {
 	}
 
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
-	err = modulRepo.Create(modul)
+	ctx := context.Background()
+	err = modulRepo.Create(ctx, modul)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, modul.ID)
 }
@@ -54,7 +56,8 @@ func TestModulRepository_GetByID_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
-	result, err := modulRepo.GetByID(modul.ID)
+	ctx := context.Background()
+	result, err := modulRepo.GetByID(ctx, modul.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, modul.ID, result.ID)
@@ -80,8 +83,9 @@ func TestModulRepository_GetByIDs_Success(t *testing.T) {
 	}
 
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
+	ctx := context.Background()
 	ids := []string{moduls[0].ID, moduls[1].ID}
-	result, err := modulRepo.GetByIDs(ids, userID)
+	result, err := modulRepo.GetByIDs(ctx, ids, userID)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 }
@@ -106,27 +110,28 @@ func TestModulRepository_GetByUserID_Success(t *testing.T) {
 	}
 
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
+	ctx := context.Background()
 
 	// Test without filters
-	result, total, err := modulRepo.GetByUserID(userID, "", "", "", 1, 10)
+	result, total, err := modulRepo.GetByUserID(ctx, userID, "", "", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 	assert.Equal(t, 2, total)
 
 	// Test with search
-	result, total, err = modulRepo.GetByUserID(userID, "Modul 1", "", "", 1, 10)
+	result, total, err = modulRepo.GetByUserID(ctx, userID, "Modul 1", "", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with type filter
-	result, total, err = modulRepo.GetByUserID(userID, "", "application/pdf", "", 1, 10)
+	result, total, err = modulRepo.GetByUserID(ctx, userID, "", "application/pdf", "", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
 
 	// Test with status filter
-	result, total, err = modulRepo.GetByUserID(userID, "", "", "pending", 1, 10)
+	result, total, err = modulRepo.GetByUserID(ctx, userID, "", "", "pending", 1, 10)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, 1, total)
@@ -151,7 +156,8 @@ func TestModulRepository_CountByUserID_Success(t *testing.T) {
 	}
 
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
-	count, err := modulRepo.CountByUserID(userID)
+	ctx := context.Background()
+	count, err := modulRepo.CountByUserID(ctx, userID)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
 }
@@ -176,9 +182,10 @@ func TestModulRepository_Update_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
+	ctx := context.Background()
 	modul.Judul = "New Name"
 	modul.Status = "pending"
-	err = modulRepo.Update(modul)
+	err = modulRepo.Update(ctx, modul)
 	assert.NoError(t, err)
 
 	// Verify update
@@ -209,7 +216,8 @@ func TestModulRepository_Delete_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
-	err = modulRepo.Delete(modul.ID)
+	ctx := context.Background()
+	err = modulRepo.Delete(ctx, modul.ID)
 	assert.NoError(t, err)
 
 	// Verify deletion
@@ -238,9 +246,10 @@ func TestModulRepository_UpdateMetadata_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
+	ctx := context.Background()
 	modul.Judul = "Updated Name"
 	modul.Deskripsi = "Updated Deskripsi"
-	err = modulRepo.UpdateMetadata(modul)
+	err = modulRepo.UpdateMetadata(ctx, modul)
 	assert.NoError(t, err)
 
 	// Verify metadata update

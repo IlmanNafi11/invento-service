@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"invento-service/config"
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/domain"
+	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"net/http"

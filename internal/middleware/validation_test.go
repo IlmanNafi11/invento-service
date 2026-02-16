@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"invento-service/internal/domain"
+	dto "invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/require"

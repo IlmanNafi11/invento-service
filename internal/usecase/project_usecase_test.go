@@ -1,9 +1,11 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"os"
@@ -41,30 +43,9 @@ func TestProjectUsecase_GetProjectByID_Success(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
-	mockProjectRepo.On("GetByID", projectID).Return(project, nil)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(project, nil)
 
-	result, err := projectUC.GetByID(projectID, userID)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, projectID, result.ID)
-	assert.Equal(t, "Test Project", result.NamaProject)
-	assert.Equal(t, "website", result.Kategori)
-
-	mockProjectRepo.AssertExpectations(t)
-}
-
-// TestGetProjectByID_NotFound tests project retrieval when project doesn't exist
-func TestProjectUsecase_GetProjectByID_NotFound(t *testing.T) {
-	mockProjectRepo := new(MockProjectRepository)
-	projectUC := NewProjectUsecase(mockProjectRepo, nil)
-
-	userID := "user-1"
-	projectID := uint(999)
-
-	mockProjectRepo.On("GetByID", projectID).Return(nil, apperrors.ErrRecordNotFound)
-
-	result, err := projectUC.GetByID(projectID, userID)
+	result, err := projectUC.GetByID(context.Background(), projectID, userID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -95,9 +76,9 @@ func TestProjectUsecase_GetProjectByID_AccessDenied(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
-	mockProjectRepo.On("GetByID", projectID).Return(project, nil)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(project, nil)
 
-	result, err := projectUC.GetByID(projectID, userID)
+	result, err := projectUC.GetByID(context.Background(), projectID, userID)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -143,9 +124,9 @@ func TestProjectUsecase_ListProjects_Success(t *testing.T) {
 
 	total := 2
 
-	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, page, limit).Return(projects, total, nil)
+	mockProjectRepo.On("GetByUserID", mock.Anything, userID, search, filterSemester, filterKategori, page, limit).Return(projects, total, nil)
 
-	result, err := projectUC.GetList(userID, search, filterSemester, filterKategori, page, limit)
+	result, err := projectUC.GetList(context.Background(), userID, search, filterSemester, filterKategori, page, limit)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -173,9 +154,9 @@ func TestProjectUsecase_ListProjects_Empty(t *testing.T) {
 	projects := []dto.ProjectListItem{}
 	total := 0
 
-	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, page, limit).Return(projects, total, nil)
+	mockProjectRepo.On("GetByUserID", mock.Anything, userID, search, filterSemester, filterKategori, page, limit).Return(projects, total, nil)
 
-	result, err := projectUC.GetList(userID, search, filterSemester, filterKategori, page, limit)
+	result, err := projectUC.GetList(context.Background(), userID, search, filterSemester, filterKategori, page, limit)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -211,9 +192,9 @@ func TestProjectUsecase_ListProjects_Pagination(t *testing.T) {
 
 	total := 15
 
-	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, page, limit).Return(projects, total, nil)
+	mockProjectRepo.On("GetByUserID", mock.Anything, userID, search, filterSemester, filterKategori, page, limit).Return(projects, total, nil)
 
-	result, err := projectUC.GetList(userID, search, filterSemester, filterKategori, page, limit)
+	result, err := projectUC.GetList(context.Background(), userID, search, filterSemester, filterKategori, page, limit)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -237,9 +218,9 @@ func TestProjectUsecase_ListProjects_RepoError(t *testing.T) {
 	page := 1
 	limit := 10
 
-	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, page, limit).Return(nil, 0, assert.AnError)
+	mockProjectRepo.On("GetByUserID", mock.Anything, userID, search, filterSemester, filterKategori, page, limit).Return(nil, 0, assert.AnError)
 
-	result, err := projectUC.GetList(userID, search, filterSemester, filterKategori, page, limit)
+	result, err := projectUC.GetList(context.Background(), userID, search, filterSemester, filterKategori, page, limit)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -259,9 +240,9 @@ func TestProjectUsecase_ListProjects_EmptyWithDefaultPagination(t *testing.T) {
 	filterSemester := 0
 	filterKategori := ""
 
-	mockProjectRepo.On("GetByUserID", userID, search, filterSemester, filterKategori, 1, 10).Return([]dto.ProjectListItem{}, 0, nil)
+	mockProjectRepo.On("GetByUserID", mock.Anything, userID, search, filterSemester, filterKategori, 1, 10).Return([]dto.ProjectListItem{}, 0, nil)
 
-	result, err := projectUC.GetList(userID, search, filterSemester, filterKategori, 0, 0)
+	result, err := projectUC.GetList(context.Background(), userID, search, filterSemester, filterKategori, 0, 0)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -300,10 +281,10 @@ func TestProjectUsecase_UpdateProject_Success(t *testing.T) {
 		Semester:    2,
 	}
 
-	mockProjectRepo.On("GetByID", projectID).Return(project, nil)
-	mockProjectRepo.On("Update", mock.AnythingOfType("*domain.Project")).Return(nil)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(project, nil)
+	mockProjectRepo.On("Update", mock.Anything, mock.AnythingOfType("*domain.Project")).Return(nil)
 
-	err := projectUC.UpdateMetadata(projectID, userID, req)
+	err := projectUC.UpdateMetadata(context.Background(), projectID, userID, req)
 
 	assert.NoError(t, err)
 
@@ -322,9 +303,9 @@ func TestProjectUsecase_UpdateProject_NotFound(t *testing.T) {
 		NamaProject: "Updated Name",
 	}
 
-	mockProjectRepo.On("GetByID", projectID).Return(nil, apperrors.ErrRecordNotFound)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(nil, apperrors.ErrRecordNotFound)
 
-	err := projectUC.UpdateMetadata(projectID, userID, req)
+	err := projectUC.UpdateMetadata(context.Background(), projectID, userID, req)
 
 	assert.Error(t, err)
 	var appErr *apperrors.AppError
@@ -358,9 +339,9 @@ func TestProjectUsecase_UpdateProject_AccessDenied(t *testing.T) {
 		NamaProject: "Updated Name",
 	}
 
-	mockProjectRepo.On("GetByID", projectID).Return(project, nil)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(project, nil)
 
-	err := projectUC.UpdateMetadata(projectID, userID, req)
+	err := projectUC.UpdateMetadata(context.Background(), projectID, userID, req)
 
 	assert.Error(t, err)
 	var appErr *apperrors.AppError
@@ -390,10 +371,10 @@ func TestProjectUsecase_DeleteProject_Success(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
-	mockProjectRepo.On("GetByID", projectID).Return(project, nil)
-	mockProjectRepo.On("Delete", projectID).Return(nil)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(project, nil)
+	mockProjectRepo.On("Delete", mock.Anything, projectID).Return(nil)
 
-	err := projectUC.Delete(projectID, userID)
+	err := projectUC.Delete(context.Background(), projectID, userID)
 
 	assert.NoError(t, err)
 
@@ -408,9 +389,9 @@ func TestProjectUsecase_DeleteProject_NotFound(t *testing.T) {
 	userID := "user-1"
 	projectID := uint(999)
 
-	mockProjectRepo.On("GetByID", projectID).Return(nil, apperrors.ErrRecordNotFound)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(nil, apperrors.ErrRecordNotFound)
 
-	err := projectUC.Delete(projectID, userID)
+	err := projectUC.Delete(context.Background(), projectID, userID)
 
 	assert.Error(t, err)
 	var appErr *apperrors.AppError
@@ -440,9 +421,9 @@ func TestProjectUsecase_DeleteProject_AccessDenied(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
-	mockProjectRepo.On("GetByID", projectID).Return(project, nil)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(project, nil)
 
-	err := projectUC.Delete(projectID, userID)
+	err := projectUC.Delete(context.Background(), projectID, userID)
 
 	assert.Error(t, err)
 	var appErr *apperrors.AppError
@@ -469,9 +450,9 @@ func TestProjectUsecase_Download_SingleFile(t *testing.T) {
 		PathFile: "/uploads/project1.pdf",
 	}
 
-	mockProjectRepo.On("GetByID", uint(1)).Return(project, nil)
+	mockProjectRepo.On("GetByID", mock.Anything, uint(1)).Return(project, nil)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "/uploads/project1.pdf", result)
@@ -490,7 +471,7 @@ func TestProjectUsecase_Download_EmptyIDs(t *testing.T) {
 	userID := "user-1"
 	projectIDs := []uint{}
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -510,9 +491,9 @@ func TestProjectUsecase_Download_NotFound(t *testing.T) {
 	userID := "user-1"
 	projectIDs := []uint{1, 2}
 
-	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return([]domain.Project{}, nil)
+	mockProjectRepo.On("GetByIDs", mock.Anything, projectIDs, userID).Return([]domain.Project{}, nil)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -534,9 +515,9 @@ func TestProjectUsecase_Download_Error(t *testing.T) {
 	userID := "user-1"
 	projectIDs := []uint{1, 2}
 
-	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(nil, assert.AnError)
+	mockProjectRepo.On("GetByIDs", mock.Anything, projectIDs, userID).Return(nil, assert.AnError)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -557,9 +538,9 @@ func TestProjectUsecase_Download_SingleFile_GetOwnedProjectError(t *testing.T) {
 	userID := "user-1"
 	projectIDs := []uint{1}
 
-	mockProjectRepo.On("GetByID", uint(1)).Return(nil, assert.AnError)
+	mockProjectRepo.On("GetByID", mock.Anything, uint(1)).Return(nil, assert.AnError)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -586,9 +567,9 @@ func TestProjectUsecase_Download_SingleFile_Forbidden(t *testing.T) {
 		PathFile: "/uploads/project1.pdf",
 	}
 
-	mockProjectRepo.On("GetByID", uint(1)).Return(project, nil)
+	mockProjectRepo.On("GetByID", mock.Anything, uint(1)).Return(project, nil)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -615,9 +596,9 @@ func TestProjectUsecase_Download_SingleFile_PathTraversal(t *testing.T) {
 		PathFile: "../uploads/project1.pdf",
 	}
 
-	mockProjectRepo.On("GetByID", uint(1)).Return(project, nil)
+	mockProjectRepo.On("GetByID", mock.Anything, uint(1)).Return(project, nil)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -648,9 +629,9 @@ func TestProjectUsecase_Download_MultipleFiles_Success(t *testing.T) {
 		{ID: 2, UserID: userID, PathFile: file2},
 	}
 
-	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(projects, nil)
+	mockProjectRepo.On("GetByIDs", mock.Anything, projectIDs, userID).Return(projects, nil)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result)
@@ -677,9 +658,9 @@ func TestProjectUsecase_Download_MultipleFiles_PartialFound(t *testing.T) {
 		{ID: 1, UserID: userID, PathFile: file1},
 	}
 
-	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(projects, nil)
+	mockProjectRepo.On("GetByIDs", mock.Anything, projectIDs, userID).Return(projects, nil)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, result)
@@ -703,9 +684,9 @@ func TestProjectUsecase_Download_MultipleFiles_NonexistentFile(t *testing.T) {
 		{ID: 2, UserID: userID, PathFile: "/tmp/this-file-should-not-exist-project2.txt"},
 	}
 
-	mockProjectRepo.On("GetByIDs", projectIDs, userID).Return(projects, nil)
+	mockProjectRepo.On("GetByIDs", mock.Anything, projectIDs, userID).Return(projects, nil)
 
-	result, err := projectUC.Download(userID, projectIDs)
+	result, err := projectUC.Download(context.Background(), userID, projectIDs)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)

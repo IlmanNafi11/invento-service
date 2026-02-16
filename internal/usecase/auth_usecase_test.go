@@ -5,6 +5,7 @@ import (
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -69,7 +70,7 @@ type authTestUserRepo struct {
 	mock.Mock
 }
 
-func (m *authTestUserRepo) GetByEmail(email string) (*domain.User, error) {
+func (m *authTestUserRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	args := m.Called(email)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -77,7 +78,7 @@ func (m *authTestUserRepo) GetByEmail(email string) (*domain.User, error) {
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
-func (m *authTestUserRepo) GetByID(id string) (*domain.User, error) {
+func (m *authTestUserRepo) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -85,24 +86,24 @@ func (m *authTestUserRepo) GetByID(id string) (*domain.User, error) {
 	return args.Get(0).(*domain.User), args.Error(1)
 }
 
-func (m *authTestUserRepo) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
+func (m *authTestUserRepo) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
 	return nil, 0, 0, nil
 }
 
-func (m *authTestUserRepo) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (m *authTestUserRepo) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	return nil, 0, nil
 }
 
-func (m *authTestUserRepo) GetByIDs(userIDs []string) ([]*domain.User, error) {
+func (m *authTestUserRepo) GetByIDs(ctx context.Context, userIDs []string) ([]*domain.User, error) {
 	return nil, nil
 }
 
-func (m *authTestUserRepo) Create(user *domain.User) error {
+func (m *authTestUserRepo) Create(ctx context.Context, user *domain.User) error {
 	args := m.Called(user)
 	return args.Error(0)
 }
 
-func (m *authTestUserRepo) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
+func (m *authTestUserRepo) GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	args := m.Called(search, filterRole, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)
@@ -110,22 +111,22 @@ func (m *authTestUserRepo) GetAll(search, filterRole string, page, limit int) ([
 	return args.Get(0).([]dto.UserListItem), args.Int(1), args.Error(2)
 }
 
-func (m *authTestUserRepo) UpdateRole(userID string, roleID *int) error {
+func (m *authTestUserRepo) UpdateRole(ctx context.Context, userID string, roleID *int) error {
 	args := m.Called(userID, roleID)
 	return args.Error(0)
 }
 
-func (m *authTestUserRepo) UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (m *authTestUserRepo) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
 	args := m.Called(userID, name, jenisKelamin, fotoProfil)
 	return args.Error(0)
 }
 
-func (m *authTestUserRepo) Delete(userID string) error {
+func (m *authTestUserRepo) Delete(ctx context.Context, userID string) error {
 	args := m.Called(userID)
 	return args.Error(0)
 }
 
-func (m *authTestUserRepo) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
+func (m *authTestUserRepo) GetByRoleID(ctx context.Context, roleID uint) ([]dto.UserListItem, error) {
 	args := m.Called(roleID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -133,7 +134,7 @@ func (m *authTestUserRepo) GetByRoleID(roleID uint) ([]dto.UserListItem, error) 
 	return args.Get(0).([]dto.UserListItem), args.Error(1)
 }
 
-func (m *authTestUserRepo) BulkUpdateRole(userIDs []string, roleID uint) error {
+func (m *authTestUserRepo) BulkUpdateRole(ctx context.Context, userIDs []string, roleID uint) error {
 	args := m.Called(userIDs, roleID)
 	return args.Error(0)
 }
@@ -142,12 +143,12 @@ type authTestRoleRepo struct {
 	mock.Mock
 }
 
-func (m *authTestRoleRepo) Create(role *domain.Role) error {
+func (m *authTestRoleRepo) Create(ctx context.Context, role *domain.Role) error {
 	args := m.Called(role)
 	return args.Error(0)
 }
 
-func (m *authTestRoleRepo) GetByID(id uint) (*domain.Role, error) {
+func (m *authTestRoleRepo) GetByID(ctx context.Context, id uint) (*domain.Role, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -155,7 +156,7 @@ func (m *authTestRoleRepo) GetByID(id uint) (*domain.Role, error) {
 	return args.Get(0).(*domain.Role), args.Error(1)
 }
 
-func (m *authTestRoleRepo) GetByName(name string) (*domain.Role, error) {
+func (m *authTestRoleRepo) GetByName(ctx context.Context, name string) (*domain.Role, error) {
 	args := m.Called(name)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -163,17 +164,17 @@ func (m *authTestRoleRepo) GetByName(name string) (*domain.Role, error) {
 	return args.Get(0).(*domain.Role), args.Error(1)
 }
 
-func (m *authTestRoleRepo) Update(role *domain.Role) error {
+func (m *authTestRoleRepo) Update(ctx context.Context, role *domain.Role) error {
 	args := m.Called(role)
 	return args.Error(0)
 }
 
-func (m *authTestRoleRepo) Delete(id uint) error {
+func (m *authTestRoleRepo) Delete(ctx context.Context, id uint) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
 
-func (m *authTestRoleRepo) GetAll(search string, page, limit int) ([]dto.RoleListItem, int, error) {
+func (m *authTestRoleRepo) GetAll(ctx context.Context, search string, page, limit int) ([]dto.RoleListItem, int, error) {
 	args := m.Called(search, page, limit)
 	if args.Get(0) == nil {
 		return nil, 0, args.Error(2)

@@ -1,6 +1,7 @@
 package repo_test
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	testhelper "invento-service/internal/testing"
 	"invento-service/internal/usecase/repo"
@@ -23,7 +24,8 @@ func TestPermissionRepository_Create_Success(t *testing.T) {
 	}
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	err = permissionRepo.Create(permission)
+	ctx := context.Background()
+	err = permissionRepo.Create(ctx, permission)
 	assert.NoError(t, err)
 	assert.NotZero(t, permission.ID)
 }
@@ -43,7 +45,8 @@ func TestPermissionRepository_GetByID_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	result, err := permissionRepo.GetByID(permission.ID)
+	ctx := context.Background()
+	result, err := permissionRepo.GetByID(ctx, permission.ID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, permission.ID, result.ID)
@@ -65,7 +68,8 @@ func TestPermissionRepository_GetByResourceAndAction_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	result, err := permissionRepo.GetByResourceAndAction("users", "write")
+	ctx := context.Background()
+	result, err := permissionRepo.GetByResourceAndAction(ctx, "users", "write")
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, "users", result.Resource)
@@ -90,7 +94,8 @@ func TestPermissionRepository_GetAll_Success(t *testing.T) {
 	}
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	result, err := permissionRepo.GetAll()
+	ctx := context.Background()
+	result, err := permissionRepo.GetAll(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, result, 3)
 }
@@ -114,7 +119,8 @@ func TestPermissionRepository_GetAvailablePermissions_Success(t *testing.T) {
 	}
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	result, err := permissionRepo.GetAvailablePermissions()
+	ctx := context.Background()
+	result, err := permissionRepo.GetAvailablePermissions(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2) // 2 resources: users, projects
 
@@ -141,7 +147,8 @@ func TestPermissionRepository_BulkCreate_Success(t *testing.T) {
 	}
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	err = permissionRepo.BulkCreate(permissions)
+	ctx := context.Background()
+	err = permissionRepo.BulkCreate(ctx, permissions)
 	assert.NoError(t, err)
 
 	// Verify all created
@@ -166,7 +173,8 @@ func TestPermissionRepository_GetAllByResourceActions_Success(t *testing.T) {
 	}
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	result, err := permissionRepo.GetAllByResourceActions(map[string][]string{
+	ctx := context.Background()
+	result, err := permissionRepo.GetAllByResourceActions(ctx, map[string][]string{
 		"users":    {"read"},
 		"projects": {"create"},
 	})
@@ -187,7 +195,8 @@ func TestPermissionRepository_GetAllByResourceActions_Empty(t *testing.T) {
 	defer testhelper.TeardownTestDatabase(db)
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	result, err := permissionRepo.GetAllByResourceActions(map[string][]string{})
+	ctx := context.Background()
+	result, err := permissionRepo.GetAllByResourceActions(ctx, map[string][]string{})
 
 	assert.NoError(t, err)
 	assert.Nil(t, result)
@@ -202,7 +211,8 @@ func TestPermissionRepository_GetAllByResourceActions_NotFound(t *testing.T) {
 	require.NoError(t, err)
 
 	permissionRepo := repo.NewPermissionRepository(db)
-	result, err := permissionRepo.GetAllByResourceActions(map[string][]string{
+	ctx := context.Background()
+	result, err := permissionRepo.GetAllByResourceActions(ctx, map[string][]string{
 		"projects": {"delete"},
 	})
 

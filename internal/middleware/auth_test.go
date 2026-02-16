@@ -5,6 +5,7 @@ import (
 	"errors"
 	"invento-service/config"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"invento-service/internal/supabase"
@@ -70,54 +71,54 @@ type mockUserRepository struct {
 	getByIDFunc func(id string) (*domain.User, error)
 }
 
-func (m *mockUserRepository) GetByEmail(email string) (*domain.User, error) {
+func (m *mockUserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockUserRepository) GetByID(id string) (*domain.User, error) {
+func (m *mockUserRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	if m.getByIDFunc != nil {
 		return m.getByIDFunc(id)
 	}
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockUserRepository) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
+func (m *mockUserRepository) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
 	return nil, 0, 0, nil
 }
 
-func (m *mockUserRepository) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (m *mockUserRepository) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	return nil, 0, nil
 }
 
-func (m *mockUserRepository) GetByIDs(userIDs []string) ([]*domain.User, error) {
+func (m *mockUserRepository) GetByIDs(ctx context.Context, userIDs []string) ([]*domain.User, error) {
 	return nil, nil
 }
 
-func (m *mockUserRepository) Create(user *domain.User) error {
+func (m *mockUserRepository) Create(ctx context.Context, user *domain.User) error {
 	return errors.New("not implemented")
 }
 
-func (m *mockUserRepository) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
+func (m *mockUserRepository) GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	return nil, 0, errors.New("not implemented")
 }
 
-func (m *mockUserRepository) UpdateRole(userID string, roleID *int) error {
+func (m *mockUserRepository) UpdateRole(ctx context.Context, userID string, roleID *int) error {
 	return errors.New("not implemented")
 }
 
-func (m *mockUserRepository) UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (m *mockUserRepository) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
 	return errors.New("not implemented")
 }
 
-func (m *mockUserRepository) Delete(userID string) error {
+func (m *mockUserRepository) Delete(ctx context.Context, userID string) error {
 	return errors.New("not implemented")
 }
 
-func (m *mockUserRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
+func (m *mockUserRepository) GetByRoleID(ctx context.Context, roleID uint) ([]dto.UserListItem, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockUserRepository) BulkUpdateRole(userIDs []string, roleID uint) error {
+func (m *mockUserRepository) BulkUpdateRole(ctx context.Context, userIDs []string, roleID uint) error {
 	return errors.New("not implemented")
 }
 

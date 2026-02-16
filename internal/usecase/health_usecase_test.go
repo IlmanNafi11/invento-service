@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"invento-service/config"
-	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"testing"
 	"time"
 

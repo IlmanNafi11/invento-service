@@ -1,8 +1,10 @@
 package usecase
 
 import (
+	"context"
 	"fmt"
 	"invento-service/internal/domain"
+	"invento-service/internal/dto"
 	"invento-service/internal/rbac"
 	"invento-service/internal/usecase/repo"
 	"testing"
@@ -40,6 +42,7 @@ type statisticUsecaseWithInterface struct {
 
 func (su *statisticUsecaseWithInterface) GetStatistics(userID string, userRole string) (*dto.StatisticData, error) {
 	result := &dto.StatisticData{}
+	ctx := context.Background()
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")
 	hasModulRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Modul", "read")
@@ -47,12 +50,12 @@ func (su *statisticUsecaseWithInterface) GetStatistics(userID string, userRole s
 	hasRoleRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Role", "read")
 
 	if hasProjectRead {
-		projectCount, _ := su.projectRepo.CountByUserID(userID)
+		projectCount, _ := su.projectRepo.CountByUserID(ctx, userID)
 		result.TotalProject = &projectCount
 	}
 
 	if hasModulRead {
-		modulCount, _ := su.modulRepo.CountByUserID(userID)
+		modulCount, _ := su.modulRepo.CountByUserID(ctx, userID)
 		result.TotalModul = &modulCount
 	}
 
