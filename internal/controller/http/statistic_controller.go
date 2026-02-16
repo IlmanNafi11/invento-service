@@ -67,7 +67,8 @@ func (ctrl *StatisticController) GetStatistics(c *fiber.Ctx) error {
 	}
 
 	// Get statistics based on user role and permissions
-	data, err := ctrl.statisticUsecase.GetStatistics(userID, userRole)
+	ctx := c.UserContext()
+	data, err := ctrl.statisticUsecase.GetStatistics(ctx, userID, userRole)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {

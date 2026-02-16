@@ -168,7 +168,7 @@ Plans:
 
 **Risk**: Context propagation changes every interface signature -- largest blast radius of any phase. Mitigated by changing one domain at a time (e.g., user first, then modul, then project) and running tests after each domain.
 
-**Plans:** 8 plans
+**Plans:** 10 plans
 
 Plans:
 - [ ] 05-01-PLAN.md -- Foundation: install copier, migrate response types to dto, extract routes.go, centralized ErrorHandler
@@ -179,6 +179,8 @@ Plans:
 - [ ] 05-06-PLAN.md -- Split test_mocks.go and top 15 oversized test files (>750 lines)
 - [ ] 05-07-PLAN.md -- Split remaining 14 oversized test files (501-750 lines)
 - [ ] 05-08-PLAN.md -- Test parallelization (t.Parallel()) and final 500-line enforcement verification
+- [ ] 05-09-PLAN.md -- Gap closure: context.Context for AuthUsecase, HealthUsecase, StatisticUsecase interfaces
+- [ ] 05-10-PLAN.md -- Gap closure: trim 5 test files to under 500-line limit
 
 ### Phase 6: Polish & Verification
 **Goal**: The codebase is clean, verified under load to stay within memory limits, and all documentation reflects the final state.
@@ -239,5 +241,5 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 | 2. Memory & Performance Tuning | 0/2 | Complete    | 2026-02-16 |
 | 3. Code Quality Standardization | 0/3 | Complete    | 2026-02-16 |
 | 4. Architecture Restructuring | 0/6 | Planned | - |
-| 5. Deep Architecture Improvements | 0/TBD | Not started | - |
+| 5. Deep Architecture Improvements | 8/10 | Gap closure | - |
 | 6. Polish & Verification | 0/TBD | Not started | - |

@@ -1,9 +1,10 @@
 package usecase
 
 import (
+	"context"
+	"fmt"
 	"invento-service/config"
 	"invento-service/internal/dto"
-	"fmt"
 	"runtime"
 	"time"
 
@@ -11,10 +12,10 @@ import (
 )
 
 type HealthUsecase interface {
-	GetBasicHealth() *dto.BasicHealthCheck
-	GetComprehensiveHealth() *dto.ComprehensiveHealthCheck
-	GetSystemMetrics() *dto.SystemMetrics
-	GetApplicationStatus() *dto.ApplicationStatus
+	GetBasicHealth(ctx context.Context) *dto.BasicHealthCheck
+	GetComprehensiveHealth(ctx context.Context) *dto.ComprehensiveHealthCheck
+	GetSystemMetrics(ctx context.Context) *dto.SystemMetrics
+	GetApplicationStatus(ctx context.Context) *dto.ApplicationStatus
 }
 
 type healthUsecase struct {
@@ -31,7 +32,7 @@ func NewHealthUsecase(db *gorm.DB, config *config.Config) HealthUsecase {
 	}
 }
 
-func (uc *healthUsecase) GetBasicHealth() *dto.BasicHealthCheck {
+func (uc *healthUsecase) GetBasicHealth(ctx context.Context) *dto.BasicHealthCheck {
 	return &dto.BasicHealthCheck{
 		Status:    dto.HealthStatusHealthy,
 		App:       uc.config.App.Name,
@@ -39,9 +40,9 @@ func (uc *healthUsecase) GetBasicHealth() *dto.BasicHealthCheck {
 	}
 }
 
-func (uc *healthUsecase) GetComprehensiveHealth() *dto.ComprehensiveHealthCheck {
+func (uc *healthUsecase) GetComprehensiveHealth(ctx context.Context) *dto.ComprehensiveHealthCheck {
 	appInfo := uc.getAppInfo()
-	dbStatus := uc.getDatabaseStatus()
+	dbStatus := uc.getDatabaseStatus(ctx)
 	systemInfo := uc.getSystemInfo()
 
 	status := dto.HealthStatusHealthy
@@ -59,26 +60,26 @@ func (uc *healthUsecase) GetComprehensiveHealth() *dto.ComprehensiveHealthCheck 
 	}
 }
 
-func (uc *healthUsecase) GetSystemMetrics() *dto.SystemMetrics {
+func (uc *healthUsecase) GetSystemMetrics(ctx context.Context) *dto.SystemMetrics {
 	appInfo := uc.getAppInfo()
 	appInfo.StartTime = uc.startTime
 
 	return &dto.SystemMetrics{
 		App:      appInfo,
 		System:   uc.getDetailedSystemInfo(),
-		Database: uc.getDetailedDatabaseStatus(),
+		Database: uc.getDetailedDatabaseStatus(ctx),
 		Http:     uc.getHttpMetrics(),
 	}
 }
 
-func (uc *healthUsecase) GetApplicationStatus() *dto.ApplicationStatus {
+func (uc *healthUsecase) GetApplicationStatus(ctx context.Context) *dto.ApplicationStatus {
 	appInfo := uc.getAppInfo()
 	appInfo.StartTime = uc.startTime
 	appInfo.Status = "running"
 
 	return &dto.ApplicationStatus{
 		App:          appInfo,
-		Services:     uc.getServicesStatus(),
+		Services:     uc.getServicesStatus(ctx),
 		Dependencies: uc.getDependencies(),
 	}
 }
@@ -93,7 +94,7 @@ func (uc *healthUsecase) getAppInfo() dto.AppInfo {
 	}
 }
 
-func (uc *healthUsecase) getDatabaseStatus() dto.DatabaseStatus {
+func (uc *healthUsecase) getDatabaseStatus(ctx context.Context) dto.DatabaseStatus {
 	if uc.db == nil {
 		return dto.DatabaseStatus{
 			Status: dto.ServiceStatusError,
@@ -110,7 +111,7 @@ func (uc *healthUsecase) getDatabaseStatus() dto.DatabaseStatus {
 	}
 
 	start := time.Now()
-	if err := sqlDB.Ping(); err != nil {
+	if err := sqlDB.PingContext(ctx); err != nil {
 		return dto.DatabaseStatus{
 			Status: dto.ServiceStatusDisconnected,
 			Error:  "Koneksi database terputus",
@@ -128,8 +129,8 @@ func (uc *healthUsecase) getDatabaseStatus() dto.DatabaseStatus {
 	}
 }
 
-func (uc *healthUsecase) getDetailedDatabaseStatus() dto.DatabaseStatus {
-	dbStatus := uc.getDatabaseStatus()
+func (uc *healthUsecase) getDetailedDatabaseStatus(ctx context.Context) dto.DatabaseStatus {
+	dbStatus := uc.getDatabaseStatus(ctx)
 
 	if dbStatus.Status == dto.ServiceStatusConnected && uc.db != nil {
 		sqlDB, _ := uc.db.DB()
@@ -188,8 +189,8 @@ func (uc *healthUsecase) getHttpMetrics() dto.HttpMetrics {
 	}
 }
 
-func (uc *healthUsecase) getServicesStatus() dto.ServicesStatus {
-	dbStatus := uc.getDatabaseStatus()
+func (uc *healthUsecase) getServicesStatus(ctx context.Context) dto.ServicesStatus {
+	dbStatus := uc.getDatabaseStatus(ctx)
 	emailStatus := uc.getEmailServiceStatus()
 
 	services := dto.ServicesStatus{

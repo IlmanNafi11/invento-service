@@ -11,7 +11,7 @@ import (
 )
 
 type StatisticUsecase interface {
-	GetStatistics(userID string, userRole string) (*dto.StatisticData, error)
+	GetStatistics(ctx context.Context, userID string, userRole string) (*dto.StatisticData, error)
 }
 
 type statisticUsecase struct {
@@ -41,7 +41,7 @@ func NewStatisticUsecase(
 	}
 }
 
-func (su *statisticUsecase) GetStatistics(userID string, userRole string) (*dto.StatisticData, error) {
+func (su *statisticUsecase) GetStatistics(ctx context.Context, userID string, userRole string) (*dto.StatisticData, error) {
 	result := &dto.StatisticData{}
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")
@@ -50,25 +50,25 @@ func (su *statisticUsecase) GetStatistics(userID string, userRole string) (*dto.
 	hasRoleRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Role", "read")
 
 	if hasProjectRead {
-		projectCount, _ := su.projectRepo.CountByUserID(context.Background(), userID)
+		projectCount, _ := su.projectRepo.CountByUserID(ctx, userID)
 		result.TotalProject = &projectCount
 	}
 
 	if hasModulRead {
-		modulCount, _ := su.modulRepo.CountByUserID(context.Background(), userID)
+		modulCount, _ := su.modulRepo.CountByUserID(ctx, userID)
 		result.TotalModul = &modulCount
 	}
 
 	if hasUserRead {
 		var totalUser int64
-		su.db.Model(&domain.User{}).Count(&totalUser)
+		su.db.WithContext(ctx).Model(&domain.User{}).Count(&totalUser)
 		count := int(totalUser)
 		result.TotalUser = &count
 	}
 
 	if hasRoleRead {
 		var totalRole int64
-		su.db.Model(&domain.Role{}).Count(&totalRole)
+		su.db.WithContext(ctx).Model(&domain.Role{}).Count(&totalRole)
 		count := int(totalRole)
 		result.TotalRole = &count
 	}

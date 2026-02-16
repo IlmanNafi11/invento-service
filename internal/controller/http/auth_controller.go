@@ -59,7 +59,8 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 		return nil
 	}
 
-	refreshToken, result, err := ctrl.authUsecase.Login(req)
+	ctx := c.UserContext()
+	refreshToken, result, err := ctrl.authUsecase.Login(ctx, req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -97,7 +98,8 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 		return nil
 	}
 
-	refreshToken, result, err := ctrl.authUsecase.Register(req)
+	ctx := c.UserContext()
+	refreshToken, result, err := ctrl.authUsecase.Register(ctx, req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -130,7 +132,8 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 		return httputil.SendErrorResponse(c, fiber.StatusUnauthorized, "Refresh token tidak ditemukan", nil)
 	}
 
-	newRefreshToken, result, err := ctrl.authUsecase.RefreshToken(refreshToken)
+	ctx := c.UserContext()
+	newRefreshToken, result, err := ctrl.authUsecase.RefreshToken(ctx, refreshToken)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -161,7 +164,8 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 	accessToken, _ := c.Locals("access_token").(string)
 	if accessToken != "" {
-		if err := ctrl.authUsecase.Logout(accessToken); err != nil {
+		ctx := c.UserContext()
+		if err := ctrl.authUsecase.Logout(ctx, accessToken); err != nil {
 			ctrl.logger.Warn().Err(err).Msg("Supabase logout failed, clearing cookies anyway")
 		}
 	}
@@ -193,7 +197,8 @@ func (ctrl *AuthController) RequestPasswordReset(c *fiber.Ctx) error {
 		return nil
 	}
 
-	if err := ctrl.authUsecase.RequestPasswordReset(req); err != nil {
+	ctx := c.UserContext()
+	if err := ctrl.authUsecase.RequestPasswordReset(ctx, req); err != nil {
 		ctrl.logger.Warn().Err(err).Str("email", req.Email).Msg("request password reset failed")
 	}
 

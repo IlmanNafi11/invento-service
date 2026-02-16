@@ -19,11 +19,11 @@ import (
 )
 
 type AuthUsecase interface {
-	Register(req dto.RegisterRequest) (string, *dto.AuthResponse, error)
-	Login(req dto.AuthRequest) (string, *dto.AuthResponse, error)
-	RefreshToken(refreshToken string) (string, *dto.RefreshTokenResponse, error)
-	RequestPasswordReset(req dto.ResetPasswordRequest) error
-	Logout(token string) error
+	Register(ctx context.Context, req dto.RegisterRequest) (string, *dto.AuthResponse, error)
+	Login(ctx context.Context, req dto.AuthRequest) (string, *dto.AuthResponse, error)
+	RefreshToken(ctx context.Context, refreshToken string) (string, *dto.RefreshTokenResponse, error)
+	RequestPasswordReset(ctx context.Context, req dto.ResetPasswordRequest) error
+	Logout(ctx context.Context, token string) error
 }
 
 type authUsecase struct {
@@ -77,8 +77,7 @@ func NewAuthUsecaseWithDeps(
 	}
 }
 
-func (uc *authUsecase) Register(req dto.RegisterRequest) (string, *dto.AuthResponse, error) {
-	ctx := context.Background()
+func (uc *authUsecase) Register(ctx context.Context, req dto.RegisterRequest) (string, *dto.AuthResponse, error) {
 
 	emailInfo, err := validatePolijeEmail(req.Email)
 	if err != nil {
@@ -159,8 +158,7 @@ func (uc *authUsecase) Register(req dto.RegisterRequest) (string, *dto.AuthRespo
 	return authResp.RefreshToken, domainAuthResp, nil
 }
 
-func (uc *authUsecase) Login(req dto.AuthRequest) (string, *dto.AuthResponse, error) {
-	ctx := context.Background()
+func (uc *authUsecase) Login(ctx context.Context, req dto.AuthRequest) (string, *dto.AuthResponse, error) {
 
 	authResp, err := uc.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
@@ -231,8 +229,7 @@ func (uc *authUsecase) Login(req dto.AuthRequest) (string, *dto.AuthResponse, er
 	return authResp.RefreshToken, domainAuthResp, nil
 }
 
-func (uc *authUsecase) RefreshToken(refreshToken string) (string, *dto.RefreshTokenResponse, error) {
-	ctx := context.Background()
+func (uc *authUsecase) RefreshToken(ctx context.Context, refreshToken string) (string, *dto.RefreshTokenResponse, error) {
 
 	authResp, err := uc.authService.RefreshToken(ctx, refreshToken)
 	if err != nil {
@@ -249,8 +246,7 @@ func (uc *authUsecase) RefreshToken(refreshToken string) (string, *dto.RefreshTo
 	return authResp.RefreshToken, domainResp, nil
 }
 
-func (uc *authUsecase) RequestPasswordReset(req dto.ResetPasswordRequest) error {
-	ctx := context.Background()
+func (uc *authUsecase) RequestPasswordReset(ctx context.Context, req dto.ResetPasswordRequest) error {
 
 	redirectURL := uc.config.App.CorsOriginDev + "/reset-password"
 	if uc.config.App.Env == "production" {
@@ -264,8 +260,7 @@ func (uc *authUsecase) RequestPasswordReset(req dto.ResetPasswordRequest) error 
 	return nil
 }
 
-func (uc *authUsecase) Logout(token string) error {
-	ctx := context.Background()
+func (uc *authUsecase) Logout(ctx context.Context, token string) error {
 	if err := uc.authService.Logout(ctx, token); err != nil {
 		return apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Logout: %w", err))
 	}

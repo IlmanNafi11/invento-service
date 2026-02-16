@@ -35,7 +35,8 @@ func NewHealthController(healthUsecase usecase.HealthUsecase) *HealthController 
 //	@Success		200	{object}	dto.SuccessResponse{data=domain.BasicHealthCheck}	"Server berjalan dengan baik"
 //	@Router			/health [get]
 func (ctrl *HealthController) BasicHealthCheck(c *fiber.Ctx) error {
-	healthData := ctrl.healthUsecase.GetBasicHealth()
+	ctx := c.UserContext()
+	healthData := ctrl.healthUsecase.GetBasicHealth(ctx)
 
 	return ctrl.SendSuccess(c, healthData, "Server berjalan dengan baik")
 }
@@ -53,7 +54,8 @@ func (ctrl *HealthController) BasicHealthCheck(c *fiber.Ctx) error {
 //	@Failure		503	{object}	dto.ErrorResponse	"Beberapa komponen sistem mengalami masalah"
 //	@Router			/monitoring/status [get]
 func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
-	healthData := ctrl.healthUsecase.GetComprehensiveHealth()
+	ctx := c.UserContext()
+	healthData := ctrl.healthUsecase.GetComprehensiveHealth(ctx)
 
 	if healthData.Status == "unhealthy" {
 		return httputil.SendErrorResponse(c, fiber.StatusServiceUnavailable, "Beberapa komponen sistem mengalami masalah", healthData)
@@ -72,7 +74,8 @@ func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 //	@Success		200	{object}	dto.SuccessResponse{data=domain.SystemMetrics}	"Metrics sistem berhasil diambil"
 //	@Router			/monitoring/metrics [get]
 func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
-	metricsData := ctrl.healthUsecase.GetSystemMetrics()
+	ctx := c.UserContext()
+	metricsData := ctrl.healthUsecase.GetSystemMetrics(ctx)
 
 	return ctrl.SendSuccess(c, metricsData, "Metrics sistem berhasil diambil")
 }
@@ -87,7 +90,8 @@ func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
 //	@Success		200	{object}	dto.SuccessResponse{data=domain.ApplicationStatus}	"Status aplikasi berhasil diambil"
 //	@Router			/monitoring/app-status [get]
 func (ctrl *HealthController) GetApplicationStatus(c *fiber.Ctx) error {
-	statusData := ctrl.healthUsecase.GetApplicationStatus()
+	ctx := c.UserContext()
+	statusData := ctrl.healthUsecase.GetApplicationStatus(ctx)
 
 	return ctrl.SendSuccess(c, statusData, "Status aplikasi berhasil diambil")
 }
