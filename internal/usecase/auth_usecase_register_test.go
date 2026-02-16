@@ -1,13 +1,14 @@
 package usecase
 
 import (
+	"context"
 	"errors"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
-	"testing"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
+	"testing"
 )
 
 func TestLogin_UserInactive(t *testing.T) {
@@ -40,7 +41,7 @@ func TestLogin_UserInactive(t *testing.T) {
 	}, nil)
 	mockUser.On("GetByEmail", req.Email).Return(inactiveUser, nil)
 
-	refreshToken, authResp, err := uc.Login(req)
+	refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Nil(t, authResp)
@@ -63,7 +64,7 @@ func TestRequestPasswordReset_Success(t *testing.T) {
 
 	mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, mock.Anything).Return(nil)
 
-	err := uc.RequestPasswordReset(req)
+	err := uc.RequestPasswordReset(context.Background(), req)
 
 	assert.NoError(t, err)
 	mockAuth.AssertCalled(t, "RequestPasswordReset", mock.Anything, req.Email, mock.Anything)
@@ -85,7 +86,7 @@ func TestRefreshToken_Success(t *testing.T) {
 		ExpiresIn:    3600,
 	}, nil)
 
-	newRefreshToken, resp, err := uc.RefreshToken("refresh_token_old")
+	newRefreshToken, resp, err := uc.RefreshToken(context.Background(), "refresh_token_old")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
@@ -104,7 +105,7 @@ func TestRefreshToken_ServiceFails(t *testing.T) {
 	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 
 	mockAuth.On("RefreshToken", mock.Anything, "refresh_token_old").Return(nil, errors.New("service error"))
-	newRefreshToken, resp, err := uc.RefreshToken("refresh_token_old")
+	newRefreshToken, resp, err := uc.RefreshToken(context.Background(), "refresh_token_old")
 
 	assert.Error(t, err)
 	assert.Empty(t, newRefreshToken)
@@ -121,7 +122,7 @@ func TestLogout_Success(t *testing.T) {
 	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 	mockAuth.On("Logout", mock.Anything, "access_token").Return(nil)
 
-	err := uc.Logout("access_token")
+	err := uc.Logout(context.Background(), "access_token")
 	assert.NoError(t, err)
 	mockAuth.AssertCalled(t, "Logout", mock.Anything, "access_token")
 }

@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"invento-service/config"
 	httpcontroller "invento-service/internal/controller/http"
@@ -23,37 +24,37 @@ type MockAuthUsecase struct {
 	mock.Mock
 }
 
-func (m *MockAuthUsecase) Register(req dto.RegisterRequest) (string, *dto.AuthResponse, error) {
-	args := m.Called(req)
+func (m *MockAuthUsecase) Register(ctx context.Context, req dto.RegisterRequest) (string, *dto.AuthResponse, error) {
+	args := m.Called(ctx, req)
 	if args.Get(1) == nil {
 		return args.String(0), nil, args.Error(2)
 	}
 	return args.String(0), args.Get(1).(*dto.AuthResponse), args.Error(2)
 }
 
-func (m *MockAuthUsecase) Login(req dto.AuthRequest) (string, *dto.AuthResponse, error) {
-	args := m.Called(req)
+func (m *MockAuthUsecase) Login(ctx context.Context, req dto.AuthRequest) (string, *dto.AuthResponse, error) {
+	args := m.Called(ctx, req)
 	if args.Get(1) == nil {
 		return args.String(0), nil, args.Error(2)
 	}
 	return args.String(0), args.Get(1).(*dto.AuthResponse), args.Error(2)
 }
 
-func (m *MockAuthUsecase) RefreshToken(refreshToken string) (string, *dto.RefreshTokenResponse, error) {
-	args := m.Called(refreshToken)
+func (m *MockAuthUsecase) RefreshToken(ctx context.Context, refreshToken string) (string, *dto.RefreshTokenResponse, error) {
+	args := m.Called(ctx, refreshToken)
 	if args.Get(1) == nil {
 		return args.String(0), nil, args.Error(2)
 	}
 	return args.String(0), args.Get(1).(*dto.RefreshTokenResponse), args.Error(2)
 }
 
-func (m *MockAuthUsecase) Logout(token string) error {
-	args := m.Called(token)
+func (m *MockAuthUsecase) Logout(ctx context.Context, token string) error {
+	args := m.Called(ctx, token)
 	return args.Error(0)
 }
 
-func (m *MockAuthUsecase) RequestPasswordReset(req dto.ResetPasswordRequest) error {
-	args := m.Called(req)
+func (m *MockAuthUsecase) RequestPasswordReset(ctx context.Context, req dto.ResetPasswordRequest) error {
+	args := m.Called(ctx, req)
 	return args.Error(0)
 }
 
@@ -107,7 +108,7 @@ func TestAuthController_Register_Success(t *testing.T) {
 		ExpiresAt:   1234567890,
 	}
 
-	mockAuthUC.On("Register", reqBody).Return("refresh_token", expectedResponse, nil)
+	mockAuthUC.On("Register", mock.Anything, reqBody).Return("refresh_token", expectedResponse, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/register", bytes.NewReader(bodyBytes))
@@ -152,7 +153,7 @@ func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
 	app.Post("/register", controller.Register)
 
 	reqBody := dto.RegisterRequest{Name: "Test User", Email: "test@example.com", Password: "password123"}
-	mockAuthUC.On("Register", reqBody).Return("", (*dto.AuthResponse)(nil), apperrors.NewConflictError("Email sudah terdaftar"))
+	mockAuthUC.On("Register", mock.Anything, reqBody).Return("", (*dto.AuthResponse)(nil), apperrors.NewConflictError("Email sudah terdaftar"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/register", bytes.NewReader(bodyBytes))
@@ -181,7 +182,7 @@ func TestAuthController_Login_Success(t *testing.T) {
 		ExpiresIn:   3600,
 		ExpiresAt:   1234567890,
 	}
-	mockAuthUC.On("Login", reqBody).Return("refresh_token", expectedResponse, nil)
+	mockAuthUC.On("Login", mock.Anything, reqBody).Return("refresh_token", expectedResponse, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/login", bytes.NewReader(bodyBytes))
@@ -207,7 +208,7 @@ func TestAuthController_Login_InvalidCredentials(t *testing.T) {
 	app.Post("/login", controller.Login)
 
 	reqBody := dto.AuthRequest{Email: "test@example.com", Password: "wrongpassword"}
-	mockAuthUC.On("Login", reqBody).Return("", (*dto.AuthResponse)(nil), apperrors.NewUnauthorizedError("Email atau password salah"))
+	mockAuthUC.On("Login", mock.Anything, reqBody).Return("", (*dto.AuthResponse)(nil), apperrors.NewUnauthorizedError("Email atau password salah"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/login", bytes.NewReader(bodyBytes))
@@ -234,7 +235,7 @@ func TestAuthController_RefreshToken_Success(t *testing.T) {
 		ExpiresIn:   3600,
 		ExpiresAt:   1234567890,
 	}
-	mockAuthUC.On("RefreshToken", "old_refresh_token").Return("new_refresh_token", expectedResponse, nil)
+	mockAuthUC.On("RefreshToken", mock.Anything, "old_refresh_token").Return("new_refresh_token", expectedResponse, nil)
 
 	req := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
 	req.AddCookie(&http.Cookie{Name: httputil.RefreshTokenCookieName, Value: "old_refresh_token"})
@@ -277,7 +278,7 @@ func TestAuthController_Logout_ClearsCookies(t *testing.T) {
 		return controller.Logout(c)
 	})
 
-	mockAuthUC.On("Logout", "access-to-logout").Return(nil)
+	mockAuthUC.On("Logout", mock.Anything, "access-to-logout").Return(nil)
 
 	req := httptest.NewRequest("POST", "/logout", nil)
 	resp, err := app.Test(req)
@@ -311,7 +312,7 @@ func TestAuthController_RequestPasswordReset(t *testing.T) {
 		app.Post("/api/v1/auth/reset-password", controller.RequestPasswordReset)
 
 		reqBody := dto.ResetPasswordRequest{Email: "test@example.com"}
-		mockAuthUC.On("RequestPasswordReset", reqBody).Return(nil)
+		mockAuthUC.On("RequestPasswordReset", mock.Anything, reqBody).Return(nil)
 
 		bodyBytes, _ := json.Marshal(reqBody)
 		req := httptest.NewRequest("POST", "/api/v1/auth/reset-password", bytes.NewReader(bodyBytes))
@@ -413,7 +414,7 @@ func TestAuthController_RefreshToken_InvalidToken(t *testing.T) {
 		app := fiber.New()
 		app.Post("/api/v1/auth/refresh", controller.RefreshToken)
 
-		mockAuthUC.On("RefreshToken", "invalid_refresh_token").Return("", (*dto.RefreshTokenResponse)(nil), apperrors.NewUnauthorizedError("Refresh token tidak valid atau sudah expired"))
+		mockAuthUC.On("RefreshToken", mock.Anything, "invalid_refresh_token").Return("", (*dto.RefreshTokenResponse)(nil), apperrors.NewUnauthorizedError("Refresh token tidak valid atau sudah expired"))
 
 		req := httptest.NewRequest("POST", "/api/v1/auth/refresh", nil)
 		req.AddCookie(&http.Cookie{Name: httputil.RefreshTokenCookieName, Value: "invalid_refresh_token"})

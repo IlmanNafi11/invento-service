@@ -1,15 +1,16 @@
 package usecase
 
 import (
+	"context"
 	"errors"
-	"invento-service/internal/domain"
-	"invento-service/internal/dto"
-	"testing"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
+	"invento-service/internal/domain"
+	"invento-service/internal/dto"
+	"testing"
 )
 
 func TestAuth_EdgeCases(t *testing.T) {
@@ -44,7 +45,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 		mockRole.On("GetByName", "mahasiswa").Return(nil, gorm.ErrRecordNotFound)
 
-		refreshToken, authResp, err := uc.Register(req)
+		refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Role mahasiswa")
@@ -70,7 +71,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 		mockRole.On("GetByName", "mahasiswa").Return(nil, errors.New("role query failed"))
 
-		refreshToken, authResp, err := uc.Register(req)
+		refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -98,7 +99,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole.On("GetByName", "mahasiswa").Return(role, nil)
 		mockAuth.On("Register", mock.Anything, mock.Anything).Return(nil, errors.New("user already registered"))
 
-		refreshToken, authResp, err := uc.Register(req)
+		refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Email sudah terdaftar di sistem autentikasi")
@@ -133,7 +134,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockUser.On("Create", mock.Anything).Return(errors.New("database write failed"))
 		mockAuth.On("DeleteUser", mock.Anything, "user-uuid-123").Return(errors.New("delete failed"))
 
-		refreshToken, authResp, err := uc.Register(req)
+		refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -164,7 +165,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		}, nil)
 		mockUser.On("GetByEmail", req.Email).Return(nil, errors.New("database connection failed"))
 
-		refreshToken, authResp, err := uc.Login(req)
+		refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -195,7 +196,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		}, nil)
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 
-		refreshToken, authResp, err := uc.Login(req)
+		refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "polije.ac.id")
@@ -231,7 +232,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 			return u.Name == req.Email
 		})).Return(nil)
 
-		refreshToken, authResp, err := uc.Login(req)
+		refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, authResp)
@@ -262,7 +263,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 		mockRole.On("GetByName", "mahasiswa").Return(nil, errors.New("role lookup failed"))
 
-		refreshToken, authResp, err := uc.Login(req)
+		refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -296,7 +297,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole.On("GetByName", "mahasiswa").Return(role, nil)
 		mockUser.On("Create", mock.Anything).Return(errors.New("insert failed"))
 
-		refreshToken, authResp, err := uc.Login(req)
+		refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -314,7 +315,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
 		mockAuth.On("Logout", mock.Anything, "access_token").Return(errors.New("logout failed"))
 
-		err := uc.Logout("access_token")
+		err := uc.Logout(context.Background(), "access_token")
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -332,7 +333,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		req := dto.ResetPasswordRequest{Email: "test@student.polije.ac.id"}
 		mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, mock.Anything).Return(errors.New("request reset failed"))
 
-		err := uc.RequestPasswordReset(req)
+		err := uc.RequestPasswordReset(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
@@ -352,7 +353,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		expectedRedirect := cfg.App.CorsOriginProd + "/reset-password"
 		mockAuth.On("RequestPasswordReset", mock.Anything, req.Email, expectedRedirect).Return(nil)
 
-		err := uc.RequestPasswordReset(req)
+		err := uc.RequestPasswordReset(context.Background(), req)
 
 		assert.NoError(t, err)
 		mockAuth.AssertCalled(t, "RequestPasswordReset", mock.Anything, req.Email, expectedRedirect)

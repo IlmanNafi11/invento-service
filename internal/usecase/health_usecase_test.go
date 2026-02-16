@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"invento-service/config"
 	"invento-service/internal/dto"
 	"testing"
@@ -53,7 +54,7 @@ func TestHealthUsecase_GetBasicHealth_Success(t *testing.T) {
 	}
 
 	healthUsecase := NewHealthUsecase(nil, cfg)
-	result := healthUsecase.GetBasicHealth()
+	result := healthUsecase.GetBasicHealth(context.Background())
 
 	assert.NotNil(t, result)
 	assert.Equal(t, dto.HealthStatusHealthy, result.Status)
@@ -71,7 +72,7 @@ func TestHealthUsecase_GetComprehensiveHealth_Success(t *testing.T) {
 	}
 
 	healthUsecase := NewHealthUsecase(nil, cfg)
-	result := healthUsecase.GetComprehensiveHealth()
+	result := healthUsecase.GetComprehensiveHealth(context.Background())
 
 	assert.NotNil(t, result)
 	assert.Equal(t, "test-app", result.App.Name)
@@ -94,7 +95,7 @@ func TestHealthUsecase_GetSystemMetrics_Success(t *testing.T) {
 	}
 
 	healthUsecase := NewHealthUsecase(nil, cfg)
-	result := healthUsecase.GetSystemMetrics()
+	result := healthUsecase.GetSystemMetrics(context.Background())
 
 	assert.NotNil(t, result)
 	assert.Equal(t, "test-app", result.App.Name)
@@ -120,7 +121,7 @@ func TestHealthUsecase_GetApplicationStatus_Success(t *testing.T) {
 	}
 
 	healthUsecase := NewHealthUsecase(nil, cfg)
-	result := healthUsecase.GetApplicationStatus()
+	result := healthUsecase.GetApplicationStatus(context.Background())
 
 	assert.NotNil(t, result)
 	assert.Equal(t, "test-app", result.App.Name)
@@ -152,10 +153,10 @@ func TestHealthUsecase_FormatDuration(t *testing.T) {
 
 	healthUsecase := NewHealthUsecase(nil, cfg)
 
-	basicHealth := healthUsecase.GetBasicHealth()
+	basicHealth := healthUsecase.GetBasicHealth(context.Background())
 	assert.NotNil(t, basicHealth)
 
-	appStatus := healthUsecase.GetApplicationStatus()
+	appStatus := healthUsecase.GetApplicationStatus(context.Background())
 	assert.NotEmpty(t, appStatus.App.Uptime)
 	assert.Contains(t, []string{"s", "m", "h"}, appStatus.App.Uptime[len(appStatus.App.Uptime)-1:])
 }

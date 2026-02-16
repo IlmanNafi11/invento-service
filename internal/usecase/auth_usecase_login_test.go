@@ -195,7 +195,6 @@ func newTestConfig() *config.Config {
 	}
 }
 
-
 func TestRegister_Success(t *testing.T) {
 	t.Parallel()
 	mockAuth := new(MockAuthService)
@@ -228,7 +227,7 @@ func TestRegister_Success(t *testing.T) {
 		return u.Email == req.Email && u.Name == req.Name && u.ID == "user-uuid-123"
 	})).Return(nil)
 
-	refreshToken, authResp, err := uc.Register(req)
+	refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, authResp)
@@ -264,7 +263,7 @@ func TestRegister_SupabaseFails(t *testing.T) {
 	mockRole.On("GetByName", "mahasiswa").Return(role, nil)
 	mockAuth.On("Register", mock.Anything, mock.Anything).Return(nil, errors.New("supabase error"))
 
-	refreshToken, authResp, err := uc.Register(req)
+	refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Nil(t, authResp)
@@ -304,7 +303,7 @@ func TestRegister_LocalDBFails_RollbackSupabaseUser(t *testing.T) {
 	mockUser.On("Create", mock.Anything).Return(errors.New("database error"))
 	mockAuth.On("DeleteUser", mock.Anything, supabaseUserID).Return(nil)
 
-	refreshToken, authResp, err := uc.Register(req)
+	refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Nil(t, authResp)
@@ -333,7 +332,7 @@ func TestRegister_EmailAlreadyExists(t *testing.T) {
 	existingUser := &domain.User{ID: "existing-user", Email: req.Email}
 	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
 
-	refreshToken, authResp, err := uc.Register(req)
+	refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Nil(t, authResp)
@@ -358,7 +357,7 @@ func TestRegister_InvalidEmail(t *testing.T) {
 		Password: "password123",
 	}
 
-	refreshToken, authResp, err := uc.Register(req)
+	refreshToken, authResp, err := uc.Register(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Nil(t, authResp)
@@ -402,7 +401,7 @@ func TestLogin_Success_ExistingUser(t *testing.T) {
 	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
 	mockRole.On("GetByID", uint(1)).Return(role, nil)
 
-	refreshToken, authResp, err := uc.Login(req)
+	refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, authResp)
@@ -444,7 +443,7 @@ func TestLogin_Success_NewUserSync(t *testing.T) {
 	})).Return(nil)
 	mockRole.On("GetByID", uint(1)).Return(role, nil)
 
-	refreshToken, authResp, err := uc.Login(req)
+	refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, authResp)
@@ -472,7 +471,7 @@ func TestLogin_SupabaseFails(t *testing.T) {
 
 	mockAuth.On("Login", mock.Anything, req.Email, req.Password).Return(nil, errors.New("invalid credentials"))
 
-	refreshToken, authResp, err := uc.Login(req)
+	refreshToken, authResp, err := uc.Login(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Nil(t, authResp)

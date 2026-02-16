@@ -1,6 +1,7 @@
 package http_test
 
 import (
+	"context"
 	"encoding/json"
 	httpcontroller "invento-service/internal/controller/http"
 	dto "invento-service/internal/dto"
@@ -17,23 +18,23 @@ type MockHealthUsecase struct {
 	mock.Mock
 }
 
-func (m *MockHealthUsecase) GetBasicHealth() *dto.BasicHealthCheck {
-	args := m.Called()
+func (m *MockHealthUsecase) GetBasicHealth(ctx context.Context) *dto.BasicHealthCheck {
+	args := m.Called(ctx)
 	return args.Get(0).(*dto.BasicHealthCheck)
 }
 
-func (m *MockHealthUsecase) GetComprehensiveHealth() *dto.ComprehensiveHealthCheck {
-	args := m.Called()
+func (m *MockHealthUsecase) GetComprehensiveHealth(ctx context.Context) *dto.ComprehensiveHealthCheck {
+	args := m.Called(ctx)
 	return args.Get(0).(*dto.ComprehensiveHealthCheck)
 }
 
-func (m *MockHealthUsecase) GetSystemMetrics() *dto.SystemMetrics {
-	args := m.Called()
+func (m *MockHealthUsecase) GetSystemMetrics(ctx context.Context) *dto.SystemMetrics {
+	args := m.Called(ctx)
 	return args.Get(0).(*dto.SystemMetrics)
 }
 
-func (m *MockHealthUsecase) GetApplicationStatus() *dto.ApplicationStatus {
-	args := m.Called()
+func (m *MockHealthUsecase) GetApplicationStatus(ctx context.Context) *dto.ApplicationStatus {
+	args := m.Called(ctx)
 	return args.Get(0).(*dto.ApplicationStatus)
 }
 
@@ -48,7 +49,7 @@ func TestHealthController_BasicHealthCheck_Success(t *testing.T) {
 		Timestamp: time.Now(),
 	}
 
-	mockUsecase.On("GetBasicHealth").Return(expectedData)
+	mockUsecase.On("GetBasicHealth", mock.Anything).Return(expectedData)
 
 	app := fiber.New()
 	app.Get("/health", controller.BasicHealthCheck)
@@ -94,7 +95,7 @@ func TestHealthController_ComprehensiveHealthCheck_Success(t *testing.T) {
 		Timestamp: time.Now(),
 	}
 
-	mockUsecase.On("GetComprehensiveHealth").Return(expectedData)
+	mockUsecase.On("GetComprehensiveHealth", mock.Anything).Return(expectedData)
 
 	app := fiber.New()
 	app.Get("/health", controller.ComprehensiveHealthCheck)
@@ -140,7 +141,7 @@ func TestHealthController_ComprehensiveHealthCheck_Unhealthy(t *testing.T) {
 		Timestamp: time.Now(),
 	}
 
-	mockUsecase.On("GetComprehensiveHealth").Return(expectedData)
+	mockUsecase.On("GetComprehensiveHealth", mock.Anything).Return(expectedData)
 
 	app := fiber.New()
 	app.Get("/health", controller.ComprehensiveHealthCheck)
@@ -206,7 +207,7 @@ func TestHealthController_GetSystemMetrics_Success(t *testing.T) {
 		},
 	}
 
-	mockUsecase.On("GetSystemMetrics").Return(expectedData)
+	mockUsecase.On("GetSystemMetrics", mock.Anything).Return(expectedData)
 
 	app := fiber.New()
 	app.Get("/metrics", controller.GetSystemMetrics)
@@ -262,7 +263,7 @@ func TestHealthController_GetApplicationStatus_Success(t *testing.T) {
 		},
 	}
 
-	mockUsecase.On("GetApplicationStatus").Return(expectedData)
+	mockUsecase.On("GetApplicationStatus", mock.Anything).Return(expectedData)
 
 	app := fiber.New()
 	app.Get("/status", controller.GetApplicationStatus)

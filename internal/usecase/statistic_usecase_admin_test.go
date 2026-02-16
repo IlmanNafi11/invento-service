@@ -40,9 +40,8 @@ type statisticUsecaseWithInterface struct {
 	db             *gorm.DB
 }
 
-func (su *statisticUsecaseWithInterface) GetStatistics(userID string, userRole string) (*dto.StatisticData, error) {
+func (su *statisticUsecaseWithInterface) GetStatistics(ctx context.Context, userID string, userRole string) (*dto.StatisticData, error) {
 	result := &dto.StatisticData{}
-	ctx := context.Background()
 
 	hasProjectRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Project", "read")
 	hasModulRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Modul", "read")
@@ -61,14 +60,14 @@ func (su *statisticUsecaseWithInterface) GetStatistics(userID string, userRole s
 
 	if hasUserRead {
 		var totalUser int64
-		su.db.Model(&domain.User{}).Count(&totalUser)
+		su.db.WithContext(ctx).Model(&domain.User{}).Count(&totalUser)
 		count := int(totalUser)
 		result.TotalUser = &count
 	}
 
 	if hasRoleRead {
 		var totalRole int64
-		su.db.Model(&domain.Role{}).Count(&totalRole)
+		su.db.WithContext(ctx).Model(&domain.Role{}).Count(&totalRole)
 		count := int(totalRole)
 		result.TotalRole = &count
 	}
@@ -160,7 +159,7 @@ func TestStatisticUsecase_GetStatistics_AllPermissionsGranted(t *testing.T) {
 	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(10, nil)
 	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(25, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -203,7 +202,7 @@ func TestStatisticUsecase_GetStatistics_OnlyProjectPermission(t *testing.T) {
 
 	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(5, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -241,7 +240,7 @@ func TestStatisticUsecase_GetStatistics_OnlyModulPermission(t *testing.T) {
 
 	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(30, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -277,7 +276,7 @@ func TestStatisticUsecase_GetStatistics_OnlyUserPermission(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(true, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(false, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -312,7 +311,7 @@ func TestStatisticUsecase_GetStatistics_OnlyRolePermission(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(false, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(true, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -348,7 +347,7 @@ func TestStatisticUsecase_GetStatistics_NoPermissions(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(false, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(false, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -385,7 +384,7 @@ func TestStatisticUsecase_GetStatistics_ProjectAndModulPermissions(t *testing.T)
 	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(12, nil)
 	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(45, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -423,7 +422,7 @@ func TestStatisticUsecase_GetStatistics_UserAndRolePermissions(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(true, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(true, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -461,7 +460,7 @@ func TestStatisticUsecase_GetStatistics_EmptyDatabase(t *testing.T) {
 	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
 	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)

@@ -290,7 +290,7 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 			Password: "password123",
 		}
 
-		refreshToken, authResp, err := suite.authUsecase.Register(req)
+		refreshToken, authResp, err := suite.authUsecase.Register(context.Background(), req)
 
 		// Verify: No error and correct response
 		require.NoError(t, err)
@@ -324,7 +324,7 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 			Password: "password123",
 		}
 
-		refreshToken, authResp, err := suite.authUsecase.Register(req)
+		refreshToken, authResp, err := suite.authUsecase.Register(context.Background(), req)
 
 		// Verify: Should return conflict error
 		require.Error(t, err)
@@ -344,7 +344,7 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 			Password: "password123",
 		}
 
-		refreshToken, authResp, err := suite.authUsecase.Register(req)
+		refreshToken, authResp, err := suite.authUsecase.Register(context.Background(), req)
 
 		// Verify: Should return validation error
 		require.Error(t, err)
@@ -385,7 +385,7 @@ func TestAuthIntegration_LoginFlow(t *testing.T) {
 			Password: "correctpassword",
 		}
 
-		refreshToken, authResp, err := suite.authUsecase.Login(req)
+		refreshToken, authResp, err := suite.authUsecase.Login(context.Background(), req)
 
 		// Verify
 		require.NoError(t, err)
@@ -408,7 +408,7 @@ func TestAuthIntegration_LoginFlow(t *testing.T) {
 			Password: "wrongpassword",
 		}
 
-		refreshToken, authResp, err := suite.authUsecase.Login(req)
+		refreshToken, authResp, err := suite.authUsecase.Login(context.Background(), req)
 
 		// Verify
 		require.Error(t, err)
@@ -440,7 +440,7 @@ func TestAuthIntegration_RequestPasswordReset(t *testing.T) {
 		req := dto.ResetPasswordRequest{
 			Email: "reset@student.polije.ac.id",
 		}
-		err := suite.authUsecase.RequestPasswordReset(req)
+		err := suite.authUsecase.RequestPasswordReset(context.Background(), req)
 
 		// Verify
 		require.NoError(t, err)
@@ -451,7 +451,7 @@ func TestAuthIntegration_RequestPasswordReset(t *testing.T) {
 		suite.mockAuth.On("RequestPasswordReset", mock.Anything, "nonexistent@student.polije.ac.id", mock.Anything).Return(nil).Once()
 
 		req := dto.ResetPasswordRequest{Email: "nonexistent@student.polije.ac.id"}
-		err := suite.authUsecase.RequestPasswordReset(req)
+		err := suite.authUsecase.RequestPasswordReset(context.Background(), req)
 
 		require.NoError(t, err)
 		suite.mockAuth.AssertExpectations(t)
@@ -470,7 +470,7 @@ func TestAuthIntegration_RefreshAndLogout(t *testing.T) {
 			ExpiresIn:    3600,
 		}, nil).Once()
 
-		newRefresh, resp, err := suite.authUsecase.RefreshToken("old_refresh")
+		newRefresh, resp, err := suite.authUsecase.RefreshToken(context.Background(), "old_refresh")
 		require.NoError(t, err)
 		assert.Equal(t, "new_refresh", newRefresh)
 		assert.Equal(t, "new_access", resp.AccessToken)
@@ -479,7 +479,7 @@ func TestAuthIntegration_RefreshAndLogout(t *testing.T) {
 
 	t.Run("Logout_Success", func(t *testing.T) {
 		suite.mockAuth.On("Logout", mock.Anything, "access_token").Return(nil).Once()
-		err := suite.authUsecase.Logout("access_token")
+		err := suite.authUsecase.Logout(context.Background(), "access_token")
 		require.NoError(t, err)
 	})
 }

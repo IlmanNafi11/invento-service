@@ -1,12 +1,13 @@
 package usecase
 
 import (
-	"invento-service/internal/rbac"
-	"testing"
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"invento-service/internal/rbac"
+	"testing"
 )
 
 func TestStatisticUsecase_ActualGetStatistics_NoPermissions(t *testing.T) {
@@ -35,7 +36,7 @@ func TestStatisticUsecase_ActualGetStatistics_NoPermissions(t *testing.T) {
 	userRole := "guest"
 	// No permissions added for guest
 
-	result, err := usecase.GetStatistics(userID, userRole)
+	result, err := usecase.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -78,7 +79,7 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 
 	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(8, nil)
 
-	result, err := usecase.GetStatistics(userID, userRole)
+	result, err := usecase.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)

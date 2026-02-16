@@ -1,12 +1,13 @@
 package usecase
 
 import (
-	"invento-service/internal/rbac"
-	"testing"
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"invento-service/internal/rbac"
+	"testing"
 )
 
 func TestStatisticUsecase_GetStatistics_ZeroCounts(t *testing.T) {
@@ -33,7 +34,7 @@ func TestStatisticUsecase_GetStatistics_ZeroCounts(t *testing.T) {
 	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
 	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
 
-	result, err := userUC.GetStatistics(userID, userRole)
+	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
@@ -111,7 +112,7 @@ func TestStatisticUsecase_GetStatistics_VariousUserIDs(t *testing.T) {
 			mockProjectRepo.On("CountByUserID", mock.Anything, tc.userID).Return(tc.projectCount, nil)
 			mockModulRepo.On("CountByUserID", mock.Anything, tc.userID).Return(tc.modulCount, nil)
 
-			result, err := userUC.GetStatistics(tc.userID, tc.userRole)
+			result, err := userUC.GetStatistics(context.Background(), tc.userID, tc.userRole)
 
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
@@ -247,7 +248,7 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 				mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(tc.modulCount, nil)
 			}
 
-			result, err := userUC.GetStatistics(userID, tc.userRole)
+			result, err := userUC.GetStatistics(context.Background(), userID, tc.userRole)
 
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
@@ -337,7 +338,7 @@ func TestStatisticUsecase_ActualGetStatistics_WithRealEnforcer(t *testing.T) {
 	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(10, nil)
 	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(25, nil)
 
-	result, err := usecase.GetStatistics(userID, userRole)
+	result, err := usecase.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)

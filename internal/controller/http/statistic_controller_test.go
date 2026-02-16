@@ -1,6 +1,7 @@
 package http_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	dto "invento-service/internal/dto"
@@ -20,8 +21,8 @@ type MockStatisticUsecase struct {
 	mock.Mock
 }
 
-func (m *MockStatisticUsecase) GetStatistics(userID string, userRole string) (*dto.StatisticData, error) {
-	args := m.Called(userID, userRole)
+func (m *MockStatisticUsecase) GetStatistics(ctx context.Context, userID string, userRole string) (*dto.StatisticData, error) {
+	args := m.Called(ctx, userID, userRole)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -69,7 +70,7 @@ func TestStatisticController_GetStatistics_AdminUser_Success(t *testing.T) {
 		TotalRole:    &totalRole,
 	}
 
-	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -115,7 +116,7 @@ func TestStatisticController_GetStatistics_RegularUser_PartialData(t *testing.T)
 		TotalRole:    nil,
 	}
 
-	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "user").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "user").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -157,7 +158,7 @@ func TestStatisticController_GetStatistics_EmptyData(t *testing.T) {
 		TotalRole:    nil,
 	}
 
-	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "user").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "user").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -214,7 +215,7 @@ func TestStatisticController_GetStatistics_InternalError(t *testing.T) {
 	app := setupTestAppWithAuthForStatistic(controller)
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
-	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "admin").Return(nil, errors.New("database connection failed"))
+	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(nil, errors.New("database connection failed"))
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -238,7 +239,7 @@ func TestStatisticController_GetStatistics_AppError(t *testing.T) {
 	app.Get("/api/v1/statistic", controller.GetStatistics)
 
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses ke statistik")
-	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "user").Return(nil, appErr)
+	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "user").Return(nil, appErr)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -271,7 +272,7 @@ func TestStatisticController_GetStatistics_ResponseHeaders(t *testing.T) {
 		TotalProject: &totalProject,
 	}
 
-	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
@@ -309,7 +310,7 @@ func TestStatisticController_GetStatistics_ResponseStructure(t *testing.T) {
 		TotalModul:   &totalModul,
 	}
 
-	mockStatisticUC.On("GetStatistics", "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
+	mockStatisticUC.On("GetStatistics", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(expectedData, nil)
 
 	req := httptest.NewRequest("GET", "/api/v1/statistic", nil)
 	req.Header.Set("X-Test-User-ID", "1")
