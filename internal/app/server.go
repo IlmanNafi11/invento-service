@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"invento-service/config"
@@ -185,10 +186,10 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	tusProjectManager := upload.NewTusManager(tusProjectStore, tusQueue, fileManager, cfg, appLogger)
 	tusModulManager := upload.NewTusManager(tusModulStore, tusModulQueue, fileManager, cfg, appLogger)
 
-	if activeIDs, err := tusUploadRepo.GetActiveUploadIDs(); err == nil && len(activeIDs) > 0 {
+	if activeIDs, err := tusUploadRepo.GetActiveUploadIDs(context.Background()); err == nil && len(activeIDs) > 0 {
 		tusQueue.LoadFromDB(activeIDs)
 	}
-	if activeIDs, err := tusModulUploadRepo.GetActiveUploadIDs(); err == nil && len(activeIDs) > 0 {
+	if activeIDs, err := tusModulUploadRepo.GetActiveUploadIDs(context.Background()); err == nil && len(activeIDs) > 0 {
 		tusModulQueue.LoadFromDB(activeIDs)
 	}
 

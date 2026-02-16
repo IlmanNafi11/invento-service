@@ -72,32 +72,32 @@ type ModulRepository interface {
 }
 
 type TusUploadRepository interface {
-	Create(upload *domain.TusUpload) error
-	GetByID(id string) (*domain.TusUpload, error)
-	GetByUserID(userID string) ([]domain.TusUpload, error)
-	GetActiveByUserID(userID string) ([]domain.TusUpload, error)
-	CountActiveByUserID(userID string) (int64, error)
-	UpdateOffset(id string, offset int64, progress float64) error
-	UpdateStatus(id string, status string) error
-	Complete(id string, projectID uint, filePath string) error
-	GetExpiredUploads(before time.Time) ([]domain.TusUpload, error)
-	GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error)
-	Delete(id string) error
-	ListActive() ([]domain.TusUpload, error)
-	GetActiveUploadIDs() ([]string, error)
+	Create(ctx context.Context, upload *domain.TusUpload) error
+	GetByID(ctx context.Context, id string) (*domain.TusUpload, error)
+	GetByUserID(ctx context.Context, userID string) ([]domain.TusUpload, error)
+	GetActiveByUserID(ctx context.Context, userID string) ([]domain.TusUpload, error)
+	CountActiveByUserID(ctx context.Context, userID string) (int64, error)
+	UpdateOffset(ctx context.Context, id string, offset int64, progress float64) error
+	UpdateStatus(ctx context.Context, id string, status string) error
+	Complete(ctx context.Context, id string, projectID uint, filePath string) error
+	GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusUpload, error)
+	GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusUpload, error)
+	Delete(ctx context.Context, id string) error
+	ListActive(ctx context.Context) ([]domain.TusUpload, error)
+	GetActiveUploadIDs(ctx context.Context) ([]string, error)
 }
 
 type TusModulUploadRepository interface {
-	Create(upload *domain.TusModulUpload) error
-	GetByID(id string) (*domain.TusModulUpload, error)
-	GetByUserID(userID string) ([]domain.TusModulUpload, error)
-	UpdateOffset(id string, offset int64, progress float64) error
-	UpdateStatus(id string, status string) error
-	Complete(id string, modulID string, filePath string) error
-	Delete(id string) error
-	GetExpiredUploads(before time.Time) ([]domain.TusModulUpload, error)
-	GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error)
-	CountActiveByUserID(userID string) (int64, error)
-	GetActiveByUserID(userID string) ([]domain.TusModulUpload, error)
-	GetActiveUploadIDs() ([]string, error)
+	Create(ctx context.Context, upload *domain.TusModulUpload) error
+	GetByID(ctx context.Context, id string) (*domain.TusModulUpload, error)
+	GetByUserID(ctx context.Context, userID string) ([]domain.TusModulUpload, error)
+	UpdateOffset(ctx context.Context, id string, offset int64, progress float64) error
+	UpdateStatus(ctx context.Context, id string, status string) error
+	Complete(ctx context.Context, id string, modulID string, filePath string) error
+	Delete(ctx context.Context, id string) error
+	GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusModulUpload, error)
+	GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusModulUpload, error)
+	CountActiveByUserID(ctx context.Context, userID string) (int64, error)
+	GetActiveByUserID(ctx context.Context, userID string) ([]domain.TusModulUpload, error)
+	GetActiveUploadIDs(ctx context.Context) ([]string, error)
 }

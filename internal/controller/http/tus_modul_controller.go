@@ -25,12 +25,13 @@ func NewTusModulController(tusModulUsecase usecase.TusModulUsecase, cfg *config.
 }
 
 func (ctrl *TusModulController) CheckUploadSlot(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return nil
 	}
 
-	response, err := ctrl.tusModulUsecase.CheckModulUploadSlot(userID)
+	response, err := ctrl.tusModulUsecase.CheckModulUploadSlot(ctx, userID)
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
@@ -51,6 +52,7 @@ func (ctrl *TusModulController) InitiateModulUpdateUpload(c *fiber.Ctx) error {
 }
 
 func (ctrl *TusModulController) initiateUpload(c *fiber.Ctx, modulID *string) error {
+	ctx := c.UserContext()
 	userID, _, _, err := getTusAuthContext(c)
 	if err != nil {
 		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
@@ -73,9 +75,9 @@ func (ctrl *TusModulController) initiateUpload(c *fiber.Ctx, modulID *string) er
 
 	var result *dto.TusModulUploadResponse
 	if modulID == nil {
-		result, err = ctrl.tusModulUsecase.InitiateModulUpload(userID, tusHeaders.UploadLength, tusHeaders.UploadMetadata)
+		result, err = ctrl.tusModulUsecase.InitiateModulUpload(ctx, userID, tusHeaders.UploadLength, tusHeaders.UploadMetadata)
 	} else {
-		result, err = ctrl.tusModulUsecase.InitiateModulUpdateUpload(*modulID, userID, tusHeaders.UploadLength, tusHeaders.UploadMetadata)
+		result, err = ctrl.tusModulUsecase.InitiateModulUpdateUpload(ctx, *modulID, userID, tusHeaders.UploadLength, tusHeaders.UploadMetadata)
 	}
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
@@ -105,6 +107,7 @@ func (ctrl *TusModulController) UploadModulUpdateChunk(c *fiber.Ctx) error {
 }
 
 func (ctrl *TusModulController) uploadChunk(c *fiber.Ctx, modulID *string) error {
+	ctx := c.UserContext()
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
@@ -126,9 +129,9 @@ func (ctrl *TusModulController) uploadChunk(c *fiber.Ctx, modulID *string) error
 
 	var newOffset int64
 	if modulID == nil {
-		newOffset, err = ctrl.tusModulUsecase.HandleModulChunk(uploadID, userID, offset, bodyReader)
+		newOffset, err = ctrl.tusModulUsecase.HandleModulChunk(ctx, uploadID, userID, offset, bodyReader)
 	} else {
-		newOffset, err = ctrl.tusModulUsecase.HandleModulUpdateChunk(*modulID, uploadID, userID, offset, bodyReader)
+		newOffset, err = ctrl.tusModulUsecase.HandleModulUpdateChunk(ctx, *modulID, uploadID, userID, offset, bodyReader)
 	}
 	if err != nil {
 		return handleTusChunkError(c, err, ctrl.config.Upload.TusVersion)
@@ -150,6 +153,7 @@ func (ctrl *TusModulController) GetModulUpdateUploadStatus(c *fiber.Ctx) error {
 }
 
 func (ctrl *TusModulController) getUploadStatus(c *fiber.Ctx, modulID *string) error {
+	ctx := c.UserContext()
 	userID := ctrl.base.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return upload.SendTusErrorResponse(c, fiber.StatusUnauthorized, ctrl.config.Upload.TusVersion)
@@ -170,9 +174,9 @@ func (ctrl *TusModulController) getUploadStatus(c *fiber.Ctx, modulID *string) e
 		err    error
 	)
 	if modulID == nil {
-		offset, length, err = ctrl.tusModulUsecase.GetModulUploadStatus(uploadID, userID)
+		offset, length, err = ctrl.tusModulUsecase.GetModulUploadStatus(ctx, uploadID, userID)
 	} else {
-		offset, length, err = ctrl.tusModulUsecase.GetModulUpdateUploadStatus(*modulID, uploadID, userID)
+		offset, length, err = ctrl.tusModulUsecase.GetModulUpdateUploadStatus(ctx, *modulID, uploadID, userID)
 	}
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
@@ -208,10 +212,11 @@ func (ctrl *TusModulController) getUploadInfo(c *fiber.Ctx, modulID *string) err
 		info *dto.TusModulUploadInfoResponse
 		err  error
 	)
+	ctx := c.UserContext()
 	if modulID == nil {
-		info, err = ctrl.tusModulUsecase.GetModulUploadInfo(uploadID, userID)
+		info, err = ctrl.tusModulUsecase.GetModulUploadInfo(ctx, uploadID, userID)
 	} else {
-		info, err = ctrl.tusModulUsecase.GetModulUpdateUploadInfo(*modulID, uploadID, userID)
+		info, err = ctrl.tusModulUsecase.GetModulUpdateUploadInfo(ctx, *modulID, uploadID, userID)
 	}
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
@@ -252,11 +257,12 @@ func (ctrl *TusModulController) cancelUpload(c *fiber.Ctx, modulID *string) erro
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
+	ctx := c.UserContext()
 	var err error
 	if modulID == nil {
-		err = ctrl.tusModulUsecase.CancelModulUpload(uploadID, userID)
+		err = ctrl.tusModulUsecase.CancelModulUpload(ctx, uploadID, userID)
 	} else {
-		err = ctrl.tusModulUsecase.CancelModulUpdateUpload(*modulID, uploadID, userID)
+		err = ctrl.tusModulUsecase.CancelModulUpdateUpload(ctx, *modulID, uploadID, userID)
 	}
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)

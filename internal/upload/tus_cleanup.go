@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	"time"
 
@@ -8,17 +9,17 @@ import (
 )
 
 type TusProjectUploadCleanupRepository interface {
-	GetExpiredUploads(before time.Time) ([]domain.TusUpload, error)
-	GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error)
-	UpdateStatus(id string, status string) error
-	Delete(id string) error
+	GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusUpload, error)
+	GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusUpload, error)
+	UpdateStatus(ctx context.Context, id string, status string) error
+	Delete(ctx context.Context, id string) error
 }
 
 type TusModulUploadCleanupRepository interface {
-	GetExpiredUploads(before time.Time) ([]domain.TusModulUpload, error)
-	GetAbandonedUploads(timeout time.Duration) ([]domain.TusModulUpload, error)
-	UpdateStatus(id string, status string) error
-	Delete(id string) error
+	GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusModulUpload, error)
+	GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusModulUpload, error)
+	UpdateStatus(ctx context.Context, id string, status string) error
+	Delete(ctx context.Context, id string) error
 }
 
 type TusCleanup struct {
@@ -128,11 +129,12 @@ func (tc *TusCleanup) cleanupStaleLocks(store *TusStore, label string) {
 }
 
 func (tc *TusCleanup) cleanupUploads(
+	ctx context.Context,
 	uploadIDs []string,
 	store *TusStore,
 	newStatus string,
 	label string,
-	updateStatus func(id string, status string) error,
+	updateStatus func(ctx context.Context, id string, status string) error,
 ) int {
 	cleaned := 0
 	for _, uploadID := range uploadIDs {
@@ -142,7 +144,7 @@ func (tc *TusCleanup) cleanupUploads(
 			}
 		}
 
-		if err := updateStatus(uploadID, newStatus); err != nil {
+		if err := updateStatus(ctx, uploadID, newStatus); err != nil {
 			tc.logger.Error().Err(err).Str("type", label).Str("upload_id", uploadID).Msg("failed to update upload status")
 			continue
 		}
@@ -159,7 +161,8 @@ func (tc *TusCleanup) CleanupExpiredProjects() error {
 		return nil
 	}
 
-	expiredUploads, err := tc.projectRepo.GetExpiredUploads(time.Now())
+	ctx := context.Background()
+	expiredUploads, err := tc.projectRepo.GetExpiredUploads(ctx, time.Now())
 	if err != nil {
 		return err
 	}
@@ -173,7 +176,7 @@ func (tc *TusCleanup) CleanupExpiredProjects() error {
 		uploadIDs = append(uploadIDs, upload.ID)
 	}
 
-	cleaned := tc.cleanupUploads(uploadIDs, tc.projectStore, domain.UploadStatusExpired, "project", tc.projectRepo.UpdateStatus)
+	cleaned := tc.cleanupUploads(ctx, uploadIDs, tc.projectStore, domain.UploadStatusExpired, "project", tc.projectRepo.UpdateStatus)
 	if cleaned > 0 {
 		tc.logger.Info().Int("count", cleaned).Msg("cleaned expired project uploads")
 	}
@@ -186,7 +189,8 @@ func (tc *TusCleanup) CleanupAbandonedProjects() error {
 		return nil
 	}
 
-	abandonedUploads, err := tc.projectRepo.GetAbandonedUploads(tc.idleTimeout)
+	ctx := context.Background()
+	abandonedUploads, err := tc.projectRepo.GetAbandonedUploads(ctx, tc.idleTimeout)
 	if err != nil {
 		return err
 	}
@@ -200,7 +204,7 @@ func (tc *TusCleanup) CleanupAbandonedProjects() error {
 		uploadIDs = append(uploadIDs, upload.ID)
 	}
 
-	cleaned := tc.cleanupUploads(uploadIDs, tc.projectStore, domain.UploadStatusFailed, "project abandoned", tc.projectRepo.UpdateStatus)
+	cleaned := tc.cleanupUploads(ctx, uploadIDs, tc.projectStore, domain.UploadStatusFailed, "project abandoned", tc.projectRepo.UpdateStatus)
 	if cleaned > 0 {
 		tc.logger.Info().Int("count", cleaned).Msg("cleaned abandoned project uploads")
 	}
@@ -213,7 +217,8 @@ func (tc *TusCleanup) CleanupExpiredModuls() error {
 		return nil
 	}
 
-	expiredUploads, err := tc.modulRepo.GetExpiredUploads(time.Now())
+	ctx := context.Background()
+	expiredUploads, err := tc.modulRepo.GetExpiredUploads(ctx, time.Now())
 	if err != nil {
 		return err
 	}
@@ -227,7 +232,7 @@ func (tc *TusCleanup) CleanupExpiredModuls() error {
 		uploadIDs = append(uploadIDs, upload.ID)
 	}
 
-	cleaned := tc.cleanupUploads(uploadIDs, tc.modulStore, domain.UploadStatusExpired, "modul", tc.modulRepo.UpdateStatus)
+	cleaned := tc.cleanupUploads(ctx, uploadIDs, tc.modulStore, domain.UploadStatusExpired, "modul", tc.modulRepo.UpdateStatus)
 	if cleaned > 0 {
 		tc.logger.Info().Int("count", cleaned).Msg("cleaned expired modul uploads")
 	}
@@ -240,7 +245,8 @@ func (tc *TusCleanup) CleanupAbandonedModuls() error {
 		return nil
 	}
 
-	abandonedUploads, err := tc.modulRepo.GetAbandonedUploads(tc.idleTimeout)
+	ctx := context.Background()
+	abandonedUploads, err := tc.modulRepo.GetAbandonedUploads(ctx, tc.idleTimeout)
 	if err != nil {
 		return err
 	}
@@ -254,7 +260,7 @@ func (tc *TusCleanup) CleanupAbandonedModuls() error {
 		uploadIDs = append(uploadIDs, upload.ID)
 	}
 
-	cleaned := tc.cleanupUploads(uploadIDs, tc.modulStore, domain.UploadStatusFailed, "modul abandoned", tc.modulRepo.UpdateStatus)
+	cleaned := tc.cleanupUploads(ctx, uploadIDs, tc.modulStore, domain.UploadStatusFailed, "modul abandoned", tc.modulRepo.UpdateStatus)
 	if cleaned > 0 {
 		tc.logger.Info().Int("count", cleaned).Msg("cleaned abandoned modul uploads")
 	}
@@ -262,14 +268,14 @@ func (tc *TusCleanup) CleanupAbandonedModuls() error {
 	return nil
 }
 
-func (tc *TusCleanup) cleanupSingleUpload(uploadID string, store *TusStore, deleteFn func(id string) error) error {
+func (tc *TusCleanup) cleanupSingleUpload(ctx context.Context, uploadID string, store *TusStore, deleteFn func(ctx context.Context, id string) error) error {
 	if store != nil {
 		if err := store.Terminate(uploadID); err != nil {
 			return err
 		}
 	}
 
-	return deleteFn(uploadID)
+	return deleteFn(ctx, uploadID)
 }
 
 func (tc *TusCleanup) CleanupUpload(uploadID string) error {
@@ -277,7 +283,7 @@ func (tc *TusCleanup) CleanupUpload(uploadID string) error {
 		return nil
 	}
 
-	return tc.cleanupSingleUpload(uploadID, tc.projectStore, tc.projectRepo.Delete)
+	return tc.cleanupSingleUpload(context.Background(), uploadID, tc.projectStore, tc.projectRepo.Delete)
 }
 
 func (tc *TusCleanup) CleanupModulUpload(uploadID string) error {
@@ -285,5 +291,5 @@ func (tc *TusCleanup) CleanupModulUpload(uploadID string) error {
 		return nil
 	}
 
-	return tc.cleanupSingleUpload(uploadID, tc.modulStore, tc.modulRepo.Delete)
+	return tc.cleanupSingleUpload(context.Background(), uploadID, tc.modulStore, tc.modulRepo.Delete)
 }

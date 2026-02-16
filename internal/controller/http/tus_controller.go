@@ -39,7 +39,8 @@ func (ctrl *TusController) CheckUploadSlot(c *fiber.Ctx) error {
 		return nil
 	}
 
-	result, err := ctrl.tusUsecase.CheckUploadSlot(userID)
+	ctx := c.UserContext()
+	result, err := ctrl.tusUsecase.CheckUploadSlot(ctx, userID)
 	if err != nil {
 		return ctrl.base.SendInternalError(c)
 	}
@@ -60,7 +61,8 @@ func (ctrl *TusController) ResetUploadQueue(c *fiber.Ctx) error {
 		return nil
 	}
 
-	if err := ctrl.tusUsecase.ResetUploadQueue(userID); err != nil {
+	ctx := c.UserContext()
+	if err := ctrl.tusUsecase.ResetUploadQueue(ctx, userID); err != nil {
 		return ctrl.base.SendInternalError(c)
 	}
 
@@ -108,10 +110,11 @@ func (ctrl *TusController) initiateUpload(c *fiber.Ctx, projectID *uint) error {
 	}
 
 	var result *dto.TusUploadResponse
+	ctx := c.UserContext()
 	if projectID == nil {
-		result, err = ctrl.tusUsecase.InitiateUpload(userID, userEmail, userRole, fileSize, metadata)
+		result, err = ctrl.tusUsecase.InitiateUpload(ctx, userID, userEmail, userRole, fileSize, metadata)
 	} else {
-		result, err = ctrl.tusUsecase.InitiateProjectUpdateUpload(*projectID, userID, fileSize, metadata)
+		result, err = ctrl.tusUsecase.InitiateProjectUpdateUpload(ctx, *projectID, userID, fileSize, metadata)
 	}
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
@@ -158,10 +161,11 @@ func (ctrl *TusController) uploadChunk(c *fiber.Ctx, projectID *uint) error {
 	}
 
 	var newOffset int64
+	ctx := c.UserContext()
 	if projectID == nil {
-		newOffset, err = ctrl.tusUsecase.HandleChunk(uploadID, userID, offset, bodyReader)
+		newOffset, err = ctrl.tusUsecase.HandleChunk(ctx, uploadID, userID, offset, bodyReader)
 	} else {
-		newOffset, err = ctrl.tusUsecase.HandleProjectUpdateChunk(*projectID, uploadID, userID, offset, bodyReader)
+		newOffset, err = ctrl.tusUsecase.HandleProjectUpdateChunk(ctx, *projectID, uploadID, userID, offset, bodyReader)
 	}
 	if err != nil {
 		return handleTusChunkError(c, err, ctrl.config.Upload.TusVersion)
@@ -205,10 +209,11 @@ func (ctrl *TusController) getUploadStatus(c *fiber.Ctx, projectID *uint) error 
 		length int64
 		err    error
 	)
+	ctx := c.UserContext()
 	if projectID == nil {
-		offset, length, err = ctrl.tusUsecase.GetUploadStatus(uploadID, userID)
+		offset, length, err = ctrl.tusUsecase.GetUploadStatus(ctx, uploadID, userID)
 	} else {
-		offset, length, err = ctrl.tusUsecase.GetProjectUpdateUploadStatus(*projectID, uploadID, userID)
+		offset, length, err = ctrl.tusUsecase.GetProjectUpdateUploadStatus(ctx, *projectID, uploadID, userID)
 	}
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
@@ -247,10 +252,11 @@ func (ctrl *TusController) getUploadInfo(c *fiber.Ctx, projectID *uint) error {
 		result *dto.TusUploadInfoResponse
 		err    error
 	)
+	ctx := c.UserContext()
 	if projectID == nil {
-		result, err = ctrl.tusUsecase.GetUploadInfo(uploadID, userID)
+		result, err = ctrl.tusUsecase.GetUploadInfo(ctx, uploadID, userID)
 	} else {
-		result, err = ctrl.tusUsecase.GetProjectUpdateUploadInfo(*projectID, uploadID, userID)
+		result, err = ctrl.tusUsecase.GetProjectUpdateUploadInfo(ctx, *projectID, uploadID, userID)
 	}
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
@@ -294,11 +300,12 @@ func (ctrl *TusController) cancelUpload(c *fiber.Ctx, projectID *uint) error {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
+	ctx := c.UserContext()
 	var err error
 	if projectID == nil {
-		err = ctrl.tusUsecase.CancelUpload(uploadID, userID)
+		err = ctrl.tusUsecase.CancelUpload(ctx, uploadID, userID)
 	} else {
-		err = ctrl.tusUsecase.CancelProjectUpdateUpload(*projectID, uploadID, userID)
+		err = ctrl.tusUsecase.CancelProjectUpdateUpload(ctx, *projectID, uploadID, userID)
 	}
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)

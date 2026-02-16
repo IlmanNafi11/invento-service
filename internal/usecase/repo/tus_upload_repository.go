@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	"time"
 
@@ -17,49 +18,49 @@ func NewTusUploadRepository(db *gorm.DB) *tusUploadRepository {
 	}
 }
 
-func (r *tusUploadRepository) Create(upload *domain.TusUpload) error {
-	result := r.db.Create(upload)
+func (r *tusUploadRepository) Create(ctx context.Context, upload *domain.TusUpload) error {
+	result := r.db.WithContext(ctx).Create(upload)
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
 }
 
-func (r *tusUploadRepository) GetByID(id string) (*domain.TusUpload, error) {
+func (r *tusUploadRepository) GetByID(ctx context.Context, id string) (*domain.TusUpload, error) {
 	var upload domain.TusUpload
-	err := r.db.Where("id = ?", id).First(&upload).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&upload).Error
 	if err != nil {
 		return nil, err
 	}
 	return &upload, nil
 }
 
-func (r *tusUploadRepository) GetByUserID(userID string) ([]domain.TusUpload, error) {
+func (r *tusUploadRepository) GetByUserID(ctx context.Context, userID string) ([]domain.TusUpload, error) {
 	var uploads []domain.TusUpload
-	err := r.db.Where("user_id = ?", userID).
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&uploads).Error
 	return uploads, err
 }
 
-func (r *tusUploadRepository) GetActiveByUserID(userID string) ([]domain.TusUpload, error) {
+func (r *tusUploadRepository) GetActiveByUserID(ctx context.Context, userID string) ([]domain.TusUpload, error) {
 	var uploads []domain.TusUpload
-	err := r.db.Where("user_id = ? AND status IN (?)", userID, []string{domain.UploadStatusQueued, domain.UploadStatusPending, domain.UploadStatusUploading}).
+	err := r.db.WithContext(ctx).Where("user_id = ? AND status IN (?)", userID, []string{domain.UploadStatusQueued, domain.UploadStatusPending, domain.UploadStatusUploading}).
 		Order("created_at ASC").
 		Find(&uploads).Error
 	return uploads, err
 }
 
-func (r *tusUploadRepository) CountActiveByUserID(userID string) (int64, error) {
+func (r *tusUploadRepository) CountActiveByUserID(ctx context.Context, userID string) (int64, error) {
 	var count int64
-	err := r.db.Model(&domain.TusUpload{}).
+	err := r.db.WithContext(ctx).Model(&domain.TusUpload{}).
 		Where("user_id = ? AND status IN (?)", userID, []string{domain.UploadStatusPending, domain.UploadStatusUploading}).
 		Count(&count).Error
 	return count, err
 }
 
-func (r *tusUploadRepository) UpdateOffset(id string, offset int64, progress float64) error {
-	return r.db.Model(&domain.TusUpload{}).
+func (r *tusUploadRepository) UpdateOffset(ctx context.Context, id string, offset int64, progress float64) error {
+	return r.db.WithContext(ctx).Model(&domain.TusUpload{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"current_offset": offset,
@@ -67,17 +68,17 @@ func (r *tusUploadRepository) UpdateOffset(id string, offset int64, progress flo
 		}).Error
 }
 
-func (r *tusUploadRepository) UpdateStatus(id string, status string) error {
-	return r.db.Model(&domain.TusUpload{}).
+func (r *tusUploadRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+	return r.db.WithContext(ctx).Model(&domain.TusUpload{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"status": status,
 		}).Error
 }
 
-func (r *tusUploadRepository) Complete(id string, projectID uint, filePath string) error {
+func (r *tusUploadRepository) Complete(ctx context.Context, id string, projectID uint, filePath string) error {
 	now := time.Now()
-	return r.db.Model(&domain.TusUpload{}).
+	return r.db.WithContext(ctx).Model(&domain.TusUpload{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"project_id":   projectID,
@@ -88,9 +89,9 @@ func (r *tusUploadRepository) Complete(id string, projectID uint, filePath strin
 		}).Error
 }
 
-func (r *tusUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusUpload, error) {
+func (r *tusUploadRepository) GetExpiredUploads(ctx context.Context, before time.Time) ([]domain.TusUpload, error) {
 	var uploads []domain.TusUpload
-	err := r.db.Where("expires_at < ? AND status NOT IN (?)", before, []string{
+	err := r.db.WithContext(ctx).Where("expires_at < ? AND status NOT IN (?)", before, []string{
 		domain.UploadStatusCompleted,
 		domain.UploadStatusExpired,
 		domain.UploadStatusCancelled,
@@ -98,10 +99,10 @@ func (r *tusUploadRepository) GetExpiredUploads(before time.Time) ([]domain.TusU
 	return uploads, err
 }
 
-func (r *tusUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]domain.TusUpload, error) {
+func (r *tusUploadRepository) GetAbandonedUploads(ctx context.Context, timeout time.Duration) ([]domain.TusUpload, error) {
 	var uploads []domain.TusUpload
 	cutoffTime := time.Now().Add(-timeout)
-	err := r.db.Where("updated_at < ? AND status IN (?)", cutoffTime, []string{
+	err := r.db.WithContext(ctx).Where("updated_at < ? AND status IN (?)", cutoffTime, []string{
 		domain.UploadStatusQueued,
 		domain.UploadStatusUploading,
 		domain.UploadStatusPending,
@@ -109,22 +110,22 @@ func (r *tusUploadRepository) GetAbandonedUploads(timeout time.Duration) ([]doma
 	return uploads, err
 }
 
-func (r *tusUploadRepository) Delete(id string) error {
-	return r.db.Where("id = ?", id).Delete(&domain.TusUpload{}).Error
+func (r *tusUploadRepository) Delete(ctx context.Context, id string) error {
+	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&domain.TusUpload{}).Error
 }
 
-func (r *tusUploadRepository) ListActive() ([]domain.TusUpload, error) {
+func (r *tusUploadRepository) ListActive(ctx context.Context) ([]domain.TusUpload, error) {
 	var uploads []domain.TusUpload
-	err := r.db.Where("status IN (?)", []string{
+	err := r.db.WithContext(ctx).Where("status IN (?)", []string{
 		domain.UploadStatusPending,
 		domain.UploadStatusUploading,
 	}).Find(&uploads).Error
 	return uploads, err
 }
 
-func (r *tusUploadRepository) GetActiveUploadIDs() ([]string, error) {
+func (r *tusUploadRepository) GetActiveUploadIDs(ctx context.Context) ([]string, error) {
 	var ids []string
-	err := r.db.Model(&domain.TusUpload{}).
+	err := r.db.WithContext(ctx).Model(&domain.TusUpload{}).
 		Where("status IN (?)", []string{domain.UploadStatusQueued, domain.UploadStatusPending, domain.UploadStatusUploading}).
 		Pluck("id", &ids).Error
 	return ids, err

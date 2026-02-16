@@ -24,17 +24,17 @@ import (
 )
 
 type TusModulUsecase interface {
-	InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error)
-	HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
-	GetModulUploadInfo(uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error)
-	GetModulUploadStatus(uploadID string, userID string) (int64, int64, error)
-	CancelModulUpload(uploadID string, userID string) error
-	CheckModulUploadSlot(userID string) (*dto.TusModulUploadSlotResponse, error)
-	InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error)
-	HandleModulUpdateChunk(modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
-	GetModulUpdateUploadStatus(modulID string, uploadID string, userID string) (int64, int64, error)
-	GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error)
-	CancelModulUpdateUpload(modulID string, uploadID string, userID string) error
+	InitiateModulUpload(ctx context.Context, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error)
+	HandleModulChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
+	GetModulUploadInfo(ctx context.Context, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error)
+	GetModulUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error)
+	CancelModulUpload(ctx context.Context, uploadID string, userID string) error
+	CheckModulUploadSlot(ctx context.Context, userID string) (*dto.TusModulUploadSlotResponse, error)
+	InitiateModulUpdateUpload(ctx context.Context, modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error)
+	HandleModulUpdateChunk(ctx context.Context, modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error)
+	GetModulUpdateUploadStatus(ctx context.Context, modulID string, uploadID string, userID string) (int64, int64, error)
+	GetModulUpdateUploadInfo(ctx context.Context, modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error)
+	CancelModulUpdateUpload(ctx context.Context, modulID string, uploadID string, userID string) error
 }
 
 type tusModulUsecase struct {
@@ -61,8 +61,8 @@ func NewTusModulUsecase(
 	}
 }
 
-func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*dto.TusModulUploadSlotResponse, error) {
-	activeCount, err := uc.tusModulUploadRepo.CountActiveByUserID(userID)
+func (uc *tusModulUsecase) CheckModulUploadSlot(ctx context.Context, userID string) (*dto.TusModulUploadSlotResponse, error) {
+	activeCount, err := uc.tusModulUploadRepo.CountActiveByUserID(ctx, userID)
 	if err != nil {
 		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.CheckModulUploadSlot: %w", err))
 	}
@@ -85,12 +85,12 @@ func (uc *tusModulUsecase) CheckModulUploadSlot(userID string) (*dto.TusModulUpl
 	return response, nil
 }
 
-func (uc *tusModulUsecase) InitiateModulUpload(userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
-	return uc.initiateUpload(userID, fileSize, uploadMetadata, domain.UploadTypeModulCreate, nil)
+func (uc *tusModulUsecase) InitiateModulUpload(ctx context.Context, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
+	return uc.initiateUpload(ctx, userID, fileSize, uploadMetadata, domain.UploadTypeModulCreate, nil)
 }
 
-func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
-	modul, err := uc.modulRepo.GetByID(context.Background(), modulID)
+func (uc *tusModulUsecase) InitiateModulUpdateUpload(ctx context.Context, modulID string, userID string, fileSize int64, uploadMetadata string) (*dto.TusModulUploadResponse, error) {
+	modul, err := uc.modulRepo.GetByID(ctx, modulID)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Modul")
@@ -102,11 +102,11 @@ func (uc *tusModulUsecase) InitiateModulUpdateUpload(modulID string, userID stri
 		return nil, apperrors.NewForbiddenError("Anda tidak memiliki akses ke modul ini")
 	}
 
-	return uc.initiateUpload(userID, fileSize, uploadMetadata, domain.UploadTypeModulUpdate, &modulID)
+	return uc.initiateUpload(ctx, userID, fileSize, uploadMetadata, domain.UploadTypeModulUpdate, &modulID)
 }
 
-func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadMetadata string, uploadType string, modulID *string) (*dto.TusModulUploadResponse, error) {
-	slotCheck, err := uc.CheckModulUploadSlot(userID)
+func (uc *tusModulUsecase) initiateUpload(ctx context.Context, userID string, fileSize int64, uploadMetadata string, uploadType string, modulID *string) (*dto.TusModulUploadResponse, error) {
+	slotCheck, err := uc.CheckModulUploadSlot(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadM
 		ExpiresAt:     expiresAt,
 	}
 
-	if err := uc.tusModulUploadRepo.Create(tusUpload); err != nil {
+	if err := uc.tusModulUploadRepo.Create(ctx, tusUpload); err != nil {
 		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.initiateUpload: create record: %w", err))
 	}
 
@@ -161,7 +161,7 @@ func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadM
 	}
 
 	if err := uc.tusManager.InitiateUpload(uploadID, fileSize, metadataMap); err != nil {
-		_ = uc.tusModulUploadRepo.Delete(uploadID)
+		_ = uc.tusModulUploadRepo.Delete(ctx, uploadID)
 		return nil, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.initiateUpload: init storage: %w", err))
 	}
 
@@ -173,16 +173,16 @@ func (uc *tusModulUsecase) initiateUpload(userID string, fileSize int64, uploadM
 	}, nil
 }
 
-func (uc *tusModulUsecase) HandleModulChunk(uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	return uc.handleChunk(uploadID, userID, offset, chunk, nil)
+func (uc *tusModulUsecase) HandleModulChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	return uc.handleChunk(ctx, uploadID, userID, offset, chunk, nil)
 }
 
-func (uc *tusModulUsecase) HandleModulUpdateChunk(modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
-	return uc.handleChunk(uploadID, userID, offset, chunk, &modulID)
+func (uc *tusModulUsecase) HandleModulUpdateChunk(ctx context.Context, modulID string, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+	return uc.handleChunk(ctx, uploadID, userID, offset, chunk, &modulID)
 }
 
-func (uc *tusModulUsecase) handleChunk(uploadID string, userID string, offset int64, chunk io.Reader, modulID *string) (int64, error) {
-	tusUpload, err := uc.getOwnedUpload(uploadID, userID, modulID)
+func (uc *tusModulUsecase) handleChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader, modulID *string) (int64, error) {
+	tusUpload, err := uc.getOwnedUpload(ctx, uploadID, userID, modulID)
 	if err != nil {
 		return 0, err
 	}
@@ -199,7 +199,7 @@ func (uc *tusModulUsecase) handleChunk(uploadID string, userID string, offset in
 	}
 
 	if tusUpload.Status == domain.UploadStatusPending {
-		if err := uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.UploadStatusUploading); err != nil {
+		if err := uc.tusModulUploadRepo.UpdateStatus(ctx, uploadID, domain.UploadStatusUploading); err != nil {
 			return tusUpload.CurrentOffset, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.handleChunk: update status: %w", err))
 		}
 		tusUpload.Status = domain.UploadStatusUploading
@@ -211,14 +211,14 @@ func (uc *tusModulUsecase) handleChunk(uploadID string, userID string, offset in
 	}
 
 	progress := float64(newOffset) / float64(tusUpload.FileSize) * 100
-	if err := uc.tusModulUploadRepo.UpdateOffset(uploadID, newOffset, progress); err != nil {
+	if err := uc.tusModulUploadRepo.UpdateOffset(ctx, uploadID, newOffset, progress); err != nil {
 		return newOffset, apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.handleChunk: update offset: %w", err))
 	}
 
 	tusUpload.CurrentOffset = newOffset
 	tusUpload.Progress = progress
 	if newOffset >= tusUpload.FileSize {
-		if err := uc.completeUpload(tusUpload, userID); err != nil {
+		if err := uc.completeUpload(ctx, tusUpload, userID); err != nil {
 			return newOffset, err
 		}
 	}
@@ -226,7 +226,7 @@ func (uc *tusModulUsecase) handleChunk(uploadID string, userID string, offset in
 	return newOffset, nil
 }
 
-func (uc *tusModulUsecase) completeUpload(tusUpload *domain.TusModulUpload, userID string) error {
+func (uc *tusModulUsecase) completeUpload(ctx context.Context, tusUpload *domain.TusModulUpload, userID string) error {
 	dirPath, randomDir, err := uc.fileManager.CreateModulUploadDirectory(userID)
 	if err != nil {
 		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeUpload: create dir: %w", err))
@@ -242,12 +242,12 @@ func (uc *tusModulUsecase) completeUpload(tusUpload *domain.TusModulUpload, user
 	var modulID string
 	switch tusUpload.UploadType {
 	case domain.UploadTypeModulCreate:
-		modulID, err = uc.completeModulCreate(tusUpload, userID, fileName, finalPath, randomDir)
+		modulID, err = uc.completeModulCreate(ctx, tusUpload, userID, fileName, finalPath, randomDir)
 		if err != nil {
 			return err
 		}
 	case domain.UploadTypeModulUpdate:
-		modulID, err = uc.completeModulUpdate(tusUpload, userID, fileName, finalPath, randomDir)
+		modulID, err = uc.completeModulUpdate(ctx, tusUpload, userID, fileName, finalPath, randomDir)
 		if err != nil {
 			return err
 		}
@@ -255,14 +255,14 @@ func (uc *tusModulUsecase) completeUpload(tusUpload *domain.TusModulUpload, user
 		return apperrors.NewValidationError("tipe upload tidak didukung", nil)
 	}
 
-	if err := uc.tusModulUploadRepo.Complete(tusUpload.ID, modulID, finalPath); err != nil {
+	if err := uc.tusModulUploadRepo.Complete(ctx, tusUpload.ID, modulID, finalPath); err != nil {
 		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeUpload: complete record: %w", err))
 	}
 
 	return nil
 }
 
-func (uc *tusModulUsecase) completeModulCreate(tusUpload *domain.TusModulUpload, userID string, fileName string, finalPath string, randomDir string) (string, error) {
+func (uc *tusModulUsecase) completeModulCreate(ctx context.Context, tusUpload *domain.TusModulUpload, userID string, fileName string, finalPath string, randomDir string) (string, error) {
 	modul := &domain.Modul{
 		UserID:    userID,
 		Judul:     tusUpload.UploadMetadata.Judul,
@@ -274,7 +274,7 @@ func (uc *tusModulUsecase) completeModulCreate(tusUpload *domain.TusModulUpload,
 		Status:    "completed",
 	}
 
-	if err := uc.modulRepo.Create(context.Background(), modul); err != nil {
+	if err := uc.modulRepo.Create(ctx, modul); err != nil {
 		_ = storage.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulCreate: %w", err))
@@ -283,12 +283,12 @@ func (uc *tusModulUsecase) completeModulCreate(tusUpload *domain.TusModulUpload,
 	return modul.ID, nil
 }
 
-func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload, userID string, fileName string, finalPath string, randomDir string) (string, error) {
+func (uc *tusModulUsecase) completeModulUpdate(ctx context.Context, tusUpload *domain.TusModulUpload, userID string, fileName string, finalPath string, randomDir string) (string, error) {
 	if tusUpload.ModulID == nil {
 		return "", apperrors.NewValidationError("modul_id tidak ditemukan dalam upload record", nil)
 	}
 
-	modul, err := uc.modulRepo.GetByID(context.Background(), *tusUpload.ModulID)
+	modul, err := uc.modulRepo.GetByID(ctx, *tusUpload.ModulID)
 	if err != nil {
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulUpdate: get modul: %w", err))
 	}
@@ -301,7 +301,7 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 	modul.FileSize = tusUpload.FileSize
 	modul.MimeType = detectMimeType(finalPath)
 
-	if err := uc.modulRepo.Update(context.Background(), modul); err != nil {
+	if err := uc.modulRepo.Update(ctx, modul); err != nil {
 		_ = storage.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulUpdate: %w", err))
@@ -316,16 +316,16 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 	return modul.ID, nil
 }
 
-func (uc *tusModulUsecase) GetModulUploadInfo(uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
-	return uc.getUploadInfo(uploadID, userID, nil)
+func (uc *tusModulUsecase) GetModulUploadInfo(ctx context.Context, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
+	return uc.getUploadInfo(ctx, uploadID, userID, nil)
 }
 
-func (uc *tusModulUsecase) GetModulUpdateUploadInfo(modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
-	return uc.getUploadInfo(uploadID, userID, &modulID)
+func (uc *tusModulUsecase) GetModulUpdateUploadInfo(ctx context.Context, modulID string, uploadID string, userID string) (*dto.TusModulUploadInfoResponse, error) {
+	return uc.getUploadInfo(ctx, uploadID, userID, &modulID)
 }
 
-func (uc *tusModulUsecase) getUploadInfo(uploadID string, userID string, modulID *string) (*dto.TusModulUploadInfoResponse, error) {
-	tusUpload, err := uc.getOwnedUpload(uploadID, userID, modulID)
+func (uc *tusModulUsecase) getUploadInfo(ctx context.Context, uploadID string, userID string, modulID *string) (*dto.TusModulUploadInfoResponse, error) {
+	tusUpload, err := uc.getOwnedUpload(ctx, uploadID, userID, modulID)
 	if err != nil {
 		return nil, err
 	}
@@ -349,16 +349,16 @@ func (uc *tusModulUsecase) getUploadInfo(uploadID string, userID string, modulID
 	return response, nil
 }
 
-func (uc *tusModulUsecase) GetModulUploadStatus(uploadID string, userID string) (int64, int64, error) {
-	return uc.getUploadStatus(uploadID, userID, nil)
+func (uc *tusModulUsecase) GetModulUploadStatus(ctx context.Context, uploadID string, userID string) (int64, int64, error) {
+	return uc.getUploadStatus(ctx, uploadID, userID, nil)
 }
 
-func (uc *tusModulUsecase) GetModulUpdateUploadStatus(modulID string, uploadID string, userID string) (int64, int64, error) {
-	return uc.getUploadStatus(uploadID, userID, &modulID)
+func (uc *tusModulUsecase) GetModulUpdateUploadStatus(ctx context.Context, modulID string, uploadID string, userID string) (int64, int64, error) {
+	return uc.getUploadStatus(ctx, uploadID, userID, &modulID)
 }
 
-func (uc *tusModulUsecase) getUploadStatus(uploadID string, userID string, modulID *string) (int64, int64, error) {
-	tusUpload, err := uc.getOwnedUpload(uploadID, userID, modulID)
+func (uc *tusModulUsecase) getUploadStatus(ctx context.Context, uploadID string, userID string, modulID *string) (int64, int64, error) {
+	tusUpload, err := uc.getOwnedUpload(ctx, uploadID, userID, modulID)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -366,16 +366,16 @@ func (uc *tusModulUsecase) getUploadStatus(uploadID string, userID string, modul
 	return tusUpload.CurrentOffset, tusUpload.FileSize, nil
 }
 
-func (uc *tusModulUsecase) CancelModulUpload(uploadID string, userID string) error {
-	return uc.cancelUpload(uploadID, userID, nil)
+func (uc *tusModulUsecase) CancelModulUpload(ctx context.Context, uploadID string, userID string) error {
+	return uc.cancelUpload(ctx, uploadID, userID, nil)
 }
 
-func (uc *tusModulUsecase) CancelModulUpdateUpload(modulID string, uploadID string, userID string) error {
-	return uc.cancelUpload(uploadID, userID, &modulID)
+func (uc *tusModulUsecase) CancelModulUpdateUpload(ctx context.Context, modulID string, uploadID string, userID string) error {
+	return uc.cancelUpload(ctx, uploadID, userID, &modulID)
 }
 
-func (uc *tusModulUsecase) cancelUpload(uploadID string, userID string, modulID *string) error {
-	tusUpload, err := uc.getOwnedUpload(uploadID, userID, modulID)
+func (uc *tusModulUsecase) cancelUpload(ctx context.Context, uploadID string, userID string, modulID *string) error {
+	tusUpload, err := uc.getOwnedUpload(ctx, uploadID, userID, modulID)
 	if err != nil {
 		return err
 	}
@@ -388,15 +388,15 @@ func (uc *tusModulUsecase) cancelUpload(uploadID string, userID string, modulID 
 		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.cancelUpload: cancel storage: %w", err))
 	}
 
-	if err := uc.tusModulUploadRepo.UpdateStatus(uploadID, domain.UploadStatusCancelled); err != nil {
+	if err := uc.tusModulUploadRepo.UpdateStatus(ctx, uploadID, domain.UploadStatusCancelled); err != nil {
 		return apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.cancelUpload: update status: %w", err))
 	}
 
 	return nil
 }
 
-func (uc *tusModulUsecase) getOwnedUpload(uploadID string, userID string, modulID *string) (*domain.TusModulUpload, error) {
-	tusUpload, err := uc.tusModulUploadRepo.GetByID(uploadID)
+func (uc *tusModulUsecase) getOwnedUpload(ctx context.Context, uploadID string, userID string, modulID *string) (*domain.TusModulUpload, error) {
+	tusUpload, err := uc.tusModulUploadRepo.GetByID(ctx, uploadID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Upload")
