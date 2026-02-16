@@ -2,14 +2,13 @@ package upload_test
 
 import (
 	"context"
-	"path/filepath"
-	"testing"
-	"time"
-
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
+	"path/filepath"
+	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"invento-service/internal/dto"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

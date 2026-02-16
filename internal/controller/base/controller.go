@@ -2,11 +2,10 @@ package base
 
 import (
 	"errors"
-	"strconv"
-
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"invento-service/internal/rbac"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"

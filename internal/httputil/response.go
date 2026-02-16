@@ -1,11 +1,10 @@
 package httputil
 
 import (
-	"strconv"
-	"time"
-
 	"invento-service/internal/dto"
 	"invento-service/internal/version"
+	"strconv"
+	"time"
 
 	apperrors "invento-service/internal/errors"
 

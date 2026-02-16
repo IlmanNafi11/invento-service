@@ -2,9 +2,8 @@ package upload
 
 import (
 	"context"
-	"time"
-
 	"invento-service/internal/domain"
+	"time"
 
 	"github.com/rs/zerolog"
 )

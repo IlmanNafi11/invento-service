@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"invento-service/internal/dto"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"invento-service/internal/dto"
 
 	httpcontroller "invento-service/internal/controller/http"
 

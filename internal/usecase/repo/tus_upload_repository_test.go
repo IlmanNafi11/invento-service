@@ -2,11 +2,10 @@ package repo
 
 import (
 	"context"
+	"invento-service/internal/domain"
 	"sync"
 	"testing"
 	"time"
-
-	"invento-service/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

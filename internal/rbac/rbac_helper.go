@@ -3,7 +3,6 @@ package rbac
 import (
 	"context"
 	"errors"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 )

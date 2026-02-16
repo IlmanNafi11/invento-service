@@ -2,11 +2,10 @@ package middleware_test
 
 import (
 	"bytes"
+	"invento-service/internal/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"invento-service/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

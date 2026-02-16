@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"path/filepath"
-	"testing"
-	"time"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/storage"
 	"invento-service/internal/upload"
+	"path/filepath"
+	"testing"
+	"time"
 
 	apperrors "invento-service/internal/errors"
 

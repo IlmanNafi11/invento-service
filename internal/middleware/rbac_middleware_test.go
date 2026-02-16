@@ -3,11 +3,10 @@ package middleware_test
 import (
 	"encoding/json"
 	"errors"
+	"invento-service/internal/middleware"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"invento-service/internal/middleware"
 
 	testutil "invento-service/internal/testing"
 

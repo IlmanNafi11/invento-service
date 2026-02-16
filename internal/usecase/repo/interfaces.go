@@ -2,10 +2,9 @@ package repo
 
 import (
 	"context"
-	"time"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"time"
 )
 
 type UserRepository interface {

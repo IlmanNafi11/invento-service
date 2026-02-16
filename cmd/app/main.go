@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
+	"invento-service/config"
+	"invento-service/internal/app"
 	"os"
 	"os/signal"
 	"runtime/debug"
 	"syscall"
 	"time"
-
-	"invento-service/config"
-	"invento-service/internal/app"
 
 	"github.com/rs/zerolog"
 )

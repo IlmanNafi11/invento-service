@@ -1,10 +1,9 @@
 package config_test
 
 import (
+	"invento-service/config"
 	"os"
 	"testing"
-
-	"invento-service/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

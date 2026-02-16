@@ -3,15 +3,14 @@ package http_test
 import (
 	"bytes"
 	"context"
+	"invento-service/internal/domain"
+	"invento-service/internal/upload"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
-
-	"invento-service/internal/domain"
-	"invento-service/internal/upload"
 
 	httpcontroller "invento-service/internal/controller/http"
 

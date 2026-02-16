@@ -8,13 +8,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"invento-service/internal/domain"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
-
-	"invento-service/internal/domain"
 
 	apperrors "invento-service/internal/errors"
 

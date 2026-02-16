@@ -3,10 +3,9 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"invento-service/config"
 	"mime/multipart"
 	"path/filepath"
-
-	"invento-service/config"
 )
 
 type ProjectHelper struct {

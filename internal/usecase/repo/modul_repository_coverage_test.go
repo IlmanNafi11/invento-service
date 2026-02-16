@@ -2,10 +2,9 @@ package repo_test
 
 import (
 	"context"
-	"testing"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/usecase/repo"
+	"testing"
 
 	apperrors "invento-service/internal/errors"
 	testhelper "invento-service/internal/testing"

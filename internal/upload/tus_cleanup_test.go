@@ -2,13 +2,12 @@ package upload
 
 import (
 	"context"
-	"path/filepath"
-	"testing"
-	"time"
-
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/storage"
+	"path/filepath"
+	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

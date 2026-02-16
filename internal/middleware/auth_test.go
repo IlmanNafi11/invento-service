@@ -3,10 +3,6 @@ package middleware_test
 import (
 	"context"
 	"errors"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
@@ -14,6 +10,9 @@ import (
 	"invento-service/internal/middleware"
 	"invento-service/internal/supabase"
 	"invento-service/internal/usecase/repo"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"

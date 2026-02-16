@@ -3,10 +3,9 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"testing"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

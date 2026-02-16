@@ -2,7 +2,6 @@ package testing
 
 import (
 	"errors"
-
 	"invento-service/config"
 
 	"github.com/gofiber/fiber/v2"

@@ -3,9 +3,8 @@ package rbac
 import (
 	"context"
 	"errors"
-	"testing"
-
 	"invento-service/internal/domain"
+	"testing"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/stretchr/testify/assert"

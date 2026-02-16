@@ -1,11 +1,10 @@
 package storage_test
 
 import (
-	"mime/multipart"
-	"testing"
-
 	"invento-service/config"
 	"invento-service/internal/storage"
+	"mime/multipart"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 )

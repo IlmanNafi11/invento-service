@@ -3,11 +3,10 @@ package http
 import (
 	"bytes"
 	"errors"
-	"io"
-
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"invento-service/internal/upload"
+	"io"
 
 	apperrors "invento-service/internal/errors"
 

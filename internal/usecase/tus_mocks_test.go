@@ -2,9 +2,8 @@ package usecase
 
 import (
 	"context"
-	"time"
-
 	"invento-service/internal/domain"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 )

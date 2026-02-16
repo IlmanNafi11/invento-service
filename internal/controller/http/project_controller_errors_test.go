@@ -3,12 +3,11 @@ package http_test
 import (
 	"encoding/json"
 	"fmt"
+	"invento-service/internal/dto"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"invento-service/internal/dto"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

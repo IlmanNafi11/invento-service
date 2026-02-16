@@ -3,10 +3,9 @@ package usecase
 import (
 	"context"
 	"errors"
-	"testing"
-
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

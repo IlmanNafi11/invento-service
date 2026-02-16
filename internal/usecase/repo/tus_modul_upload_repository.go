@@ -2,9 +2,8 @@ package repo
 
 import (
 	"context"
-	"time"
-
 	"invento-service/internal/domain"
+	"time"
 
 	"gorm.io/gorm"
 )

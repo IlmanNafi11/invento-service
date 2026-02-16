@@ -2,13 +2,12 @@ package http_test
 
 import (
 	"bytes"
+	"invento-service/internal/domain"
+	"invento-service/internal/upload"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"invento-service/internal/domain"
-	"invento-service/internal/upload"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

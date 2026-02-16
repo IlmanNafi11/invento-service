@@ -1,9 +1,8 @@
 package rbac_test
 
 import (
-	"testing"
-
 	"invento-service/internal/rbac"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

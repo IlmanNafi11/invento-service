@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"invento-service/internal/storage"
 	"io"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
-
-	"invento-service/internal/storage"
 )
 
 type TusStore struct {

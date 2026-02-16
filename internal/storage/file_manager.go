@@ -2,10 +2,9 @@ package storage
 
 import (
 	"fmt"
+	"invento-service/config"
 	"os"
 	"path/filepath"
-
-	"invento-service/config"
 )
 
 type FileManager struct {

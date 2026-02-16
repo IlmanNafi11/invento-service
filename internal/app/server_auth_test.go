@@ -1,12 +1,11 @@
 package app_test
 
 import (
+	"invento-service/config"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"invento-service/config"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"

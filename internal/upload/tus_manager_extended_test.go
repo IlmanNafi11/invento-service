@@ -2,12 +2,11 @@ package upload_test
 
 import (
 	"bytes"
+	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"os"
 	"path/filepath"
 	"testing"
-
-	"invento-service/internal/storage"
-	"invento-service/internal/upload"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
