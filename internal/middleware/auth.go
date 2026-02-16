@@ -35,7 +35,7 @@ func SupabaseAuthMiddleware(authService domain.AuthService, userRepo repo.UserRe
 			return httputil.SendUnauthorizedResponse(c)
 		}
 
-		user, err := userRepo.GetByID(claims.GetUserID())
+		user, err := userRepo.GetByID(c.UserContext(), claims.GetUserID())
 		if err != nil {
 			return httputil.SendUnauthorizedResponse(c)
 		}

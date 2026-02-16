@@ -86,7 +86,7 @@ func (uc *authUsecase) Register(req dto.RegisterRequest) (string, *dto.AuthRespo
 	}
 
 	// Check if user already exists locally
-	existingUser, _ := uc.userRepo.GetByEmail(req.Email)
+	existingUser, _ := uc.userRepo.GetByEmail(ctx, req.Email)
 	if existingUser != nil {
 		return "", nil, apperrors.NewConflictError("Email sudah terdaftar")
 	}
@@ -126,7 +126,7 @@ func (uc *authUsecase) Register(req dto.RegisterRequest) (string, *dto.AuthRespo
 		IsActive: true,
 	}
 
-	if err := uc.userRepo.Create(user); err != nil {
+	if err := uc.userRepo.Create(ctx, user); err != nil {
 		// Rollback: Delete user from Supabase if local DB creation fails
 		uc.logger.Error().Err(err).Str("supabase_user_id", authResp.User.ID).Msg("failed to create local user, rolling back Supabase user")
 		if deleteErr := uc.authService.DeleteUser(ctx, authResp.User.ID); deleteErr != nil {
@@ -167,7 +167,7 @@ func (uc *authUsecase) Login(req dto.AuthRequest) (string, *dto.AuthResponse, er
 		return "", nil, apperrors.NewUnauthorizedError("Email atau password salah")
 	}
 
-	user, err := uc.userRepo.GetByEmail(req.Email)
+	user, err := uc.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			emailInfo, validateErr := validatePolijeEmail(req.Email)
@@ -194,7 +194,7 @@ func (uc *authUsecase) Login(req dto.AuthRequest) (string, *dto.AuthResponse, er
 				IsActive: true,
 			}
 
-			if createErr := uc.userRepo.Create(user); createErr != nil {
+			if createErr := uc.userRepo.Create(ctx, user); createErr != nil {
 				uc.logger.Error().Err(createErr).Str("email", req.Email).Msg("failed to sync Supabase user to local database")
 				return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Login: sync user: %w", createErr))
 			}

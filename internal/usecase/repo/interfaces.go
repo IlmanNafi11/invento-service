@@ -9,18 +9,18 @@ import (
 )
 
 type UserRepository interface {
-	GetByEmail(email string) (*domain.User, error)
-	GetByID(id string) (*domain.User, error)
-	GetByIDs(userIDs []string) ([]*domain.User, error)
-	Create(user *domain.User) error
-	GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error)
-	GetProfileWithCounts(userID string) (*domain.User, int, int, error)
-	GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error)
-	UpdateRole(userID string, roleID *int) error
-	UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error
-	Delete(userID string) error
-	GetByRoleID(roleID uint) ([]dto.UserListItem, error)
-	BulkUpdateRole(userIDs []string, roleID uint) error
+	GetByEmail(ctx context.Context, email string) (*domain.User, error)
+	GetByID(ctx context.Context, id string) (*domain.User, error)
+	GetByIDs(ctx context.Context, userIDs []string) ([]*domain.User, error)
+	Create(ctx context.Context, user *domain.User) error
+	GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error)
+	GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error)
+	GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error)
+	UpdateRole(ctx context.Context, userID string, roleID *int) error
+	UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error
+	Delete(ctx context.Context, userID string) error
+	GetByRoleID(ctx context.Context, roleID uint) ([]dto.UserListItem, error)
+	BulkUpdateRole(ctx context.Context, userIDs []string, roleID uint) error
 }
 
 type RoleRepository interface {

@@ -17,16 +17,16 @@ import (
 )
 
 type UserUsecase interface {
-	GetUserList(params dto.UserListQueryParams) (*dto.UserListData, error)
-	UpdateUserRole(userID string, roleName string) error
-	DeleteUser(userID string) error
-	GetUserFiles(userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error)
-	GetProfile(userID string) (*dto.ProfileData, error)
-	UpdateProfile(userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error)
-	GetUserPermissions(userID string) ([]dto.UserPermissionItem, error)
-	DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error)
-	GetUsersForRole(roleID uint) ([]dto.UserListItem, error)
-	BulkAssignRole(userIDs []string, roleID uint) error
+	GetUserList(ctx context.Context, params dto.UserListQueryParams) (*dto.UserListData, error)
+	UpdateUserRole(ctx context.Context, userID string, roleName string) error
+	DeleteUser(ctx context.Context, userID string) error
+	GetUserFiles(ctx context.Context, userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error)
+	GetProfile(ctx context.Context, userID string) (*dto.ProfileData, error)
+	UpdateProfile(ctx context.Context, userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error)
+	GetUserPermissions(ctx context.Context, userID string) ([]dto.UserPermissionItem, error)
+	DownloadUserFiles(ctx context.Context, ownerUserID string, projectIDs, modulIDs []string) (string, error)
+	GetUsersForRole(ctx context.Context, roleID uint) ([]dto.UserListItem, error)
+	BulkAssignRole(ctx context.Context, userIDs []string, roleID uint) error
 }
 
 type userUsecase struct {
@@ -63,12 +63,12 @@ func NewUserUsecase(
 	}
 }
 
-func (uc *userUsecase) GetUserList(params dto.UserListQueryParams) (*dto.UserListData, error) {
+func (uc *userUsecase) GetUserList(ctx context.Context, params dto.UserListQueryParams) (*dto.UserListData, error) {
 	normalizedParams := httputil.NormalizePaginationParams(params.Page, params.Limit)
 	params.Page = normalizedParams.Page
 	params.Limit = normalizedParams.Limit
 
-	users, total, err := uc.userRepo.GetAll(params.Search, params.FilterRole, params.Page, params.Limit)
+	users, total, err := uc.userRepo.GetAll(ctx, params.Search, params.FilterRole, params.Page, params.Limit)
 	if err != nil {
 		return nil, apperrors.NewInternalError(err)
 	}
@@ -81,8 +81,8 @@ func (uc *userUsecase) GetUserList(params dto.UserListQueryParams) (*dto.UserLis
 	}, nil
 }
 
-func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
-	user, err := uc.userRepo.GetByID(userID)
+func (uc *userUsecase) UpdateUserRole(ctx context.Context, userID string, roleName string) error {
+	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("User")
@@ -90,7 +90,7 @@ func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
 		return apperrors.NewInternalError(err)
 	}
 
-	role, err := uc.roleRepo.GetByName(context.Background(), roleName)
+	role, err := uc.roleRepo.GetByName(ctx, roleName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("Role")
@@ -109,7 +109,7 @@ func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
 		}
 	}
 
-	if err := uc.userRepo.UpdateRole(userID, &roleID); err != nil {
+	if err := uc.userRepo.UpdateRole(ctx, userID, &roleID); err != nil {
 		return apperrors.NewInternalError(err)
 	}
 
@@ -126,8 +126,8 @@ func (uc *userUsecase) UpdateUserRole(userID string, roleName string) error {
 	return nil
 }
 
-func (uc *userUsecase) DeleteUser(userID string) error {
-	_, err := uc.userRepo.GetByID(userID)
+func (uc *userUsecase) DeleteUser(ctx context.Context, userID string) error {
+	_, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("User")
@@ -135,15 +135,15 @@ func (uc *userUsecase) DeleteUser(userID string) error {
 		return apperrors.NewInternalError(err)
 	}
 
-	if err := uc.userRepo.Delete(userID); err != nil {
+	if err := uc.userRepo.Delete(ctx, userID); err != nil {
 		return apperrors.NewInternalError(err)
 	}
 
 	return nil
 }
 
-func (uc *userUsecase) GetUserFiles(userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error) {
-	_, err := uc.userRepo.GetByID(userID)
+func (uc *userUsecase) GetUserFiles(ctx context.Context, userID string, params dto.UserFilesQueryParams) (*dto.UserFilesData, error) {
+	_, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("User")
@@ -155,7 +155,7 @@ func (uc *userUsecase) GetUserFiles(userID string, params dto.UserFilesQueryPara
 	params.Page = normalizedParams.Page
 	params.Limit = normalizedParams.Limit
 
-	items, total, err := uc.userRepo.GetUserFiles(userID, params.Search, params.Page, params.Limit)
+	items, total, err := uc.userRepo.GetUserFiles(ctx, userID, params.Search, params.Page, params.Limit)
 	if err != nil {
 		return nil, apperrors.NewInternalError(err)
 	}
@@ -174,8 +174,8 @@ func (uc *userUsecase) GetUserFiles(userID string, params dto.UserFilesQueryPara
 	}, nil
 }
 
-func (uc *userUsecase) GetProfile(userID string) (*dto.ProfileData, error) {
-	user, jumlahProject, jumlahModul, err := uc.userRepo.GetProfileWithCounts(userID)
+func (uc *userUsecase) GetProfile(ctx context.Context, userID string) (*dto.ProfileData, error) {
+	user, jumlahProject, jumlahModul, err := uc.userRepo.GetProfileWithCounts(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("User")
@@ -186,8 +186,8 @@ func (uc *userUsecase) GetProfile(userID string) (*dto.ProfileData, error) {
 	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
-func (uc *userUsecase) UpdateProfile(userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error) {
-	user, err := uc.userRepo.GetByID(userID)
+func (uc *userUsecase) UpdateProfile(ctx context.Context, userID string, req dto.UpdateProfileRequest, fotoProfil *multipart.FileHeader) (*dto.ProfileData, error) {
+	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("User")
@@ -205,7 +205,7 @@ func (uc *userUsecase) UpdateProfile(userID string, req dto.UpdateProfileRequest
 		return nil, apperrors.NewValidationError(err.Error(), err)
 	}
 
-	if err := uc.userRepo.UpdateProfile(userID, req.Name, jenisKelaminPtr, fotoProfilPath); err != nil {
+	if err := uc.userRepo.UpdateProfile(ctx, userID, req.Name, jenisKelaminPtr, fotoProfilPath); err != nil {
 		return nil, apperrors.NewInternalError(err)
 	}
 
@@ -223,8 +223,8 @@ func (uc *userUsecase) UpdateProfile(userID string, req dto.UpdateProfileRequest
 	return uc.userHelper.BuildProfileData(user, jumlahProject, jumlahModul), nil
 }
 
-func (uc *userUsecase) GetUserPermissions(userID string) ([]dto.UserPermissionItem, error) {
-	user, err := uc.userRepo.GetByID(userID)
+func (uc *userUsecase) GetUserPermissions(ctx context.Context, userID string) ([]dto.UserPermissionItem, error) {
+	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("User")
@@ -249,12 +249,12 @@ func (uc *userUsecase) GetUserPermissions(userID string) ([]dto.UserPermissionIt
 	return uc.userHelper.AggregateUserPermissions(permissions), nil
 }
 
-func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulIDs []string) (string, error) {
+func (uc *userUsecase) DownloadUserFiles(ctx context.Context, ownerUserID string, projectIDs, modulIDs []string) (string, error) {
 	if err := uc.downloadHelper.ValidateDownloadRequest(projectIDs, modulIDs); err != nil {
 		return "", err
 	}
 
-	_, err := uc.userRepo.GetByID(ownerUserID)
+	_, err := uc.userRepo.GetByID(ctx, ownerUserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", apperrors.NewNotFoundError("User")
@@ -307,8 +307,8 @@ func (uc *userUsecase) DownloadUserFiles(ownerUserID string, projectIDs, modulID
 	return zipPath, nil
 }
 
-func (uc *userUsecase) GetUsersForRole(roleID uint) ([]dto.UserListItem, error) {
-	_, err := uc.roleRepo.GetByID(context.Background(), roleID)
+func (uc *userUsecase) GetUsersForRole(ctx context.Context, roleID uint) ([]dto.UserListItem, error) {
+	_, err := uc.roleRepo.GetByID(ctx, roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperrors.NewNotFoundError("Role")
@@ -316,7 +316,7 @@ func (uc *userUsecase) GetUsersForRole(roleID uint) ([]dto.UserListItem, error) 
 		return nil, apperrors.NewInternalError(err)
 	}
 
-	users, err := uc.userRepo.GetByRoleID(roleID)
+	users, err := uc.userRepo.GetByRoleID(ctx, roleID)
 	if err != nil {
 		return nil, apperrors.NewInternalError(err)
 	}
@@ -324,8 +324,8 @@ func (uc *userUsecase) GetUsersForRole(roleID uint) ([]dto.UserListItem, error) 
 	return users, nil
 }
 
-func (uc *userUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
-	role, err := uc.roleRepo.GetByID(context.Background(), roleID)
+func (uc *userUsecase) BulkAssignRole(ctx context.Context, userIDs []string, roleID uint) error {
+	role, err := uc.roleRepo.GetByID(ctx, roleID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return apperrors.NewNotFoundError("Role")
@@ -333,7 +333,7 @@ func (uc *userUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
 		return apperrors.NewInternalError(err)
 	}
 
-	users, err := uc.userRepo.GetByIDs(userIDs)
+	users, err := uc.userRepo.GetByIDs(ctx, userIDs)
 	if err != nil {
 		return apperrors.NewInternalError(err)
 	}
@@ -352,7 +352,7 @@ func (uc *userUsecase) BulkAssignRole(userIDs []string, roleID uint) error {
 		}
 	}
 
-	if err := uc.userRepo.BulkUpdateRole(userIDs, roleID); err != nil {
+	if err := uc.userRepo.BulkUpdateRole(ctx, userIDs, roleID); err != nil {
 		return apperrors.NewInternalError(err)
 	}
 

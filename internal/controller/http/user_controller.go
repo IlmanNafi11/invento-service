@@ -46,12 +46,13 @@ func NewUserController(userUsecase usecase.UserUsecase) *UserController {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /user [get]
 func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	var params dto.UserListQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
 
-	result, err := ctrl.userUsecase.GetUserList(params)
+	result, err := ctrl.userUsecase.GetUserList(ctx, params)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -79,6 +80,7 @@ func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /user/{id}/role [put]
 func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	id, err := ctrl.ParsePathID(c)
 	if err != nil {
 		return err // error response already sent
@@ -93,7 +95,7 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 		return nil // validation error response already sent
 	}
 
-	err = ctrl.userUsecase.UpdateUserRole(strconv.FormatUint(uint64(id), 10), req.Role)
+	err = ctrl.userUsecase.UpdateUserRole(ctx, strconv.FormatUint(uint64(id), 10), req.Role)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -120,12 +122,13 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /user/{id} [delete]
 func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	id, err := ctrl.ParsePathID(c)
 	if err != nil {
 		return err // error response already sent
 	}
 
-	err = ctrl.userUsecase.DeleteUser(strconv.FormatUint(uint64(id), 10))
+	err = ctrl.userUsecase.DeleteUser(ctx, strconv.FormatUint(uint64(id), 10))
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -154,6 +157,7 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /user/{id}/files [get]
 func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	id, err := ctrl.ParsePathID(c)
 	if err != nil {
 		return err // error response already sent
@@ -164,7 +168,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
 
-	result, err := ctrl.userUsecase.GetUserFiles(strconv.FormatUint(uint64(id), 10), params)
+	result, err := ctrl.userUsecase.GetUserFiles(ctx, strconv.FormatUint(uint64(id), 10), params)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -188,12 +192,13 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /profile [get]
 func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return nil // unauthorized response already sent
 	}
 
-	result, err := ctrl.userUsecase.GetProfile(userID)
+	result, err := ctrl.userUsecase.GetProfile(ctx, userID)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -220,6 +225,7 @@ func (ctrl *UserController) GetProfile(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /profile [put]
 func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return nil // unauthorized response already sent
@@ -236,7 +242,7 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 
 	fotoProfil, _ := c.FormFile("foto_profil")
 
-	result, err := ctrl.userUsecase.UpdateProfile(userID, req, fotoProfil)
+	result, err := ctrl.userUsecase.UpdateProfile(ctx, userID, req, fotoProfil)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -260,12 +266,13 @@ func (ctrl *UserController) UpdateProfile(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /user/permissions [get]
 func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	userID := ctrl.GetAuthenticatedUserID(c)
 	if userID == "" {
 		return nil // unauthorized response already sent
 	}
 
-	result, err := ctrl.userUsecase.GetUserPermissions(userID)
+	result, err := ctrl.userUsecase.GetUserPermissions(ctx, userID)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -293,6 +300,7 @@ func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /user/{id}/download [post]
 func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	ownerUserID, err := ctrl.ParsePathID(c)
 	if err != nil {
 		return err // error response already sent
@@ -318,7 +326,7 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 		modulIDsStr[i] = strconv.FormatUint(uint64(id), 10)
 	}
 
-	filePath, err := ctrl.userUsecase.DownloadUserFiles(strconv.FormatUint(uint64(ownerUserID), 10), projectIDsStr, modulIDsStr)
+	filePath, err := ctrl.userUsecase.DownloadUserFiles(ctx, strconv.FormatUint(uint64(ownerUserID), 10), projectIDsStr, modulIDsStr)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -332,12 +340,13 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 
 // GetUsersForRole handles GET /api/v1/role/:id/users - Get users for a specific role
 func (ctrl *UserController) GetUsersForRole(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	id, err := ctrl.ParsePathID(c)
 	if err != nil {
 		return err
 	}
 
-	result, err := ctrl.userUsecase.GetUsersForRole(uint(id))
+	result, err := ctrl.userUsecase.GetUsersForRole(ctx, uint(id))
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -351,6 +360,7 @@ func (ctrl *UserController) GetUsersForRole(c *fiber.Ctx) error {
 
 // BulkAssignRole handles POST /api/v1/role/:id/users/bulk - Assign role to multiple users
 func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
+	ctx := c.UserContext()
 	id, err := ctrl.ParsePathID(c)
 	if err != nil {
 		return err
@@ -365,7 +375,7 @@ func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
 		return nil
 	}
 
-	err = ctrl.userUsecase.BulkAssignRole(req.UserIDs, uint(id))
+	err = ctrl.userUsecase.BulkAssignRole(ctx, req.UserIDs, uint(id))
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {

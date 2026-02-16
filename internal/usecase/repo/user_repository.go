@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 
@@ -15,39 +16,39 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
+func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.Where("email = ? AND is_active = ?", email, true).Preload("Role").First(&user).Error
+	err := r.db.WithContext(ctx).Where("email = ? AND is_active = ?", email, true).Preload("Role").First(&user).Error
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *userRepository) GetByID(id string) (*domain.User, error) {
+func (r *userRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.Where("id = ? AND is_active = ?", id, true).Preload("Role").First(&user).Error
+	err := r.db.WithContext(ctx).Where("id = ? AND is_active = ?", id, true).Preload("Role").First(&user).Error
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *userRepository) GetByIDs(userIDs []string) ([]*domain.User, error) {
+func (r *userRepository) GetByIDs(ctx context.Context, userIDs []string) ([]*domain.User, error) {
 	var users []*domain.User
-	err := r.db.Where("id IN ? AND is_active = ?", userIDs, true).Preload("Role").Find(&users).Error
+	err := r.db.WithContext(ctx).Where("id IN ? AND is_active = ?", userIDs, true).Preload("Role").Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
-func (r *userRepository) Create(user *domain.User) error {
-	return r.db.Create(user).Error
+func (r *userRepository) Create(ctx context.Context, user *domain.User) error {
+	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *userRepository) buildUserListQuery(search, filterRole string) *gorm.DB {
-	query := r.db.Table("user_profiles").
+func (r *userRepository) buildUserListQuery(ctx context.Context, search, filterRole string) *gorm.DB {
+	query := r.db.WithContext(ctx).Table("user_profiles").
 		Joins("LEFT JOIN roles ON roles.id = user_profiles.role_id").
 		Where("user_profiles.is_active = ?", true)
 
@@ -63,11 +64,11 @@ func (r *userRepository) buildUserListQuery(search, filterRole string) *gorm.DB 
 	return query
 }
 
-func (r *userRepository) GetAll(search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
+func (r *userRepository) GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	var userListItems []dto.UserListItem
 	var total int64
 
-	baseQuery := r.buildUserListQuery(search, filterRole)
+	baseQuery := r.buildUserListQuery(ctx, search, filterRole)
 
 	if err := baseQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -84,27 +85,27 @@ func (r *userRepository) GetAll(search, filterRole string, page, limit int) ([]d
 	return userListItems, int(total), nil
 }
 
-func (r *userRepository) GetProfileWithCounts(userID string) (*domain.User, int, int, error) {
+func (r *userRepository) GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error) {
 	var user domain.User
-	err := r.db.Where("id = ? AND is_active = ?", userID, true).Preload("Role").First(&user).Error
+	err := r.db.WithContext(ctx).Where("id = ? AND is_active = ?", userID, true).Preload("Role").First(&user).Error
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
 	var projectCount int64
-	r.db.Table("projects").Where("user_id = ?", userID).Count(&projectCount)
+	r.db.WithContext(ctx).Table("projects").Where("user_id = ?", userID).Count(&projectCount)
 
 	var modulCount int64
-	r.db.Table("moduls").Where("user_id = ?", userID).Count(&modulCount)
+	r.db.WithContext(ctx).Table("moduls").Where("user_id = ?", userID).Count(&modulCount)
 
 	return &user, int(projectCount), int(modulCount), nil
 }
 
-func (r *userRepository) GetUserFiles(userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
+func (r *userRepository) GetUserFiles(ctx context.Context, userID string, search string, page, limit int) ([]dto.UserFileItem, int, error) {
 	var items []dto.UserFileItem
 	var total int64
 
-	countQuery := r.db.Raw(`
+	countQuery := r.db.WithContext(ctx).Raw(`
 		SELECT COUNT(*) FROM (
 			SELECT p.id FROM projects p WHERE p.user_id = ? AND (? = '' OR p.nama_project ILIKE '%' || ? || '%')
 			UNION ALL
@@ -117,7 +118,7 @@ func (r *userRepository) GetUserFiles(userID string, search string, page, limit 
 	}
 
 	offset := (page - 1) * limit
-	if err := r.db.Raw(`
+	if err := r.db.WithContext(ctx).Raw(`
 		SELECT id, nama_file, kategori, download_url FROM (
 			SELECT
 				CAST(p.id AS TEXT) as id,
@@ -148,11 +149,11 @@ func (r *userRepository) GetUserFiles(userID string, search string, page, limit 
 	return items, int(total), nil
 }
 
-func (r *userRepository) UpdateRole(userID string, roleID *int) error {
-	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("role_id", roleID).Error
+func (r *userRepository) UpdateRole(ctx context.Context, userID string, roleID *int) error {
+	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", userID).Update("role_id", roleID).Error
 }
 
-func (r *userRepository) UpdateProfile(userID string, name string, jenisKelamin *string, fotoProfil *string) error {
+func (r *userRepository) UpdateProfile(ctx context.Context, userID string, name string, jenisKelamin *string, fotoProfil *string) error {
 	updates := map[string]interface{}{
 		"name": name,
 	}
@@ -165,17 +166,17 @@ func (r *userRepository) UpdateProfile(userID string, name string, jenisKelamin 
 		updates["foto_profil"] = fotoProfil
 	}
 
-	return r.db.Model(&domain.User{}).Where("id = ?", userID).Updates(updates).Error
+	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", userID).Updates(updates).Error
 }
 
-func (r *userRepository) Delete(userID string) error {
-	return r.db.Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
+func (r *userRepository) Delete(ctx context.Context, userID string) error {
+	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", userID).Update("is_active", false).Error
 }
 
-func (r *userRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
+func (r *userRepository) GetByRoleID(ctx context.Context, roleID uint) ([]dto.UserListItem, error) {
 	var userListItems []dto.UserListItem
 
-	err := r.db.Table("user_profiles").
+	err := r.db.WithContext(ctx).Table("user_profiles").
 		Select("user_profiles.id, user_profiles.email, user_profiles.created_at as dibuat_pada, COALESCE(roles.nama_role, '') as role").
 		Joins("LEFT JOIN roles ON roles.id = user_profiles.role_id").
 		Where("user_profiles.is_active = ? AND user_profiles.role_id = ?", true, roleID).
@@ -189,8 +190,8 @@ func (r *userRepository) GetByRoleID(roleID uint) ([]dto.UserListItem, error) {
 	return userListItems, nil
 }
 
-func (r *userRepository) BulkUpdateRole(userIDs []string, roleID uint) error {
-	return r.db.Model(&domain.User{}).
+func (r *userRepository) BulkUpdateRole(ctx context.Context, userIDs []string, roleID uint) error {
+	return r.db.WithContext(ctx).Model(&domain.User{}).
 		Where("id IN ? AND is_active = ?", userIDs, true).
 		Update("role_id", roleID).Error
 }
