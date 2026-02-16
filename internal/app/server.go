@@ -1,11 +1,14 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"invento-service/config"
 	_ "invento-service/docs"
 	"invento-service/internal/controller/base"
 	"invento-service/internal/controller/http"
+	"invento-service/internal/dto"
+	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"invento-service/internal/rbac"
@@ -62,19 +65,43 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 				return err
 			}
 
-			if err != nil {
-				if e, ok := err.(*fiber.Error); ok {
-					if e.Code == fiber.StatusNotFound {
-						return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-							"status":    "error",
-							"message":   "Endpoint tidak ditemukan",
-							"code":      404,
-							"timestamp": time.Now().Format(time.RFC3339),
-						})
-					}
-				}
+			// Check for AppError first (application-level structured errors)
+			var appErr *apperrors.AppError
+			if errors.As(err, &appErr) {
+				return c.Status(appErr.HTTPStatus).JSON(dto.ErrorResponse{
+					BaseResponse: dto.BaseResponse{
+						Status:  "error",
+						Message: appErr.Message,
+						Code:    appErr.HTTPStatus,
+					},
+					Timestamp: time.Now(),
+				})
 			}
 
+			// Check for Fiber framework errors
+			var fiberErr *fiber.Error
+			if errors.As(err, &fiberErr) {
+				if fiberErr.Code == fiber.StatusNotFound {
+					return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResponse{
+						BaseResponse: dto.BaseResponse{
+							Status:  "error",
+							Message: "Endpoint tidak ditemukan",
+							Code:    fiber.StatusNotFound,
+						},
+						Timestamp: time.Now(),
+					})
+				}
+				return c.Status(fiberErr.Code).JSON(dto.ErrorResponse{
+					BaseResponse: dto.BaseResponse{
+						Status:  "error",
+						Message: fiberErr.Message,
+						Code:    fiberErr.Code,
+					},
+					Timestamp: time.Now(),
+				})
+			}
+
+			// TUS protocol error handling
 			tusVersion := c.Get("Tus-Resumable")
 			if tusVersion != "" && (c.Method() == "PATCH" || c.Method() == "HEAD" || c.Method() == "DELETE") {
 				c.Set("Tus-Resumable", cfg.Upload.TusVersion)
