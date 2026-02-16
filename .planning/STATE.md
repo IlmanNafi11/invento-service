@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 6 of 6 (Polish & Verification)
-Plan: 3 of 6 complete
+Plan: 5 of 6 complete
 Status: Phase 6 In Progress
-Last activity: 2026-02-16 -- Plan 06-02 (Fix Failing Tests) complete
+Last activity: 2026-02-16 -- Plan 06-05 (Swagger Regen, Config Audit, Memory Verification) complete
 
-Progress: [█████░░░░░] 50% (3/6 plans)
+Progress: [████████░░] 83% (5/6 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29
+- Total plans completed: 31
 - Average duration: ~9min
-- Total execution time: ~4.5 hours
+- Total execution time: ~4.8 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [█████░░░░░] 50% (3/6 plans)
 | 03-code-quality-standardization | 3 | ~25min | ~8min |
 | 04-architecture-restructuring | 6 | ~55min | ~9min |
 | 05-deep-architecture-improvements | 10 | ~219min | ~22min |
-| 06-polish-verification | 3/6 | ~30min | ~10min |
+| 06-polish-verification | 5/6 | ~45min | ~9min |
 
 **Recent Trend:**
-- Last 5 plans: 05-10, 06-01, 06-02, 06-03
-- Trend: Stabilizing ~10-15min per plan
+- Last 5 plans: 06-01, 06-02, 06-03, 06-04, 06-05
+- Trend: Stabilizing ~8-10min per plan
 
 ## Accumulated Context
 
@@ -117,6 +117,9 @@ Recent decisions affecting current work:
 
 - [06-03]: TUS Upload tag for project endpoints, TUS Modul Upload for modul endpoints, Role Management for user role endpoints
 - [06-03]: Modul IDs use string type (UUID) in Swagger @Param, project IDs use int
+- [06-05]: Swagger annotations use dto.* prefix (not domain.*) after Phase 5 type migration
+- [06-05]: Memory baseline: 9.8MB idle, 12.7MB under 100 concurrent requests — PASS with >95% headroom
+- [06-05]: .env.example verified complete (46 env vars, no gaps)
 
 ### Pending Todos
 
@@ -124,11 +127,11 @@ None yet.
 
 ### Blockers/Concerns
 
-- Actual memory usage under load not yet measured (estimate is ~250MB baseline)
+- TUS upload memory test requires authenticated JWT tokens — procedure documented, pending staging environment
 - SQLite vs PostgreSQL test divergence extent unknown
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06-02-PLAN.md (Fix Failing Tests) and 06-03-PLAN.md (Swagger Annotations)
-Resume file: .planning/phases/06-polish-verification/06-04-PLAN.md
+Stopped at: Completed 06-05-PLAN.md (Swagger Regen, Config Audit, Memory Verification)
+Resume file: .planning/phases/06-polish-verification/06-06-PLAN.md
