@@ -5,7 +5,7 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"os"
 	"path/filepath"
 	"testing"
@@ -457,7 +457,7 @@ func TestProjectUsecase_Download_SingleFile(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	userID := "user-1"
@@ -484,7 +484,7 @@ func TestProjectUsecase_Download_EmptyIDs(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	userID := "user-1"
@@ -504,7 +504,7 @@ func TestProjectUsecase_Download_NotFound(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	userID := "user-1"
@@ -528,7 +528,7 @@ func TestProjectUsecase_Download_Error(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	userID := "user-1"
@@ -551,7 +551,7 @@ func TestProjectUsecase_Download_SingleFile_GetOwnedProjectError(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	userID := "user-1"
@@ -574,7 +574,7 @@ func TestProjectUsecase_Download_SingleFile_Forbidden(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	userID := "user-1"
@@ -603,7 +603,7 @@ func TestProjectUsecase_Download_SingleFile_PathTraversal(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	userID := "user-1"
@@ -632,7 +632,7 @@ func TestProjectUsecase_Download_MultipleFiles_Success(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	tempDir := t.TempDir()
@@ -664,7 +664,7 @@ func TestProjectUsecase_Download_MultipleFiles_PartialFound(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	tempDir := t.TempDir()
@@ -693,7 +693,7 @@ func TestProjectUsecase_Download_MultipleFiles_NonexistentFile(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 
 	cfg := &config.Config{}
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	projectUC := NewProjectUsecase(mockProjectRepo, fileManager)
 
 	userID := "user-1"

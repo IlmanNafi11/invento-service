@@ -5,6 +5,7 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"os"
 	"testing"
 	"time"
@@ -25,7 +26,7 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -77,7 +78,7 @@ func TestUserUsecase_GetUserByID_NotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -106,7 +107,7 @@ func TestUserUsecase_ListUsers_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -158,7 +159,7 @@ func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -204,7 +205,7 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -254,7 +255,7 @@ func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -287,7 +288,7 @@ func TestUserUsecase_DeleteUser_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -323,7 +324,7 @@ func TestUserUsecase_DeleteUser_NotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -351,7 +352,7 @@ func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	// Note: Casbin enforcer is skipped in tests
 	var casbinEnforcer *helper.CasbinEnforcer
 
@@ -401,7 +402,7 @@ func TestUserUsecase_UpdateUserRole_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -449,7 +450,7 @@ func TestUserUsecase_UpdateUserRole_UserNotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -478,7 +479,7 @@ func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -520,7 +521,7 @@ func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -567,7 +568,7 @@ func TestUserUsecase_DownloadUserFiles_EmptyIDs(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -594,7 +595,7 @@ func TestUserUsecase_DownloadUserFiles_UserNotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -625,7 +626,7 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -668,7 +669,7 @@ func TestUserUsecase_GetUserFiles_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -729,7 +730,7 @@ func TestUserUsecase_GetUserFiles_UserNotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -761,7 +762,7 @@ func TestUserUsecase_GetUserFiles_RepoError(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -804,7 +805,7 @@ func TestUserUsecase_GetUsersForRole_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -848,7 +849,7 @@ func TestUserUsecase_GetUsersForRole_RoleNotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -876,7 +877,7 @@ func TestUserUsecase_GetUsersForRole_InternalError(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -910,7 +911,7 @@ func TestUserUsecase_BulkAssignRole_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -957,7 +958,7 @@ func TestUserUsecase_BulkAssignRole_RoleNotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -985,7 +986,7 @@ func TestUserUsecase_BulkAssignRole_UserFetchError(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -1019,7 +1020,7 @@ func TestUserUsecase_BulkAssignRole_InternalError(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -1067,7 +1068,7 @@ func TestUserUsecase_GetUserPermissions_UserNotFound(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -1095,7 +1096,7 @@ func TestUserUsecase_GetProfile_InternalError(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -1123,7 +1124,7 @@ func TestUserUsecase_UpdateProfile_RepoUpdateError(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -1166,7 +1167,7 @@ func TestUserUsecase_DownloadUserFiles_Success(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 
@@ -1223,7 +1224,7 @@ func TestUserUsecase_UpdateUserRole_RepoUpdateError(t *testing.T) {
 			Env: "development",
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
 

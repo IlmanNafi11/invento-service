@@ -5,6 +5,7 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"io"
 	"net/http/httptest"
 	"os"
@@ -91,7 +92,7 @@ func setupTestTusStore(t *testing.T) (*helper.TusStore, string) {
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
 
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 
 	return store, tempDir
@@ -101,10 +102,10 @@ func setupTestTusStore(t *testing.T) (*helper.TusStore, string) {
 
 func TestNewTusManager_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
@@ -113,10 +114,10 @@ func TestNewTusManager_Success(t *testing.T) {
 
 func TestTusManager_CheckUploadSlot_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	// Test when no active upload
@@ -130,10 +131,10 @@ func TestTusManager_CheckUploadSlot_Success(t *testing.T) {
 
 func TestTusManager_CheckUploadSlot_WithActiveUpload(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(1) // maxConcurrent=1 so slot fills up
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	queue.Add("upload-1")
@@ -146,10 +147,10 @@ func TestTusManager_CheckUploadSlot_WithActiveUpload(t *testing.T) {
 
 func TestTusManager_ResetUploadQueue_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	queue.Add("upload-1")
@@ -183,10 +184,10 @@ func TestTusManager_ParseMetadata_InvalidBase64(t *testing.T) {
 
 func TestTusManager_ValidateModulMetadata_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	tests := []struct {
@@ -250,7 +251,7 @@ func TestTusManager_ValidateModulMetadata_Success(t *testing.T) {
 
 func TestNewTusStore_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 
@@ -1125,7 +1126,7 @@ func TestNewTusCleanup_Success(t *testing.T) {
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
@@ -1138,7 +1139,7 @@ func TestTusCleanup_Start_Success(t *testing.T) {
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1156,7 +1157,7 @@ func TestTusCleanup_Start_AlreadyRunning(t *testing.T) {
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1171,7 +1172,7 @@ func TestTusCleanup_Stop_Success(t *testing.T) {
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1187,7 +1188,7 @@ func TestTusCleanup_Stop_NotRunning(t *testing.T) {
 	repo := &MockTusUploadRepository{
 		uploads: make(map[string]domain.TusUpload),
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1207,7 +1208,7 @@ func TestTusCleanup_CleanupExpired_Success(t *testing.T) {
 			},
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1225,7 +1226,7 @@ func TestTusCleanup_CleanupExpired_NoExpired(t *testing.T) {
 		uploads: make(map[string]domain.TusUpload),
 		expired: []domain.TusUpload{},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1240,7 +1241,7 @@ func TestTusCleanup_CleanupExpired_RepositoryError(t *testing.T) {
 		expired:  []domain.TusUpload{},
 		getError: true,
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1261,7 +1262,7 @@ func TestTusCleanup_CleanupAbandoned_Success(t *testing.T) {
 			},
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1279,7 +1280,7 @@ func TestTusCleanup_CleanupAbandoned_NoActive(t *testing.T) {
 		uploads: make(map[string]domain.TusUpload),
 		active:  []domain.TusUpload{},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1294,7 +1295,7 @@ func TestTusCleanup_CleanupAbandoned_RepositoryError(t *testing.T) {
 		active:   []domain.TusUpload{},
 		getError: true,
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1312,7 +1313,7 @@ func TestTusCleanup_CleanupUpload_Success(t *testing.T) {
 			},
 		},
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1334,7 +1335,7 @@ func TestTusCleanup_CleanupUpload_NotFound(t *testing.T) {
 		uploads:     map[string]domain.TusUpload{},
 		deleteError: true, // Simulate error for non-existent
 	}
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	cleanup := helper.NewTusCleanup(repo, nil, store, store, 60, 300, zerolog.Nop())
 
@@ -1346,10 +1347,10 @@ func TestTusCleanup_CleanupUpload_NotFound(t *testing.T) {
 
 func TestTusManager_InitiateUpload_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-123"
@@ -1369,10 +1370,10 @@ func TestTusManager_InitiateUpload_Success(t *testing.T) {
 
 func TestTusManager_InitiateUpload_FileTooLarge(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-large"
@@ -1387,10 +1388,10 @@ func TestTusManager_InitiateUpload_FileTooLarge(t *testing.T) {
 
 func TestTusManager_InitiateUpload_InvalidSize(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	tests := []struct {
@@ -1416,10 +1417,10 @@ func TestTusManager_InitiateUpload_InvalidSize(t *testing.T) {
 
 func TestTusManager_HandleChunk_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-chunk"
@@ -1444,10 +1445,10 @@ func TestTusManager_HandleChunk_Success(t *testing.T) {
 
 func TestTusManager_HandleChunk_UploadNotFound(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	chunk := []byte("test data")
@@ -1458,10 +1459,10 @@ func TestTusManager_HandleChunk_UploadNotFound(t *testing.T) {
 
 func TestTusManager_GetUploadStatus_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-status"
@@ -1479,10 +1480,10 @@ func TestTusManager_GetUploadStatus_Success(t *testing.T) {
 
 func TestTusManager_GetUploadStatus_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	_, _, err := manager.GetUploadStatus("nonexistent")
@@ -1492,10 +1493,10 @@ func TestTusManager_GetUploadStatus_NotFound(t *testing.T) {
 
 func TestTusManager_GetUploadInfo_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-info"
@@ -1514,10 +1515,10 @@ func TestTusManager_GetUploadInfo_Success(t *testing.T) {
 
 func TestTusManager_GetUploadInfo_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	_, err := manager.GetUploadInfo("nonexistent")
@@ -1527,10 +1528,10 @@ func TestTusManager_GetUploadInfo_NotFound(t *testing.T) {
 
 func TestTusManager_CancelUpload_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-cancel"
@@ -1550,10 +1551,10 @@ func TestTusManager_CancelUpload_Success(t *testing.T) {
 
 func TestTusManager_CancelUpload_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	// Terminate on non-existent upload doesn't return error (os.RemoveAll succeeds)
@@ -1565,12 +1566,12 @@ func TestTusManager_CancelUpload_NotFound(t *testing.T) {
 func TestTusManager_FinalizeUpload_Success(t *testing.T) {
 	cfg := setupTestConfig()
 	tempDir := t.TempDir()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-finalize"
@@ -1596,12 +1597,12 @@ func TestTusManager_FinalizeUpload_Success(t *testing.T) {
 func TestTusManager_FinalizeUpload_NotComplete(t *testing.T) {
 	cfg := setupTestConfig()
 	tempDir := t.TempDir()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-incomplete"
@@ -1625,10 +1626,10 @@ func TestTusManager_FinalizeUpload_NotComplete(t *testing.T) {
 
 func TestTusManager_IsUploadComplete_True(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-complete"
@@ -1649,10 +1650,10 @@ func TestTusManager_IsUploadComplete_True(t *testing.T) {
 
 func TestTusManager_IsUploadComplete_False(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-pending"
@@ -1669,10 +1670,10 @@ func TestTusManager_IsUploadComplete_False(t *testing.T) {
 
 func TestTusManager_GetUploadProgress_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-progress"
@@ -1689,10 +1690,10 @@ func TestTusManager_GetUploadProgress_Success(t *testing.T) {
 
 func TestTusManager_GetUploadProgress_HalfComplete(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-half-progress"
@@ -1713,10 +1714,10 @@ func TestTusManager_GetUploadProgress_HalfComplete(t *testing.T) {
 
 func TestTusManager_AddToQueue_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
@@ -1728,10 +1729,10 @@ func TestTusManager_AddToQueue_Success(t *testing.T) {
 
 func TestTusManager_AddToQueue_Multiple(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(1) // maxConcurrent=1 so queue fills up
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1") // Active
@@ -1745,10 +1746,10 @@ func TestTusManager_AddToQueue_Multiple(t *testing.T) {
 
 func TestTusManager_RemoveFromQueue_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
@@ -1760,10 +1761,10 @@ func TestTusManager_RemoveFromQueue_Success(t *testing.T) {
 
 func TestTusManager_RemoveFromQueue_NotFound(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	err := manager.RemoveFromQueue("nonexistent")
@@ -1773,10 +1774,10 @@ func TestTusManager_RemoveFromQueue_NotFound(t *testing.T) {
 
 func TestTusManager_CanAcceptUpload_True(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	assert.True(t, manager.CanAcceptUpload())
@@ -1784,10 +1785,10 @@ func TestTusManager_CanAcceptUpload_True(t *testing.T) {
 
 func TestTusManager_CanAcceptUpload_False(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(1) // maxConcurrent=1 so it fills up with one upload
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
@@ -1797,10 +1798,10 @@ func TestTusManager_CanAcceptUpload_False(t *testing.T) {
 
 func TestTusManager_IsActiveUpload_True(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
@@ -1810,10 +1811,10 @@ func TestTusManager_IsActiveUpload_True(t *testing.T) {
 
 func TestTusManager_IsActiveUpload_False(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	manager.AddToQueue("upload-1")
@@ -1823,10 +1824,10 @@ func TestTusManager_IsActiveUpload_False(t *testing.T) {
 
 func TestTusManager_GetDefaultTusHeaders_Success(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	headers := manager.GetDefaultTusHeaders()
@@ -1838,12 +1839,12 @@ func TestTusManager_GetDefaultTusHeaders_Success(t *testing.T) {
 func TestTusManager_ResetUploadQueue_WithActiveUpload(t *testing.T) {
 	cfg := setupTestConfig()
 	tempDir := t.TempDir()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	cfg.Upload.PathDevelopment = tempDir
 	cfg.Upload.TempPathDevelopment = filepath.Join(tempDir, "temp")
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-reset"
@@ -1884,10 +1885,10 @@ func TestTusManager_ParseMetadata_InvalidPair(t *testing.T) {
 
 func TestTusManager_ValidateModulMetadata_TooLong(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	// Create nama_file > 255 characters
@@ -1909,10 +1910,10 @@ func TestTusManager_ValidateModulMetadata_TooLong(t *testing.T) {
 
 func TestTusManager_ValidateModulMetadata_AllTypes(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	validTypes := []string{"docx", "xlsx", "pdf", "pptx"}
@@ -1930,10 +1931,10 @@ func TestTusManager_ValidateModulMetadata_AllTypes(t *testing.T) {
 
 func TestTusManager_HandleChunk_MultipleChunks(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-multiple"
@@ -1962,10 +1963,10 @@ func TestTusManager_HandleChunk_MultipleChunks(t *testing.T) {
 
 func TestTusManager_CheckUploadSlot_QueueFull(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(1) // maxConcurrent=1 so queue fills up
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	// Fill the queue - first goes active, rest go to queue
@@ -1984,10 +1985,10 @@ func TestTusManager_CheckUploadSlot_QueueFull(t *testing.T) {
 
 func TestTusManager_GetUploadStatus_AfterChunk(t *testing.T) {
 	cfg := setupTestConfig()
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	store := helper.NewTusStore(pathResolver, cfg.Upload.MaxSize)
 	queue := helper.NewTusQueue(3)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	manager := helper.NewTusManager(store, queue, fileManager, cfg, zerolog.Nop())
 
 	uploadID := "test-upload-status-chunk"

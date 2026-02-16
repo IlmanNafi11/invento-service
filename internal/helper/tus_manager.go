@@ -8,6 +8,7 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
+	"invento-service/internal/storage"
 
 	"github.com/rs/zerolog"
 )
@@ -15,12 +16,12 @@ import (
 type TusManager struct {
 	store       *TusStore
 	queue       *TusQueue
-	fileManager *FileManager
+	fileManager *storage.FileManager
 	config      *config.Config
 	logger      zerolog.Logger
 }
 
-func NewTusManager(store *TusStore, queue *TusQueue, fileManager *FileManager, config *config.Config, logger zerolog.Logger) *TusManager {
+func NewTusManager(store *TusStore, queue *TusQueue, fileManager *storage.FileManager, config *config.Config, logger zerolog.Logger) *TusManager {
 	return &TusManager{
 		store:       store,
 		queue:       queue,

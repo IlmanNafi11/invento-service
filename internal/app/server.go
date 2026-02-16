@@ -10,6 +10,7 @@ import (
 	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
+	"invento-service/internal/storage"
 	supabaseAuth "invento-service/internal/supabase"
 	"invento-service/internal/usecase"
 	"invento-service/internal/usecase/repo"
@@ -120,7 +121,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 		ExposeHeaders:    "Tus-Resumable, Tus-Version, Tus-Extension, Tus-Max-Size, Upload-Offset, Upload-Length, Location",
 	}))
 
-	pathResolver := helper.NewPathResolver(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
 	cookieHelper := httputil.NewCookieHelper(cfg)
 	app.Static("/uploads", pathResolver.GetBasePath())
 
@@ -154,7 +155,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	tusModulStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeModul)
 	tusQueue := helper.NewTusQueue(cfg.Upload.MaxConcurrentProject)
 	tusModulQueue := helper.NewTusQueue(cfg.Upload.MaxQueueModulPerUser)
-	fileManager := helper.NewFileManager(cfg)
+	fileManager := storage.NewFileManager(cfg)
 	tusProjectManager := helper.NewTusManager(tusProjectStore, tusQueue, fileManager, cfg, appLogger)
 	tusModulManager := helper.NewTusManager(tusModulStore, tusModulQueue, fileManager, cfg, appLogger)
 

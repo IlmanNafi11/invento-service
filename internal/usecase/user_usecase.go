@@ -7,6 +7,7 @@ import (
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
+	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
 	"mime/multipart"
 	"strconv"
@@ -33,9 +34,9 @@ type userUsecase struct {
 	projectRepo    repo.ProjectRepository
 	modulRepo      repo.ModulRepository
 	casbinEnforcer *helper.CasbinEnforcer
-	userHelper     *helper.UserHelper
-	downloadHelper *helper.DownloadHelper
-	pathResolver   *helper.PathResolver
+	userHelper     *storage.UserHelper
+	downloadHelper *storage.DownloadHelper
+	pathResolver   *storage.PathResolver
 	config         *config.Config
 }
 
@@ -45,7 +46,7 @@ func NewUserUsecase(
 	projectRepo repo.ProjectRepository,
 	modulRepo repo.ModulRepository,
 	casbinEnforcer *helper.CasbinEnforcer,
-	pathResolver *helper.PathResolver,
+	pathResolver *storage.PathResolver,
 	cfg *config.Config,
 ) UserUsecase {
 	return &userUsecase{
@@ -54,8 +55,8 @@ func NewUserUsecase(
 		projectRepo:    projectRepo,
 		modulRepo:      modulRepo,
 		casbinEnforcer: casbinEnforcer,
-		userHelper:     helper.NewUserHelper(pathResolver, cfg),
-		downloadHelper: helper.NewDownloadHelper(pathResolver),
+		userHelper:     storage.NewUserHelper(pathResolver, cfg),
+		downloadHelper: storage.NewDownloadHelper(pathResolver),
 		pathResolver:   pathResolver,
 		config:         cfg,
 	}

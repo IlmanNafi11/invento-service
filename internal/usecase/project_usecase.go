@@ -2,11 +2,11 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,10 +25,10 @@ type ProjectUsecase interface {
 
 type projectUsecase struct {
 	projectRepo repo.ProjectRepository
-	fileManager *helper.FileManager
+	fileManager *storage.FileManager
 }
 
-func NewProjectUsecase(projectRepo repo.ProjectRepository, fileManager *helper.FileManager) ProjectUsecase {
+func NewProjectUsecase(projectRepo repo.ProjectRepository, fileManager *storage.FileManager) ProjectUsecase {
 	return &projectUsecase{
 		projectRepo: projectRepo,
 		fileManager: fileManager,
@@ -113,7 +113,7 @@ func (uc *projectUsecase) Delete(projectID uint, userID string) error {
 	}
 
 	if project.PathFile != "" {
-		if err := helper.DeleteFile(project.PathFile); err != nil {
+		if err := storage.DeleteFile(project.PathFile); err != nil {
 			// File deletion after DB delete is critical but non-blocking;
 			// log the error so it can be investigated.
 			zlog.Warn().Err(err).Str("file", project.PathFile).Msg("ProjectUsecase.Delete: failed to delete project file")
@@ -174,7 +174,7 @@ func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, er
 		return "", newInternalError("gagal membuat direktori temp", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
 
-	identifier, err := helper.GenerateUniqueIdentifier(8)
+	identifier, err := storage.GenerateUniqueIdentifier(8)
 	if err != nil {
 		return "", newInternalError("gagal generate identifier", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
@@ -182,7 +182,7 @@ func (uc *projectUsecase) Download(userID string, projectIDs []uint) (string, er
 	zipFileName := fmt.Sprintf("projects_%s.zip", identifier)
 	zipFilePath := filepath.Join(tempDir, zipFileName)
 
-	if err := helper.CreateZipArchive(filePaths, zipFilePath); err != nil {
+	if err := storage.CreateZipArchive(filePaths, zipFilePath); err != nil {
 		return "", newInternalError("gagal membuat file zip", fmt.Errorf("ProjectUsecase.Download: %w", err))
 	}
 

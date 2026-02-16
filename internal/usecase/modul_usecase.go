@@ -8,7 +8,7 @@ import (
 
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
 
 	zlog "github.com/rs/zerolog/log"
@@ -102,7 +102,7 @@ func (uc *modulUsecase) Delete(modulID string, userID string) error {
 	}
 
 	if modul.FilePath != "" {
-		if err := helper.DeleteFile(modul.FilePath); err != nil {
+		if err := storage.DeleteFile(modul.FilePath); err != nil {
 			// File deletion after DB delete is critical but non-blocking;
 			// log the error so it can be investigated.
 			zlog.Warn().Err(err).Str("file", modul.FilePath).Msg("ModulUsecase.Delete: failed to delete modul file")
@@ -143,7 +143,7 @@ func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, erro
 		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
 
-	identifier, err := helper.GenerateUniqueIdentifier(8)
+	identifier, err := storage.GenerateUniqueIdentifier(8)
 	if err != nil {
 		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
@@ -151,7 +151,7 @@ func (uc *modulUsecase) Download(userID string, modulIDs []string) (string, erro
 	zipFileName := fmt.Sprintf("moduls_%s.zip", identifier)
 	zipFilePath := filepath.Join(tempDir, zipFileName)
 
-	if err := helper.CreateZipArchive(filePaths, zipFilePath); err != nil {
+	if err := storage.CreateZipArchive(filePaths, zipFilePath); err != nil {
 		return "", apperrors.NewInternalError(fmt.Errorf("ModulUsecase.Download: %w", err))
 	}
 

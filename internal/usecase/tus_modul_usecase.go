@@ -13,6 +13,7 @@ import (
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
 
 	"github.com/google/uuid"
@@ -38,7 +39,7 @@ type tusModulUsecase struct {
 	tusModulUploadRepo repo.TusModulUploadRepository
 	modulRepo          repo.ModulRepository
 	tusManager         *helper.TusManager
-	fileManager        *helper.FileManager
+	fileManager        *storage.FileManager
 	config             *config.Config
 }
 
@@ -46,7 +47,7 @@ func NewTusModulUsecase(
 	tusModulUploadRepo repo.TusModulUploadRepository,
 	modulRepo repo.ModulRepository,
 	tusManager *helper.TusManager,
-	fileManager *helper.FileManager,
+	fileManager *storage.FileManager,
 	config *config.Config,
 ) TusModulUsecase {
 	return &tusModulUsecase{
@@ -269,7 +270,7 @@ func (uc *tusModulUsecase) completeModulCreate(tusUpload *domain.TusModulUpload,
 	}
 
 	if err := uc.modulRepo.Create(modul); err != nil {
-		_ = helper.DeleteFile(finalPath)
+		_ = storage.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulCreate: %w", err))
 	}
@@ -296,13 +297,13 @@ func (uc *tusModulUsecase) completeModulUpdate(tusUpload *domain.TusModulUpload,
 	modul.MimeType = detectMimeType(finalPath)
 
 	if err := uc.modulRepo.Update(modul); err != nil {
-		_ = helper.DeleteFile(finalPath)
+		_ = storage.DeleteFile(finalPath)
 		uc.fileManager.DeleteModulDirectory(userID, randomDir)
 		return "", apperrors.NewInternalError(fmt.Errorf("TusModulUsecase.completeModulUpdate: %w", err))
 	}
 
 	if oldFilePath != "" {
-		if err := helper.DeleteFile(oldFilePath); err != nil {
+		if err := storage.DeleteFile(oldFilePath); err != nil {
 			// Old file deletion after successful update is critical but non-blocking
 			zlog.Warn().Err(err).Str("file", oldFilePath).Msg("TusModulUsecase.completeModulUpdate: failed to delete old file")
 		}

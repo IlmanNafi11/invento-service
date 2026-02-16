@@ -9,10 +9,12 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"invento-service/internal/storage"
 )
 
 type TusStore struct {
-	pathResolver *PathResolver
+	pathResolver *storage.PathResolver
 	maxFileSize  int64
 	locks        map[string]*lockEntry
 	locksMutex   sync.RWMutex
@@ -30,7 +32,7 @@ type TusFileInfo struct {
 	Metadata map[string]string `json:"metadata"`
 }
 
-func NewTusStore(pathResolver *PathResolver, maxFileSize int64) *TusStore {
+func NewTusStore(pathResolver *storage.PathResolver, maxFileSize int64) *TusStore {
 	return &TusStore{
 		pathResolver: pathResolver,
 		maxFileSize:  maxFileSize,
@@ -167,7 +169,7 @@ func (ts *TusStore) FinalizeUpload(uploadID string, finalPath string) error {
 		return fmt.Errorf("gagal membuat direktori final: %w", err)
 	}
 
-	if err := MoveFile(tempFilePath, finalPath); err != nil {
+	if err := storage.MoveFile(tempFilePath, finalPath); err != nil {
 		return fmt.Errorf("gagal memindahkan file: %w", err)
 	}
 

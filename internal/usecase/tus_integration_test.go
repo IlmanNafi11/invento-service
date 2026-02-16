@@ -13,6 +13,7 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
 
 	"github.com/rs/zerolog"
@@ -26,7 +27,7 @@ type tusIntegrationEnv struct {
 	cfg            *config.Config
 	db             *gorm.DB
 	userID         string
-	pathResolver   *helper.PathResolver
+	pathResolver   *storage.PathResolver
 	projectQueue   *helper.TusQueue
 	modulQueue     *helper.TusQueue
 	projectManager *helper.TusManager
@@ -85,8 +86,8 @@ func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 		IsActive: true,
 	}).Error)
 
-	pathResolver := helper.NewPathResolver(cfg)
-	fileManager := helper.NewFileManager(cfg)
+	pathResolver := storage.NewPathResolver(cfg)
+	fileManager := storage.NewFileManager(cfg)
 
 	projectStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeProject)
 	modulStore := helper.NewTusStore(pathResolver, cfg.Upload.MaxSizeModul)

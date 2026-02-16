@@ -10,6 +10,7 @@ import (
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/helper"
+	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
 
 	"github.com/google/uuid"
@@ -36,7 +37,7 @@ type tusUploadUsecase struct {
 	projectRepo    repo.ProjectRepository
 	projectUsecase ProjectUsecase
 	tusManager     *helper.TusManager
-	fileManager    *helper.FileManager
+	fileManager    *storage.FileManager
 	config         *config.Config
 }
 
@@ -45,7 +46,7 @@ func NewTusUploadUsecase(
 	projectRepo repo.ProjectRepository,
 	projectUsecase ProjectUsecase,
 	tusManager *helper.TusManager,
-	fileManager *helper.FileManager,
+	fileManager *storage.FileManager,
 	cfg *config.Config,
 ) TusUploadUsecase {
 	return &tusUploadUsecase{
@@ -281,7 +282,7 @@ func (uc *tusUploadUsecase) completeProjectCreate(upload *domain.TusUpload, fina
 		NamaProject: upload.UploadMetadata.NamaProject,
 		Kategori:    upload.UploadMetadata.Kategori,
 		Semester:    upload.UploadMetadata.Semester,
-		Ukuran:      helper.GetFileSizeFromPath(finalFilePath),
+		Ukuran:      storage.GetFileSizeFromPath(finalFilePath),
 		PathFile:    finalFilePath,
 	}
 
@@ -309,7 +310,7 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload, fina
 	project.NamaProject = upload.UploadMetadata.NamaProject
 	project.Kategori = upload.UploadMetadata.Kategori
 	project.Semester = upload.UploadMetadata.Semester
-	project.Ukuran = helper.GetFileSizeFromPath(finalFilePath)
+	project.Ukuran = storage.GetFileSizeFromPath(finalFilePath)
 	project.PathFile = finalFilePath
 
 	if err := uc.projectRepo.Update(project); err != nil {
@@ -317,7 +318,7 @@ func (uc *tusUploadUsecase) completeProjectUpdate(upload *domain.TusUpload, fina
 	}
 
 	if oldFilePath != "" && oldFilePath != finalFilePath {
-		if err := helper.DeleteFile(oldFilePath); err != nil {
+		if err := storage.DeleteFile(oldFilePath); err != nil {
 			// Old file deletion after successful update is critical but non-blocking
 			zlog.Warn().Err(err).Str("file", oldFilePath).Msg("TusUploadUsecase.completeProjectUpdate: failed to delete old file")
 		}
