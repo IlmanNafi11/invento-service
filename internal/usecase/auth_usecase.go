@@ -2,11 +2,11 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	supabaseAuth "invento-service/internal/supabase"
 	"invento-service/internal/usecase/repo"
 	"strings"
@@ -79,7 +79,7 @@ func NewAuthUsecaseWithDeps(
 func (uc *authUsecase) Register(req domain.RegisterRequest) (string, *domain.AuthResponse, error) {
 	ctx := context.Background()
 
-	emailInfo, err := helper.ValidatePolijeEmail(req.Email)
+	emailInfo, err := validatePolijeEmail(req.Email)
 	if err != nil {
 		return "", nil, apperrors.NewValidationError(err.Error(), err)
 	}
@@ -169,7 +169,7 @@ func (uc *authUsecase) Login(req domain.AuthRequest) (string, *domain.AuthRespon
 	user, err := uc.userRepo.GetByEmail(req.Email)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			emailInfo, validateErr := helper.ValidatePolijeEmail(req.Email)
+			emailInfo, validateErr := validatePolijeEmail(req.Email)
 			if validateErr != nil {
 				return "", nil, apperrors.NewValidationError(validateErr.Error(), validateErr)
 			}
@@ -270,4 +270,52 @@ func (uc *authUsecase) Logout(token string) error {
 	}
 
 	return nil
+}
+
+// emailDomainInfo holds parsed email domain information for Polije email validation.
+type emailDomainInfo struct {
+	IsValid   bool
+	Subdomain string
+	RoleName  string
+}
+
+// validatePolijeEmail validates that the email belongs to the polije.ac.id domain
+// and returns the parsed domain info including the mapped role name.
+func validatePolijeEmail(email string) (*emailDomainInfo, error) {
+	email = strings.ToLower(strings.TrimSpace(email))
+
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return nil, errors.New("format email tidak valid")
+	}
+
+	domain := parts[1]
+
+	if !strings.HasSuffix(domain, "polije.ac.id") {
+		return nil, errors.New("hanya email dengan domain polije.ac.id yang dapat digunakan")
+	}
+
+	subdomain := ""
+	if strings.Contains(domain, ".") {
+		domainParts := strings.Split(domain, ".")
+		if len(domainParts) >= 3 {
+			subdomain = domainParts[0]
+		}
+	}
+
+	info := &emailDomainInfo{
+		IsValid:   true,
+		Subdomain: subdomain,
+	}
+
+	switch subdomain {
+	case "student":
+		info.RoleName = "mahasiswa"
+	case "teacher":
+		info.RoleName = "dosen"
+	default:
+		return nil, errors.New("subdomain email tidak valid, gunakan student atau teacher")
+	}
+
+	return info, nil
 }

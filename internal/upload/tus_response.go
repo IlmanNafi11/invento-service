@@ -76,7 +76,7 @@ func SendTusSlotResponse(c *fiber.Ctx, available bool, message string, queueLeng
 //
 // Usage:
 //
-//	return helper.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
+//	return upload.SendTusErrorResponse(c, fiber.StatusBadRequest, ctrl.config.Upload.TusVersion)
 func SendTusErrorResponse(c *fiber.Ctx, statusCode int, tusVersion string) error {
 	c.Set(HeaderTusResumable, tusVersion)
 	return c.SendStatus(statusCode)
@@ -93,7 +93,7 @@ func SendTusErrorResponse(c *fiber.Ctx, statusCode int, tusVersion string) error
 //
 // Usage:
 //
-//	return helper.SendTusErrorResponseWithOffset(c, fiber.StatusConflict, ctrl.config.Upload.TusVersion, newOffset)
+//	return upload.SendTusErrorResponseWithOffset(c, fiber.StatusConflict, ctrl.config.Upload.TusVersion, newOffset)
 func SendTusErrorResponseWithOffset(c *fiber.Ctx, statusCode int, tusVersion string, offset int64) error {
 	c.Set(HeaderTusResumable, tusVersion)
 	c.Set(HeaderUploadOffset, strconv.FormatInt(offset, 10))
@@ -111,7 +111,7 @@ func SendTusErrorResponseWithOffset(c *fiber.Ctx, statusCode int, tusVersion str
 //
 // Usage:
 //
-//	return helper.SendTusErrorResponseWithLength(c, fiber.StatusRequestEntityTooLarge, ctrl.config.Upload.TusVersion, fileSize)
+//	return upload.SendTusErrorResponseWithLength(c, fiber.StatusRequestEntityTooLarge, ctrl.config.Upload.TusVersion, fileSize)
 func SendTusErrorResponseWithLength(c *fiber.Ctx, statusCode int, tusVersion string, length int64) error {
 	c.Set(HeaderTusResumable, tusVersion)
 	c.Set(HeaderUploadLength, strconv.FormatInt(length, 10))
@@ -128,7 +128,7 @@ func SendTusErrorResponseWithLength(c *fiber.Ctx, statusCode int, tusVersion str
 // Usage:
 //
 //	if uploadMetadata == "" {
-//	    return helper.SendTusValidationErrorResponse(c, "Metadata upload wajib diisi")
+//	    return upload.SendTusValidationErrorResponse(c, "Metadata upload wajib diisi")
 //	}
 func SendTusValidationErrorResponse(c *fiber.Ctx, message string) error {
 	return httputil.SendBadRequestResponse(c, message)
@@ -144,7 +144,7 @@ func SendTusValidationErrorResponse(c *fiber.Ctx, message string) error {
 // Usage:
 //
 //	if err != nil && errors.Is(err, ErrUploadNotFound) {
-//	    return helper.SendTusNotFoundErrorResponse(c, "Upload tidak ditemukan")
+//	    return upload.SendTusNotFoundErrorResponse(c, "Upload tidak ditemukan")
 //	}
 func SendTusNotFoundErrorResponse(c *fiber.Ctx, message string) error {
 	if message == "" {
@@ -162,7 +162,7 @@ func SendTusNotFoundErrorResponse(c *fiber.Ctx, message string) error {
 // Usage:
 //
 //	if err != nil && errors.Is(err, ErrAccessDenied) {
-//	    return helper.SendTusForbiddenErrorResponse(c)
+//	    return upload.SendTusForbiddenErrorResponse(c)
 //	}
 func SendTusForbiddenErrorResponse(c *fiber.Ctx) error {
 	return httputil.SendForbiddenResponse(c)
@@ -178,7 +178,7 @@ func SendTusForbiddenErrorResponse(c *fiber.Ctx) error {
 // Usage:
 //
 //	if err != nil && errors.Is(err, ErrUploadAlreadyCompleted) {
-//	    return helper.SendTusConflictErrorResponse(c, "Upload sudah selesai")
+//	    return upload.SendTusConflictErrorResponse(c, "Upload sudah selesai")
 //	}
 func SendTusConflictErrorResponse(c *fiber.Ctx, message string) error {
 	if message == "" {
@@ -197,7 +197,7 @@ func SendTusConflictErrorResponse(c *fiber.Ctx, message string) error {
 // Usage:
 //
 //	if fileSize > ctrl.config.Upload.MaxFileSize {
-//	    return helper.SendTusPayloadTooLargeErrorResponse(c, "Ukuran file melebihi batas maksimal")
+//	    return upload.SendTusPayloadTooLargeErrorResponse(c, "Ukuran file melebihi batas maksimal")
 //	}
 func SendTusPayloadTooLargeErrorResponse(c *fiber.Ctx, message string) error {
 	if message == "" {
@@ -216,7 +216,7 @@ func SendTusPayloadTooLargeErrorResponse(c *fiber.Ctx, message string) error {
 // Usage:
 //
 //	if err != nil && errors.Is(err, ErrUploadQueueFull) {
-//	    return helper.SendTusTooManyRequestsErrorResponse(c, "Antrian upload penuh")
+//	    return upload.SendTusTooManyRequestsErrorResponse(c, "Antrian upload penuh")
 //	}
 func SendTusTooManyRequestsErrorResponse(c *fiber.Ctx, message string) error {
 	if message == "" {
@@ -234,7 +234,7 @@ func SendTusTooManyRequestsErrorResponse(c *fiber.Ctx, message string) error {
 // Usage:
 //
 //	if err != nil {
-//	    return helper.SendTusInternalErrorResponse(c)
+//	    return upload.SendTusInternalErrorResponse(c)
 //	}
 func SendTusInternalErrorResponse(c *fiber.Ctx) error {
 	return httputil.SendInternalServerErrorResponse(c)

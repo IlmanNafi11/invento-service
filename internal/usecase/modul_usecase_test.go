@@ -5,8 +5,8 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/helper"
 	"invento-service/internal/storage"
+	"invento-service/internal/upload"
 	"os"
 	"strings"
 	"testing"
@@ -272,10 +272,10 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 	}
 
 	pathResolver := storage.NewPathResolver(cfg)
-	tusStore := helper.NewTusStore(pathResolver, 10*1024*1024)
-	tusQueue := helper.NewTusQueue(3)
+	tusStore := upload.NewTusStore(pathResolver, 10*1024*1024)
+	tusQueue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, fileManager, cfg, zerolog.Nop())
+	tusManager := upload.NewTusManager(tusStore, tusQueue, fileManager, cfg, zerolog.Nop())
 
 	_ = NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
@@ -304,9 +304,9 @@ func TestInitiateUpload_Success(t *testing.T) {
 	}
 
 	pathResolver := storage.NewPathResolver(cfg)
-	tusStore := helper.NewTusStore(pathResolver, 52428800)
-	tusQueue := helper.NewTusQueue(3)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, nil, cfg, zerolog.Nop())
+	tusStore := upload.NewTusStore(pathResolver, 52428800)
+	tusQueue := upload.NewTusQueue(3)
+	tusManager := upload.NewTusManager(tusStore, tusQueue, nil, cfg, zerolog.Nop())
 	fileManager := storage.NewFileManager(cfg)
 
 	tusModulUc := NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
@@ -346,10 +346,10 @@ func TestUploadChunk_Success(t *testing.T) {
 	}
 
 	pathResolver := storage.NewPathResolver(cfg)
-	tusStore := helper.NewTusStore(pathResolver, 10*1024*1024)
-	tusQueue := helper.NewTusQueue(3)
+	tusStore := upload.NewTusStore(pathResolver, 10*1024*1024)
+	tusQueue := upload.NewTusQueue(3)
 	fileManager := storage.NewFileManager(cfg)
-	tusManager := helper.NewTusManager(tusStore, tusQueue, fileManager, cfg, zerolog.Nop())
+	tusManager := upload.NewTusManager(tusStore, tusQueue, fileManager, cfg, zerolog.Nop())
 
 	_ = NewTusModulUsecase(mockTusModulUploadRepo, mockModulRepo, tusManager, fileManager, cfg)
 
