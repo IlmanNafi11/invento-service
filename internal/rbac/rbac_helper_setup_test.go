@@ -152,7 +152,6 @@ func TestNewRBACHelper(t *testing.T) {
 	t.Parallel()
 	mockCasbin := new(MockCasbinEnforcerForRBAC)
 	rh := NewRBACHelper(mockCasbin)
-
 	assert.NotNil(t, rh)
 	assert.Equal(t, mockCasbin, rh.casbinEnforcer)
 }
@@ -160,7 +159,6 @@ func TestNewRBACHelper(t *testing.T) {
 func TestNewRBACHelper_NilEnforcer(t *testing.T) {
 	t.Parallel()
 	rh := NewRBACHelper(nil)
-
 	assert.NotNil(t, rh)
 	assert.Nil(t, rh.casbinEnforcer)
 }
@@ -170,7 +168,6 @@ func TestRBACHelper_ValidatePermissionFormat_EmptyPermissions(t *testing.T) {
 	rh := NewRBACHelper(nil)
 
 	err := rh.ValidatePermissionFormat(map[string][]string{})
-
 	assert.Error(t, err)
 	assert.Equal(t, "permission tidak boleh kosong", err.Error())
 }
@@ -180,7 +177,6 @@ func TestRBACHelper_ValidatePermissionFormat_NilPermissions(t *testing.T) {
 	rh := NewRBACHelper(nil)
 
 	err := rh.ValidatePermissionFormat(nil)
-
 	assert.Error(t, err)
 	assert.Equal(t, "permission tidak boleh kosong", err.Error())
 }
@@ -194,7 +190,6 @@ func TestRBACHelper_ValidatePermissionFormat_EmptyResourceName(t *testing.T) {
 	}
 
 	err := rh.ValidatePermissionFormat(permissions)
-
 	assert.Error(t, err)
 	assert.Equal(t, "nama resource tidak boleh kosong", err.Error())
 }
@@ -208,7 +203,6 @@ func TestRBACHelper_ValidatePermissionFormat_EmptyActionsForResource(t *testing.
 	}
 
 	err := rh.ValidatePermissionFormat(permissions)
-
 	assert.Error(t, err)
 	assert.Equal(t, "action untuk resource users tidak boleh kosong", err.Error())
 }
@@ -222,7 +216,6 @@ func TestRBACHelper_ValidatePermissionFormat_EmptyActionString(t *testing.T) {
 	}
 
 	err := rh.ValidatePermissionFormat(permissions)
-
 	assert.Error(t, err)
 	assert.Equal(t, "action tidak boleh kosong untuk resource users", err.Error())
 }

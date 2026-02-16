@@ -2,14 +2,14 @@ package storage_test
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"invento-service/internal/storage"
 	"mime/multipart"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateUniqueIdentifier(t *testing.T) {
@@ -299,7 +299,6 @@ func TestSaveUploadedFile(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
 	destPath := filepath.Join(tempDir, "test.txt")
-
 	// Create a multipart form with a file
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -308,12 +307,8 @@ func TestSaveUploadedFile(t *testing.T) {
 	_, err = part.Write([]byte("test content"))
 	require.NoError(t, err)
 	writer.Close()
-
-	// Create a HTTP request from the body
 	req := httptest.NewRequest("POST", "/upload", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	// Parse the form to get the FileHeader
 	err = req.ParseMultipartForm(32 << 20)
 	require.NoError(t, err)
 

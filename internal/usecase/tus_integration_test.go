@@ -40,7 +40,6 @@ type tusIntegrationEnv struct {
 
 func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 	t.Helper()
-
 	baseDir := t.TempDir()
 	cfg := &config.Config{
 		Upload: config.UploadConfig{
@@ -66,11 +65,8 @@ func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 
 	dsnSafeName := strings.ReplaceAll(t.Name(), "/", "_")
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", dsnSafeName)
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true})
 	require.NoError(t, err)
-
 	err = db.AutoMigrate(
 		&domain.User{},
 		&domain.Project{},
@@ -79,7 +75,6 @@ func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 		&domain.TusModulUpload{},
 	)
 	require.NoError(t, err)
-
 	userID := "11111111-1111-1111-1111-111111111111"
 	require.NoError(t, db.Create(&domain.User{
 		ID:       userID,
@@ -87,24 +82,18 @@ func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 		Name:     "Integration User",
 		IsActive: true,
 	}).Error)
-
 	pathResolver := storage.NewPathResolver(cfg)
 	fileManager := storage.NewFileManager(cfg)
-
 	projectStore := upload.NewTusStore(pathResolver, cfg.Upload.MaxSizeProject)
 	modulStore := upload.NewTusStore(pathResolver, cfg.Upload.MaxSizeModul)
-
 	projectQueue := upload.NewTusQueue(cfg.Upload.MaxConcurrentProject)
 	modulQueue := upload.NewTusQueue(cfg.Upload.MaxConcurrentModul)
-
 	projectManager := upload.NewTusManager(projectStore, projectQueue, fileManager, cfg, zerolog.Nop())
 	modulManager := upload.NewTusManager(modulStore, modulQueue, fileManager, cfg, zerolog.Nop())
-
 	tusUploadRepo := repo.NewTusUploadRepository(db)
 	projectRepo := repo.NewProjectRepository(db)
 	tusModulUploadRepo := repo.NewTusModulUploadRepository(db)
 	modulRepo := repo.NewModulRepository(db, zerolog.Nop())
-
 	uploadUsecase := NewTusUploadUsecase(
 		tusUploadRepo,
 		projectRepo,
@@ -113,7 +102,6 @@ func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 		fileManager,
 		cfg,
 	).(*tusUploadUsecase)
-
 	modulUsecase := NewTusModulUsecase(
 		tusModulUploadRepo,
 		modulRepo,
@@ -121,7 +109,6 @@ func setupTusIntegrationTest(t *testing.T) *tusIntegrationEnv {
 		fileManager,
 		cfg,
 	).(*tusModulUsecase)
-
 	return &tusIntegrationEnv{
 		cfg:            cfg,
 		db:             db,

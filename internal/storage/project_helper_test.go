@@ -23,7 +23,6 @@ func TestNewProjectHelper(t *testing.T) {
 	}
 
 	projectHelper := storage.NewProjectHelper(cfg)
-
 	assert.NotNil(t, projectHelper)
 }
 
@@ -31,7 +30,6 @@ func TestProjectHelper_GenerateProjectIdentifier(t *testing.T) {
 	t.Parallel()
 	cfg := &config.Config{}
 	projectHelper := storage.NewProjectHelper(cfg)
-
 	t.Run("Generate unique identifiers", func(t *testing.T) {
 		t.Parallel()
 		identifiers := make(map[string]bool)
@@ -69,7 +67,6 @@ func TestProjectHelper_BuildProjectPath(t *testing.T) {
 		},
 	}
 	projectHelper := storage.NewProjectHelper(cfg)
-
 	tests := []struct {
 		name       string
 		userID     uint
@@ -115,7 +112,6 @@ func TestProjectHelper_BuildProjectDirectory(t *testing.T) {
 		},
 	}
 	projectHelper := storage.NewProjectHelper(cfg)
-
 	userID := uint(123)
 	identifier := "testidentifier"
 	result := projectHelper.BuildProjectDirectory(userID, identifier)
@@ -133,7 +129,6 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 		},
 	}
 	projectHelper := storage.NewProjectHelper(cfg)
-
 	t.Run("Valid ZIP file", func(t *testing.T) {
 		t.Parallel()
 		fileHeader := &multipart.FileHeader{
@@ -184,12 +179,9 @@ func TestProjectHelper_ValidateProjectFile(t *testing.T) {
 func TestProjectHelper_ValidateProjectFileSize(t *testing.T) {
 	t.Parallel()
 	cfg := &config.Config{
-		Upload: config.UploadConfig{
-			MaxSize: 50 * 1024 * 1024,
-		},
+		Upload: config.UploadConfig{MaxSize: 50 * 1024 * 1024},
 	}
 	projectHelper := storage.NewProjectHelper(cfg)
-
 	tests := []struct {
 		name     string
 		fileSize int64
@@ -421,7 +413,6 @@ func TestProjectHelper_EdgeCases(t *testing.T) {
 		},
 	}
 	projectHelper := storage.NewProjectHelper(cfg)
-
 	t.Run("Special characters in filename", func(t *testing.T) {
 		t.Parallel()
 		filename := "project (2024) [v1.0].zip"
@@ -482,7 +473,6 @@ func TestProjectHelper_FileOperations(t *testing.T) {
 		},
 	}
 	projectHelper := storage.NewProjectHelper(cfg)
-
 	t.Run("Create and validate project file", func(t *testing.T) {
 		t.Parallel()
 		userID := uint(123)

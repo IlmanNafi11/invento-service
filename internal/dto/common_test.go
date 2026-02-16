@@ -191,7 +191,6 @@ func TestFormatISO8601_Success(t *testing.T) {
 func TestNowISO8601_Format(t *testing.T) {
 	t.Parallel()
 	got := NowISO8601()
-
 	// Parse the result to verify it's valid ISO 8601
 	parsed, err := time.Parse(TimeFormat, got)
 	assert.NoError(t, err, "NowISO8601 should return valid ISO 8601 format")
@@ -200,8 +199,6 @@ func TestNowISO8601_Format(t *testing.T) {
 	now := time.Now()
 	diff := now.Sub(parsed)
 	assert.LessOrEqual(t, diff.Abs(), time.Second, "NowISO8601 should return current time")
-
-	// Verify format contains expected parts
 	assert.Contains(t, got, "T", "Should contain T separator")
 	assert.Contains(t, got, ":", "Should contain time separator")
 }
@@ -266,10 +263,10 @@ func TestParseISO8601_Success(t *testing.T) {
 			assert.NoError(t, err)
 			assert.True(t, got.Equal(tt.want), "Expected %v, got %v", tt.want, got)
 
-		// Check location matches - use the time value's Zone() method
-		_, offsetGot := got.Zone()
-		_, offsetWant := tt.want.Zone()
-		assert.Equal(t, offsetWant, offsetGot, "Timezone offset should match")
+			// Check location matches - use the time value's Zone() method
+			_, offsetGot := got.Zone()
+			_, offsetWant := tt.want.Zone()
+			assert.Equal(t, offsetWant, offsetGot, "Timezone offset should match")
 		})
 	}
 }
@@ -464,8 +461,6 @@ func TestErrorDetail_JSONTags(t *testing.T) {
 	t.Run("without code - omitempty", func(t *testing.T) {
 		t.Parallel()
 		ed := NewErrorDetail("email", "required")
-		// Code should not be present in JSON when empty due to omitempty
-		// This is implicitly tested through the struct tag
 		assert.Empty(t, ed.Code)
 		assert.Equal(t, "email", ed.Field)
 		assert.Equal(t, "required", ed.Message)
