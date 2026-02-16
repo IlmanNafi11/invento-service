@@ -204,7 +204,7 @@ Plans:
 
 **Risk**: Memory issues only surface under concurrent load, not in unit tests. Mitigated by running pprof heap profiles during load simulation, not just at rest.
 
-**Plans:** 5 plans
+**Plans:** 6 plans
 
 Plans:
 - [ ] 06-01-PLAN.md -- Fix golangci-lint config, extract magic string constants, remove dead code and TODO comments
@@ -212,6 +212,7 @@ Plans:
 - [ ] 06-03-PLAN.md -- Add Swagger annotations to all missing TUS and user management endpoints
 - [ ] 06-04-PLAN.md -- Comprehensive golangci-lint pass (zero warnings) and gofumpt formatting
 - [ ] 06-05-PLAN.md -- Regenerate Swagger docs, update .env.example, create memory verification checklist
+- [ ] 06-06-PLAN.md -- Test coverage audit: add tests for config (32.5%) and usecase/repo (65.5%) packages
 
 ## Requirements Coverage
 
@@ -248,4 +249,4 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 | 3. Code Quality Standardization | 0/3 | Complete    | 2026-02-16 |
 | 4. Architecture Restructuring | 0/6 | Planned | - |
 | 5. Deep Architecture Improvements | 8/10 | Complete    | 2026-02-16 |
-| 6. Polish & Verification | 0/5 | Planned | - |
+| 6. Polish & Verification | 0/6 | Planned | - |
