@@ -3,6 +3,7 @@ package base
 import (
 	"errors"
 	"invento-service/internal/httputil"
+	"invento-service/internal/middleware"
 	"invento-service/internal/rbac"
 	"strconv"
 
@@ -39,7 +40,7 @@ func NewBaseController(supabaseURL string, casbin *rbac.CasbinEnforcer) *BaseCon
 //	    return nil // response already sent
 //	}
 func (bc *BaseController) GetAuthenticatedUserID(c *fiber.Ctx) string {
-	userIDVal := c.Locals("user_id")
+	userIDVal := c.Locals(middleware.LocalsKeyUserID)
 	if userIDVal == nil {
 		httputil.SendUnauthorizedResponse(c)
 		return ""
@@ -55,7 +56,7 @@ func (bc *BaseController) GetAuthenticatedUserID(c *fiber.Ctx) string {
 // GetAuthenticatedUserEmail extracts the authenticated user email from context locals.
 // Returns empty string and sends unauthorized response if email is not found or invalid.
 func (bc *BaseController) GetAuthenticatedUserEmail(c *fiber.Ctx) string {
-	emailVal := c.Locals("user_email")
+	emailVal := c.Locals(middleware.LocalsKeyUserEmail)
 	if emailVal == nil {
 		httputil.SendUnauthorizedResponse(c)
 		return ""
@@ -71,7 +72,7 @@ func (bc *BaseController) GetAuthenticatedUserEmail(c *fiber.Ctx) string {
 // GetAuthenticatedUserRole extracts the authenticated user role from context locals.
 // Returns empty string and sends unauthorized response if role is not found or invalid.
 func (bc *BaseController) GetAuthenticatedUserRole(c *fiber.Ctx) string {
-	roleVal := c.Locals("user_role")
+	roleVal := c.Locals(middleware.LocalsKeyUserRole)
 	if roleVal == nil {
 		httputil.SendUnauthorizedResponse(c)
 		return ""

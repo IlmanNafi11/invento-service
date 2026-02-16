@@ -34,7 +34,7 @@ func (ph *ProjectHelper) BuildProjectDirectory(userID uint, identifier string) s
 }
 
 func (ph *ProjectHelper) getBasePath() string {
-	if ph.config.App.Env == "production" {
+	if ph.config.App.Env == config.EnvProduction {
 		return ph.config.Upload.PathProduction
 	}
 	return ph.config.Upload.PathDevelopment

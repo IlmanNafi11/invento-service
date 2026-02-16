@@ -7,6 +7,7 @@ import (
 	"invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
+	"invento-service/internal/middleware"
 	"invento-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
@@ -162,7 +163,7 @@ func (ctrl *AuthController) RefreshToken(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /auth/logout [post]
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
-	accessToken, _ := c.Locals("access_token").(string)
+	accessToken, _ := c.Locals(middleware.LocalsKeyAccessToken).(string)
 	if accessToken != "" {
 		ctx := c.UserContext()
 		if err := ctrl.authUsecase.Logout(ctx, accessToken); err != nil {

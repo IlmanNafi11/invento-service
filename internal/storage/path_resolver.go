@@ -26,14 +26,14 @@ func NewPathResolver(cfg *config.Config) *PathResolver {
 }
 
 func (pr *PathResolver) GetBasePath() string {
-	if pr.env == "production" {
+	if pr.env == config.EnvProduction {
 		return pr.pathProduction
 	}
 	return pr.pathDevelopment
 }
 
 func (pr *PathResolver) GetTempPath() string {
-	if pr.env == "production" {
+	if pr.env == config.EnvProduction {
 		return pr.tempPathProduction
 	}
 	return pr.tempPathDevelopment

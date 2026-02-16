@@ -15,7 +15,7 @@ type CasbinPermissionChecker interface {
 
 func RBACMiddleware(casbinEnforcer CasbinPermissionChecker, resource string, action string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		roleVal := c.Locals("user_role")
+		roleVal := c.Locals(LocalsKeyUserRole)
 		if roleVal == nil {
 			return httputil.SendForbiddenResponse(c)
 		}

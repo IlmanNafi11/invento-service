@@ -6,23 +6,24 @@ import (
 
 	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
+	"invento-service/internal/middleware"
 	"invento-service/internal/upload"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func getTusAuthContext(c *fiber.Ctx) (userID string, email string, role string, err error) {
-	uid, ok := c.Locals("user_id").(string)
+	uid, ok := c.Locals(middleware.LocalsKeyUserID).(string)
 	if !ok || uid == "" {
 		return "", "", "", fiber.ErrUnauthorized
 	}
 
-	userEmail, ok := c.Locals("user_email").(string)
+	userEmail, ok := c.Locals(middleware.LocalsKeyUserEmail).(string)
 	if !ok || userEmail == "" {
 		return "", "", "", fiber.ErrUnauthorized
 	}
 
-	userRole, ok := c.Locals("user_role").(string)
+	userRole, ok := c.Locals(middleware.LocalsKeyUserRole).(string)
 	if !ok || userRole == "" {
 		return "", "", "", fiber.ErrUnauthorized
 	}

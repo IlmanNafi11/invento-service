@@ -105,7 +105,7 @@ func LoadConfig() (*Config, error) {
 		App: AppConfig{
 			Name:           getEnv("APP_NAME", "invento-service"),
 			Port:           getEnv("APP_PORT", "3000"),
-			Env:            getEnv("APP_ENV", "development"),
+			Env:            getEnv("APP_ENV", EnvDevelopment),
 			CorsOriginDev:  getEnv("CORS_ORIGIN_DEVELOPMENT", "http://localhost:5173"),
 			CorsOriginProd: getEnv("CORS_ORIGIN_PRODUCTION", "https://yourdomain.com"),
 		},

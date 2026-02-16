@@ -33,7 +33,7 @@ func (mh *ModulHelper) BuildModulDirectory(userID string, identifier string) str
 }
 
 func (mh *ModulHelper) getBasePath() string {
-	if mh.config.App.Env == "production" {
+	if mh.config.App.Env == config.EnvProduction {
 		return mh.config.Upload.PathProduction
 	}
 	return mh.config.Upload.PathDevelopment

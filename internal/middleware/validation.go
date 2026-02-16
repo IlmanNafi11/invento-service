@@ -65,7 +65,7 @@ func ValidateRequest(requestType interface{}) fiber.Handler {
 		}
 
 		// Store validated request in context
-		c.Locals("request", req)
+		c.Locals(LocalsKeyRequest, req)
 
 		return c.Next()
 	}

@@ -24,7 +24,7 @@ func (fm *FileManager) GenerateRandomDirectory() (string, error) {
 func (fm *FileManager) GetUserUploadPath(userID string) (string, error) {
 	var basePath string
 
-	if fm.config.App.Env == "production" {
+	if fm.config.App.Env == config.EnvProduction {
 		basePath = fm.config.Upload.PathProduction
 	} else {
 		basePath = fm.config.Upload.PathDevelopment
@@ -62,7 +62,7 @@ func (fm *FileManager) CreateProjectUploadDirectory(userID string) (string, stri
 func (fm *FileManager) GetProjectFilePath(userID string, randomDir, filename string) string {
 	var basePath string
 
-	if fm.config.App.Env == "production" {
+	if fm.config.App.Env == config.EnvProduction {
 		basePath = fm.config.Upload.PathProduction
 	} else {
 		basePath = fm.config.Upload.PathDevelopment
@@ -74,7 +74,7 @@ func (fm *FileManager) GetProjectFilePath(userID string, randomDir, filename str
 func (fm *FileManager) DeleteUserDirectory(userID string) error {
 	var basePath string
 
-	if fm.config.App.Env == "production" {
+	if fm.config.App.Env == config.EnvProduction {
 		basePath = fm.config.Upload.PathProduction
 	} else {
 		basePath = fm.config.Upload.PathDevelopment
@@ -88,7 +88,7 @@ func (fm *FileManager) DeleteUserDirectory(userID string) error {
 func (fm *FileManager) DeleteProjectDirectory(userID string, randomDir string) error {
 	var basePath string
 
-	if fm.config.App.Env == "production" {
+	if fm.config.App.Env == config.EnvProduction {
 		basePath = fm.config.Upload.PathProduction
 	} else {
 		basePath = fm.config.Upload.PathDevelopment
@@ -102,7 +102,7 @@ func (fm *FileManager) DeleteProjectDirectory(userID string, randomDir string) e
 func (fm *FileManager) GetUploadFilePath(uploadID string) string {
 	var basePath string
 
-	if fm.config.App.Env == "production" {
+	if fm.config.App.Env == config.EnvProduction {
 		basePath = fm.config.Upload.TempPathProduction
 	} else {
 		basePath = fm.config.Upload.TempPathDevelopment
@@ -112,7 +112,7 @@ func (fm *FileManager) GetUploadFilePath(uploadID string) string {
 }
 
 func (fm *FileManager) GetModulBasePath() string {
-	if fm.config.App.Env == "production" {
+	if fm.config.App.Env == config.EnvProduction {
 		return fm.config.Upload.PathProduction
 	}
 	return fm.config.Upload.PathDevelopment

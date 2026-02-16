@@ -38,7 +38,7 @@ import (
 // initLogger creates a zerolog.Logger configured for the given environment and level.
 func initLogger(env, level string) zerolog.Logger {
 	var output io.Writer
-	if env == "development" {
+	if env == config.EnvDevelopment {
 		output = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: "15:04:05"}
 	} else {
 		output = os.Stderr
@@ -136,7 +136,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	}
 
 	corsOrigin := cfg.App.CorsOriginDev
-	if cfg.App.Env == "production" {
+	if cfg.App.Env == config.EnvProduction {
 		corsOrigin = cfg.App.CorsOriginProd
 	}
 

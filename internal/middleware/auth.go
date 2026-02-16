@@ -44,15 +44,15 @@ func SupabaseAuthMiddleware(authService domain.AuthService, userRepo repo.UserRe
 			return httputil.SendUnauthorizedResponse(c)
 		}
 
-		c.Locals("user_id", user.ID)
-		c.Locals("user_email", user.Email)
+		c.Locals(LocalsKeyUserID, user.ID)
+		c.Locals(LocalsKeyUserEmail, user.Email)
 
 		roleName := ""
 		if user.Role != nil {
 			roleName = user.Role.NamaRole
 		}
-		c.Locals("user_role", roleName)
-		c.Locals("access_token", accessToken)
+		c.Locals(LocalsKeyUserRole, roleName)
+		c.Locals(LocalsKeyAccessToken, accessToken)
 		c.Locals("claims", claims)
 
 		return c.Next()

@@ -21,7 +21,7 @@ func ConnectDatabase(cfg *Config, dbLogger zerolog.Logger) (*gorm.DB, error) {
 	if dsn == "" {
 		// Fallback to local database for development
 		sslMode := "require"
-		if cfg.App.Env == "development" {
+		if cfg.App.Env == EnvDevelopment {
 			sslMode = "disable"
 		}
 		dsn = fmt.Sprintf(

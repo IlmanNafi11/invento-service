@@ -249,7 +249,7 @@ func (uc *authUsecase) RefreshToken(ctx context.Context, refreshToken string) (s
 func (uc *authUsecase) RequestPasswordReset(ctx context.Context, req dto.ResetPasswordRequest) error {
 
 	redirectURL := uc.config.App.CorsOriginDev + "/reset-password"
-	if uc.config.App.Env == "production" {
+	if uc.config.App.Env == config.EnvProduction {
 		redirectURL = uc.config.App.CorsOriginProd + "/reset-password"
 	}
 
