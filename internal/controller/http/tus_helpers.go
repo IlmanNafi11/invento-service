@@ -3,17 +3,17 @@ package http
 import (
 	"bytes"
 	"errors"
-	"io"
-
-	apperrors "invento-service/internal/errors"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"invento-service/internal/upload"
+	"io"
+
+	apperrors "invento-service/internal/errors"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func getTusAuthContext(c *fiber.Ctx) (userID string, email string, role string, err error) {
+func getTusAuthContext(c *fiber.Ctx) (userID, email, role string, err error) {
 	uid, ok := c.Locals(middleware.LocalsKeyUserID).(string)
 	if !ok || uid == "" {
 		return "", "", "", fiber.ErrUnauthorized
@@ -44,31 +44,31 @@ func validateTusHeaders(c *fiber.Ctx, tusVersion string) error {
 	return nil
 }
 
-func parseChunkRequest(c *fiber.Ctx) (offset int64, chunkSize int64, body io.Reader, err error) {
+func parseChunkRequest(c *fiber.Ctx) (offset int64, body io.Reader, err error) {
 	tusHeaders, err := upload.GetTusHeaders(c)
 	if err != nil {
-		return 0, 0, nil, err
+		return 0, nil, err
 	}
 
 	if tusHeaders.UploadOffset < 0 {
-		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "Upload-Offset tidak valid")
+		return 0, nil, fiber.NewError(fiber.StatusBadRequest, "Upload-Offset tidak valid")
 	}
 	if tusHeaders.ContentLength <= 0 {
-		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "Content-Length tidak valid")
+		return 0, nil, fiber.NewError(fiber.StatusBadRequest, "Content-Length tidak valid")
 	}
 	if err := upload.ValidateChunkSize(tusHeaders.ContentLength); err != nil {
-		return 0, 0, nil, err
+		return 0, nil, err
 	}
 
 	bodyBytes := c.Body()
 	if len(bodyBytes) == 0 {
-		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "Request body kosong")
+		return 0, nil, fiber.NewError(fiber.StatusBadRequest, "Request body kosong")
 	}
 	if int64(len(bodyBytes)) != tusHeaders.ContentLength {
-		return 0, 0, nil, fiber.NewError(fiber.StatusBadRequest, "Ukuran chunk tidak sesuai dengan Content-Length")
+		return 0, nil, fiber.NewError(fiber.StatusBadRequest, "Ukuran chunk tidak sesuai dengan Content-Length")
 	}
 
-	return tusHeaders.UploadOffset, tusHeaders.ContentLength, bytes.NewReader(bodyBytes), nil
+	return tusHeaders.UploadOffset, bytes.NewReader(bodyBytes), nil
 }
 
 func handleTusChunkError(c *fiber.Ctx, err error, tusVersion string) error {

@@ -114,7 +114,7 @@ func CreateTestUser(db *gorm.DB, email, name string, roleID int) (*domain.User, 
 }
 
 // CreateTestProject creates a test project in the database
-func CreateTestProject(db *gorm.DB, name string, userID string) (*domain.Project, error) {
+func CreateTestProject(db *gorm.DB, name, userID string) (*domain.Project, error) {
 	project := &domain.Project{
 		NamaProject: name,
 		UserID:      userID,
@@ -130,7 +130,7 @@ func CreateTestProject(db *gorm.DB, name string, userID string) (*domain.Project
 }
 
 // CreateTestModul creates a test modul in the database
-func CreateTestModul(db *gorm.DB, name string, userID string) (*domain.Modul, error) {
+func CreateTestModul(db *gorm.DB, name, userID string) (*domain.Modul, error) {
 	modul := &domain.Modul{
 		Judul:     name,
 		Deskripsi: "Test deskripsi",

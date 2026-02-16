@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"invento-service/internal/controller/base"
+	"invento-service/internal/dto"
+	"invento-service/internal/rbac"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,11 +16,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"invento-service/internal/controller/base"
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/dto"
+
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/rbac"
+
 	app_testing "invento-service/internal/testing"
 )
 
@@ -26,7 +28,7 @@ type MockModulUsecase struct {
 	mock.Mock
 }
 
-func (m *MockModulUsecase) GetList(ctx context.Context, userID string, search string, filterType string, filterStatus string, page, limit int) (*dto.ModulListData, error) {
+func (m *MockModulUsecase) GetList(ctx context.Context, userID, search, filterType, filterStatus string, page, limit int) (*dto.ModulListData, error) {
 	args := m.Called(userID, search, filterType, filterStatus, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -34,7 +36,7 @@ func (m *MockModulUsecase) GetList(ctx context.Context, userID string, search st
 	return args.Get(0).(*dto.ModulListData), args.Error(1)
 }
 
-func (m *MockModulUsecase) GetByID(ctx context.Context, modulID string, userID string) (*dto.ModulResponse, error) {
+func (m *MockModulUsecase) GetByID(ctx context.Context, modulID, userID string) (*dto.ModulResponse, error) {
 	args := m.Called(modulID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -42,12 +44,12 @@ func (m *MockModulUsecase) GetByID(ctx context.Context, modulID string, userID s
 	return args.Get(0).(*dto.ModulResponse), args.Error(1)
 }
 
-func (m *MockModulUsecase) UpdateMetadata(ctx context.Context, modulID string, userID string, req dto.UpdateModulRequest) error {
+func (m *MockModulUsecase) UpdateMetadata(ctx context.Context, modulID, userID string, req dto.UpdateModulRequest) error {
 	args := m.Called(modulID, userID, req)
 	return args.Error(0)
 }
 
-func (m *MockModulUsecase) Delete(ctx context.Context, modulID string, userID string) error {
+func (m *MockModulUsecase) Delete(ctx context.Context, modulID, userID string) error {
 	args := m.Called(modulID, userID)
 	return args.Error(0)
 }
@@ -67,10 +69,10 @@ func getTestBaseController() *base.BaseController {
 }
 
 // Helper function to set authenticated user in context
-func setAuthenticatedUser(c *fiber.Ctx, userID string, email, role string) {
-	c.Locals("user_id", userID)
-	c.Locals("user_email", email)
-	c.Locals("user_role", role)
+func setAuthenticatedUser(c *fiber.Ctx) {
+	c.Locals("user_id", "user-1")
+	c.Locals("user_email", "test@example.com")
+	c.Locals("user_role", "user")
 }
 
 // TestModulController_GetList_Success tests successful retrieval of module list
@@ -85,7 +87,7 @@ func TestModulController_GetList_Success(t *testing.T) {
 
 	// Setup middleware to inject authenticated user
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 
@@ -142,7 +144,7 @@ func TestModulController_GetList_WithSearchAndFilters(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Get("/api/v1/modul", controller.GetList)
@@ -212,7 +214,7 @@ func TestModulController_UpdateMetadata_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
@@ -244,7 +246,7 @@ func TestModulController_UpdateMetadata_NotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
@@ -273,7 +275,7 @@ func TestModulController_UpdateMetadata_ValidationError(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Patch("/api/v1/modul/:id", controller.UpdateMetadata)
@@ -298,7 +300,7 @@ func TestModulController_Delete_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/:id", controller.Delete)
@@ -323,7 +325,7 @@ func TestModulController_Delete_NotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/:id", controller.Delete)
@@ -348,7 +350,7 @@ func TestModulController_Delete_Forbidden(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/:id", controller.Delete)
@@ -373,7 +375,7 @@ func TestModulController_Delete_InvalidID(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Delete("/api/v1/modul/:id", controller.Delete)

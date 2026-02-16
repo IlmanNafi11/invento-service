@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"invento-service/internal/dto"
 	"net/http/httptest"
 	"testing"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/dto"
+
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
 )
@@ -25,7 +26,7 @@ func TestModulController_Download_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -57,7 +58,7 @@ func TestModulController_Download_EmptyIDs(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -81,7 +82,7 @@ func TestModulController_Download_NotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)
@@ -130,7 +131,7 @@ func TestModulController_Download_InternalError(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setAuthenticatedUser(c, "user-1", "test@example.com", "user")
+		setAuthenticatedUser(c)
 		return c.Next()
 	})
 	app.Post("/api/v1/modul/download", controller.Download)

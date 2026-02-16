@@ -1,13 +1,13 @@
 package http
 
 import (
-	"strconv"
-
 	"invento-service/config"
-	base "invento-service/internal/controller/base"
 	"invento-service/internal/dto"
 	"invento-service/internal/upload"
 	"invento-service/internal/usecase"
+	"strconv"
+
+	base "invento-service/internal/controller/base"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -254,7 +254,7 @@ func (ctrl *TusController) uploadChunk(c *fiber.Ctx, projectID *uint) error {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	offset, _, bodyReader, err := parseChunkRequest(c)
+	offset, bodyReader, err := parseChunkRequest(c)
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}

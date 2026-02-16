@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"invento-service/config"
+	"invento-service/internal/domain"
+	"invento-service/internal/rbac"
+	"invento-service/internal/upload"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -15,15 +19,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"invento-service/config"
 	base "invento-service/internal/controller/base"
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/domain"
+
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
-	"invento-service/internal/rbac"
+
 	app_testing "invento-service/internal/testing"
-	"invento-service/internal/upload"
 )
 
 // MockTusUploadUsecase mocks the TusUploadUsecase interface
@@ -44,7 +46,7 @@ func (m *MockTusUploadUsecase) ResetUploadQueue(ctx context.Context, userID stri
 	return args.Error(0)
 }
 
-func (m *MockTusUploadUsecase) InitiateUpload(ctx context.Context, userID string, userEmail string, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
+func (m *MockTusUploadUsecase) InitiateUpload(ctx context.Context, userID, userEmail, userRole string, fileSize int64, metadata dto.TusUploadInitRequest) (*dto.TusUploadResponse, error) {
 	args := m.Called(ctx, userID, userEmail, userRole, fileSize, metadata)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -52,7 +54,7 @@ func (m *MockTusUploadUsecase) InitiateUpload(ctx context.Context, userID string
 	return args.Get(0).(*dto.TusUploadResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) HandleChunk(ctx context.Context, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+func (m *MockTusUploadUsecase) HandleChunk(ctx context.Context, uploadID, userID string, offset int64, chunk io.Reader) (int64, error) {
 	args := m.Called(ctx, uploadID, userID, offset, mock.Anything)
 	if args.Get(1) != nil {
 		return args.Get(0).(int64), args.Error(1)
@@ -60,7 +62,7 @@ func (m *MockTusUploadUsecase) HandleChunk(ctx context.Context, uploadID string,
 	return args.Get(0).(int64), nil
 }
 
-func (m *MockTusUploadUsecase) GetUploadInfo(ctx context.Context, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
+func (m *MockTusUploadUsecase) GetUploadInfo(ctx context.Context, uploadID, userID string) (*dto.TusUploadInfoResponse, error) {
 	args := m.Called(ctx, uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -68,12 +70,12 @@ func (m *MockTusUploadUsecase) GetUploadInfo(ctx context.Context, uploadID strin
 	return args.Get(0).(*dto.TusUploadInfoResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) CancelUpload(ctx context.Context, uploadID string, userID string) error {
+func (m *MockTusUploadUsecase) CancelUpload(ctx context.Context, uploadID, userID string) error {
 	args := m.Called(ctx, uploadID, userID)
 	return args.Error(0)
 }
 
-func (m *MockTusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID string, userID string) (offset int64, length int64, err error) {
+func (m *MockTusUploadUsecase) GetUploadStatus(ctx context.Context, uploadID, userID string) (offset, length int64, err error) {
 	args := m.Called(ctx, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
@@ -86,7 +88,7 @@ func (m *MockTusUploadUsecase) InitiateProjectUpdateUpload(ctx context.Context, 
 	return args.Get(0).(*dto.TusUploadResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) HandleProjectUpdateChunk(ctx context.Context, projectID uint, uploadID string, userID string, offset int64, chunk io.Reader) (int64, error) {
+func (m *MockTusUploadUsecase) HandleProjectUpdateChunk(ctx context.Context, projectID uint, uploadID, userID string, offset int64, chunk io.Reader) (int64, error) {
 	args := m.Called(ctx, projectID, uploadID, userID, offset, mock.Anything)
 	if args.Get(1) != nil {
 		return args.Get(0).(int64), args.Error(1)
@@ -94,12 +96,12 @@ func (m *MockTusUploadUsecase) HandleProjectUpdateChunk(ctx context.Context, pro
 	return args.Get(0).(int64), nil
 }
 
-func (m *MockTusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID string, userID string) (offset int64, length int64, err error) {
+func (m *MockTusUploadUsecase) GetProjectUpdateUploadStatus(ctx context.Context, projectID uint, uploadID, userID string) (offset, length int64, err error) {
 	args := m.Called(ctx, projectID, uploadID, userID)
 	return args.Get(0).(int64), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTusUploadUsecase) GetProjectUpdateUploadInfo(ctx context.Context, projectID uint, uploadID string, userID string) (*dto.TusUploadInfoResponse, error) {
+func (m *MockTusUploadUsecase) GetProjectUpdateUploadInfo(ctx context.Context, projectID uint, uploadID, userID string) (*dto.TusUploadInfoResponse, error) {
 	args := m.Called(ctx, projectID, uploadID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -107,7 +109,7 @@ func (m *MockTusUploadUsecase) GetProjectUpdateUploadInfo(ctx context.Context, p
 	return args.Get(0).(*dto.TusUploadInfoResponse), args.Error(1)
 }
 
-func (m *MockTusUploadUsecase) CancelProjectUpdateUpload(ctx context.Context, projectID uint, uploadID string, userID string) error {
+func (m *MockTusUploadUsecase) CancelProjectUpdateUpload(ctx context.Context, projectID uint, uploadID, userID string) error {
 	args := m.Called(ctx, projectID, uploadID, userID)
 	return args.Error(0)
 }
@@ -133,10 +135,10 @@ func getTusBaseController() *base.BaseController {
 }
 
 // Helper function to set authenticated user in context
-func setTusAuthenticatedUser(c *fiber.Ctx, userID string, email, role string) {
+func setTusAuthenticatedUser(c *fiber.Ctx, userID, email string) {
 	c.Locals("user_id", userID)
 	c.Locals("user_email", email)
-	c.Locals("user_role", role)
+	c.Locals("user_role", "user")
 }
 
 // Helper to encode TUS metadata
@@ -170,7 +172,7 @@ func TestInitiateUpload_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Post("/api/v1/tus/upload", controller.InitiateUpload)
@@ -222,7 +224,7 @@ func TestInitiateUpload_InvalidHeaders(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Post("/api/v1/tus/upload", controller.InitiateUpload)
@@ -243,7 +245,7 @@ func TestInitiateUpload_InvalidTusVersion(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Post("/api/v1/tus/upload", controller.InitiateUpload)
@@ -285,7 +287,7 @@ func TestUploadChunk_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Patch("/api/v1/tus/upload/:id", controller.UploadChunk)
@@ -319,7 +321,7 @@ func TestUploadChunk_InvalidOffset(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Patch("/api/v1/tus/upload/:id", controller.UploadChunk)
@@ -371,7 +373,7 @@ func TestUploadChunk_InvalidContentType(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Patch("/api/v1/tus/upload/:id", controller.UploadChunk)
@@ -396,7 +398,7 @@ func TestGetUploadStatus_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Head("/api/v1/tus/upload/:id", controller.GetUploadStatus)
@@ -427,7 +429,7 @@ func TestGetUploadStatus_NotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Head("/api/v1/tus/upload/:id", controller.GetUploadStatus)
@@ -453,7 +455,7 @@ func TestGetUploadInfo_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Get("/api/v1/tus/upload/:id", controller.GetUploadInfo)

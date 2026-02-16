@@ -208,7 +208,7 @@ func (ctrl *TusModulController) uploadChunk(c *fiber.Ctx, modulID *string) error
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}
 
-	offset, _, bodyReader, err := parseChunkRequest(c)
+	offset, bodyReader, err := parseChunkRequest(c)
 	if err != nil {
 		return handleTusUsecaseError(c, err, ctrl.config.Upload.TusVersion)
 	}

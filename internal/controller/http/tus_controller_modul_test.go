@@ -2,6 +2,8 @@ package http_test
 
 import (
 	"bytes"
+	"invento-service/internal/domain"
+	"invento-service/internal/upload"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,10 +14,9 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	httpcontroller "invento-service/internal/controller/http"
-	"invento-service/internal/domain"
+
 	dto "invento-service/internal/dto"
 	app_testing "invento-service/internal/testing"
-	"invento-service/internal/upload"
 )
 
 func TestTusModulController_GetUploadInfo_Success(t *testing.T) {
@@ -27,7 +28,7 @@ func TestTusModulController_GetUploadInfo_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Get("/api/v1/tus/modul/:upload_id", controller.GetUploadInfo)
@@ -59,7 +60,7 @@ func TestTusModulController_CancelUpload_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Delete("/api/v1/tus/modul/:upload_id", controller.CancelUpload)
@@ -85,7 +86,7 @@ func TestTusModulController_ModulUpdateEndpoints_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Post("/api/v1/tus/modul/:id/update", controller.InitiateModulUpdateUpload)

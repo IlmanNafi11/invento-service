@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"bytes"
+	"invento-service/internal/upload"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -15,7 +16,6 @@ import (
 	dto "invento-service/internal/dto"
 	apperrors "invento-service/internal/errors"
 	app_testing "invento-service/internal/testing"
-	"invento-service/internal/upload"
 )
 
 func TestGetUploadInfo_Forbidden(t *testing.T) {
@@ -26,7 +26,7 @@ func TestGetUploadInfo_Forbidden(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-456", "other@example.com", "user")
+		setTusAuthenticatedUser(c, "user-456", "other@example.com")
 		return c.Next()
 	})
 	app.Get("/api/v1/tus/upload/:id", controller.GetUploadInfo)
@@ -49,7 +49,7 @@ func TestCancelUpload_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Delete("/api/v1/tus/upload/:id", controller.CancelUpload)
@@ -75,7 +75,7 @@ func TestCancelUpload_AlreadyCompleted(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Delete("/api/v1/tus/upload/:id", controller.CancelUpload)
@@ -105,7 +105,7 @@ func TestInitiateProjectUpdateUpload_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Post("/api/v1/tus/project/:id/upload", controller.InitiateProjectUpdateUpload)
@@ -156,7 +156,7 @@ func TestInitiateProjectUpdateUpload_ProjectNotFound(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Post("/api/v1/tus/project/:id/upload", controller.InitiateProjectUpdateUpload)
@@ -184,7 +184,7 @@ func TestUploadProjectUpdateChunk_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Patch("/api/v1/tus/project/:id/upload/:upload_id", controller.UploadProjectUpdateChunk)
@@ -217,7 +217,7 @@ func TestUploadProjectUpdateChunk_ProjectMismatch(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Patch("/api/v1/tus/project/:id/upload/:upload_id", controller.UploadProjectUpdateChunk)
@@ -247,7 +247,7 @@ func TestGetProjectUpdateUploadStatus_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Head("/api/v1/tus/project/:id/upload/:upload_id", controller.GetProjectUpdateUploadStatus)
@@ -282,7 +282,7 @@ func TestCheckUploadSlot_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Get("/api/v1/tus/slot", controller.CheckUploadSlot)
@@ -314,7 +314,7 @@ func TestResetUploadQueue_Success(t *testing.T) {
 
 	app := fiber.New()
 	app.Use(func(c *fiber.Ctx) error {
-		setTusAuthenticatedUser(c, "user-123", "test@example.com", "user")
+		setTusAuthenticatedUser(c, "user-123", "test@example.com")
 		return c.Next()
 	})
 	app.Post("/api/v1/tus/reset", controller.ResetUploadQueue)
