@@ -2,148 +2,35 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-15)
+See: .planning/PROJECT.md (updated 2026-02-17)
 
-**Core value:** File storage that is reliable and resource-efficient on a 500MB RAM server -- upload, store, and download student files without failure.
-**Current focus:** Phase 8 — File Size Enforcement
+**Core value:** File storage yang reliable dan resource-efficient pada server terbatas (500MB RAM) — upload, simpan, dan download file modul/project mahasiswa tanpa gagal.
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 8 of 8 (File Size Enforcement)
-Plan: 1 of 3 complete
-Status: Executing Phase 8
-Last activity: 2026-02-17 -- Plan 08-01 (TUS Controller Split & Integration Test Trim) complete
+Milestone: v1.0 Comprehensive Refactoring & Optimization — ✅ SHIPPED 2026-02-17
+Status: Milestone complete, planning next version
+Last activity: 2026-02-17 — v1.0 milestone archived
 
-Progress: [███░░░░░░░] 33% (1/3 plans)
+## v1.0 Summary
 
-## Performance Metrics
+- 8 phases, 37 plans, ~5.7 hours execution
+- 103 commits, 334 files changed, +47391/-31786 lines
+- 65,752 LOC Go
+- Timeline: 2026-02-15 → 2026-02-17 (3 days)
 
-**Velocity:**
-- Total plans completed: 35
-- Average duration: ~9min
-- Total execution time: ~5.6 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01-foundation-rename | 5 | ~40min | ~8min |
-| 02-memory-performance-tuning | 2 | ~12min | ~6min |
-| 03-code-quality-standardization | 3 | ~25min | ~8min |
-| 04-architecture-restructuring | 6 | ~55min | ~9min |
-| 05-deep-architecture-improvements | 10 | ~219min | ~22min |
-| 06-polish-verification | 6/6 | ~57min | ~10min |
-| 07-swagger-logger-fixes | 2/2 | ~17min | ~9min |
-| 08-file-size-enforcement | 1/3 | ~6min | ~6min |
-
-**Recent Trend:**
-- Last 5 plans: 06-06, 07-01, 07-02, 08-01
-- Trend: Stabilizing ~8-15min per plan
+Archive: `.planning/milestones/v1.0-ROADMAP.md`, `.planning/milestones/v1.0-REQUIREMENTS.md`
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- [Roadmap]: zerolog chosen over slog/zap (zero-allocation, official Fiber middleware)
-- [Roadmap]: Module path `invento-service` (simple, not `github.com/...` -- internal module)
-- [Roadmap]: GOMEMLIMIT=350MiB with GOGC=50 (conservative for stability)
-- [Roadmap]: Keep hand-written mocks (no mockery/gomock migration)
-- [Roadmap]: Fail-fast config validation (no silent defaults)
-
-- [01-03]: All RBAC string literals replaced with typed constants for compile-time safety
-- [01-03]: Test tokens confirmed as test fixtures (no real credentials); annotated with comments
-- [01-05]: Used require.NoError for LoadConfig error checking in tests (fail-fast over assert)
-
-- [02-01]: GOGC=100 (Go default) instead of 50 per user decision -- prioritizes speed over aggressive GC
-- [02-01]: FiberReduceMemory defaults to false -- balanced approach per user discussion
-- [02-01]: SkipDefaultTransaction NOT included -- user decided to keep GORM default
-
-- [02-02]: Used *logger.Logger (pointer) for startMemoryMonitor since Logger is a struct
-- [02-02]: FiberStreamRequestBody=false and FiberConcurrency=256 in test configs for stability
-
-- [03-03]: Boot logger pattern (zerolog.New(os.Stderr)) for pre-config fatal logging in main.go
-- [03-03]: ConnectDatabase accepts zerolog.Logger parameter instead of using global logger
-- [03-03]: Global zerolog/log used in middleware/usecases where DI would over-complicate signatures
-- [03-03]: zerolog.Nop() used in all test constructors to avoid log noise
-
-- [04-01]: helper/tus_response.go imports httputil for Send* functions (delegation pattern)
-- [04-01]: helper/middleware.go imports httputil for CookieHelper and response helpers
-- [04-01]: TUS controllers keep helper import only (no httputil needed for SendTus* functions)
-- [04-01]: Files using only httputil symbols have helper import removed entirely
-
-- [04-04]: CasbinPermissionChecker interface stays in middleware package (accept-interfaces principle)
-- [04-04]: rbac_middleware.go filename avoids confusion with internal/rbac/ package
-- [04-04]: server.go keeps helper import for TUS store/queue/manager symbols
-
-- [04-06]: ValidatePolijeEmail inlined as private function in auth_usecase.go (single consumer, no separate package)
-- [04-06]: internal/helper/ fully deleted — god-package decomposition complete
-
-- [05-01]: Response types (BaseResponse, SuccessResponse, ErrorResponse, etc.) migrated from domain/ to dto/ with copier mapper
-- [05-01]: Route registration extracted from server.go into routes.go with routeDeps struct
-- [05-01]: Centralized ErrorHandler uses errors.As for AppError + fiber.Error with dto.ErrorResponse format
-
-- [05-02]: All domain-specific request/response types migrated to dto/ package (auth, user, role, project, modul, stat, health, TUS)
-- [05-02]: Repository interfaces keep domain types; controllers and usecases use dto types
-
-- [05-03]: context.Context on all Role/Permission/User domain repo/usecase interfaces
-- [05-03]: RBAC helper interfaces updated with context.Context
-
-- [05-04]: context.Context on all Project/Modul repo interfaces and all remaining usecase interfaces
-- [05-04]: TUS usecases use context.Background() as temporary bridge (05-05 will fix)
-
-- [05-05]: ALL 70 repository interface methods now accept context.Context -- project-wide context propagation complete
-- [05-05]: Background cleanup goroutines use context.Background() to avoid request context cancellation
-- [05-05]: domain.TusUploadMetadata/TusModulUploadMetadata used in repo tests (not dto types)
-
-- [05-06]: Used _test.go suffix for mock files (no external packages import usecase mocks)
-- [05-06]: Shared test helpers extracted to *_helpers_test.go (setupTestDB, assertRoleUsecaseAppError)
-- [05-06]: Domain-specific mock naming: {domain}_mocks_test.go; test splits by concern: *_crud_test.go, *_status_test.go, etc.
-
-- [05-07]: Split rbac_helper_test.go with BuildRoleDetailResponse in check file to keep setup under 500 lines
-- [05-07]: TUS test split pattern: init (helpers, slot checks, initiate, info/status) vs chunk (handle chunk, completion, cancel)
-- [05-08]: Controller subtests NOT parallelized - they share Fiber app instances per top-level test
-- [05-08]: auth_integration_test.go NOT parallelized - uses file::memory:?cache=shared SQLite DSN
-- [05-08]: TestVerify_ClockSkewTolerance NOT parallelized - modifies global jwt.TimeFunc
-- [05-10]: Removed only blank lines and redundant comments to trim files — zero test cases deleted
-- [05-08]: Fixed pre-existing mock bugs from 05-04 context propagation (args.Get index, missing mock.Anything)
-- [Phase 05-09]: Thread ctx through health private helpers (getDatabaseStatus, getDetailedDatabaseStatus, getServicesStatus) for full context propagation; PingContext(ctx) for database checks
-
-- [06-01]: Locals key constants in middleware package; environment constants in config package (no circular imports)
-- [06-01]: Godoc example comments preserved even when containing Go code patterns
-- [06-02]: Casbin tests need pre-created casbin_rule table (TurnOffAutoMigrate prevents auto-create)
-- [06-02]: App/server tests skipped (require network access to Supabase JWKS endpoint)
-- [06-02]: Project usecase test had wrong assertions (asserted error for success case)
-
-- [06-03]: TUS Upload tag for project endpoints, TUS Modul Upload for modul endpoints, Role Management for user role endpoints
-- [06-03]: Modul IDs use string type (UUID) in Swagger @Param, project IDs use int
-
-- [06-04]: 3 //nolint:gocritic suppressions for sloppyReassign — genuine conflict with govet shadow checker (govet wins)
-- [06-04]: golangci-lint --fix used for gofumpt instead of standalone gofumpt (embedded version differs from v0.9.2)
-- [06-04]: unparam fixes cascade — removing one param exposes more constant-valued params in callers (3 iterations needed)
-
-- [06-05]: Swagger annotations use dto.* prefix (not domain.*) after Phase 5 type migration
-- [06-05]: Memory baseline: 9.8MB idle, 12.7MB under 100 concurrent requests — PASS with >95% headroom
-- [06-05]: .env.example verified complete (46 env vars, no gaps)
-
-- [06-06]: Config coverage 53.8% (not 60%) accepted — ConnectDatabase requires real PostgreSQL
-- [06-06]: GORM zero-value bool workaround: create active, then raw-update is_active=false for SQLite tests
-- [06-06]: PostgreSQL-specific SQL (ILIKE, UNION ALL, CAST) left uncovered in user repository
-
-- [07-01]: Reuse existing server logger directly in RBACMiddleware and DownloadHelper -- no sub-logger per user decision
-- [07-01]: zerolog.Logger DI now complete in middleware (parameter) and storage (struct field) layers
-- [07-01]: 03-03 decision "Global zerolog/log in middleware/usecases" superseded -- middleware and storage now use DI
-
-- [07-02]: BasicHealthCheck @Router /health kept as-is with @Description note about Swagger basePath limitation
-- [07-02]: All 58 @Router annotations audited against routes.go -- only 2 mismatches found and fixed
-
-- [08-01]: No header comments on split controller files — filenames are self-explanatory
+All v1.0 decisions archived in PROJECT.md Key Decisions table and `.planning/milestones/v1.0-ROADMAP.md`.
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
@@ -153,5 +40,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 08-01-PLAN.md
-Resume file: .planning/phases/08-file-size-enforcement/08-01-SUMMARY.md
+Stopped at: v1.0 milestone archived
+Next action: `/gsd-new-milestone` to start next version
