@@ -16,6 +16,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -367,7 +368,7 @@ func TestMiddleware_HandlerCreation(t *testing.T) {
 	mockAuth := &mockAuthService{}
 	mockUser := &mockUserRepository{}
 	jwtMiddleware := middleware.SupabaseAuthMiddleware(mockAuth, mockUser, testCookieHelper())
-	rbacMiddleware := middleware.RBACMiddleware(nil, "test", "read")
+	rbacMiddleware := middleware.RBACMiddleware(nil, "test", "read", zerolog.Nop())
 	tusMiddleware := middleware.TusProtocolMiddleware("1.0.0", 524288000)
 
 	assert.NotNil(t, jwtMiddleware)

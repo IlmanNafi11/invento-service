@@ -11,6 +11,7 @@ import (
 	testutil "invento-service/internal/testing"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +24,7 @@ func (m *mockErrorEnforcer) CheckPermission(roleName, resource, action string) (
 
 func TestRBACMiddleware_Creation(t *testing.T) {
 	t.Parallel()
-	mw := middleware.RBACMiddleware(nil, "resource", "action")
+	mw := middleware.RBACMiddleware(nil, "resource", "action", zerolog.Nop())
 
 	assert.NotNil(t, mw)
 }
@@ -40,7 +41,7 @@ func TestRBACMiddleware_ValidRoleWithPermission_Returns200(t *testing.T) {
 		c.Locals("user_role", "admin")
 		return c.Next()
 	})
-	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read"))
+	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read", zerolog.Nop()))
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -64,7 +65,7 @@ func TestRBACMiddleware_ValidRoleWithoutPermission_Returns403(t *testing.T) {
 		c.Locals("user_role", "admin")
 		return c.Next()
 	})
-	app.Use(middleware.RBACMiddleware(enforcer, "projects", "delete"))
+	app.Use(middleware.RBACMiddleware(enforcer, "projects", "delete", zerolog.Nop()))
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -93,7 +94,7 @@ func TestRBACMiddleware_InvalidRole_Returns403(t *testing.T) {
 		c.Locals("user_role", "guest")
 		return c.Next()
 	})
-	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read"))
+	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read", zerolog.Nop()))
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -111,7 +112,7 @@ func TestRBACMiddleware_MissingRoleInContext_Returns403(t *testing.T) {
 	require.NoError(t, err)
 
 	app := fiber.New()
-	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read"))
+	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read", zerolog.Nop()))
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -133,7 +134,7 @@ func TestRBACMiddleware_EmptyRoleInContext_Returns403(t *testing.T) {
 		c.Locals("user_role", "")
 		return c.Next()
 	})
-	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read"))
+	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read", zerolog.Nop()))
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -155,7 +156,7 @@ func TestRBACMiddleware_InvalidRoleType_Returns403(t *testing.T) {
 		c.Locals("user_role", 12345)
 		return c.Next()
 	})
-	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read"))
+	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read", zerolog.Nop()))
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -176,7 +177,7 @@ func TestRBACMiddleware_CasbinError_Returns500(t *testing.T) {
 		c.Locals("user_role", "admin")
 		return c.Next()
 	})
-	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read"))
+	app.Use(middleware.RBACMiddleware(enforcer, "projects", "read", zerolog.Nop()))
 	app.Get("/test", func(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusOK)
 	})
@@ -223,7 +224,7 @@ func TestRBACMiddleware_MultiplePermissions(t *testing.T) {
 				c.Locals("user_role", tt.role)
 				return c.Next()
 			})
-			app.Use(middleware.RBACMiddleware(enforcer, tt.resource, tt.action))
+			app.Use(middleware.RBACMiddleware(enforcer, tt.resource, tt.action, zerolog.Nop()))
 			app.Get("/test", func(c *fiber.Ctx) error {
 				return c.SendStatus(fiber.StatusOK)
 			})
@@ -266,7 +267,7 @@ func TestRBACMiddleware_DifferentResources(t *testing.T) {
 				c.Locals("user_role", tt.role)
 				return c.Next()
 			})
-			app.Use(middleware.RBACMiddleware(enforcer, tt.resource, tt.action))
+			app.Use(middleware.RBACMiddleware(enforcer, tt.resource, tt.action, zerolog.Nop()))
 			app.Get("/test", func(c *fiber.Ctx) error {
 				return c.SendStatus(fiber.StatusOK)
 			})
@@ -288,7 +289,7 @@ func TestRBACMiddleware_DifferentParameters(t *testing.T) {
 	for _, resource := range resources {
 		for _, action := range actions {
 			t.Run(resource+"_"+action, func(t *testing.T) {
-				mw := middleware.RBACMiddleware(nil, resource, action)
+				mw := middleware.RBACMiddleware(nil, resource, action, zerolog.Nop())
 				assert.NotNil(t, mw)
 			})
 		}
