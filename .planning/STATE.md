@@ -10,17 +10,17 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 9 of 11 (RLS Policy Migration)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-02-17 -- Completed 09-01 (RLS CRUD table migration)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-17 -- Completed 09-02 (user_profiles + admin tables RLS migration)
 
-Progress: [█░░░░░░░░░] 10% (v1.1 milestone)
+Progress: [██░░░░░░░░] 20% (v1.1 milestone)
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 37 (v1.0)
-- v1.1 plans completed: 1
+- v1.1 plans completed: 2
 - Total v1.0 execution time: ~3 days
 
 **By Phase (v1.0):**
@@ -28,13 +28,14 @@ Progress: [█░░░░░░░░░] 10% (v1.1 milestone)
 | Phase | Plans | Status |
 |-------|-------|--------|
 | 1-8 (v1.0) | 37/37 | Complete |
-| 9 (v1.1) | 1/2 | In progress |
+| 9 (v1.1) | 2/2 | Complete |
 | 10 (v1.1) | 0/? | Not started |
 | 11 (v1.1) | 0/? | Not started |
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 09 | 01 | 2min | 2 | 1 |
+| 09 | 02 | 3min | 2 | 1 |
 
 ## Accumulated Context
 
@@ -49,6 +50,8 @@ v1.1 decisions:
 - Used ALTER POLICY instead of DROP/CREATE to avoid downtime window during RLS migration
 - INSERT policies use WITH CHECK (not USING) per PostgreSQL semantics
 - FOR ALL service policies include both USING(true) and WITH CHECK(true)
+- user_profiles uses 'id' (not 'user_id') as ownership column -- different from CRUD tables
+- Directory listing policy confirmed absent on user_profiles -- skipped, no new policies created
 
 ### Pending Todos
 
@@ -62,5 +65,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 09-01-PLAN.md (RLS CRUD table migration)
-Next action: Execute Phase 9 Plan 02 (remaining RLS tables)
+Stopped at: Completed 09-02-PLAN.md (user_profiles + admin tables RLS migration) -- Phase 9 complete
+Next action: Plan Phase 10 (GORM Query Optimization)
