@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** File storage that is reliable and resource-efficient on a 500MB RAM server -- upload, store, and download student files without failure.
-**Current focus:** Phase 7 Complete — Swagger & Logger Fixes
+**Current focus:** Phase 8 — File Size Enforcement
 
 ## Current Position
 
-Phase: 7 of 7 (Swagger & Logger Fixes)
-Plan: 2 of 2 complete
-Status: Phase 7 Complete — All Plans Done
-Last activity: 2026-02-17 -- Plan 07-02 (Swagger Annotation Fix & Lint Gate) complete
+Phase: 8 of 8 (File Size Enforcement)
+Plan: 1 of 3 complete
+Status: Executing Phase 8
+Last activity: 2026-02-17 -- Plan 08-01 (TUS Controller Split & Integration Test Trim) complete
 
-Progress: [██████████] 100% (2/2 plans)
+Progress: [███░░░░░░░] 33% (1/3 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: ~9min
-- Total execution time: ~5.5 hours
+- Total execution time: ~5.6 hours
 
 **By Phase:**
 
@@ -34,9 +34,10 @@ Progress: [██████████] 100% (2/2 plans)
 | 05-deep-architecture-improvements | 10 | ~219min | ~22min |
 | 06-polish-verification | 6/6 | ~57min | ~10min |
 | 07-swagger-logger-fixes | 2/2 | ~17min | ~9min |
+| 08-file-size-enforcement | 1/3 | ~6min | ~6min |
 
 **Recent Trend:**
-- Last 5 plans: 06-05, 06-06, 07-01, 07-02
+- Last 5 plans: 06-06, 07-01, 07-02, 08-01
 - Trend: Stabilizing ~8-15min per plan
 
 ## Accumulated Context
@@ -138,6 +139,8 @@ Recent decisions affecting current work:
 - [07-02]: BasicHealthCheck @Router /health kept as-is with @Description note about Swagger basePath limitation
 - [07-02]: All 58 @Router annotations audited against routes.go -- only 2 mismatches found and fixed
 
+- [08-01]: No header comments on split controller files — filenames are self-explanatory
+
 ### Pending Todos
 
 None yet.
@@ -150,5 +153,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 07-02-PLAN.md — Phase 7 complete
-Resume file: .planning/phases/07-swagger-logger-fixes/07-02-SUMMARY.md
+Stopped at: Completed 08-01-PLAN.md
+Resume file: .planning/phases/08-file-size-enforcement/08-01-SUMMARY.md
