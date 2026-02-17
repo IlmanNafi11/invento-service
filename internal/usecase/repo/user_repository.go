@@ -18,7 +18,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.WithContext(ctx).Where("email = ? AND is_active = ?", email, true).Preload("Role").First(&user).Error
+	err := r.db.WithContext(ctx).Where("email = ? AND is_active = ?", email, true).Joins("Role").First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.
 
 func (r *userRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.WithContext(ctx).Where("id = ? AND is_active = ?", id, true).Preload("Role").First(&user).Error
+	err := r.db.WithContext(ctx).Where("\"user_profiles\".id = ? AND \"user_profiles\".is_active = ?", id, true).Joins("Role").First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (r *userRepository) GetByID(ctx context.Context, id string) (*domain.User, 
 
 func (r *userRepository) GetByIDs(ctx context.Context, userIDs []string) ([]*domain.User, error) {
 	var users []*domain.User
-	err := r.db.WithContext(ctx).Where("id IN ? AND is_active = ?", userIDs, true).Preload("Role").Find(&users).Error
+	err := r.db.WithContext(ctx).Where("\"user_profiles\".id IN ? AND \"user_profiles\".is_active = ?", userIDs, true).Joins("Role").Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
