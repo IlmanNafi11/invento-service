@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
@@ -29,7 +30,7 @@ func TestUserUsecase_UpdateUserRole_RoleNotFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 	roleName := "nonexistent"
@@ -72,7 +73,7 @@ func TestUserUsecase_UpdateUserRole_SameRole(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 	roleName := "admin"
@@ -120,7 +121,7 @@ func TestUserUsecase_DownloadUserFiles_EmptyIDs(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	ownerUserID := "user-1"
 	projectIDs := []string{}
@@ -148,7 +149,7 @@ func TestUserUsecase_DownloadUserFiles_UserNotFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	ownerUserID := "user-999"
 	projectIDs := []string{"1"}
@@ -180,7 +181,7 @@ func TestUserUsecase_DownloadUserFiles_NoFilesFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	ownerUserID := "user-1"
 	projectIDs := []string{"1"}
@@ -224,7 +225,7 @@ func TestUserUsecase_GetUserFiles_Success(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 	params := dto.UserFilesQueryParams{
@@ -286,7 +287,7 @@ func TestUserUsecase_GetUserFiles_UserNotFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-999"
 	params := dto.UserFilesQueryParams{
@@ -319,7 +320,7 @@ func TestUserUsecase_GetUserFiles_RepoError(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 	params := dto.UserFilesQueryParams{
@@ -363,7 +364,7 @@ func TestUserUsecase_GetUsersForRole_Success(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	roleID := uint(1)
 	role := &domain.Role{
@@ -408,7 +409,7 @@ func TestUserUsecase_GetUsersForRole_RoleNotFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	roleID := uint(999)
 
@@ -437,7 +438,7 @@ func TestUserUsecase_GetUsersForRole_InternalError(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg)
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
 
 	roleID := uint(1)
 	role := &domain.Role{

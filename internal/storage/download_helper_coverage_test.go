@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +16,7 @@ import (
 func TestNewDownloadHelper_Success(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	assert.NotNil(t, dh)
 }
@@ -24,7 +25,7 @@ func TestNewDownloadHelper_Success(t *testing.T) {
 func TestValidateDownloadRequest_EmptyArrays(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	err := dh.ValidateDownloadRequest([]string{}, []string{})
 	assert.Error(t, err)
@@ -35,7 +36,7 @@ func TestValidateDownloadRequest_EmptyArrays(t *testing.T) {
 func TestValidateDownloadRequest_WithProjects(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	err := dh.ValidateDownloadRequest([]string{"1", "2"}, []string{})
 	assert.NoError(t, err)
@@ -45,7 +46,7 @@ func TestValidateDownloadRequest_WithProjects(t *testing.T) {
 func TestValidateDownloadRequest_WithModuls(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	err := dh.ValidateDownloadRequest([]string{}, []string{"1", "2", "3"})
 	assert.NoError(t, err)
@@ -55,7 +56,7 @@ func TestValidateDownloadRequest_WithModuls(t *testing.T) {
 func TestValidateDownloadRequest_WithBoth(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	err := dh.ValidateDownloadRequest([]string{"1"}, []string{"2"})
 	assert.NoError(t, err)
@@ -65,7 +66,7 @@ func TestValidateDownloadRequest_WithBoth(t *testing.T) {
 func TestGetFilesByIDs_SelectsCorrectProjects(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	projects := []domain.Project{
 		{ID: 1, NamaProject: "Project 1"},
@@ -90,7 +91,7 @@ func TestGetFilesByIDs_SelectsCorrectProjects(t *testing.T) {
 func TestGetFilesByIDs_EmptySelections(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	projects := []domain.Project{
 		{ID: 1, NamaProject: "Project 1"},
@@ -109,7 +110,7 @@ func TestGetFilesByIDs_EmptySelections(t *testing.T) {
 func TestGetFilesByIDs_NonExistentIDs(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	projects := []domain.Project{
 		{ID: 1, NamaProject: "Project 1"},
@@ -129,7 +130,7 @@ func TestGetFilesByIDs_NonExistentIDs(t *testing.T) {
 func TestGetFilesByIDs_DoesNotModifyOriginals(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	projects := []domain.Project{
 		{ID: 1, NamaProject: "Project 1"},
@@ -159,7 +160,7 @@ func TestCreateDownloadZip_SingleFile(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	zipPath, err := dh.CreateDownloadZip([]string{tmpFile.Name()}, "123")
 	assert.NoError(t, err)
@@ -170,7 +171,7 @@ func TestCreateDownloadZip_SingleFile(t *testing.T) {
 func TestCreateDownloadZip_EmptyArray(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	zipPath, err := dh.CreateDownloadZip([]string{}, "123")
 	assert.Error(t, err)
@@ -193,7 +194,7 @@ func TestCreateDownloadZip_MultipleFiles(t *testing.T) {
 	defer os.Remove(tmpFile2.Name())
 
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	// This would create a zip file, but we can't test the full functionality
 	// without a proper path resolver setup
@@ -216,7 +217,7 @@ func TestPrepareFilesForDownload_AllFilesFound(t *testing.T) {
 	os.WriteFile(file2, []byte("test2"), 0o644)
 
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	projects := []domain.Project{
 		{ID: 1, PathFile: file1},
@@ -235,7 +236,7 @@ func TestPrepareFilesForDownload_AllFilesFound(t *testing.T) {
 func TestPrepareFilesForDownload_SomeFilesNotFound(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	projects := []domain.Project{
 		{ID: 1, PathFile: "/nonexistent/file1.pdf"},
@@ -255,7 +256,7 @@ func TestPrepareFilesForDownload_SomeFilesNotFound(t *testing.T) {
 func TestPrepareFilesForDownloads_EmptyArrays(t *testing.T) {
 	t.Parallel()
 	pathResolver := NewPathResolver(&config.Config{})
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	filePaths, notFoundFiles, err := dh.PrepareFilesForDownload([]domain.Project{}, []domain.Modul{})
 	// Empty arrays mean no files were found, so it should return an error
@@ -271,7 +272,7 @@ func TestResolvePath_AbsolutePath(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Upload.PathProduction = "/test/uploads"
 	pathResolver := NewPathResolver(cfg)
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	absPath := "/absolute/path/to/file.pdf"
 	result := dh.resolvePath(absPath)
@@ -284,7 +285,7 @@ func TestResolvePath_RelativePath(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Upload.PathProduction = "/test/uploads"
 	pathResolver := NewPathResolver(cfg)
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	relPath := "uploads/file.pdf"
 	result := dh.resolvePath(relPath)
@@ -300,7 +301,7 @@ func TestResolvePath_WithUploadsPrefix(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Upload.PathProduction = "/base/uploads"
 	pathResolver := NewPathResolver(cfg)
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	path := "uploads/subfolder/file.pdf"
 	result := dh.resolvePath(path)
@@ -315,7 +316,7 @@ func TestResolvePath_WithTempPrefix(t *testing.T) {
 	cfg := &config.Config{}
 	cfg.Upload.PathProduction = "/base/uploads"
 	pathResolver := NewPathResolver(cfg)
-	dh := NewDownloadHelper(pathResolver)
+	dh := NewDownloadHelper(pathResolver, zerolog.Nop())
 
 	path := "temp/file.pdf"
 	result := dh.resolvePath(path)

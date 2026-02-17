@@ -14,6 +14,7 @@ import (
 
 	apperrors "invento-service/internal/errors"
 
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
 
@@ -50,6 +51,7 @@ func NewUserUsecase(
 	casbinEnforcer *rbac.CasbinEnforcer,
 	pathResolver *storage.PathResolver,
 	cfg *config.Config,
+	logger zerolog.Logger,
 ) UserUsecase {
 	return &userUsecase{
 		userRepo:       userRepo,
@@ -58,7 +60,7 @@ func NewUserUsecase(
 		modulRepo:      modulRepo,
 		casbinEnforcer: casbinEnforcer,
 		userHelper:     storage.NewUserHelper(pathResolver, cfg),
-		downloadHelper: storage.NewDownloadHelper(pathResolver),
+		downloadHelper: storage.NewDownloadHelper(pathResolver, logger),
 		pathResolver:   pathResolver,
 		config:         cfg,
 	}

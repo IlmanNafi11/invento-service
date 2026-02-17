@@ -8,16 +8,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	zlog "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 )
 
 type DownloadHelper struct {
 	pathResolver *PathResolver
+	logger       zerolog.Logger
 }
 
-func NewDownloadHelper(pathResolver *PathResolver) *DownloadHelper {
+func NewDownloadHelper(pathResolver *PathResolver, logger zerolog.Logger) *DownloadHelper {
 	return &DownloadHelper{
 		pathResolver: pathResolver,
+		logger:       logger,
 	}
 }
 
@@ -34,7 +36,7 @@ func (dh *DownloadHelper) resolvePath(relativePath string) string {
 	}
 
 	if dh.pathResolver == nil {
-		zlog.Error().Msg("resolvePath - pathResolver is nil")
+		dh.logger.Error().Msg("resolvePath - pathResolver is nil")
 		return relativePath
 	}
 
@@ -53,7 +55,7 @@ func (dh *DownloadHelper) resolvePath(relativePath string) string {
 
 	absPath, err := filepath.Abs(resolved)
 	if err != nil {
-		zlog.Warn().Err(err).Msg("resolvePath - failed to get absolute path, using relative path")
+		dh.logger.Warn().Err(err).Msg("resolvePath - failed to get absolute path, using relative path")
 		return resolved
 	}
 
