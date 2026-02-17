@@ -4,6 +4,7 @@ import (
 	"context"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -86,20 +87,70 @@ func (r *userRepository) GetAll(ctx context.Context, search, filterRole string, 
 }
 
 func (r *userRepository) GetProfileWithCounts(ctx context.Context, userID string) (userResult *domain.User, projectTotal, modulTotal int, err error) {
-	var user domain.User
+	type profileWithCounts struct {
+		ID           string    `gorm:"column:id"`
+		Email        string    `gorm:"column:email"`
+		Name         string    `gorm:"column:name"`
+		JenisKelamin *string   `gorm:"column:jenis_kelamin"`
+		FotoProfil   *string   `gorm:"column:foto_profil"`
+		RoleID       *int      `gorm:"column:role_id"`
+		IsActive     bool      `gorm:"column:is_active"`
+		CreatedAt    time.Time `gorm:"column:created_at"`
+		UpdatedAt    time.Time `gorm:"column:updated_at"`
 
-	err = r.db.WithContext(ctx).Where("id = ? AND is_active = ?", userID, true).Preload("Role").First(&user).Error
+		RoleDbID      *uint      `gorm:"column:role_db_id"`
+		NamaRole      *string    `gorm:"column:nama_role"`
+		RoleCreatedAt *time.Time `gorm:"column:role_created_at"`
+		RoleUpdatedAt *time.Time `gorm:"column:role_updated_at"`
+
+		ProjectCount int64 `gorm:"column:project_count"`
+		ModulCount   int64 `gorm:"column:modul_count"`
+	}
+
+	var result profileWithCounts
+	err = r.db.WithContext(ctx).Raw(`
+		SELECT
+			u.id, u.email, u.name, u.jenis_kelamin, u.foto_profil,
+			u.role_id, u.is_active, u.created_at, u.updated_at,
+			r.id AS role_db_id,
+			r.nama_role,
+			r.created_at AS role_created_at,
+			r.updated_at AS role_updated_at,
+			(SELECT COUNT(*) FROM projects WHERE projects.user_id = u.id) AS project_count,
+			(SELECT COUNT(*) FROM moduls WHERE moduls.user_id = u.id) AS modul_count
+		FROM user_profiles u
+		LEFT JOIN roles r ON r.id = u.role_id
+		WHERE u.id = ? AND u.is_active = ?
+	`, userID, true).Scan(&result).Error
 	if err != nil {
 		return nil, 0, 0, err
 	}
 
-	var projectCount int64
-	r.db.WithContext(ctx).Table("projects").Where("user_id = ?", userID).Count(&projectCount)
+	if result.ID == "" {
+		return nil, 0, 0, gorm.ErrRecordNotFound
+	}
 
-	var modulCount int64
-	r.db.WithContext(ctx).Table("moduls").Where("user_id = ?", userID).Count(&modulCount)
+	user := domain.User{
+		ID:           result.ID,
+		Email:        result.Email,
+		Name:         result.Name,
+		JenisKelamin: result.JenisKelamin,
+		FotoProfil:   result.FotoProfil,
+		RoleID:       result.RoleID,
+		IsActive:     result.IsActive,
+		CreatedAt:    result.CreatedAt,
+		UpdatedAt:    result.UpdatedAt,
+	}
+	if result.RoleDbID != nil {
+		user.Role = &domain.Role{
+			ID:        *result.RoleDbID,
+			NamaRole:  *result.NamaRole,
+			CreatedAt: *result.RoleCreatedAt,
+			UpdatedAt: *result.RoleUpdatedAt,
+		}
+	}
 
-	return &user, int(projectCount), int(modulCount), nil
+	return &user, int(result.ProjectCount), int(result.ModulCount), nil
 }
 
 func (r *userRepository) GetUserFiles(ctx context.Context, userID, search string, page, limit int) ([]dto.UserFileItem, int, error) {
