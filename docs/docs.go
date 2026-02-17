@@ -302,7 +302,7 @@ const docTemplate = `{
         },
         "/health": {
             "get": {
-                "description": "Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status dasar tanpa pengecekan koneksi database.",
+                "description": "Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status dasar tanpa pengecekan koneksi database.\nNote: This endpoint is registered at /health (not under /api/v1).",
                 "consumes": [
                     "application/json"
                 ],
@@ -1495,9 +1495,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/monitoring/app-status": {
+        "/monitoring/health": {
             "get": {
-                "description": "Mengambil status aplikasi lengkap termasuk uptime, layanan yang aktif, dan dependency eksternal.",
+                "description": "Melakukan pemeriksaan kesehatan menyeluruh termasuk koneksi database, penggunaan memori, CPU, dan lainnya.\n-\nMengembalikan status HTTP 503 jika sistem tidak sehat (database terputus atau error).",
                 "consumes": [
                     "application/json"
                 ],
@@ -1507,10 +1507,10 @@ const docTemplate = `{
                 "tags": [
                     "Monitoring"
                 ],
-                "summary": "Application Status",
+                "summary": "Comprehensive Health Check",
                 "responses": {
                     "200": {
-                        "description": "Status aplikasi berhasil diambil",
+                        "description": "Sistem sehat",
                         "schema": {
                             "allOf": [
                                 {
@@ -1520,11 +1520,17 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.ApplicationStatus"
+                                            "$ref": "#/definitions/dto.ComprehensiveHealthCheck"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "503": {
+                        "description": "Beberapa komponen sistem mengalami masalah",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -1567,7 +1573,7 @@ const docTemplate = `{
         },
         "/monitoring/status": {
             "get": {
-                "description": "Melakukan pemeriksaan kesehatan menyeluruh termasuk koneksi database, penggunaan memori, CPU, dan lainnya.\n-\nMengembalikan status HTTP 503 jika sistem tidak sehat (database terputus atau error).",
+                "description": "Mengambil status aplikasi lengkap termasuk uptime, layanan yang aktif, dan dependency eksternal.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1577,10 +1583,10 @@ const docTemplate = `{
                 "tags": [
                     "Monitoring"
                 ],
-                "summary": "Comprehensive Health Check",
+                "summary": "Application Status",
                 "responses": {
                     "200": {
-                        "description": "Sistem sehat",
+                        "description": "Status aplikasi berhasil diambil",
                         "schema": {
                             "allOf": [
                                 {
@@ -1590,17 +1596,11 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.ComprehensiveHealthCheck"
+                                            "$ref": "#/definitions/dto.ApplicationStatus"
                                         }
                                     }
                                 }
                             ]
-                        }
-                    },
-                    "503": {
-                        "description": "Beberapa komponen sistem mengalami masalah",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }

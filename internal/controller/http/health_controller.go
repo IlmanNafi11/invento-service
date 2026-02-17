@@ -29,6 +29,7 @@ func NewHealthController(healthUsecase usecase.HealthUsecase) *HealthController 
 //
 //	@Summary		Basic Health Check
 //	@Description	Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status dasar tanpa pengecekan koneksi database.
+//	@Description	Note: This endpoint is registered at /health (not under /api/v1).
 //	@Tags			Monitoring
 //	@Accept			json
 //	@Produce		json
@@ -52,7 +53,7 @@ func (ctrl *HealthController) BasicHealthCheck(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Success		200	{object}	dto.SuccessResponse{data=dto.ComprehensiveHealthCheck}	"Sistem sehat"
 //	@Failure		503	{object}	dto.ErrorResponse	"Beberapa komponen sistem mengalami masalah"
-//	@Router			/monitoring/status [get]
+//	@Router			/monitoring/health [get]
 func (ctrl *HealthController) ComprehensiveHealthCheck(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	healthData := ctrl.healthUsecase.GetComprehensiveHealth(ctx)
@@ -88,7 +89,7 @@ func (ctrl *HealthController) GetSystemMetrics(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	dto.SuccessResponse{data=dto.ApplicationStatus}	"Status aplikasi berhasil diambil"
-//	@Router			/monitoring/app-status [get]
+//	@Router			/monitoring/status [get]
 func (ctrl *HealthController) GetApplicationStatus(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	statusData := ctrl.healthUsecase.GetApplicationStatus(ctx)

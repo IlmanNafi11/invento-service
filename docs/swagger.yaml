@@ -832,8 +832,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status
-        dasar tanpa pengecekan koneksi database.
+      description: |-
+        Melakukan pemeriksaan dasar kesehatan server. Mengembalikan status dasar tanpa pengecekan koneksi database.
+        Note: This endpoint is registered at /health (not under /api/v1).
       produces:
       - application/json
       responses:
@@ -1600,25 +1601,31 @@ paths:
       summary: Check modul upload slot
       tags:
       - TUS Modul Upload
-  /monitoring/app-status:
+  /monitoring/health:
     get:
       consumes:
       - application/json
-      description: Mengambil status aplikasi lengkap termasuk uptime, layanan yang
-        aktif, dan dependency eksternal.
+      description: |-
+        Melakukan pemeriksaan kesehatan menyeluruh termasuk koneksi database, penggunaan memori, CPU, dan lainnya.
+        -
+        Mengembalikan status HTTP 503 jika sistem tidak sehat (database terputus atau error).
       produces:
       - application/json
       responses:
         "200":
-          description: Status aplikasi berhasil diambil
+          description: Sistem sehat
           schema:
             allOf:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.ApplicationStatus'
+                  $ref: '#/definitions/dto.ComprehensiveHealthCheck'
               type: object
-      summary: Application Status
+        "503":
+          description: Beberapa komponen sistem mengalami masalah
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Comprehensive Health Check
       tags:
       - Monitoring
   /monitoring/metrics:
@@ -1646,27 +1653,21 @@ paths:
     get:
       consumes:
       - application/json
-      description: |-
-        Melakukan pemeriksaan kesehatan menyeluruh termasuk koneksi database, penggunaan memori, CPU, dan lainnya.
-        -
-        Mengembalikan status HTTP 503 jika sistem tidak sehat (database terputus atau error).
+      description: Mengambil status aplikasi lengkap termasuk uptime, layanan yang
+        aktif, dan dependency eksternal.
       produces:
       - application/json
       responses:
         "200":
-          description: Sistem sehat
+          description: Status aplikasi berhasil diambil
           schema:
             allOf:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.ComprehensiveHealthCheck'
+                  $ref: '#/definitions/dto.ApplicationStatus'
               type: object
-        "503":
-          description: Beberapa komponen sistem mengalami masalah
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: Comprehensive Health Check
+      summary: Application Status
       tags:
       - Monitoring
   /profile:
