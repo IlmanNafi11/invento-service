@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	"invento-service/internal/rbac"
 	"invento-service/internal/usecase/repo"
@@ -49,27 +48,40 @@ func (su *statisticUsecase) GetStatistics(ctx context.Context, userID, userRole 
 	hasUserRead, _ := su.casbinEnforcer.CheckPermission(userRole, "User", "read")
 	hasRoleRead, _ := su.casbinEnforcer.CheckPermission(userRole, "Role", "read")
 
+	if !hasProjectRead && !hasModulRead && !hasUserRead && !hasRoleRead {
+		return result, nil
+	}
+
+	type statisticCounts struct {
+		TotalProject int64 `gorm:"column:total_project"`
+		TotalModul   int64 `gorm:"column:total_modul"`
+		TotalUser    int64 `gorm:"column:total_user"`
+		TotalRole    int64 `gorm:"column:total_role"`
+	}
+
+	var counts statisticCounts
+	su.db.WithContext(ctx).Raw(`
+		SELECT
+			(SELECT COUNT(*) FROM projects WHERE user_id = ?) AS total_project,
+			(SELECT COUNT(*) FROM moduls WHERE user_id = ?) AS total_modul,
+			(SELECT COUNT(*) FROM user_profiles) AS total_user,
+			(SELECT COUNT(*) FROM roles) AS total_role
+	`, userID, userID).Scan(&counts)
+
 	if hasProjectRead {
-		projectCount, _ := su.projectRepo.CountByUserID(ctx, userID)
-		result.TotalProject = &projectCount
+		count := int(counts.TotalProject)
+		result.TotalProject = &count
 	}
-
 	if hasModulRead {
-		modulCount, _ := su.modulRepo.CountByUserID(ctx, userID)
-		result.TotalModul = &modulCount
+		count := int(counts.TotalModul)
+		result.TotalModul = &count
 	}
-
 	if hasUserRead {
-		var totalUser int64
-		su.db.WithContext(ctx).Model(&domain.User{}).Count(&totalUser)
-		count := int(totalUser)
+		count := int(counts.TotalUser)
 		result.TotalUser = &count
 	}
-
 	if hasRoleRead {
-		var totalRole int64
-		su.db.WithContext(ctx).Model(&domain.Role{}).Count(&totalRole)
-		count := int(totalRole)
+		count := int(counts.TotalRole)
 		result.TotalRole = &count
 	}
 
