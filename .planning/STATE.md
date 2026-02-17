@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** File storage that is reliable and resource-efficient on a 500MB RAM server -- upload, store, and download student files without failure.
-**Current focus:** Phase 6 complete — Polish & Verification finished
+**Current focus:** Phase 7 — Swagger & Logger Fixes
 
 ## Current Position
 
-Phase: 6 of 6 (Polish & Verification)
-Plan: 6 of 6 complete
-Status: Phase 6 Complete — All Phases Done
-Last activity: 2026-02-16 -- Plan 06-06 (Test Coverage Audit) complete
+Phase: 7 of 7 (Swagger & Logger Fixes)
+Plan: 1 of 2 complete
+Status: Executing Phase 7
+Last activity: 2026-02-17 -- Plan 07-01 (Logger DI) complete
 
-Progress: [██████████] 100% (6/6 plans)
+Progress: [█████░░░░░] 50% (1/2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 32
+- Total plans completed: 33
 - Average duration: ~9min
-- Total execution time: ~5.0 hours
+- Total execution time: ~5.25 hours
 
 **By Phase:**
 
@@ -33,10 +33,11 @@ Progress: [██████████] 100% (6/6 plans)
 | 04-architecture-restructuring | 6 | ~55min | ~9min |
 | 05-deep-architecture-improvements | 10 | ~219min | ~22min |
 | 06-polish-verification | 6/6 | ~57min | ~10min |
+| 07-swagger-logger-fixes | 1/2 | ~15min | ~15min |
 
 **Recent Trend:**
-- Last 5 plans: 06-02, 06-03, 06-04, 06-05, 06-06
-- Trend: Stabilizing ~8-10min per plan
+- Last 5 plans: 06-04, 06-05, 06-06, 07-01
+- Trend: Stabilizing ~10-15min per plan
 
 ## Accumulated Context
 
@@ -130,6 +131,10 @@ Recent decisions affecting current work:
 - [06-06]: GORM zero-value bool workaround: create active, then raw-update is_active=false for SQLite tests
 - [06-06]: PostgreSQL-specific SQL (ILIKE, UNION ALL, CAST) left uncovered in user repository
 
+- [07-01]: Reuse existing server logger directly in RBACMiddleware and DownloadHelper -- no sub-logger per user decision
+- [07-01]: zerolog.Logger DI now complete in middleware (parameter) and storage (struct field) layers
+- [07-01]: 03-03 decision "Global zerolog/log in middleware/usecases" superseded -- middleware and storage now use DI
+
 ### Pending Todos
 
 None yet.
@@ -141,6 +146,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-16
-Stopped at: Completed 06-06-PLAN.md (Test Coverage Audit) — Phase 6 complete, all phases done
-Resume file: N/A — all plans complete
+Last session: 2026-02-17
+Stopped at: Completed 07-01-PLAN.md (Logger DI)
+Resume file: .planning/phases/07-swagger-logger-fixes/07-01-SUMMARY.md
