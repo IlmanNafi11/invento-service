@@ -7,7 +7,6 @@ import (
 
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -33,9 +32,6 @@ func TestStatisticUsecase_GetStatistics_ZeroCounts(t *testing.T) {
 	mockCasbin.On("CheckPermission", userRole, "User", "read").Return(true, nil)
 	mockCasbin.On("CheckPermission", userRole, "Role", "read").Return(true, nil)
 
-	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
-	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(0, nil)
-
 	result, err := userUC.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
@@ -46,8 +42,6 @@ func TestStatisticUsecase_GetStatistics_ZeroCounts(t *testing.T) {
 	assert.Equal(t, 0, *result.TotalModul)
 
 	mockCasbin.AssertExpectations(t)
-	mockProjectRepo.AssertExpectations(t)
-	mockModulRepo.AssertExpectations(t)
 }
 
 // TestStatisticUsecase_GetStatistics_VariousUserIDs tests statistics with different user IDs
@@ -58,6 +52,9 @@ func TestStatisticUsecase_GetStatistics_VariousUserIDs(t *testing.T) {
 	db := setupTestDB(t)
 
 	seedTestDB(db, 50, 10)
+
+	seedProjectModulData(db, "user-1", 8, 15)
+	seedProjectModulData(db, "user-2", 12, 25)
 
 	testCases := []struct {
 		name          string
@@ -111,9 +108,6 @@ func TestStatisticUsecase_GetStatistics_VariousUserIDs(t *testing.T) {
 			mockCasbin.On("CheckPermission", tc.userRole, "User", "read").Return(true, nil)
 			mockCasbin.On("CheckPermission", tc.userRole, "Role", "read").Return(true, nil)
 
-			mockProjectRepo.On("CountByUserID", mock.Anything, tc.userID).Return(tc.projectCount, nil)
-			mockModulRepo.On("CountByUserID", mock.Anything, tc.userID).Return(tc.modulCount, nil)
-
 			result, err := userUC.GetStatistics(context.Background(), tc.userID, tc.userRole)
 
 			assert.NoError(t, err)
@@ -128,8 +122,6 @@ func TestStatisticUsecase_GetStatistics_VariousUserIDs(t *testing.T) {
 			assert.Equal(t, tc.expectedRoles, *result.TotalRole)
 
 			mockCasbin.AssertExpectations(t)
-			mockProjectRepo.AssertExpectations(t)
-			mockModulRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -169,8 +161,12 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 
 	seedTestDB(db, 40, 9)
 
+	seedProjectModulData(db, "user-mixed-1", 15, 35)
+	seedProjectModulData(db, "user-mixed-2", 20, 0)
+
 	testCases := []struct {
 		name             string
+		userID           string
 		userRole         string
 		hasProjectRead   bool
 		hasModulRead     bool
@@ -185,6 +181,7 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 	}{
 		{
 			name:             "Full admin - all permissions",
+			userID:           "user-mixed-1",
 			userRole:         "admin",
 			hasProjectRead:   true,
 			hasModulRead:     true,
@@ -199,6 +196,7 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 		},
 		{
 			name:             "Project manager - only projects",
+			userID:           "user-mixed-2",
 			userRole:         "project_manager",
 			hasProjectRead:   true,
 			hasModulRead:     false,
@@ -213,6 +211,7 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 		},
 		{
 			name:             "User admin - users and roles",
+			userID:           "user-mixed-3",
 			userRole:         "user_admin",
 			hasProjectRead:   false,
 			hasModulRead:     false,
@@ -236,21 +235,12 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 
 			userUC := newStatisticUsecaseWithInterface(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, mockCasbin, db)
 
-			userID := "user-1"
-
 			mockCasbin.On("CheckPermission", tc.userRole, "Project", "read").Return(tc.hasProjectRead, nil)
 			mockCasbin.On("CheckPermission", tc.userRole, "Modul", "read").Return(tc.hasModulRead, nil)
 			mockCasbin.On("CheckPermission", tc.userRole, "User", "read").Return(tc.hasUserRead, nil)
 			mockCasbin.On("CheckPermission", tc.userRole, "Role", "read").Return(tc.hasRoleRead, nil)
 
-			if tc.hasProjectRead {
-				mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(tc.projectCount, nil)
-			}
-			if tc.hasModulRead {
-				mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(tc.modulCount, nil)
-			}
-
-			result, err := userUC.GetStatistics(context.Background(), userID, tc.userRole)
+			result, err := userUC.GetStatistics(context.Background(), tc.userID, tc.userRole)
 
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
@@ -282,8 +272,6 @@ func TestStatisticUsecase_GetStatistics_MixedPermissions(t *testing.T) {
 			}
 
 			mockCasbin.AssertExpectations(t)
-			mockProjectRepo.AssertExpectations(t)
-			mockModulRepo.AssertExpectations(t)
 		})
 	}
 }
@@ -325,6 +313,7 @@ func TestStatisticUsecase_ActualGetStatistics_WithRealEnforcer(t *testing.T) {
 
 	db := setupTestDB(t)
 	seedTestDB(db, 15, 5)
+	seedProjectModulData(db, "user-1", 10, 25)
 
 	usecase := NewStatisticUsecase(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, casbinEnforcer, db)
 
@@ -338,9 +327,6 @@ func TestStatisticUsecase_ActualGetStatistics_WithRealEnforcer(t *testing.T) {
 	casbinEnforcer.AddPermissionForRole(userRole, "Role", "read")
 	casbinEnforcer.SavePolicy()
 
-	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(10, nil)
-	mockModulRepo.On("CountByUserID", mock.Anything, userID).Return(25, nil)
-
 	result, err := usecase.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
@@ -353,9 +339,6 @@ func TestStatisticUsecase_ActualGetStatistics_WithRealEnforcer(t *testing.T) {
 	assert.Equal(t, 15, *result.TotalUser)
 	assert.NotNil(t, result.TotalRole)
 	assert.Equal(t, 5, *result.TotalRole)
-
-	mockProjectRepo.AssertExpectations(t)
-	mockModulRepo.AssertExpectations(t)
 }
 
 // TestStatisticUsecase_ActualGetStatistics_NoPermissions tests with real enforcer but no permissions

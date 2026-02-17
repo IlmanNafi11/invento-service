@@ -7,7 +7,6 @@ import (
 
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -70,6 +69,7 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 
 	db := setupTestDB(t)
 	seedTestDB(db, 20, 6)
+	seedProjectModulData(db, "user-1", 8, 0)
 
 	usecase := NewStatisticUsecase(mockUserRepo, mockProjectRepo, mockModulRepo, mockRoleRepo, casbinEnforcer, db)
 
@@ -81,8 +81,6 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 	casbinEnforcer.AddPermissionForRole(userRole, "User", "read")
 	casbinEnforcer.SavePolicy()
 
-	mockProjectRepo.On("CountByUserID", mock.Anything, userID).Return(8, nil)
-
 	result, err := usecase.GetStatistics(context.Background(), userID, userRole)
 
 	assert.NoError(t, err)
@@ -93,8 +91,6 @@ func TestStatisticUsecase_ActualGetStatistics_PartialPermissions(t *testing.T) {
 	assert.NotNil(t, result.TotalUser)
 	assert.Equal(t, 20, *result.TotalUser)
 	assert.Nil(t, result.TotalRole)
-
-	mockProjectRepo.AssertExpectations(t)
 }
 
 // TestNewStatisticUsecase_RealConstructor tests the actual NewStatisticUsecase constructor
