@@ -220,7 +220,7 @@ Plans:
 **Goal**: Swagger documentation accurately reflects actual routes, and all logging uses injected zerolog (no global logger bypass).
 **Depends on**: Phase 6 (all structural changes complete)
 **Requirements**: API-01 (residual), LOG-01 (residual)
-**Gap Closure**: Closes gaps from v1 milestone audit (integration 3→4, integration 5→6)
+**Gap Closure**: Closes gaps from v1 milestone audit (integration 3->4, integration 5->6)
 
 **Success Criteria** (what must be TRUE):
   1. Swagger @Router annotations for ComprehensiveHealthCheck and GetApplicationStatus match actual registered routes
@@ -238,7 +238,11 @@ Plans:
 
 **Risk**: Minimal -- targeted fixes to 4 files. Mitigated by running `go test ./...` after each change.
 
-**Plans:** 0/0 plans complete
+**Plans:** 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md -- Inject zerolog.Logger into RBACMiddleware and DownloadHelper, update all callers and tests
+- [ ] 07-02-PLAN.md -- Fix Swagger @Router annotations, regenerate docs, full-codebase lint gate
 
 ### Phase 8: File Size Enforcement & Verification
 **Goal**: All source files comply with the 500-line limit, and Phase 6 has formal verification documentation.
@@ -254,9 +258,9 @@ Plans:
   5. `go test ./... -count=1` passes after all splits
 
 **Scope:**
-- Split or trim tus_controller.go (540 → <500 lines)
-- Trim config/integration_test.go (501 → <500 lines)
-- Split clients/go/invento-client/client.go (665 → <500 lines)
+- Split or trim tus_controller.go (540 -> <500 lines)
+- Trim config/integration_test.go (501 -> <500 lines)
+- Split clients/go/invento-client/client.go (665 -> <500 lines)
 - Create formal 06-VERIFICATION.md documenting all Phase 6 criteria verification
 - Final `go test ./...` pass
 
@@ -300,5 +304,5 @@ Note: CFG-01 spans two phases -- constants package created in Phase 1, final aud
 | 4. Architecture Restructuring | 6/6 | Complete | 2026-02-16 |
 | 5. Deep Architecture Improvements | 10/10 | Complete | 2026-02-16 |
 | 6. Polish & Verification | 6/6 | Complete | 2026-02-16 |
-| 7. Swagger & Logger Integration Fixes | 0/0 | Pending | — |
-| 8. File Size Enforcement & Verification | 0/0 | Pending | — |
+| 7. Swagger & Logger Integration Fixes | 0/2 | Pending | -- |
+| 8. File Size Enforcement & Verification | 0/0 | Pending | -- |
