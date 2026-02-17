@@ -451,7 +451,6 @@ func TestIntegrationDatabaseConnectionWithConfig(t *testing.T) {
 	t.Run("SQLiteInMemoryForTesting", func(t *testing.T) {
 		// This is a pattern for tests that need a real database
 		// without external dependencies
-
 		type TestModel struct {
 			ID   uint   `gorm:"primarykey"`
 			Name string `gorm:"size:255"`
@@ -493,7 +492,6 @@ func TestIntegrationDatabaseConnectionWithConfig(t *testing.T) {
 		var count int64
 		db.Model(&TestModel{}).Where("code = ?", "TEST001").Count(&count)
 		assert.Equal(t, int64(0), count)
-
 		// Cleanup
 		sqlDB, _ := db.DB()
 		sqlDB.Close()
