@@ -35,13 +35,13 @@ ORDER BY p.updated_at DESC;
 -- name: GetUserFilesFromModuls :many
 SELECT 
     m.id,
-    m.nama_file,
+    m.file_name as nama_file,
     'Modul' as kategori,
-    m.path_file as download_url,
+    m.file_path as download_url,
     m.updated_at
 FROM moduls m
 WHERE m.user_id = ?
-    AND (? = '' OR m.nama_file LIKE CONCAT('%', ?, '%'))
+    AND (? = '' OR m.file_name LIKE CONCAT('%', ?, '%'))
 ORDER BY m.updated_at DESC;
 
 -- name: CountUserFilesFromProjects :one
@@ -54,7 +54,7 @@ WHERE p.user_id = ?
 SELECT COUNT(*) as total
 FROM moduls m
 WHERE m.user_id = ?
-    AND (? = '' OR m.nama_file LIKE CONCAT('%', ?, '%'));
+    AND (? = '' OR m.file_name LIKE CONCAT('%', ?, '%'));
 
 -- name: GetUserProfileStats :one
 SELECT 

@@ -159,9 +159,9 @@ func (r *userRepository) GetUserFiles(ctx context.Context, userID, search string
 
 	countQuery := r.db.WithContext(ctx).Raw(`
 		SELECT COUNT(*) FROM (
-			SELECT p.id FROM projects p WHERE p.user_id = ? AND (? = '' OR p.nama_project ILIKE '%' || ? || '%')
+			SELECT 1 FROM projects p WHERE p.user_id = ? AND (? = '' OR p.nama_project ILIKE '%' || ? || '%')
 			UNION ALL
-			SELECT m.id FROM moduls m WHERE m.user_id = ? AND (? = '' OR m.file_name ILIKE '%' || ? || '%')
+			SELECT 1 FROM moduls m WHERE m.user_id = ? AND (? = '' OR m.file_name ILIKE '%' || ? || '%')
 		) combined
 	`, userID, search, search, userID, search, search)
 
