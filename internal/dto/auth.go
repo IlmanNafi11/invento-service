@@ -43,3 +43,7 @@ type RefreshTokenResponse struct {
 	ExpiresIn   int    `json:"expires_in"`
 	ExpiresAt   int64  `json:"expires_at"`
 }
+
+type RegisterMessageResponse struct {
+	Message string `json:"message" example:"Registrasi berhasil! Silakan cek email Anda untuk konfirmasi akun sebelum login."`
+}

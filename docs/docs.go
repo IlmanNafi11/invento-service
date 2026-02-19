@@ -71,7 +71,7 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "Akun belum diaktifkan",
+                        "description": "Email belum dikonfirmasi",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
@@ -186,7 +186,7 @@ const docTemplate = `{
         },
         "/auth/register": {
             "post": {
-                "description": "Membuat akun pengguna baru melalui Supabase Auth dan menyimpan data profil ke database lokal.",
+                "description": "Daftarkan akun mahasiswa baru dengan email @student.polije.ac.id. Email konfirmasi akan dikirim.",
                 "consumes": [
                     "application/json"
                 ],
@@ -196,7 +196,7 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Registrasi pengguna baru",
+                "summary": "Register akun mahasiswa baru",
                 "parameters": [
                     {
                         "description": "Data registrasi (name, email, password)",
@@ -209,8 +209,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Registrasi berhasil",
+                    "200": {
+                        "description": "Registrasi berhasil, email konfirmasi dikirim",
                         "schema": {
                             "allOf": [
                                 {
@@ -220,7 +220,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.AuthResponse"
+                                            "$ref": "#/definitions/dto.RegisterMessageResponse"
                                         }
                                     }
                                 }
@@ -3652,8 +3652,8 @@ const docTemplate = `{
                 "summary": "Delete user",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "User ID",
+                        "type": "string",
+                        "description": "User ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -3713,8 +3713,8 @@ const docTemplate = `{
                 "summary": "Download user files",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "User ID",
+                        "type": "string",
+                        "description": "User ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -3783,8 +3783,8 @@ const docTemplate = `{
                 "summary": "Get user files",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "User ID",
+                        "type": "string",
+                        "description": "User ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -3870,8 +3870,8 @@ const docTemplate = `{
                 "summary": "Update user role",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "User ID",
+                        "type": "string",
+                        "description": "User ID (UUID)",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -4384,6 +4384,15 @@ const docTemplate = `{
                 },
                 "token_type": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.RegisterMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Registrasi berhasil! Silakan cek email Anda untuk konfirmasi akun sebelum login."
                 }
             }
         },

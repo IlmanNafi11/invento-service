@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"invento-service/config"
+	"invento-service/internal/domain"
 	"invento-service/internal/httputil"
 	"net/http"
 	"net/http/httptest"
@@ -25,12 +26,12 @@ type MockAuthUsecase struct {
 	mock.Mock
 }
 
-func (m *MockAuthUsecase) Register(ctx context.Context, req dto.RegisterRequest) (string, *dto.AuthResponse, error) {
+func (m *MockAuthUsecase) Register(ctx context.Context, req dto.RegisterRequest) (*domain.RegisterResult, error) {
 	args := m.Called(ctx, req)
-	if args.Get(1) == nil {
-		return args.String(0), nil, args.Error(2)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
 	}
-	return args.String(0), args.Get(1).(*dto.AuthResponse), args.Error(2)
+	return args.Get(0).(*domain.RegisterResult), args.Error(1)
 }
 
 func (m *MockAuthUsecase) Login(ctx context.Context, req dto.AuthRequest) (string, *dto.AuthResponse, error) {
@@ -97,19 +98,12 @@ func TestAuthController_Register_Success(t *testing.T) {
 		Password: "password123",
 	}
 
-	expectedResponse := &dto.AuthResponse{
-		User: &dto.AuthUserResponse{
-			ID:    "user-123",
-			Name:  reqBody.Name,
-			Email: reqBody.Email,
-		},
-		AccessToken: "access_token",
-		TokenType:   "Bearer",
-		ExpiresIn:   3600,
-		ExpiresAt:   1234567890,
+	expectedResult := &domain.RegisterResult{
+		NeedsConfirmation: true,
+		Message:           "Registrasi berhasil! Silakan cek email Anda untuk konfirmasi akun sebelum login.",
 	}
 
-	mockAuthUC.On("Register", mock.Anything, reqBody).Return("refresh_token", expectedResponse, nil)
+	mockAuthUC.On("Register", mock.Anything, reqBody).Return(expectedResult, nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/register", bytes.NewReader(bodyBytes))
@@ -117,29 +111,25 @@ func TestAuthController_Register_Success(t *testing.T) {
 
 	resp, err := app.Test(req)
 	require.NoError(t, err)
-	assert.Equal(t, fiber.StatusCreated, resp.StatusCode)
+	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
 
 	body := decodeBodyMap(t, resp)
 	assert.Equal(t, "success", body["status"])
-	assert.Equal(t, "Registrasi berhasil", body["message"])
+	assert.Contains(t, body["message"].(string), "konfirmasi")
 	data := body["data"].(map[string]interface{})
-	assert.Equal(t, "access_token", data["access_token"])
-	assert.Equal(t, "Bearer", data["token_type"])
-	assert.Equal(t, float64(3600), data["expires_in"])
-	assert.Equal(t, float64(1234567890), data["expires_at"])
-	assert.NotNil(t, data["user"])
+	assert.Contains(t, data["message"].(string), "konfirmasi")
 
 	var hasAccessCookie, hasRefreshCookie bool
 	for _, c := range resp.Cookies() {
-		if c.Name == httputil.AccessTokenCookieName {
+		if c.Name == httputil.AccessTokenCookieName && c.Value != "" {
 			hasAccessCookie = true
 		}
-		if c.Name == httputil.RefreshTokenCookieName {
+		if c.Name == httputil.RefreshTokenCookieName && c.Value != "" {
 			hasRefreshCookie = true
 		}
 	}
-	assert.True(t, hasAccessCookie)
-	assert.True(t, hasRefreshCookie)
+	assert.False(t, hasAccessCookie)
+	assert.False(t, hasRefreshCookie)
 
 	mockAuthUC.AssertExpectations(t)
 }
@@ -154,7 +144,7 @@ func TestAuthController_Register_EmailAlreadyExists(t *testing.T) {
 	app.Post("/register", controller.Register)
 
 	reqBody := dto.RegisterRequest{Name: "Test User", Email: "test@example.com", Password: "password123"}
-	mockAuthUC.On("Register", mock.Anything, reqBody).Return("", (*dto.AuthResponse)(nil), apperrors.NewConflictError("Email sudah terdaftar"))
+	mockAuthUC.On("Register", mock.Anything, reqBody).Return((*domain.RegisterResult)(nil), apperrors.NewConflictError("Email sudah terdaftar"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", "/register", bytes.NewReader(bodyBytes))

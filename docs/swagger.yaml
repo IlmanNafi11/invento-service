@@ -305,6 +305,13 @@ definitions:
       token_type:
         type: string
     type: object
+  dto.RegisterMessageResponse:
+    properties:
+      message:
+        example: Registrasi berhasil! Silakan cek email Anda untuk konfirmasi akun
+          sebelum login.
+        type: string
+    type: object
   dto.RegisterRequest:
     properties:
       email:
@@ -682,7 +689,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "403":
-          description: Akun belum diaktifkan
+          description: Email belum dikonfirmasi
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "500":
@@ -757,8 +764,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Membuat akun pengguna baru melalui Supabase Auth dan menyimpan
-        data profil ke database lokal.
+      description: Daftarkan akun mahasiswa baru dengan email @student.polije.ac.id.
+        Email konfirmasi akan dikirim.
       parameters:
       - description: Data registrasi (name, email, password)
         in: body
@@ -769,14 +776,14 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Registrasi berhasil
+        "200":
+          description: Registrasi berhasil, email konfirmasi dikirim
           schema:
             allOf:
             - $ref: '#/definitions/dto.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.AuthResponse'
+                  $ref: '#/definitions/dto.RegisterMessageResponse'
               type: object
         "400":
           description: Data validasi tidak valid
@@ -790,7 +797,7 @@ paths:
           description: Terjadi kesalahan pada server
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Registrasi pengguna baru
+      summary: Register akun mahasiswa baru
       tags:
       - Auth
   /auth/reset-password:
@@ -2949,11 +2956,11 @@ paths:
       - application/json
       description: Delete a specific user by ID
       parameters:
-      - description: User ID
+      - description: User ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -2988,11 +2995,11 @@ paths:
       - application/json
       description: Download files owned by a specific user
       parameters:
-      - description: User ID
+      - description: User ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Download request
         in: body
         name: request
@@ -3033,11 +3040,11 @@ paths:
       - application/json
       description: Get list of files owned by a specific user
       parameters:
-      - description: User ID
+      - description: User ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - default: 1
         description: Page number
         in: query
@@ -3087,11 +3094,11 @@ paths:
       - application/json
       description: Update the role of a specific user
       parameters:
-      - description: User ID
+      - description: User ID (UUID)
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Role update request
         in: body
         name: request

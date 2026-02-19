@@ -47,9 +47,9 @@ func NewAuthController(authUsecase usecase.AuthUsecase, cookieHelper *httputil.C
 // @Param request body dto.AuthRequest true "Credential login (email, password)"
 // @Success 200 {object} dto.SuccessResponse{data=dto.AuthResponse} "Login berhasil"
 // @Failure 400 {object} dto.ErrorResponse "Format request tidak valid"
-// @Failure 401 {object} dto.ErrorResponse "Email atau password salah"
-// @Failure 403 {object} dto.ErrorResponse "Akun belum diaktifkan"
-// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
+// @Failure      401 {object} dto.ErrorResponse "Email atau password salah"
+// @Failure      403 {object} dto.ErrorResponse "Email belum dikonfirmasi"
+// @Failure      500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
 // @Router /auth/login [post]
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	var req dto.AuthRequest
@@ -77,19 +77,19 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	return ctrl.SendSuccess(c, result, "Login berhasil")
 }
 
-// Register creates a new user account.
+// Register creates a new student user account.
 //
-// @Summary Registrasi pengguna baru
-// @Description Membuat akun pengguna baru melalui Supabase Auth dan menyimpan data profil ke database lokal.
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body dto.RegisterRequest true "Data registrasi (name, email, password)"
-// @Success 201 {object} dto.SuccessResponse{data=dto.AuthResponse} "Registrasi berhasil"
-// @Failure 400 {object} dto.ErrorResponse "Data validasi tidak valid"
-// @Failure 409 {object} dto.ErrorResponse "Email sudah terdaftar"
-// @Failure 500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
-// @Router /auth/register [post]
+// @Summary      Register akun mahasiswa baru
+// @Description  Daftarkan akun mahasiswa baru dengan email @student.polije.ac.id. Email konfirmasi akan dikirim.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.RegisterRequest true "Data registrasi (name, email, password)"
+// @Success      200 {object} dto.SuccessResponse{data=dto.RegisterMessageResponse} "Registrasi berhasil, email konfirmasi dikirim"
+// @Failure      400 {object} dto.ErrorResponse "Data validasi tidak valid"
+// @Failure      409 {object} dto.ErrorResponse "Email sudah terdaftar"
+// @Failure      500 {object} dto.ErrorResponse "Terjadi kesalahan pada server"
+// @Router       /auth/register [post]
 func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 	var req dto.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -101,7 +101,7 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	refreshToken, result, err := ctrl.authUsecase.Register(ctx, req)
+	result, err := ctrl.authUsecase.Register(ctx, req)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -110,10 +110,13 @@ func (ctrl *AuthController) Register(c *fiber.Ctx) error {
 		return ctrl.SendInternalError(c)
 	}
 
-	ctrl.cookieHelper.SetAccessTokenCookie(c, result.AccessToken, result.ExpiresIn)
-	ctrl.cookieHelper.SetRefreshTokenCookie(c, refreshToken)
+	if result.NeedsConfirmation {
+		return ctrl.SendSuccess(c, dto.RegisterMessageResponse{
+			Message: result.Message,
+		}, result.Message)
+	}
 
-	return ctrl.SendCreated(c, result, "Registrasi berhasil")
+	return ctrl.SendSuccess(c, nil, "Registrasi berhasil")
 }
 
 // RefreshToken refreshes an access token using a valid refresh token.
