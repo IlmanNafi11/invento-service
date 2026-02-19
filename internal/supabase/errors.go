@@ -11,7 +11,7 @@ import (
 
 // AuthError represents the error response from Supabase Auth API.
 type AuthError struct {
-	Code       string `json:"code"`
+	Code       int    `json:"code"`
 	Message    string `json:"msg"`
 	ErrorCode  string `json:"error_code"`
 	Error      string `json:"error"`
