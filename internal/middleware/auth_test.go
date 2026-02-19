@@ -61,6 +61,10 @@ func (m *mockAuthService) ResendConfirmation(ctx context.Context, email string) 
 	return errors.New("not implemented")
 }
 
+func (m *mockAuthService) AdminCreateUser(ctx context.Context, email, password string) (string, error) {
+	return "", errors.New("not implemented")
+}
+
 func testSupabaseClaims() domain.AuthClaims {
 	return &supabase.SupabaseClaims{
 		RegisteredClaims: jwt.RegisteredClaims{Subject: "user-123"},

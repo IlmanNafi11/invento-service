@@ -72,6 +72,11 @@ func (m *AuthUsecaseMockAuthService) ResendConfirmation(ctx context.Context, ema
 	return args.Error(0)
 }
 
+func (m *AuthUsecaseMockAuthService) AdminCreateUser(ctx context.Context, email, password string) (string, error) {
+	args := m.Called(ctx, email, password)
+	return args.String(0), args.Error(1)
+}
+
 type authTestUserRepo struct {
 	mock.Mock
 }

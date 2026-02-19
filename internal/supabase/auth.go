@@ -325,3 +325,42 @@ func (s *AuthService) DeleteUser(ctx context.Context, uid string) error {
 
 	return nil
 }
+
+func (s *AuthService) AdminCreateUser(ctx context.Context, email, password string) (string, error) {
+	body := map[string]interface{}{
+		"email":         email,
+		"password":      password,
+		"email_confirm": false,
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return "", fmt.Errorf("gagal marshal request admin create user: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", s.authURL+"/admin/users", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return "", fmt.Errorf("gagal membuat request admin create user: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Authorization", "Bearer "+s.serviceKey)
+	httpReq.Header.Set("apikey", s.serviceKey)
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		return "", fmt.Errorf("gagal mengirim request admin create user: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", ParseAuthError(resp)
+	}
+
+	var result supabaseUser
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", fmt.Errorf("gagal decode response admin create user: %w", err)
+	}
+
+	return result.ID, nil
+}

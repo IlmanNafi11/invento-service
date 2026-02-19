@@ -62,3 +62,8 @@ func (m *MockAuthService) ResendConfirmation(ctx context.Context, email string) 
 	args := m.Called(ctx, email)
 	return args.Error(0)
 }
+
+func (m *MockAuthService) AdminCreateUser(ctx context.Context, email, password string) (string, error) {
+	args := m.Called(ctx, email, password)
+	return args.String(0), args.Error(1)
+}

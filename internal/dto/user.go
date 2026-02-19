@@ -72,3 +72,20 @@ type DownloadUserFilesRequest struct {
 type BulkAssignRoleRequest struct {
 	UserIDs []string `json:"user_ids" validate:"required,min=1"`
 }
+
+type CreateUserRequest struct {
+	Email    string  `json:"email" validate:"required,email"`
+	Name     string  `json:"name" validate:"required,min=2,max=100"`
+	Password *string `json:"password" validate:"omitempty,min=8"`
+	RoleID   int     `json:"role_id" validate:"required"`
+}
+
+type CreateUserResponse struct {
+	ID                string  `json:"id"`
+	Email             string  `json:"email"`
+	Name              string  `json:"name"`
+	RoleID            int     `json:"role_id"`
+	RoleName          string  `json:"role_name"`
+	GeneratedPassword *string `json:"generated_password,omitempty"`
+	IsActive          bool    `json:"is_active"`
+}

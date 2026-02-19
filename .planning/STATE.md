@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 12 of 14 (Auth Confirmation Flow) — COMPLETE
 Plan: 12-01 complete, 12-02 complete
 Status: Phase 12 complete, ready for Phase 13
-Last activity: 2026-02-20 — Completed plan 12-02 (usecase + controller — student-only registration, login confirmation detection)
+Last activity: 2026-02-20 — Completed phase 12 including live-testing bug fixes: case-insensitive role lookup (8fb2da1), flat Supabase signup response shape (c1049b6), AppError propagation in Register (rate limit re-wrapped as 500, fixed), AuthError.Code string→int JSON type mismatch (Supabase sends integers, caused json.Unmarshal to fail before error mapping)
 
 Progress: [███░░░░░░░] 33% (v1.2 — 2/6 plans)
 
@@ -60,5 +60,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Completed phase 12 (auth confirmation flow — both plans)
+Stopped at: Phase 12 complete (all plans + live-testing bug fixes committed)
 Next action: Plan and execute Phase 13 (manual user creation)

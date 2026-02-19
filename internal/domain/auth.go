@@ -14,6 +14,7 @@ type AuthService interface {
 	Logout(ctx context.Context, accessToken string) error
 	RequestPasswordReset(ctx context.Context, email, redirectTo string) error
 	DeleteUser(ctx context.Context, uid string) error
+	AdminCreateUser(ctx context.Context, email, password string) (string, error)
 }
 
 type AuthClaims interface {
