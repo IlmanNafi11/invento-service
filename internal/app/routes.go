@@ -82,6 +82,7 @@ func registerRoleRoutes(api fiber.Router, deps routeDeps) {
 func registerUserRoutes(api fiber.Router, deps routeDeps) {
 	user := api.Group("/user", middleware.SupabaseAuthMiddleware(deps.supabaseAuthService, deps.userRepo, deps.cookieHelper))
 	user.Get("/import/template", middleware.RBACMiddleware(deps.casbinEnforcer, rbac.ResourceUser, rbac.ActionCreate, deps.appLogger), deps.userController.GetImportTemplate)
+	user.Post("/import", middleware.RBACMiddleware(deps.casbinEnforcer, rbac.ResourceUser, rbac.ActionCreate, deps.appLogger), deps.userController.ImportUsers)
 	user.Get("/", middleware.RBACMiddleware(deps.casbinEnforcer, rbac.ResourceUser, rbac.ActionRead, deps.appLogger), deps.userController.GetUserList)
 	user.Post("/", middleware.RBACMiddleware(deps.casbinEnforcer, rbac.ResourceUser, rbac.ActionCreate, deps.appLogger), deps.userController.CreateUser)
 	user.Put("/:id/role", middleware.RBACMiddleware(deps.casbinEnforcer, rbac.ResourceUser, rbac.ActionUpdate, deps.appLogger), deps.userController.UpdateUserRole)

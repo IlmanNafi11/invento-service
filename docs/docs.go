@@ -3656,6 +3656,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/import": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengimpor banyak user sekaligus dari file Excel (.xlsx). Baris yang tidak valid akan dilewati, bukan menggagalkan seluruh proses.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Import user secara massal dari Excel",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File Excel (.xlsx) untuk import",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID role default untuk baris tanpa kolom Role",
+                        "name": "default_role_id",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Laporan hasil import",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ImportReport"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "File tidak valid atau parameter tidak lengkap",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal memproses import",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/import/template": {
             "get": {
                 "security": [
@@ -4392,6 +4460,49 @@ const docTemplate = `{
                 },
                 "total_requests": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.ImportReport": {
+            "type": "object",
+            "properties": {
+                "berhasil": {
+                    "type": "integer"
+                },
+                "detail": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ImportReportRow"
+                    }
+                },
+                "dilewati": {
+                    "type": "integer"
+                },
+                "total_baris": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ImportReportRow": {
+            "type": "object",
+            "properties": {
+                "alasan": {
+                    "type": "string"
+                },
+                "baris": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "nama": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

@@ -240,6 +240,34 @@ definitions:
       total_requests:
         type: integer
     type: object
+  dto.ImportReport:
+    properties:
+      berhasil:
+        type: integer
+      detail:
+        items:
+          $ref: '#/definitions/dto.ImportReportRow'
+        type: array
+      dilewati:
+        type: integer
+      total_baris:
+        type: integer
+    type: object
+  dto.ImportReportRow:
+    properties:
+      alasan:
+        type: string
+      baris:
+        type: integer
+      email:
+        type: string
+      nama:
+        type: string
+      password:
+        type: string
+      status:
+        type: string
+    type: object
   dto.MemoryInfo:
     properties:
       allocated:
@@ -3215,6 +3243,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user role
+      tags:
+      - User Management
+  /user/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Mengimpor banyak user sekaligus dari file Excel (.xlsx). Baris
+        yang tidak valid akan dilewati, bukan menggagalkan seluruh proses.
+      parameters:
+      - description: File Excel (.xlsx) untuk import
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: ID role default untuk baris tanpa kolom Role
+        in: formData
+        name: default_role_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Laporan hasil import
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ImportReport'
+              type: object
+        "400":
+          description: File tidak valid atau parameter tidak lengkap
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Gagal memproses import
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Import user secara massal dari Excel
       tags:
       - User Management
   /user/import/template:

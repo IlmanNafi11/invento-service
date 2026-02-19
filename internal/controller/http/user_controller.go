@@ -2,16 +2,20 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"invento-service/internal/controller/base"
 	"invento-service/internal/dto"
 	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	apperrors "invento-service/internal/errors"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/xuri/excelize/v2"
 )
 
 // UserController handles user-related HTTP requests.
@@ -480,4 +484,75 @@ func (ctrl *UserController) GetImportTemplate(c *fiber.Ctx) error {
 	}
 
 	return nil
+}
+
+// ImportUsers handles POST /api/v1/user/import - Bulk import users from Excel
+// @Summary Import user secara massal dari Excel
+// @Description Mengimpor banyak user sekaligus dari file Excel (.xlsx). Baris yang tidak valid akan dilewati, bukan menggagalkan seluruh proses.
+// @Tags User Management
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "File Excel (.xlsx) untuk import"
+// @Param default_role_id formData int true "ID role default untuk baris tanpa kolom Role"
+// @Success 200 {object} dto.SuccessResponse{data=dto.ImportReport} "Laporan hasil import"
+// @Failure 400 {object} dto.ErrorResponse "File tidak valid atau parameter tidak lengkap"
+// @Failure 500 {object} dto.ErrorResponse "Gagal memproses import"
+// @Security BearerAuth
+// @Router /user/import [post]
+func (ctrl *UserController) ImportUsers(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		return ctrl.SendBadRequest(c, "File harus disertakan")
+	}
+
+	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
+	if ext != ".xlsx" {
+		return ctrl.SendBadRequest(c, "Format file harus .xlsx")
+	}
+
+	defaultRoleIDStr := c.FormValue("default_role_id")
+	if defaultRoleIDStr == "" {
+		return ctrl.SendBadRequest(c, "default_role_id harus diisi")
+	}
+	defaultRoleID, err := strconv.Atoi(defaultRoleIDStr)
+	if err != nil || defaultRoleID <= 0 {
+		return ctrl.SendBadRequest(c, "default_role_id harus berupa angka positif")
+	}
+
+	src, err := fileHeader.Open()
+	if err != nil {
+		return ctrl.SendInternalError(c)
+	}
+	defer src.Close()
+
+	f, err := excelize.OpenReader(src)
+	if err != nil {
+		return ctrl.SendBadRequest(c, "File Excel tidak dapat dibaca")
+	}
+	defer f.Close()
+
+	req := dto.ImportUsersRequest{DefaultRoleID: defaultRoleID}
+
+	report, err := ctrl.userUsecase.BulkImportUsers(ctx, f, req)
+	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return httputil.SendAppError(c, appErr)
+		}
+		return ctrl.SendInternalError(c)
+	}
+
+	var message string
+	switch {
+	case report.Berhasil > 0 && report.Dilewati > 0:
+		message = fmt.Sprintf("Import selesai: %d berhasil, %d dilewati", report.Berhasil, report.Dilewati)
+	case report.Berhasil > 0:
+		message = fmt.Sprintf("Import berhasil: %d user ditambahkan", report.Berhasil)
+	default:
+		message = "Tidak ada user yang berhasil diimpor"
+	}
+
+	return ctrl.SendSuccess(c, report, message)
 }
