@@ -32,7 +32,7 @@ func (r *roleRepository) GetByID(ctx context.Context, id uint) (*domain.Role, er
 
 func (r *roleRepository) GetByName(ctx context.Context, name string) (*domain.Role, error) {
 	var role domain.Role
-	err := r.db.WithContext(ctx).Where("nama_role = ?", name).First(&role).Error
+	err := r.db.WithContext(ctx).Where("LOWER(nama_role) = LOWER(?)", name).First(&role).Error
 	if err != nil {
 		return nil, err
 	}
