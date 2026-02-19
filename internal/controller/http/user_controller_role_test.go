@@ -23,7 +23,7 @@ import (
 func TestUserController_UpdateUserRole_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
@@ -56,7 +56,7 @@ func TestUserController_UpdateUserRole_Success(t *testing.T) {
 func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
@@ -84,7 +84,7 @@ func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
 func TestUserController_DeleteUser_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
@@ -111,7 +111,7 @@ func TestUserController_DeleteUser_Success(t *testing.T) {
 func TestUserController_UpdateUserRole_InvalidRole(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
@@ -134,7 +134,7 @@ func TestUserController_UpdateUserRole_InvalidRole(t *testing.T) {
 func TestUserController_UpdateUserRole_Forbidden(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
@@ -162,7 +162,7 @@ func TestUserController_UpdateUserRole_Forbidden(t *testing.T) {
 func TestUserController_DeleteUser_Forbidden(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
@@ -184,7 +184,7 @@ func TestUserController_DeleteUser_Forbidden(t *testing.T) {
 func TestUserController_DeleteUser_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
@@ -205,7 +205,7 @@ func TestUserController_DeleteUser_InternalError(t *testing.T) {
 func TestUserController_UpdateUserRole_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Put("/api/v1/user/:id/role", controller.UpdateUserRole)
@@ -232,7 +232,7 @@ func TestUserController_UpdateUserRole_InternalError(t *testing.T) {
 func TestUserController_GetUsersForRole_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
@@ -264,7 +264,7 @@ func TestUserController_GetUsersForRole_Success(t *testing.T) {
 func TestUserController_GetUsersForRole_NotFound(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
@@ -282,7 +282,7 @@ func TestUserController_GetUsersForRole_NotFound(t *testing.T) {
 func TestUserController_GetUsersForRole_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/role/:id/users", controller.GetUsersForRole)
@@ -299,7 +299,7 @@ func TestUserController_GetUsersForRole_InternalError(t *testing.T) {
 func TestUserController_BulkAssignRole_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
@@ -331,7 +331,7 @@ func TestUserController_BulkAssignRole_Success(t *testing.T) {
 func TestUserController_BulkAssignRole_NotFound(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
@@ -358,7 +358,7 @@ func TestUserController_BulkAssignRole_NotFound(t *testing.T) {
 func TestUserController_BulkAssignRole_ValidationError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)
@@ -380,7 +380,7 @@ func TestUserController_BulkAssignRole_ValidationError(t *testing.T) {
 func TestUserController_BulkAssignRole_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Post("/api/v1/role/:id/users/bulk", controller.BulkAssignRole)

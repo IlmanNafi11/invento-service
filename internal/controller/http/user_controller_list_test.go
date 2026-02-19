@@ -22,7 +22,7 @@ import (
 func TestUserController_GetUserList_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
@@ -79,7 +79,7 @@ func TestUserController_GetUserList_Success(t *testing.T) {
 func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
@@ -133,7 +133,7 @@ func TestUserController_GetUserList_WithSearchAndFilter(t *testing.T) {
 func TestUserController_GetUserFiles_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
@@ -190,7 +190,7 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
@@ -242,7 +242,7 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 func TestUserController_DownloadUserFiles_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
@@ -279,7 +279,7 @@ func TestUserController_DownloadUserFiles_Success(t *testing.T) {
 func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
@@ -309,7 +309,7 @@ func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
 func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)
@@ -338,7 +338,7 @@ func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
 func TestUserController_GetUserList_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/user", controller.GetUserList)
@@ -366,7 +366,7 @@ func TestUserController_GetUserList_InternalError(t *testing.T) {
 func TestUserController_GetUserFiles_UserNotFound(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
@@ -395,7 +395,7 @@ func TestUserController_GetUserFiles_UserNotFound(t *testing.T) {
 func TestUserController_GetUserFiles_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Get("/api/v1/user/:id/files", controller.GetUserFiles)
@@ -423,7 +423,7 @@ func TestUserController_GetUserFiles_InternalError(t *testing.T) {
 func TestUserController_DownloadUserFiles_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := fiber.New()
 	app.Post("/api/v1/user/:id/download", controller.DownloadUserFiles)

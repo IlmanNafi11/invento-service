@@ -25,7 +25,7 @@ import (
 func TestUserController_GetProfile_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/profile", controller.GetProfile)
@@ -66,7 +66,7 @@ func TestUserController_GetProfile_Success(t *testing.T) {
 func TestUserController_UpdateProfile_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
@@ -114,7 +114,7 @@ func TestUserController_UpdateProfile_Success(t *testing.T) {
 func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
@@ -164,7 +164,7 @@ func TestUserController_UpdateProfile_WithPhoto(t *testing.T) {
 func TestUserController_GetUserPermissions_Success(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
@@ -209,7 +209,7 @@ func TestUserController_GetUserPermissions_Success(t *testing.T) {
 func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
@@ -240,7 +240,7 @@ func TestUserController_GetUserPermissions_EmptyPermissions(t *testing.T) {
 func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
@@ -272,7 +272,7 @@ func TestUserController_UpdateProfile_UserNotFound(t *testing.T) {
 func TestUserController_UpdateProfile_ValidationError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
@@ -298,7 +298,7 @@ func TestUserController_UpdateProfile_ValidationError(t *testing.T) {
 func TestUserController_UpdateProfile_InvalidJenisKelamin(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
@@ -325,7 +325,7 @@ func TestUserController_UpdateProfile_InvalidJenisKelamin(t *testing.T) {
 func TestUserController_GetProfile_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/profile", controller.GetProfile)
@@ -348,7 +348,7 @@ func TestUserController_GetProfile_InternalError(t *testing.T) {
 func TestUserController_GetProfile_NotFound(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/profile", controller.GetProfile)
@@ -372,7 +372,7 @@ func TestUserController_GetProfile_NotFound(t *testing.T) {
 func TestUserController_GetUserPermissions_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
@@ -395,7 +395,7 @@ func TestUserController_GetUserPermissions_InternalError(t *testing.T) {
 func TestUserController_GetUserPermissions_NotFound(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Get("/api/v1/user/permissions", controller.GetUserPermissions)
@@ -419,7 +419,7 @@ func TestUserController_GetUserPermissions_NotFound(t *testing.T) {
 func TestUserController_UpdateProfile_InternalError(t *testing.T) {
 	t.Parallel()
 	mockUserUC := new(MockUserUsecase)
-	controller := httpcontroller.NewUserController(mockUserUC)
+	controller := httpcontroller.NewUserController(mockUserUC, nil)
 
 	app := setupTestAppWithAuthForUser()
 	app.Put("/api/v1/profile", controller.UpdateProfile)
