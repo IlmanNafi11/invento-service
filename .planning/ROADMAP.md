@@ -36,7 +36,7 @@
 **Milestone Goal:** Add user management features (manual + bulk Excel import) with email confirmation flow that differentiates admin-created vs self-registered users.
 
 - [x] **Phase 12: Auth Confirmation Flow** - Change login to reject unconfirmed users and register to require email confirmation
-- [ ] **Phase 13: Manual User Creation** - Add endpoint for authorized users to create individual accounts with role assignment
+- [x] **Phase 13: Manual User Creation** - Add endpoint for authorized users to create individual accounts with role assignment
 - [ ] **Phase 14: Excel Import & Template** - Bulk user import from Excel with validation, skip logic, and detailed reporting
 
 ## Phase Details
@@ -69,7 +69,7 @@ Plans:
 **Plans**: 2 plans
 Plans:
 - [x] 13-01-PLAN.md — Foundation: DTOs, AuthService.AdminCreateUser, Supabase implementation, Usecase business logic (validation, password gen, DB+Casbin sync, rollback)
-- [ ] 13-02-PLAN.md — HTTP Layer: CreateUser controller handler with Swagger annotations, route registration with RBAC, Swagger docs regeneration
+- [x] 13-02-PLAN.md — HTTP Layer: CreateUser controller handler with Swagger annotations, route registration with RBAC, Swagger docs regeneration
 
 ### Phase 14: Excel Import & Template
 **Goal**: Authorized users can bulk import users from Excel with comprehensive validation, skip logic, and detailed reporting
@@ -104,5 +104,5 @@ Plans:
 | 10. Go Query Optimization | v1.1 | 2/2 | Complete | 2026-02-17 |
 | 11. Verification & Validation | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 12. Auth Confirmation Flow | v1.2 | 2/2 | Complete | 2026-02-20 |
-| 13. Manual User Creation | v1.2 | 1/2 | In progress | - |
+| 13. Manual User Creation | v1.2 | 2/2 | Complete | 2026-02-20 |
 | 14. Excel Import & Template | v1.2 | 0/2 | Planning complete | - |

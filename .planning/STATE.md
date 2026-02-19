@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** File storage yang reliable dan resource-efficient pada server terbatas (500MB RAM) -- upload, simpan, dan download file modul/project mahasiswa tanpa gagal.
-**Current focus:** v1.2 User Management & Import — Phase 13: Manual User Creation (IN PROGRESS)
+**Current focus:** v1.2 User Management & Import — Phase 14: Excel Import & Template (NEXT)
 
 ## Current Position
 
-Phase: 13 of 14 (Manual User Creation) — IN PROGRESS
-Plan: 13-01 complete, 13-02 pending
-Status: Plan 13-01 complete (foundation: DTOs, AuthService, Usecase), ready for 13-02 (HTTP layer)
-Last activity: 2026-02-20 — Completed plan 13-01: CreateUser DTOs, AdminCreateUser on AuthService (Supabase Admin API with email_confirm:false), AdminCreateUser usecase with Mahasiswa domain validation, auto-password generation, DB+Casbin sync, rollback chain
+Phase: 13 of 14 (Manual User Creation) — COMPLETE
+Plan: 13-01 complete, 13-02 complete (2/2)
+Status: Phase 13 complete — Manual user creation fully implemented (foundation + HTTP layer)
+Last activity: 2026-02-20 — Completed plan 13-02: CreateUser controller handler with Swagger annotations, POST /user route with RBAC, Swagger docs regenerated
 
-Progress: [████░░░░░░] 50% (v1.2 — 3/6 plans)
+Progress: [██████░░░░] 67% (v1.2 — 4/6 plans)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0 plans completed: 37 (Phases 1-8)
 - v1.1 plans completed: 5 (Phases 9-11)
-- v1.2 plans completed: 3 (Phases 12-13)
-- Total plans: 45
+- v1.2 plans completed: 4 (Phases 12-13)
+- Total plans: 46
 
 ## Accumulated Context
 
@@ -60,5 +60,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Phase 13, plan 13-01 complete
-Next action: Plan and execute 13-02 (HTTP controller, route registration, Swagger docs)
+Stopped at: Phase 13 complete (2/2 plans)
+Next action: Plan and execute Phase 14 (Excel Import & Template)
