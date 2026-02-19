@@ -85,7 +85,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Excel template generation, import DTOs, and template download endpoint
+- [x] 14-01-PLAN.md — Excel template generation, import DTOs, and template download endpoint
 - [ ] 14-02-PLAN.md — Bulk import logic with validation, skip logic, and upload endpoint
 
 ## Progress
@@ -105,4 +105,4 @@ Plans:
 | 11. Verification & Validation | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 12. Auth Confirmation Flow | v1.2 | 2/2 | Complete | 2026-02-20 |
 | 13. Manual User Creation | v1.2 | Complete    | 2026-02-19 | 2026-02-20 |
-| 14. Excel Import & Template | v1.2 | 0/2 | Planning complete | - |
+| 14. Excel Import & Template | v1.2 | 1/2 | In progress | - |
