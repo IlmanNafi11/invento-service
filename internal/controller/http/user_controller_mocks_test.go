@@ -85,6 +85,14 @@ func (m *MockUserUsecase) BulkAssignRole(ctx context.Context, userIDs []string, 
 	return args.Error(0)
 }
 
+func (m *MockUserUsecase) AdminCreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.CreateUserResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.CreateUserResponse), args.Error(1)
+}
+
 // Helper function to create a test app with authenticated middleware for UserController
 func setupTestAppWithAuthForUser() *fiber.App {
 	app := fiber.New(fiber.Config{
