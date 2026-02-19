@@ -35,7 +35,7 @@
 
 **Milestone Goal:** Add user management features (manual + bulk Excel import) with email confirmation flow that differentiates admin-created vs self-registered users.
 
-- [ ] **Phase 12: Auth Confirmation Flow** - Change login to reject unconfirmed users and register to require email confirmation
+- [x] **Phase 12: Auth Confirmation Flow** - Change login to reject unconfirmed users and register to require email confirmation
 - [ ] **Phase 13: Manual User Creation** - Add endpoint for authorized users to create individual accounts with role assignment
 - [ ] **Phase 14: Excel Import & Template** - Bulk user import from Excel with validation, skip logic, and detailed reporting
 
@@ -53,8 +53,8 @@
   5. First login attempt by unconfirmed user triggers Supabase resend API to send confirmation email
 **Plans:** 2 plans
 Plans:
-- [ ] 12-01-PLAN.md — Error codes + Domain/Service layer (ResendConfirmation, Register autoConfirm)
-- [ ] 12-02-PLAN.md — Usecase + Controller (student-only registration, login confirmation detection)
+- [x] 12-01-PLAN.md — Error codes + Domain/Service layer (ResendConfirmation, Register autoConfirm)
+- [x] 12-02-PLAN.md — Usecase + Controller (student-only registration, login confirmation detection)
 
 ### Phase 13: Manual User Creation
 **Goal**: Authorized users can create individual user accounts with role assignment; created users are unconfirmed until they confirm via email
@@ -103,6 +103,6 @@ Plans:
 | 9. RLS Policy Migration | v1.1 | 2/2 | Complete | 2026-02-17 |
 | 10. Go Query Optimization | v1.1 | 2/2 | Complete | 2026-02-17 |
 | 11. Verification & Validation | v1.1 | 1/1 | Complete | 2026-02-17 |
-| 12. Auth Confirmation Flow | v1.2 | 0/2 | Planning complete | - |
+| 12. Auth Confirmation Flow | v1.2 | 2/2 | Complete | 2026-02-20 |
 | 13. Manual User Creation | v1.2 | 0/? | Not started | - |
 | 14. Excel Import & Template | v1.2 | 0/2 | Planning complete | - |
