@@ -30,7 +30,7 @@ func TestUserUsecase_GetUserByID_Success(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 
@@ -83,7 +83,7 @@ func TestUserUsecase_GetUserByID_NotFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-999"
 
@@ -113,7 +113,7 @@ func TestUserUsecase_ListUsers_Success(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	users := []dto.UserListItem{
 		{
@@ -166,7 +166,7 @@ func TestUserUsecase_ListUsers_WithSearchAndFilter(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	users := []dto.UserListItem{
 		{
@@ -213,7 +213,7 @@ func TestUserUsecase_UpdateUserProfile_Success(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 
@@ -264,7 +264,7 @@ func TestUserUsecase_UpdateUserProfile_NotFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-999"
 
@@ -298,7 +298,7 @@ func TestUserUsecase_DeleteUser_Success(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 
@@ -335,7 +335,7 @@ func TestUserUsecase_DeleteUser_NotFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-999"
 
@@ -366,7 +366,7 @@ func TestUserUsecase_GetUserPermissions_Success(t *testing.T) {
 	// Note: Casbin enforcer is skipped in tests
 	var casbinEnforcer *rbac.CasbinEnforcer
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, casbinEnforcer, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, casbinEnforcer, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 
@@ -415,7 +415,7 @@ func TestUserUsecase_UpdateUserRole_Success(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-1"
 	roleName := "admin"
@@ -464,7 +464,7 @@ func TestUserUsecase_UpdateUserRole_UserNotFound(t *testing.T) {
 	}
 	pathResolver := storage.NewPathResolver(cfg)
 
-	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, pathResolver, cfg, zerolog.Nop())
+	userUC := NewUserUsecase(mockUserRepo, mockRoleRepo, mockProjectRepo, mockModulRepo, nil, nil, pathResolver, cfg, zerolog.Nop())
 
 	userID := "user-999"
 	roleName := "admin"

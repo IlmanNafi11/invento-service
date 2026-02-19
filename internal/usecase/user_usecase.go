@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"invento-service/config"
+	"invento-service/internal/domain"
 	"invento-service/internal/dto"
 	"invento-service/internal/httputil"
 	"invento-service/internal/rbac"
@@ -11,6 +14,7 @@ import (
 	"invento-service/internal/usecase/repo"
 	"mime/multipart"
 	"strconv"
+	"strings"
 
 	apperrors "invento-service/internal/errors"
 
@@ -29,6 +33,7 @@ type UserUsecase interface {
 	DownloadUserFiles(ctx context.Context, ownerUserID string, projectIDs, modulIDs []string) (string, error)
 	GetUsersForRole(ctx context.Context, roleID uint) ([]dto.UserListItem, error)
 	BulkAssignRole(ctx context.Context, userIDs []string, roleID uint) error
+	AdminCreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.CreateUserResponse, error)
 }
 
 type userUsecase struct {
@@ -36,6 +41,7 @@ type userUsecase struct {
 	roleRepo       repo.RoleRepository
 	projectRepo    repo.ProjectRepository
 	modulRepo      repo.ModulRepository
+	authService    domain.AuthService
 	casbinEnforcer *rbac.CasbinEnforcer
 	userHelper     *storage.UserHelper
 	downloadHelper *storage.DownloadHelper
@@ -48,6 +54,7 @@ func NewUserUsecase(
 	roleRepo repo.RoleRepository,
 	projectRepo repo.ProjectRepository,
 	modulRepo repo.ModulRepository,
+	authService domain.AuthService,
 	casbinEnforcer *rbac.CasbinEnforcer,
 	pathResolver *storage.PathResolver,
 	cfg *config.Config,
@@ -58,6 +65,7 @@ func NewUserUsecase(
 		roleRepo:       roleRepo,
 		projectRepo:    projectRepo,
 		modulRepo:      modulRepo,
+		authService:    authService,
 		casbinEnforcer: casbinEnforcer,
 		userHelper:     storage.NewUserHelper(pathResolver, cfg),
 		downloadHelper: storage.NewDownloadHelper(pathResolver, logger),
@@ -367,4 +375,81 @@ func (uc *userUsecase) BulkAssignRole(ctx context.Context, userIDs []string, rol
 	}
 
 	return nil
+}
+
+const mahasiswaEmailDomain = "@student.polije.ac.id"
+
+func generateRandomPassword() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func (uc *userUsecase) AdminCreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.CreateUserResponse, error) {
+	role, err := uc.roleRepo.GetByID(ctx, uint(req.RoleID))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperrors.NewNotFoundError("Role")
+		}
+		return nil, apperrors.NewInternalError(err)
+	}
+
+	if strings.EqualFold(role.NamaRole, "Mahasiswa") && !strings.HasSuffix(strings.ToLower(req.Email), mahasiswaEmailDomain) {
+		return nil, apperrors.NewValidationError("Email mahasiswa harus menggunakan domain "+mahasiswaEmailDomain, nil)
+	}
+
+	password := ""
+	var generatedPassword *string
+	if req.Password == nil || *req.Password == "" {
+		pwd, err := generateRandomPassword()
+		if err != nil {
+			return nil, apperrors.NewInternalError(err)
+		}
+		password = pwd
+		generatedPassword = &pwd
+	} else {
+		password = *req.Password
+	}
+
+	supabaseUserID, err := uc.authService.AdminCreateUser(ctx, req.Email, password)
+	if err != nil {
+		return nil, err
+	}
+
+	user := domain.User{
+		ID:       supabaseUserID,
+		Email:    req.Email,
+		Name:     req.Name,
+		RoleID:   &req.RoleID,
+		IsActive: true,
+	}
+	if err := uc.userRepo.Create(ctx, &user); err != nil {
+		_ = uc.authService.DeleteUser(ctx, supabaseUserID)
+		return nil, apperrors.NewInternalError(err)
+	}
+
+	if uc.casbinEnforcer != nil {
+		if err := uc.casbinEnforcer.AddRoleForUser(supabaseUserID, role.NamaRole); err != nil {
+			_ = uc.userRepo.Delete(ctx, supabaseUserID)
+			_ = uc.authService.DeleteUser(ctx, supabaseUserID)
+			return nil, apperrors.NewInternalError(err)
+		}
+		if err := uc.casbinEnforcer.SavePolicy(); err != nil {
+			_ = uc.userRepo.Delete(ctx, supabaseUserID)
+			_ = uc.authService.DeleteUser(ctx, supabaseUserID)
+			return nil, apperrors.NewInternalError(err)
+		}
+	}
+
+	return &dto.CreateUserResponse{
+		ID:                supabaseUserID,
+		Email:             req.Email,
+		Name:              req.Name,
+		RoleID:            req.RoleID,
+		RoleName:          role.NamaRole,
+		GeneratedPassword: generatedPassword,
+		IsActive:          true,
+	}, nil
 }
