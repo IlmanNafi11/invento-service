@@ -20,6 +20,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, userID string) error
 	GetByRoleID(ctx context.Context, roleID uint) ([]dto.UserListItem, error)
 	BulkUpdateRole(ctx context.Context, userIDs []string, roleID uint) error
+	FindByEmails(ctx context.Context, emails []string) ([]domain.User, error)
 }
 
 type RoleRepository interface {

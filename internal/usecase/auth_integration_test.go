@@ -151,6 +151,15 @@ func (r *integrationUserRepository) BulkUpdateRole(ctx context.Context, userIDs 
 	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id IN ?", userIDs).Update("role_id", roleID).Error
 }
 
+func (r *integrationUserRepository) FindByEmails(ctx context.Context, emails []string) ([]domain.User, error) {
+	var users []domain.User
+	if len(emails) == 0 {
+		return users, nil
+	}
+	err := r.db.WithContext(ctx).Where("email IN ?", emails).Find(&users).Error
+	return users, err
+}
+
 type integrationRoleRepository struct {
 	db *gorm.DB
 }

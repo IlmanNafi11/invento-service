@@ -5,20 +5,24 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
 	"invento-service/internal/rbac"
 	"invento-service/internal/storage"
 	"invento-service/internal/usecase/repo"
 	"mime/multipart"
+	"regexp"
 	"strconv"
 	"strings"
 
 	apperrors "invento-service/internal/errors"
 
 	"github.com/rs/zerolog"
+	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +38,7 @@ type UserUsecase interface {
 	GetUsersForRole(ctx context.Context, roleID uint) ([]dto.UserListItem, error)
 	BulkAssignRole(ctx context.Context, userIDs []string, roleID uint) error
 	AdminCreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.CreateUserResponse, error)
+	BulkImportUsers(ctx context.Context, file *excelize.File, req dto.ImportUsersRequest) (*dto.ImportReport, error)
 }
 
 type userUsecase struct {
@@ -46,6 +51,7 @@ type userUsecase struct {
 	userHelper     *storage.UserHelper
 	downloadHelper *storage.DownloadHelper
 	pathResolver   *storage.PathResolver
+	excelHelper    *helper.ExcelHelper
 	config         *config.Config
 }
 
@@ -70,6 +76,7 @@ func NewUserUsecase(
 		userHelper:     storage.NewUserHelper(pathResolver, cfg),
 		downloadHelper: storage.NewDownloadHelper(pathResolver, logger),
 		pathResolver:   pathResolver,
+		excelHelper:    helper.NewExcelHelper(),
 		config:         cfg,
 	}
 }
@@ -452,4 +459,240 @@ func (uc *userUsecase) AdminCreateUser(ctx context.Context, req dto.CreateUserRe
 		GeneratedPassword: generatedPassword,
 		IsActive:          true,
 	}, nil
+}
+
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+
+func (uc *userUsecase) BulkImportUsers(ctx context.Context, file *excelize.File, req dto.ImportUsersRequest) (*dto.ImportReport, error) {
+	rows, err := uc.excelHelper.ParseImportFile(file)
+	if err != nil {
+		return nil, apperrors.NewValidationError(err.Error(), err)
+	}
+
+	report := &dto.ImportReport{
+		TotalBaris: len(rows),
+		Detail:     make([]dto.ImportReportRow, 0, len(rows)),
+	}
+
+	if len(rows) == 0 {
+		return report, nil
+	}
+
+	emails := make([]string, 0, len(rows))
+	for _, row := range rows {
+		if row.Email != "" {
+			emails = append(emails, strings.ToLower(row.Email))
+		}
+	}
+
+	existingUsers, err := uc.userRepo.FindByEmails(ctx, emails)
+	if err != nil {
+		return nil, apperrors.NewInternalError(err)
+	}
+	existingEmails := make(map[string]bool, len(existingUsers))
+	for _, u := range existingUsers {
+		existingEmails[strings.ToLower(u.Email)] = true
+	}
+
+	seenEmails := make(map[string]bool)
+
+	for _, row := range rows {
+		emailLower := strings.ToLower(row.Email)
+
+		if row.Email == "" || row.Nama == "" {
+			report.Detail = append(report.Detail, dto.ImportReportRow{
+				Baris:  row.RowNumber,
+				Email:  row.Email,
+				Nama:   row.Nama,
+				Status: "dilewati",
+				Alasan: "Email dan Nama wajib diisi",
+			})
+			report.Dilewati++
+			continue
+		}
+
+		if !emailRegex.MatchString(row.Email) {
+			report.Detail = append(report.Detail, dto.ImportReportRow{
+				Baris:  row.RowNumber,
+				Email:  row.Email,
+				Nama:   row.Nama,
+				Status: "dilewati",
+				Alasan: "Format email tidak valid",
+			})
+			report.Dilewati++
+			continue
+		}
+
+		if seenEmails[emailLower] {
+			report.Detail = append(report.Detail, dto.ImportReportRow{
+				Baris:  row.RowNumber,
+				Email:  row.Email,
+				Nama:   row.Nama,
+				Status: "dilewati",
+				Alasan: "Email duplikat dalam file",
+			})
+			report.Dilewati++
+			continue
+		}
+
+		if existingEmails[emailLower] {
+			report.Detail = append(report.Detail, dto.ImportReportRow{
+				Baris:  row.RowNumber,
+				Email:  row.Email,
+				Nama:   row.Nama,
+				Status: "dilewati",
+				Alasan: "Email sudah terdaftar",
+			})
+			report.Dilewati++
+			continue
+		}
+
+		var role *domain.Role
+		var roleID int
+		if row.Role != "" {
+			role, err = uc.roleRepo.GetByName(ctx, row.Role)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					report.Detail = append(report.Detail, dto.ImportReportRow{
+						Baris:  row.RowNumber,
+						Email:  row.Email,
+						Nama:   row.Nama,
+						Status: "dilewati",
+						Alasan: fmt.Sprintf("Role '%s' tidak ditemukan", row.Role),
+					})
+					report.Dilewati++
+					continue
+				}
+				return nil, apperrors.NewInternalError(err)
+			}
+			roleID = int(role.ID)
+		} else {
+			roleID = req.DefaultRoleID
+			role, err = uc.roleRepo.GetByID(ctx, uint(roleID))
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					report.Detail = append(report.Detail, dto.ImportReportRow{
+						Baris:  row.RowNumber,
+						Email:  row.Email,
+						Nama:   row.Nama,
+						Status: "dilewati",
+						Alasan: "Default role tidak ditemukan",
+					})
+					report.Dilewati++
+					continue
+				}
+				return nil, apperrors.NewInternalError(err)
+			}
+		}
+
+		if strings.EqualFold(role.NamaRole, "Mahasiswa") && !strings.HasSuffix(emailLower, mahasiswaEmailDomain) {
+			report.Detail = append(report.Detail, dto.ImportReportRow{
+				Baris:  row.RowNumber,
+				Email:  row.Email,
+				Nama:   row.Nama,
+				Status: "dilewati",
+				Alasan: "Mahasiswa harus menggunakan email @student.polije.ac.id",
+			})
+			report.Dilewati++
+			continue
+		}
+
+		if row.JenisKelamin != "" && row.JenisKelamin != "Laki-laki" && row.JenisKelamin != "Perempuan" {
+			report.Detail = append(report.Detail, dto.ImportReportRow{
+				Baris:  row.RowNumber,
+				Email:  row.Email,
+				Nama:   row.Nama,
+				Status: "dilewati",
+				Alasan: "Jenis Kelamin harus 'Laki-laki' atau 'Perempuan'",
+			})
+			report.Dilewati++
+			continue
+		}
+
+		password := row.Password
+		var reportPassword string
+		if password == "" {
+			pwd, genErr := generateRandomPassword()
+			if genErr != nil {
+				return nil, apperrors.NewInternalError(genErr)
+			}
+			password = pwd
+			reportPassword = pwd
+		}
+
+		supabaseUserID, createErr := uc.authService.AdminCreateUser(ctx, row.Email, password)
+		if createErr != nil {
+			report.Detail = append(report.Detail, dto.ImportReportRow{
+				Baris:  row.RowNumber,
+				Email:  row.Email,
+				Nama:   row.Nama,
+				Status: "dilewati",
+				Alasan: fmt.Sprintf("Gagal membuat akun: %s", createErr.Error()),
+			})
+			report.Dilewati++
+			continue
+		}
+
+		var jenisKelaminPtr *string
+		if row.JenisKelamin != "" {
+			jenisKelaminPtr = &row.JenisKelamin
+		}
+
+		user := domain.User{
+			ID:           supabaseUserID,
+			Email:        row.Email,
+			Name:         row.Nama,
+			JenisKelamin: jenisKelaminPtr,
+			RoleID:       &roleID,
+			IsActive:     true,
+		}
+		if dbErr := uc.userRepo.Create(ctx, &user); dbErr != nil {
+			_ = uc.authService.DeleteUser(ctx, supabaseUserID)
+			report.Detail = append(report.Detail, dto.ImportReportRow{
+				Baris:  row.RowNumber,
+				Email:  row.Email,
+				Nama:   row.Nama,
+				Status: "dilewati",
+				Alasan: fmt.Sprintf("Gagal menyimpan data: %s", dbErr.Error()),
+			})
+			report.Dilewati++
+			continue
+		}
+
+		if uc.casbinEnforcer != nil {
+			if policyErr := uc.casbinEnforcer.AddRoleForUser(supabaseUserID, role.NamaRole); policyErr != nil {
+				_ = uc.userRepo.Delete(ctx, supabaseUserID)
+				_ = uc.authService.DeleteUser(ctx, supabaseUserID)
+				report.Detail = append(report.Detail, dto.ImportReportRow{
+					Baris:  row.RowNumber,
+					Email:  row.Email,
+					Nama:   row.Nama,
+					Status: "dilewati",
+					Alasan: fmt.Sprintf("Gagal menyimpan data: %s", policyErr.Error()),
+				})
+				report.Dilewati++
+				continue
+			}
+		}
+
+		seenEmails[emailLower] = true
+		existingEmails[emailLower] = true
+
+		report.Detail = append(report.Detail, dto.ImportReportRow{
+			Baris:    row.RowNumber,
+			Email:    row.Email,
+			Nama:     row.Nama,
+			Status:   "berhasil",
+			Password: reportPassword,
+		})
+		report.Berhasil++
+	}
+
+	if uc.casbinEnforcer != nil && report.Berhasil > 0 {
+		if err := uc.casbinEnforcer.SavePolicy(); err != nil {
+			return nil, apperrors.NewInternalError(err)
+		}
+	}
+
+	return report, nil
 }

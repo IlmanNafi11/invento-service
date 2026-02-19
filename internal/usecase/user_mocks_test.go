@@ -93,3 +93,11 @@ func (m *MockUserRepository) BulkUpdateRole(ctx context.Context, userIDs []strin
 	args := m.Called(ctx, userIDs, roleID)
 	return args.Error(0)
 }
+
+func (m *MockUserRepository) FindByEmails(ctx context.Context, emails []string) ([]domain.User, error) {
+	args := m.Called(ctx, emails)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.User), args.Error(1)
+}

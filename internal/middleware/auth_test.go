@@ -131,6 +131,10 @@ func (m *mockUserRepository) BulkUpdateRole(ctx context.Context, userIDs []strin
 	return errors.New("not implemented")
 }
 
+func (m *mockUserRepository) FindByEmails(ctx context.Context, emails []string) ([]domain.User, error) {
+	return nil, errors.New("not implemented")
+}
+
 var _ repo.UserRepository = (*mockUserRepository)(nil)
 
 func TestJWTAuthMiddleware_Creation(t *testing.T) {

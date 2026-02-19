@@ -246,3 +246,15 @@ func (r *userRepository) BulkUpdateRole(ctx context.Context, userIDs []string, r
 		Where("id IN ? AND is_active = ?", userIDs, true).
 		Update("role_id", roleID).Error
 }
+
+func (r *userRepository) FindByEmails(ctx context.Context, emails []string) ([]domain.User, error) {
+	var users []domain.User
+	if len(emails) == 0 {
+		return users, nil
+	}
+	err := r.db.WithContext(ctx).Where("email IN ?", emails).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

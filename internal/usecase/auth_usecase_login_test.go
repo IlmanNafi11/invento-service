@@ -150,6 +150,14 @@ func (m *authTestUserRepo) BulkUpdateRole(ctx context.Context, userIDs []string,
 	return args.Error(0)
 }
 
+func (m *authTestUserRepo) FindByEmails(ctx context.Context, emails []string) ([]domain.User, error) {
+	args := m.Called(emails)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]domain.User), args.Error(1)
+}
+
 type authTestRoleRepo struct {
 	mock.Mock
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/mock"
+	"github.com/xuri/excelize/v2"
 )
 
 // MockUserUsecase is a mock implementation of usecase.UserUsecase
@@ -91,6 +92,14 @@ func (m *MockUserUsecase) AdminCreateUser(ctx context.Context, req dto.CreateUse
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.CreateUserResponse), args.Error(1)
+}
+
+func (m *MockUserUsecase) BulkImportUsers(ctx context.Context, file *excelize.File, req dto.ImportUsersRequest) (*dto.ImportReport, error) {
+	args := m.Called(ctx, file, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.ImportReport), args.Error(1)
 }
 
 // Helper function to create a test app with authenticated middleware for UserController

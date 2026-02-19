@@ -1,6 +1,10 @@
 package helper
 
 import (
+	"fmt"
+	"invento-service/internal/dto"
+	"strings"
+
 	"github.com/xuri/excelize/v2"
 )
 
@@ -150,4 +154,50 @@ func (h *ExcelHelper) createGuideSheet(f *excelize.File) error {
 	f.SetColWidth(sheet, "C", "C", 60)
 
 	return nil
+}
+
+// ParseImportFile reads user data rows from the "Data Import" sheet.
+func (h *ExcelHelper) ParseImportFile(f *excelize.File) ([]dto.ImportUserRow, error) {
+	sheet := "Data Import"
+	rows, err := f.GetRows(sheet)
+	if err != nil {
+		return nil, fmt.Errorf("gagal membaca sheet '%s': %w", sheet, err)
+	}
+
+	var result []dto.ImportUserRow
+	for rowIdx, row := range rows {
+		if rowIdx == 0 {
+			continue
+		}
+
+		excelRowNumber := rowIdx + 1
+
+		email := getCellValue(row, 0)
+		nama := getCellValue(row, 1)
+		password := getCellValue(row, 2)
+		jenisKelamin := getCellValue(row, 3)
+		role := getCellValue(row, 4)
+
+		if email == "" && nama == "" && password == "" && jenisKelamin == "" && role == "" {
+			continue
+		}
+
+		result = append(result, dto.ImportUserRow{
+			RowNumber:    excelRowNumber,
+			Email:        email,
+			Nama:         nama,
+			Password:     password,
+			JenisKelamin: jenisKelamin,
+			Role:         role,
+		})
+	}
+
+	return result, nil
+}
+
+func getCellValue(row []string, index int) string {
+	if index >= len(row) {
+		return ""
+	}
+	return strings.TrimSpace(row[index])
 }
