@@ -117,7 +117,12 @@ func (uc *authUsecase) Register(ctx context.Context, req dto.RegisterRequest) (*
 
 	authResp, err := uc.authService.Register(ctx, supabaseReq)
 	if err != nil {
-		// Check if user already exists in Supabase
+		// Propagate AppError types directly (rate limit, conflict, email not confirmed, etc.)
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return nil, appErr
+		}
+		// Check if user already exists in Supabase (raw error fallback)
 		if strings.Contains(err.Error(), "already registered") || strings.Contains(err.Error(), "already exists") {
 			return nil, apperrors.NewConflictError("Email sudah terdaftar di sistem autentikasi")
 		}
