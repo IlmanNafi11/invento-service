@@ -13,6 +13,10 @@ const (
 	// Message: "Akses ditolak"
 	ErrForbidden = "FORBIDDEN_ERROR"
 
+	// ErrEmailNotConfirmed indicates unconfirmed email (HTTP 403)
+	// Message: "Email belum dikonfirmasi"
+	ErrEmailNotConfirmed = "EMAIL_NOT_CONFIRMED"
+
 	// ErrNotFound indicates resource not found (HTTP 404)
 	// Message: "Data tidak ditemukan"
 	ErrNotFound = "NOT_FOUND_ERROR"

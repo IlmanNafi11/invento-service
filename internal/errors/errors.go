@@ -64,6 +64,23 @@ func NewForbiddenError(message string) *AppError {
 	}
 }
 
+// NewEmailNotConfirmedError creates an email not confirmed error with HTTP 403 status.
+// Use when a user's email has not been confirmed yet.
+// Returns the same HTTP status as forbidden but with a distinct error code
+// so the controller/client can differentiate from generic forbidden.
+//
+// Example:
+//
+//	return errors.NewEmailNotConfirmedError("Email belum dikonfirmasi")
+func NewEmailNotConfirmedError(message string) *AppError {
+	return &AppError{
+		Code:       ErrEmailNotConfirmed,
+		Message:    message,
+		HTTPStatus: fiber.StatusForbidden,
+		Timestamp:  time.Now(),
+	}
+}
+
 // NewNotFoundError creates a not found error with HTTP 404 status.
 // The resource parameter is used to generate a default message if needed.
 //

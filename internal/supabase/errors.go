@@ -69,7 +69,7 @@ func mapSupabaseError(authErr *AuthError) *apperrors.AppError {
 	}
 
 	if IsEmailNotConfirmed(authErr) {
-		return apperrors.NewForbiddenError("Email belum dikonfirmasi")
+		return apperrors.NewEmailNotConfirmedError("Email belum dikonfirmasi. Silakan cek email Anda untuk konfirmasi akun.")
 	}
 
 	return apperrors.NewInternalError(nil)
