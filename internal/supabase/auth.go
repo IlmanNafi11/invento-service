@@ -27,11 +27,30 @@ type supabaseUser struct {
 }
 
 type supabaseAuthResponse struct {
+	// Session response fields (auto-confirmed or login)
 	AccessToken  string       `json:"access_token"`
 	RefreshToken string       `json:"refresh_token"`
 	ExpiresIn    int          `json:"expires_in"`
 	TokenType    string       `json:"token_type"`
 	User         supabaseUser `json:"user"`
+	// Flat user response fields (when email confirmation is required — no session returned)
+	ID           string                 `json:"id"`
+	Email        string                 `json:"email"`
+	UserMetadata map[string]interface{} `json:"user_metadata"`
+}
+
+func (r *supabaseAuthResponse) userID() string {
+	if r.User.ID != "" {
+		return r.User.ID
+	}
+	return r.ID
+}
+
+func (r *supabaseAuthResponse) userEmail() string {
+	if r.User.Email != "" {
+		return r.User.Email
+	}
+	return r.Email
 }
 
 func NewAuthService(authURL, serviceKey string) (*AuthService, error) {
@@ -97,8 +116,8 @@ func (s *AuthService) Register(ctx context.Context, req domain.AuthServiceRegist
 		TokenType:    authResp.TokenType,
 		ExpiresIn:    authResp.ExpiresIn,
 		User: &domain.AuthServiceUserInfo{
-			ID:    authResp.User.ID,
-			Email: authResp.User.Email,
+			ID:    authResp.userID(),
+			Email: authResp.userEmail(),
 			Name:  req.Name,
 		},
 	}, nil
