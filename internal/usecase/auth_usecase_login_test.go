@@ -8,6 +8,8 @@ import (
 	"invento-service/internal/dto"
 	"testing"
 
+	apperrors "invento-service/internal/errors"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -219,25 +221,24 @@ func TestRegister_Success(t *testing.T) {
 	mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 	mockRole.On("GetByName", "mahasiswa").Return(role, nil)
 	mockAuth.On("Register", mock.Anything, mock.MatchedBy(func(r domain.AuthServiceRegisterRequest) bool {
-		return r.Email == req.Email && r.Password == req.Password && r.Name == req.Name
+		return r.Email == req.Email && r.Password == req.Password && r.Name == req.Name && !r.AutoConfirm
 	})).Return(&domain.AuthServiceResponse{
-		AccessToken:  "access_token",
-		RefreshToken: "refresh_token",
+		AccessToken:  "",
+		RefreshToken: "",
 		TokenType:    "bearer",
-		ExpiresIn:    3600,
+		ExpiresIn:    0,
 		User:         &domain.AuthServiceUserInfo{ID: "user-uuid-123", Email: req.Email, Name: req.Name},
 	}, nil)
 	mockUser.On("Create", mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == req.Email && u.Name == req.Name && u.ID == "user-uuid-123"
 	})).Return(nil)
 
-	refreshToken, authResp, err := uc.Register(context.Background(), req)
+	result, err := uc.Register(context.Background(), req)
 
 	assert.NoError(t, err)
-	assert.NotNil(t, authResp)
-	assert.Equal(t, "refresh_token", refreshToken)
-	assert.Equal(t, "access_token", authResp.AccessToken)
-	assert.Equal(t, req.Email, authResp.User.Email)
+	assert.NotNil(t, result)
+	assert.True(t, result.NeedsConfirmation)
+	assert.Contains(t, result.Message, "konfirmasi")
 
 	mockAuth.AssertCalled(t, "Register", mock.Anything, mock.Anything)
 	mockUser.AssertCalled(t, "Create", mock.Anything)
@@ -267,11 +268,10 @@ func TestRegister_SupabaseFails(t *testing.T) {
 	mockRole.On("GetByName", "mahasiswa").Return(role, nil)
 	mockAuth.On("Register", mock.Anything, mock.Anything).Return(nil, errors.New("supabase error"))
 
-	refreshToken, authResp, err := uc.Register(context.Background(), req)
+	result, err := uc.Register(context.Background(), req)
 
 	assert.Error(t, err)
-	assert.Nil(t, authResp)
-	assert.Empty(t, refreshToken)
+	assert.Nil(t, result)
 
 	mockAuth.AssertCalled(t, "Register", mock.Anything, mock.Anything)
 	mockUser.AssertNotCalled(t, "Create", mock.Anything)
@@ -307,11 +307,10 @@ func TestRegister_LocalDBFails_RollbackSupabaseUser(t *testing.T) {
 	mockUser.On("Create", mock.Anything).Return(errors.New("database error"))
 	mockAuth.On("DeleteUser", mock.Anything, supabaseUserID).Return(nil)
 
-	refreshToken, authResp, err := uc.Register(context.Background(), req)
+	result, err := uc.Register(context.Background(), req)
 
 	assert.Error(t, err)
-	assert.Nil(t, authResp)
-	assert.Empty(t, refreshToken)
+	assert.Nil(t, result)
 
 	mockAuth.AssertCalled(t, "Register", mock.Anything, mock.Anything)
 	mockUser.AssertCalled(t, "Create", mock.Anything)
@@ -336,11 +335,10 @@ func TestRegister_EmailAlreadyExists(t *testing.T) {
 	existingUser := &domain.User{ID: "existing-user", Email: req.Email}
 	mockUser.On("GetByEmail", req.Email).Return(existingUser, nil)
 
-	refreshToken, authResp, err := uc.Register(context.Background(), req)
+	result, err := uc.Register(context.Background(), req)
 
 	assert.Error(t, err)
-	assert.Nil(t, authResp)
-	assert.Empty(t, refreshToken)
+	assert.Nil(t, result)
 	assert.Contains(t, err.Error(), "sudah terdaftar")
 
 	mockAuth.AssertNotCalled(t, "Register", mock.Anything, mock.Anything)
@@ -361,12 +359,35 @@ func TestRegister_InvalidEmail(t *testing.T) {
 		Password: "password123",
 	}
 
-	refreshToken, authResp, err := uc.Register(context.Background(), req)
+	result, err := uc.Register(context.Background(), req)
 
 	assert.Error(t, err)
-	assert.Nil(t, authResp)
-	assert.Empty(t, refreshToken)
+	assert.Nil(t, result)
 	assert.Contains(t, err.Error(), "polije.ac.id")
+
+	mockAuth.AssertNotCalled(t, "Register", mock.Anything, mock.Anything)
+}
+
+func TestRegister_TeacherEmailRejected(t *testing.T) {
+	t.Parallel()
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
+
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
+
+	req := dto.RegisterRequest{
+		Name:     "Teacher User",
+		Email:    "teacher@teacher.polije.ac.id",
+		Password: "password123",
+	}
+
+	result, err := uc.Register(context.Background(), req)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "mahasiswa")
 
 	mockAuth.AssertNotCalled(t, "Register", mock.Anything, mock.Anything)
 }
@@ -483,5 +504,38 @@ func TestLogin_SupabaseFails(t *testing.T) {
 	assert.Contains(t, err.Error(), "salah")
 
 	mockAuth.AssertCalled(t, "Login", mock.Anything, req.Email, req.Password)
+	mockUser.AssertNotCalled(t, "GetByEmail", mock.Anything)
+}
+
+func TestLogin_EmailNotConfirmed_ResendsAndReturnsError(t *testing.T) {
+	t.Parallel()
+	mockAuth := new(MockAuthService)
+	mockUser := new(authTestUserRepo)
+	mockRole := new(authTestRoleRepo)
+	cfg := newTestConfig()
+
+	uc := NewAuthUsecaseWithDeps(mockUser, mockRole, mockAuth, cfg, zerolog.Nop())
+
+	req := dto.AuthRequest{
+		Email:    "unconfirmed@student.polije.ac.id",
+		Password: "password123",
+	}
+
+	mockAuth.On("Login", mock.Anything, req.Email, req.Password).Return(nil, apperrors.NewEmailNotConfirmedError("Email belum dikonfirmasi"))
+	mockAuth.On("ResendConfirmation", mock.Anything, req.Email).Return(nil)
+
+	refreshToken, authResp, err := uc.Login(context.Background(), req)
+
+	assert.Error(t, err)
+	assert.Nil(t, authResp)
+	assert.Empty(t, refreshToken)
+
+	var appErr *apperrors.AppError
+	assert.ErrorAs(t, err, &appErr)
+	assert.Equal(t, apperrors.ErrEmailNotConfirmed, appErr.Code)
+	assert.Contains(t, appErr.Message, "konfirmasi")
+
+	mockAuth.AssertCalled(t, "Login", mock.Anything, req.Email, req.Password)
+	mockAuth.AssertCalled(t, "ResendConfirmation", mock.Anything, req.Email)
 	mockUser.AssertNotCalled(t, "GetByEmail", mock.Anything)
 }

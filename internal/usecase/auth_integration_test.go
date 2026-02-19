@@ -275,12 +275,12 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 		// Setup
 		supabaseUserID := "supabase-user-uuid-123"
 		suite.mockAuth.On("Register", mock.Anything, mock.MatchedBy(func(r domain.AuthServiceRegisterRequest) bool {
-			return r.Email == "test@student.polije.ac.id" && r.Password == "password123"
+			return r.Email == "test@student.polije.ac.id" && r.Password == "password123" && !r.AutoConfirm
 		})).Return(&domain.AuthServiceResponse{
-			AccessToken:  "mock_access_token",
-			RefreshToken: "mock_refresh_token",
+			AccessToken:  "",
+			RefreshToken: "",
 			TokenType:    "bearer",
-			ExpiresIn:    3600,
+			ExpiresIn:    0,
 			User: &domain.AuthServiceUserInfo{
 				ID:    supabaseUserID,
 				Email: "test@student.polije.ac.id",
@@ -295,15 +295,13 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 			Password: "password123",
 		}
 
-		refreshToken, authResp, err := suite.authUsecase.Register(context.Background(), req)
+		result, err := suite.authUsecase.Register(context.Background(), req)
 
 		// Verify: No error and correct response
 		require.NoError(t, err)
-		assert.NotNil(t, authResp)
-		assert.Equal(t, "mock_refresh_token", refreshToken)
-		assert.Equal(t, "mock_access_token", authResp.AccessToken)
-		assert.Equal(t, "Test User", authResp.User.Name)
-		assert.Equal(t, "test@student.polije.ac.id", authResp.User.Email)
+		assert.NotNil(t, result)
+		assert.True(t, result.NeedsConfirmation)
+		assert.Contains(t, result.Message, "konfirmasi")
 
 		// Verify: User was created in database
 		savedUser, err := suite.userRepo.GetByEmail(context.Background(), "test@student.polije.ac.id")
@@ -329,12 +327,11 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 			Password: "password123",
 		}
 
-		refreshToken, authResp, err := suite.authUsecase.Register(context.Background(), req)
+		result, err := suite.authUsecase.Register(context.Background(), req)
 
 		// Verify: Should return conflict error
 		require.Error(t, err)
-		assert.Nil(t, authResp)
-		assert.Empty(t, refreshToken)
+		assert.Nil(t, result)
 
 		var appErr *apperrors.AppError
 		assert.ErrorAs(t, err, &appErr)
@@ -349,13 +346,26 @@ func TestAuthIntegration_RegisterFlow(t *testing.T) {
 			Password: "password123",
 		}
 
-		refreshToken, authResp, err := suite.authUsecase.Register(context.Background(), req)
+		result, err := suite.authUsecase.Register(context.Background(), req)
 
 		// Verify: Should return validation error
 		require.Error(t, err)
-		assert.Nil(t, authResp)
-		assert.Empty(t, refreshToken)
+		assert.Nil(t, result)
 		assert.Contains(t, err.Error(), "polije.ac.id")
+	})
+
+	t.Run("RegisterFlow_TeacherEmailRejected", func(t *testing.T) {
+		req := dto.RegisterRequest{
+			Name:     "Teacher User",
+			Email:    "teacher@teacher.polije.ac.id",
+			Password: "password123",
+		}
+
+		result, err := suite.authUsecase.Register(context.Background(), req)
+
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "mahasiswa")
 	})
 }
 

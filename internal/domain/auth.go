@@ -27,6 +27,13 @@ type AuthServiceRegisterRequest struct {
 	AutoConfirm bool   `json:"-"`
 }
 
+// RegisterResult holds the result of a registration operation.
+// NeedsConfirmation indicates whether the user must confirm their email before logging in.
+type RegisterResult struct {
+	NeedsConfirmation bool
+	Message           string
+}
+
 type AuthServiceLoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`

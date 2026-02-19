@@ -20,7 +20,7 @@ import (
 )
 
 type AuthUsecase interface {
-	Register(ctx context.Context, req dto.RegisterRequest) (string, *dto.AuthResponse, error)
+	Register(ctx context.Context, req dto.RegisterRequest) (*domain.RegisterResult, error)
 	Login(ctx context.Context, req dto.AuthRequest) (string, *dto.AuthResponse, error)
 	RefreshToken(ctx context.Context, refreshToken string) (string, *dto.RefreshTokenResponse, error)
 	RequestPasswordReset(ctx context.Context, req dto.ResetPasswordRequest) error
@@ -78,41 +78,50 @@ func NewAuthUsecaseWithDeps(
 	}
 }
 
-func (uc *authUsecase) Register(ctx context.Context, req dto.RegisterRequest) (string, *dto.AuthResponse, error) {
+func (uc *authUsecase) Register(ctx context.Context, req dto.RegisterRequest) (*domain.RegisterResult, error) {
 	emailInfo, err := validatePolijeEmail(req.Email)
 	if err != nil {
-		return "", nil, apperrors.NewValidationError(err.Error(), err)
+		return nil, apperrors.NewValidationError(err.Error(), err)
+	}
+
+	// Self-registration restricted to student email domain only (AUTH-06)
+	if emailInfo.RoleName != "mahasiswa" {
+		return nil, apperrors.NewValidationError(
+			"Pendaftaran mandiri hanya tersedia untuk email mahasiswa (@student.polije.ac.id)",
+			nil,
+		)
 	}
 
 	// Check if user already exists locally
 	existingUser, _ := uc.userRepo.GetByEmail(ctx, req.Email)
 	if existingUser != nil {
-		return "", nil, apperrors.NewConflictError("Email sudah terdaftar")
+		return nil, apperrors.NewConflictError("Email sudah terdaftar")
 	}
 
 	// Get role for the user
 	role, err := uc.roleRepo.GetByName(ctx, emailInfo.RoleName)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", nil, apperrors.NewNotFoundError("Role " + emailInfo.RoleName)
+			return nil, apperrors.NewNotFoundError("Role " + emailInfo.RoleName)
 		}
-		return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: get role: %w", err))
+		return nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: get role: %w", err))
 	}
 
-	// Register with Supabase
+	// Register with Supabase (AutoConfirm=false: requires email confirmation)
 	supabaseReq := domain.AuthServiceRegisterRequest{
-		Email:    req.Email,
-		Password: req.Password,
-		Name:     req.Name,
+		Email:       req.Email,
+		Password:    req.Password,
+		Name:        req.Name,
+		AutoConfirm: false,
 	}
 
 	authResp, err := uc.authService.Register(ctx, supabaseReq)
 	if err != nil {
 		// Check if user already exists in Supabase
 		if strings.Contains(err.Error(), "already registered") || strings.Contains(err.Error(), "already exists") {
-			return "", nil, apperrors.NewConflictError("Email sudah terdaftar di sistem autentikasi")
+			return nil, apperrors.NewConflictError("Email sudah terdaftar di sistem autentikasi")
 		}
-		return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: supabase register: %w", err))
+		return nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: supabase register: %w", err))
 	}
 
 	// Create user in local database with Supabase user ID
@@ -131,36 +140,28 @@ func (uc *authUsecase) Register(ctx context.Context, req dto.RegisterRequest) (s
 		if deleteErr := uc.authService.DeleteUser(ctx, authResp.User.ID); deleteErr != nil {
 			uc.logger.Error().Err(deleteErr).Str("supabase_user_id", authResp.User.ID).Msg("failed to rollback Supabase user deletion")
 		}
-		return "", nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: create local user: %w", err))
+		return nil, apperrors.NewInternalError(fmt.Errorf("AuthUsecase.Register: create local user: %w", err))
 	}
 
-	user.Role = role
-
-	roleName := ""
-	if user.Role != nil {
-		roleName = user.Role.NamaRole
-	}
-
-	domainAuthResp := &dto.AuthResponse{
-		User: &dto.AuthUserResponse{
-			ID:        user.ID,
-			Email:     user.Email,
-			Name:      user.Name,
-			Role:      roleName,
-			CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		},
-		AccessToken: authResp.AccessToken,
-		TokenType:   authResp.TokenType,
-		ExpiresIn:   authResp.ExpiresIn,
-		ExpiresAt:   time.Now().Add(time.Duration(authResp.ExpiresIn) * time.Second).Unix(),
-	}
-
-	return authResp.RefreshToken, domainAuthResp, nil
+	return &domain.RegisterResult{
+		NeedsConfirmation: true,
+		Message:           "Registrasi berhasil! Silakan cek email Anda untuk konfirmasi akun sebelum login.",
+	}, nil
 }
 
 func (uc *authUsecase) Login(ctx context.Context, req dto.AuthRequest) (string, *dto.AuthResponse, error) {
 	authResp, err := uc.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) && appErr.Code == apperrors.ErrEmailNotConfirmed {
+			resendErr := uc.authService.ResendConfirmation(ctx, req.Email)
+			if resendErr != nil {
+				uc.logger.Warn().Err(resendErr).Str("email", req.Email).Msg("Gagal mengirim ulang email konfirmasi")
+			}
+			return "", nil, apperrors.NewEmailNotConfirmedError(
+				"Email belum dikonfirmasi. Email konfirmasi telah dikirim ulang, silakan cek inbox Anda.",
+			)
+		}
 		return "", nil, apperrors.NewUnauthorizedError("Email atau password salah")
 	}
 

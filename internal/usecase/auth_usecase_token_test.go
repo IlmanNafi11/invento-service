@@ -47,12 +47,11 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 		mockRole.On("GetByName", "mahasiswa").Return(nil, gorm.ErrRecordNotFound)
 
-		refreshToken, authResp, err := uc.Register(context.Background(), req)
+		result, err := uc.Register(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Role mahasiswa")
-		assert.Nil(t, authResp)
-		assert.Empty(t, refreshToken)
+		assert.Nil(t, result)
 		mockAuth.AssertNotCalled(t, "Register", mock.Anything, mock.Anything)
 	})
 
@@ -73,12 +72,11 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 		mockRole.On("GetByName", "mahasiswa").Return(nil, errors.New("role query failed"))
 
-		refreshToken, authResp, err := uc.Register(context.Background(), req)
+		result, err := uc.Register(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
-		assert.Nil(t, authResp)
-		assert.Empty(t, refreshToken)
+		assert.Nil(t, result)
 		mockAuth.AssertNotCalled(t, "Register", mock.Anything, mock.Anything)
 	})
 
@@ -101,12 +99,11 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockRole.On("GetByName", "mahasiswa").Return(role, nil)
 		mockAuth.On("Register", mock.Anything, mock.Anything).Return(nil, errors.New("user already registered"))
 
-		refreshToken, authResp, err := uc.Register(context.Background(), req)
+		result, err := uc.Register(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Email sudah terdaftar di sistem autentikasi")
-		assert.Nil(t, authResp)
-		assert.Empty(t, refreshToken)
+		assert.Nil(t, result)
 	})
 
 	t.Run("Register_LocalCreateFailsWithNonAuthError", func(t *testing.T) {
@@ -127,21 +124,20 @@ func TestAuth_EdgeCases(t *testing.T) {
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 		mockRole.On("GetByName", "mahasiswa").Return(role, nil)
 		mockAuth.On("Register", mock.Anything, mock.Anything).Return(&domain.AuthServiceResponse{
-			AccessToken:  "access_token",
-			RefreshToken: "refresh_token",
+			AccessToken:  "",
+			RefreshToken: "",
 			TokenType:    "bearer",
-			ExpiresIn:    3600,
+			ExpiresIn:    0,
 			User:         &domain.AuthServiceUserInfo{ID: "user-uuid-123", Email: req.Email, Name: req.Name},
 		}, nil)
 		mockUser.On("Create", mock.Anything).Return(errors.New("database write failed"))
 		mockAuth.On("DeleteUser", mock.Anything, "user-uuid-123").Return(errors.New("delete failed"))
 
-		refreshToken, authResp, err := uc.Register(context.Background(), req)
+		result, err := uc.Register(context.Background(), req)
 
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "Terjadi kesalahan pada server")
-		assert.Nil(t, authResp)
-		assert.Empty(t, refreshToken)
+		assert.Nil(t, result)
 		mockAuth.AssertCalled(t, "DeleteUser", mock.Anything, "user-uuid-123")
 	})
 
