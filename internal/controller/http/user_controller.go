@@ -371,6 +371,45 @@ func (ctrl *UserController) GetUsersForRole(c *fiber.Ctx) error {
 	return ctrl.SendSuccess(c, result, "Daftar user untuk role berhasil diambil")
 }
 
+// CreateUser handles POST /api/v1/user - Create a new user
+// @Summary Buat user baru
+// @Description Membuat akun user baru dengan email, nama, password opsional, dan role
+// @Tags User Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateUserRequest true "Data user baru"
+// @Success 201 {object} dto.SuccessResponse{data=dto.CreateUserResponse} "User berhasil dibuat"
+// @Failure 400 {object} dto.ErrorResponse "Validasi gagal"
+// @Failure 401 {object} dto.ErrorResponse "Tidak terautentikasi"
+// @Failure 403 {object} dto.ErrorResponse "Tidak memiliki izin"
+// @Failure 409 {object} dto.ErrorResponse "Email sudah terdaftar"
+// @Failure 500 {object} dto.ErrorResponse "Kesalahan server"
+// @Router /user [post]
+func (ctrl *UserController) CreateUser(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+
+	var req dto.CreateUserRequest
+	if err := c.BodyParser(&req); err != nil {
+		return ctrl.SendBadRequest(c, "Format request tidak valid")
+	}
+
+	if !ctrl.ValidateStruct(c, req) {
+		return nil // validation error response already sent
+	}
+
+	result, err := ctrl.userUsecase.AdminCreateUser(ctx, req)
+	if err != nil {
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return httputil.SendAppError(c, appErr)
+		}
+		return ctrl.SendInternalError(c)
+	}
+
+	return ctrl.SendCreated(c, result, "User berhasil dibuat")
+}
+
 // BulkAssignRole handles POST /api/v1/role/:id/users/bulk - Assign role to multiple users
 // @Summary Bulk assign role to users
 // @Description Menetapkan role tertentu ke beberapa user sekaligus berdasarkan daftar user ID
