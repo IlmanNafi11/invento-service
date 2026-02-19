@@ -32,10 +32,10 @@ func TestUserController_UpdateUserRole_Success(t *testing.T) {
 		Role: "admin",
 	}
 
-	mockUserUC.On("UpdateUserRole", mock.Anything, "1", "admin").Return(nil)
+	mockUserUC.On("UpdateUserRole", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("PUT", "/api/v1/user/00000000-0000-0000-0000-000000000001/role", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
@@ -66,10 +66,10 @@ func TestUserController_UpdateUserRole_UserNotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("UpdateUserRole", mock.Anything, "999", "admin").Return(appErr)
+	mockUserUC.On("UpdateUserRole", mock.Anything, "00000000-0000-0000-0000-000000000999", "admin").Return(appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("PUT", "/api/v1/user/999/role", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("PUT", "/api/v1/user/00000000-0000-0000-0000-000000000999/role", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
@@ -89,9 +89,9 @@ func TestUserController_DeleteUser_Success(t *testing.T) {
 	app := fiber.New()
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
 
-	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(nil)
+	mockUserUC.On("DeleteUser", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(nil)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/user/1", http.NoBody)
+	req := httptest.NewRequest("DELETE", "/api/v1/user/00000000-0000-0000-0000-000000000001", http.NoBody)
 
 	resp, err := app.Test(req)
 
@@ -121,7 +121,7 @@ func TestUserController_UpdateUserRole_InvalidRole(t *testing.T) {
 	}
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("PUT", "/api/v1/user/00000000-0000-0000-0000-000000000001/role", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
@@ -144,10 +144,10 @@ func TestUserController_UpdateUserRole_Forbidden(t *testing.T) {
 	}
 
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses untuk mengubah role ini")
-	mockUserUC.On("UpdateUserRole", mock.Anything, "1", "admin").Return(appErr)
+	mockUserUC.On("UpdateUserRole", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("PUT", "/api/v1/user/00000000-0000-0000-0000-000000000001/role", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
@@ -168,9 +168,9 @@ func TestUserController_DeleteUser_Forbidden(t *testing.T) {
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
 
 	appErr := apperrors.NewForbiddenError("Anda tidak memiliki akses untuk menghapus user ini")
-	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(appErr)
+	mockUserUC.On("DeleteUser", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(appErr)
 
-	req := httptest.NewRequest("DELETE", "/api/v1/user/1", http.NoBody)
+	req := httptest.NewRequest("DELETE", "/api/v1/user/00000000-0000-0000-0000-000000000001", http.NoBody)
 
 	resp, err := app.Test(req)
 
@@ -189,9 +189,9 @@ func TestUserController_DeleteUser_InternalError(t *testing.T) {
 	app := fiber.New()
 	app.Delete("/api/v1/user/:id", controller.DeleteUser)
 
-	mockUserUC.On("DeleteUser", mock.Anything, "1").Return(errors.New("database error"))
+	mockUserUC.On("DeleteUser", mock.Anything, "00000000-0000-0000-0000-000000000001").Return(errors.New("database error"))
 
-	req := httptest.NewRequest("DELETE", "/api/v1/user/1", http.NoBody)
+	req := httptest.NewRequest("DELETE", "/api/v1/user/00000000-0000-0000-0000-000000000001", http.NoBody)
 
 	resp, err := app.Test(req)
 
@@ -214,10 +214,10 @@ func TestUserController_UpdateUserRole_InternalError(t *testing.T) {
 		Role: "admin",
 	}
 
-	mockUserUC.On("UpdateUserRole", mock.Anything, "1", "admin").Return(errors.New("database error"))
+	mockUserUC.On("UpdateUserRole", mock.Anything, "00000000-0000-0000-0000-000000000001", "admin").Return(errors.New("database error"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("PUT", "/api/v1/user/1/role", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("PUT", "/api/v1/user/00000000-0000-0000-0000-000000000001/role", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)

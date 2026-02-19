@@ -166,9 +166,9 @@ func TestUserController_GetUserFiles_Success(t *testing.T) {
 		Limit: 10,
 	}
 
-	mockUserUC.On("GetUserFiles", mock.Anything, "1", params).Return(expectedData, nil)
+	mockUserUC.On("GetUserFiles", mock.Anything, "00000000-0000-0000-0000-000000000001", params).Return(expectedData, nil)
 
-	req := app_testing.GetRequestURL("/api/v1/user/1/files", map[string]string{
+	req := app_testing.GetRequestURL("/api/v1/user/00000000-0000-0000-0000-000000000001/files", map[string]string{
 		"page":  "1",
 		"limit": "10",
 	})
@@ -218,9 +218,9 @@ func TestUserController_GetUserFiles_WithSearch(t *testing.T) {
 		Limit:  10,
 	}
 
-	mockUserUC.On("GetUserFiles", mock.Anything, "1", params).Return(expectedData, nil)
+	mockUserUC.On("GetUserFiles", mock.Anything, "00000000-0000-0000-0000-000000000001", params).Return(expectedData, nil)
 
-	req := app_testing.GetRequestURL("/api/v1/user/1/files", map[string]string{
+	req := app_testing.GetRequestURL("/api/v1/user/00000000-0000-0000-0000-000000000001/files", map[string]string{
 		"search": "project",
 		"page":   "1",
 		"limit":  "10",
@@ -260,10 +260,10 @@ func TestUserController_DownloadUserFiles_Success(t *testing.T) {
 	assert.NoError(t, err)
 	tmpFile.Close()
 
-	mockUserUC.On("DownloadUserFiles", mock.Anything, "1", []string{"1", "2"}, []string{"3", "4"}).Return(tmpFile.Name(), nil)
+	mockUserUC.On("DownloadUserFiles", mock.Anything, "00000000-0000-0000-0000-000000000001", []string{"1", "2"}, []string{"3", "4"}).Return(tmpFile.Name(), nil)
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("POST", "/api/v1/user/1/download", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("POST", "/api/v1/user/00000000-0000-0000-0000-000000000001/download", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
@@ -290,7 +290,7 @@ func TestUserController_DownloadUserFiles_EmptyIDs(t *testing.T) {
 	}
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("POST", "/api/v1/user/1/download", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("POST", "/api/v1/user/00000000-0000-0000-0000-000000000001/download", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
@@ -320,10 +320,10 @@ func TestUserController_DownloadUserFiles_UserNotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("DownloadUserFiles", mock.Anything, "999", []string{"1", "2"}, []string{}).Return("", appErr)
+	mockUserUC.On("DownloadUserFiles", mock.Anything, "00000000-0000-0000-0000-000000000999", []string{"1", "2"}, []string{}).Return("", appErr)
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("POST", "/api/v1/user/999/download", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("POST", "/api/v1/user/00000000-0000-0000-0000-000000000999/download", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
@@ -377,9 +377,9 @@ func TestUserController_GetUserFiles_UserNotFound(t *testing.T) {
 	}
 
 	appErr := apperrors.NewNotFoundError("User tidak ditemukan")
-	mockUserUC.On("GetUserFiles", mock.Anything, "999", params).Return(nil, appErr)
+	mockUserUC.On("GetUserFiles", mock.Anything, "00000000-0000-0000-0000-000000000999", params).Return(nil, appErr)
 
-	req := app_testing.GetRequestURL("/api/v1/user/999/files", map[string]string{
+	req := app_testing.GetRequestURL("/api/v1/user/00000000-0000-0000-0000-000000000999/files", map[string]string{
 		"page":  "1",
 		"limit": "10",
 	})
@@ -405,9 +405,9 @@ func TestUserController_GetUserFiles_InternalError(t *testing.T) {
 		Limit: 10,
 	}
 
-	mockUserUC.On("GetUserFiles", mock.Anything, "1", params).Return(nil, errors.New("database error"))
+	mockUserUC.On("GetUserFiles", mock.Anything, "00000000-0000-0000-0000-000000000001", params).Return(nil, errors.New("database error"))
 
-	req := app_testing.GetRequestURL("/api/v1/user/1/files", map[string]string{
+	req := app_testing.GetRequestURL("/api/v1/user/00000000-0000-0000-0000-000000000001/files", map[string]string{
 		"page":  "1",
 		"limit": "10",
 	})
@@ -433,10 +433,10 @@ func TestUserController_DownloadUserFiles_InternalError(t *testing.T) {
 		ModulIDs:   []uint{},
 	}
 
-	mockUserUC.On("DownloadUserFiles", mock.Anything, "1", []string{"1"}, []string{}).Return("", errors.New("zip creation failed"))
+	mockUserUC.On("DownloadUserFiles", mock.Anything, "00000000-0000-0000-0000-000000000001", []string{"1"}, []string{}).Return("", errors.New("zip creation failed"))
 
 	bodyBytes, _ := json.Marshal(reqBody)
-	req := httptest.NewRequest("POST", "/api/v1/user/1/download", bytes.NewReader(bodyBytes))
+	req := httptest.NewRequest("POST", "/api/v1/user/00000000-0000-0000-0000-000000000001/download", bytes.NewReader(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)

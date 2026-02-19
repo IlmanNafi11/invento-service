@@ -267,10 +267,10 @@ func TestServer_RouteRegistration_UserRoutes(t *testing.T) {
 		path   string
 	}{
 		{"GET", "/api/v1/user/"},
-		{"PUT", "/api/v1/user/1/role"},
-		{"DELETE", "/api/v1/user/1"},
-		{"GET", "/api/v1/user/1/files"},
-		{"POST", "/api/v1/user/1/download"},
+		{"PUT", "/api/v1/user/00000000-0000-0000-0000-000000000001/role"},
+		{"DELETE", "/api/v1/user/00000000-0000-0000-0000-000000000001"},
+		{"GET", "/api/v1/user/00000000-0000-0000-0000-000000000001/files"},
+		{"POST", "/api/v1/user/00000000-0000-0000-0000-000000000001/download"},
 		{"GET", "/api/v1/user/permissions"},
 	}
 

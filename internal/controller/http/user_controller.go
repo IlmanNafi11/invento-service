@@ -72,7 +72,7 @@ func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param id path int true "User ID"
+// @Param id path string true "User ID (UUID)"
 // @Param request body dto.UpdateUserRoleRequest true "Role update request"
 // @Success 200 {object} dto.SuccessResponse
 // @Failure 400 {object} dto.ErrorResponse
@@ -82,7 +82,7 @@ func (ctrl *UserController) GetUserList(c *fiber.Ctx) error {
 // @Router /user/{id}/role [put]
 func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 	ctx := c.UserContext()
-	id, err := ctrl.ParsePathID(c)
+	userID, err := ctrl.ParsePathUUID(c)
 	if err != nil {
 		return err // error response already sent
 	}
@@ -96,7 +96,7 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 		return nil // validation error response already sent
 	}
 
-	err = ctrl.userUsecase.UpdateUserRole(ctx, strconv.FormatUint(uint64(id), 10), req.Role)
+	err = ctrl.userUsecase.UpdateUserRole(ctx, userID, req.Role)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -115,7 +115,7 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param id path int true "User ID"
+// @Param id path string true "User ID (UUID)"
 // @Success 200 {object} dto.SuccessResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 401 {object} dto.ErrorResponse
@@ -124,12 +124,12 @@ func (ctrl *UserController) UpdateUserRole(c *fiber.Ctx) error {
 // @Router /user/{id} [delete]
 func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 	ctx := c.UserContext()
-	id, err := ctrl.ParsePathID(c)
+	userID, err := ctrl.ParsePathUUID(c)
 	if err != nil {
 		return err // error response already sent
 	}
 
-	err = ctrl.userUsecase.DeleteUser(ctx, strconv.FormatUint(uint64(id), 10))
+	err = ctrl.userUsecase.DeleteUser(ctx, userID)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -148,7 +148,7 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param id path int true "User ID"
+// @Param id path string true "User ID (UUID)"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Success 200 {object} dto.SuccessResponse{data=dto.UserFilesData}
@@ -159,7 +159,7 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 // @Router /user/{id}/files [get]
 func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 	ctx := c.UserContext()
-	id, err := ctrl.ParsePathID(c)
+	userID, err := ctrl.ParsePathUUID(c)
 	if err != nil {
 		return err // error response already sent
 	}
@@ -169,7 +169,7 @@ func (ctrl *UserController) GetUserFiles(c *fiber.Ctx) error {
 		return ctrl.SendBadRequest(c, "Parameter query tidak valid")
 	}
 
-	result, err := ctrl.userUsecase.GetUserFiles(ctx, strconv.FormatUint(uint64(id), 10), params)
+	result, err := ctrl.userUsecase.GetUserFiles(ctx, userID, params)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
@@ -292,7 +292,7 @@ func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 // @Accept json
 // @Produce application/octet-stream
 // @Security BearerAuth
-// @Param id path int true "User ID"
+// @Param id path string true "User ID (UUID)"
 // @Param request body dto.DownloadUserFilesRequest true "Download request"
 // @Success 200 {file} binary
 // @Failure 400 {object} dto.ErrorResponse
@@ -302,7 +302,7 @@ func (ctrl *UserController) GetUserPermissions(c *fiber.Ctx) error {
 // @Router /user/{id}/download [post]
 func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 	ctx := c.UserContext()
-	ownerUserID, err := ctrl.ParsePathID(c)
+	ownerUserID, err := ctrl.ParsePathUUID(c)
 	if err != nil {
 		return err // error response already sent
 	}
@@ -327,7 +327,7 @@ func (ctrl *UserController) DownloadUserFiles(c *fiber.Ctx) error {
 		modulIDsStr[i] = strconv.FormatUint(uint64(id), 10)
 	}
 
-	filePath, err := ctrl.userUsecase.DownloadUserFiles(ctx, strconv.FormatUint(uint64(ownerUserID), 10), projectIDsStr, modulIDsStr)
+	filePath, err := ctrl.userUsecase.DownloadUserFiles(ctx, ownerUserID, projectIDsStr, modulIDsStr)
 	if err != nil {
 		var appErr *apperrors.AppError
 		if errors.As(err, &appErr) {
