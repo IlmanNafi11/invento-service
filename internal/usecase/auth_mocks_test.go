@@ -57,3 +57,8 @@ func (m *MockAuthService) DeleteUser(ctx context.Context, uid string) error {
 	args := m.Called(ctx, uid)
 	return args.Error(0)
 }
+
+func (m *MockAuthService) ResendConfirmation(ctx context.Context, email string) error {
+	args := m.Called(ctx, email)
+	return args.Error(0)
+}

@@ -196,7 +196,7 @@ func TestAuthService_Register(t *testing.T) {
 
 		assert.Equal(t, "user@example.com", gotBody["email"])
 		assert.Equal(t, "password123", gotBody["password"])
-		assert.Equal(t, true, gotBody["email_confirm"])
+		assert.Equal(t, false, gotBody["email_confirm"])
 		dataMap, ok := gotBody["data"].(map[string]interface{})
 		require.True(t, ok)
 		assert.Equal(t, "Budi", dataMap["name"])

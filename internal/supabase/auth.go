@@ -57,7 +57,7 @@ func (s *AuthService) Register(ctx context.Context, req domain.AuthServiceRegist
 	body := map[string]interface{}{
 		"email":         req.Email,
 		"password":      req.Password,
-		"email_confirm": true,
+		"email_confirm": req.AutoConfirm,
 		"data": map[string]interface{}{
 			"name": req.Name,
 		},
@@ -102,6 +102,36 @@ func (s *AuthService) Register(ctx context.Context, req domain.AuthServiceRegist
 			Name:  req.Name,
 		},
 	}, nil
+}
+
+func (s *AuthService) ResendConfirmation(ctx context.Context, email string) error {
+	body := map[string]string{
+		"type":  "signup",
+		"email": email,
+	}
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("gagal marshal request resend: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", s.authURL+"/resend", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return fmt.Errorf("gagal membuat request resend: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("apikey", s.serviceKey)
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("gagal mengirim request resend: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return ParseAuthError(resp)
+	}
+
+	return nil
 }
 
 func (s *AuthService) Login(ctx context.Context, email, password string) (*domain.AuthServiceResponse, error) {

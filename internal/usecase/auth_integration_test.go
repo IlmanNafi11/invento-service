@@ -70,6 +70,11 @@ func (m *IntegrationMockAuthService) DeleteUser(ctx context.Context, uid string)
 	return args.Error(0)
 }
 
+func (m *IntegrationMockAuthService) ResendConfirmation(ctx context.Context, email string) error {
+	args := m.Called(ctx, email)
+	return args.Error(0)
+}
+
 type integrationUserRepository struct {
 	db *gorm.DB
 }

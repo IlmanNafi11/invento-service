@@ -54,9 +54,9 @@ func TestParseAuthError_StatusBasedMappings(t *testing.T) {
 			name:           "403 email not confirmed via error_code",
 			statusCode:     http.StatusForbidden,
 			body:           `{"msg":"Email not confirmed","error_code":"email_not_confirmed"}`,
-			expectedCode:   apperrors.ErrForbidden,
+			expectedCode:   apperrors.ErrEmailNotConfirmed,
 			expectedStatus: http.StatusForbidden,
-			expectedMsg:    "Email belum dikonfirmasi",
+			expectedMsg:    "Email belum dikonfirmasi. Silakan cek email Anda untuk konfirmasi akun.",
 		},
 		{
 			name:           "404 user not found via error_code",

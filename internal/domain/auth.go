@@ -9,6 +9,7 @@ type AuthService interface {
 	VerifyJWT(token string) (AuthClaims, error)
 	Login(ctx context.Context, email, password string) (*AuthServiceResponse, error)
 	Register(ctx context.Context, req AuthServiceRegisterRequest) (*AuthServiceResponse, error)
+	ResendConfirmation(ctx context.Context, email string) error
 	RefreshToken(ctx context.Context, refreshToken string) (*AuthServiceResponse, error)
 	Logout(ctx context.Context, accessToken string) error
 	RequestPasswordReset(ctx context.Context, email, redirectTo string) error
@@ -20,9 +21,10 @@ type AuthClaims interface {
 }
 
 type AuthServiceRegisterRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
+	Email       string `json:"email"`
+	Password    string `json:"password"`
+	Name        string `json:"name"`
+	AutoConfirm bool   `json:"-"`
 }
 
 type AuthServiceLoginRequest struct {

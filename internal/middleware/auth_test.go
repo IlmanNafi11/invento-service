@@ -57,6 +57,10 @@ func (m *mockAuthService) DeleteUser(ctx context.Context, uid string) error {
 	return errors.New("not implemented")
 }
 
+func (m *mockAuthService) ResendConfirmation(ctx context.Context, email string) error {
+	return errors.New("not implemented")
+}
+
 func testSupabaseClaims() domain.AuthClaims {
 	return &supabase.SupabaseClaims{
 		RegisteredClaims: jwt.RegisteredClaims{Subject: "user-123"},

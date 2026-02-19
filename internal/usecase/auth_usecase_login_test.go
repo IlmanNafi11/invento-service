@@ -65,6 +65,11 @@ func (m *AuthUsecaseMockAuthService) DeleteUser(ctx context.Context, uid string)
 	return args.Error(0)
 }
 
+func (m *AuthUsecaseMockAuthService) ResendConfirmation(ctx context.Context, email string) error {
+	args := m.Called(ctx, email)
+	return args.Error(0)
+}
+
 type authTestUserRepo struct {
 	mock.Mock
 }
