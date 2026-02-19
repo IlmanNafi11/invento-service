@@ -8,6 +8,7 @@ import (
 	"invento-service/internal/controller/base"
 	"invento-service/internal/controller/http"
 	"invento-service/internal/dto"
+	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
 	"invento-service/internal/middleware"
 	"invento-service/internal/rbac"
@@ -207,7 +208,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) (*fiber.App, error) {
 	roleController := http.NewRoleController(roleUsecase, baseCtrl)
 
 	userUsecase := usecase.NewUserUsecase(userRepo, roleRepo, projectRepo, modulRepo, supabaseAuthService, casbinEnforcer, pathResolver, cfg, appLogger)
-	userController := http.NewUserController(userUsecase)
+	userController := http.NewUserController(userUsecase, helper.NewExcelHelper())
 
 	projectUsecase := usecase.NewProjectUsecase(projectRepo, fileManager)
 	projectController := http.NewProjectController(projectUsecase, cfg.Supabase.URL, casbinEnforcer)

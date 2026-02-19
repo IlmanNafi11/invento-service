@@ -3217,6 +3217,25 @@ paths:
       summary: Update user role
       tags:
       - User Management
+  /user/import/template:
+    get:
+      description: Mengunduh file Excel template untuk import user secara massal
+      produces:
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      responses:
+        "200":
+          description: Template Excel
+          schema:
+            type: file
+        "500":
+          description: Gagal membuat template
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Download template import user
+      tags:
+      - User Management
   /user/permissions:
     get:
       consumes:

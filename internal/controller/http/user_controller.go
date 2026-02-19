@@ -4,6 +4,7 @@ import (
 	"errors"
 	"invento-service/internal/controller/base"
 	"invento-service/internal/dto"
+	"invento-service/internal/helper"
 	"invento-service/internal/httputil"
 	"invento-service/internal/usecase"
 	"strconv"
@@ -22,13 +23,14 @@ import (
 type UserController struct {
 	*base.BaseController
 	userUsecase usecase.UserUsecase
+	excelHelper *helper.ExcelHelper
 }
 
-// NewUserController creates a new UserController instance
-func NewUserController(userUsecase usecase.UserUsecase) *UserController {
+func NewUserController(userUsecase usecase.UserUsecase, excelHelper *helper.ExcelHelper) *UserController {
 	return &UserController{
 		BaseController: base.NewBaseController("", nil),
 		userUsecase:    userUsecase,
+		excelHelper:    excelHelper,
 	}
 }
 
@@ -452,4 +454,30 @@ func (ctrl *UserController) BulkAssignRole(c *fiber.Ctx) error {
 	}
 
 	return ctrl.SendSuccess(c, nil, "Role berhasil ditetapkan ke user")
+}
+
+// GetImportTemplate handles GET /api/v1/user/import/template - Download import template
+// @Summary Download template import user
+// @Description Mengunduh file Excel template untuk import user secara massal
+// @Tags User Management
+// @Produce application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Success 200 {file} file "Template Excel"
+// @Failure 500 {object} dto.ErrorResponse "Gagal membuat template"
+// @Security BearerAuth
+// @Router /user/import/template [get]
+func (ctrl *UserController) GetImportTemplate(c *fiber.Ctx) error {
+	f, err := ctrl.excelHelper.GenerateImportTemplate()
+	if err != nil {
+		return ctrl.SendInternalError(c)
+	}
+	defer f.Close()
+
+	c.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Set("Content-Disposition", `attachment; filename="template_import_user.xlsx"`)
+
+	if err := f.Write(c.Response().BodyWriter()); err != nil {
+		return ctrl.SendInternalError(c)
+	}
+
+	return nil
 }

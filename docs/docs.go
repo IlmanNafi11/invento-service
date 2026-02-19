@@ -3656,6 +3656,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/import/template": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengunduh file Excel template untuk import user secara massal",
+                "produces": [
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Download template import user",
+                "responses": {
+                    "200": {
+                        "description": "Template Excel",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal membuat template",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/permissions": {
             "get": {
                 "security": [
