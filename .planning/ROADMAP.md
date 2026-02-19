@@ -68,7 +68,7 @@ Plans:
   5. Creating user with Mahasiswa role requires @student.polije.ac.id email domain — request rejected with clear error if domain doesn't match
 **Plans**: 2 plans
 Plans:
-- [ ] 13-01-PLAN.md — Foundation: DTOs, AuthService.AdminCreateUser, Supabase implementation, Usecase business logic (validation, password gen, DB+Casbin sync, rollback)
+- [x] 13-01-PLAN.md — Foundation: DTOs, AuthService.AdminCreateUser, Supabase implementation, Usecase business logic (validation, password gen, DB+Casbin sync, rollback)
 - [ ] 13-02-PLAN.md — HTTP Layer: CreateUser controller handler with Swagger annotations, route registration with RBAC, Swagger docs regeneration
 
 ### Phase 14: Excel Import & Template
@@ -104,5 +104,5 @@ Plans:
 | 10. Go Query Optimization | v1.1 | 2/2 | Complete | 2026-02-17 |
 | 11. Verification & Validation | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 12. Auth Confirmation Flow | v1.2 | 2/2 | Complete | 2026-02-20 |
-| 13. Manual User Creation | v1.2 | 0/? | Not started | - |
+| 13. Manual User Creation | v1.2 | 1/2 | In progress | - |
 | 14. Excel Import & Template | v1.2 | 0/2 | Planning complete | - |

@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** File storage yang reliable dan resource-efficient pada server terbatas (500MB RAM) -- upload, simpan, dan download file modul/project mahasiswa tanpa gagal.
-**Current focus:** v1.2 User Management & Import — Phase 12: Auth Confirmation Flow (COMPLETE)
+**Current focus:** v1.2 User Management & Import — Phase 13: Manual User Creation (IN PROGRESS)
 
 ## Current Position
 
-Phase: 12 of 14 (Auth Confirmation Flow) — COMPLETE
-Plan: 12-01 complete, 12-02 complete
-Status: Phase 12 complete, ready for Phase 13
-Last activity: 2026-02-20 — Completed phase 12 including live-testing bug fixes: case-insensitive role lookup (8fb2da1), flat Supabase signup response shape (c1049b6), AppError propagation in Register (rate limit re-wrapped as 500, fixed), AuthError.Code string→int JSON type mismatch (Supabase sends integers, caused json.Unmarshal to fail before error mapping)
+Phase: 13 of 14 (Manual User Creation) — IN PROGRESS
+Plan: 13-01 complete, 13-02 pending
+Status: Plan 13-01 complete (foundation: DTOs, AuthService, Usecase), ready for 13-02 (HTTP layer)
+Last activity: 2026-02-20 — Completed plan 13-01: CreateUser DTOs, AdminCreateUser on AuthService (Supabase Admin API with email_confirm:false), AdminCreateUser usecase with Mahasiswa domain validation, auto-password generation, DB+Casbin sync, rollback chain
 
-Progress: [███░░░░░░░] 33% (v1.2 — 2/6 plans)
+Progress: [████░░░░░░] 50% (v1.2 — 3/6 plans)
 
 ## Performance Metrics
 
 **Velocity:**
 - v1.0 plans completed: 37 (Phases 1-8)
 - v1.1 plans completed: 5 (Phases 9-11)
-- v1.2 plans completed: 2 (Phase 12)
-- Total plans: 44
+- v1.2 plans completed: 3 (Phases 12-13)
+- Total plans: 45
 
 ## Accumulated Context
 
@@ -60,5 +60,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: Phase 12 complete (all plans + live-testing bug fixes committed)
-Next action: Plan and execute Phase 13 (manual user creation)
+Stopped at: Phase 13, plan 13-01 complete
+Next action: Plan and execute 13-02 (HTTP controller, route registration, Swagger docs)
