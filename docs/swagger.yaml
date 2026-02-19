@@ -102,6 +102,41 @@ definitions:
       timestamp:
         type: string
     type: object
+  dto.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+      role_id:
+        type: integer
+    required:
+    - email
+    - name
+    - role_id
+    type: object
+  dto.CreateUserResponse:
+    properties:
+      email:
+        type: string
+      generated_password:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      role_id:
+        type: integer
+      role_name:
+        type: string
+    type: object
   dto.DatabaseService:
     properties:
       name:
@@ -2948,6 +2983,55 @@ paths:
       security:
       - BearerAuth: []
       summary: Get list of users
+      tags:
+      - User Management
+    post:
+      consumes:
+      - application/json
+      description: Membuat akun user baru dengan email, nama, password opsional, dan
+        role
+      parameters:
+      - description: Data user baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User berhasil dibuat
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateUserResponse'
+              type: object
+        "400":
+          description: Validasi gagal
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Tidak terautentikasi
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Tidak memiliki izin
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Email sudah terdaftar
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Kesalahan server
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buat user baru
       tags:
       - User Management
   /user/{id}:
