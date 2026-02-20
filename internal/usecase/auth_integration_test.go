@@ -122,6 +122,10 @@ func (r *integrationUserRepository) Create(ctx context.Context, user *domain.Use
 	return r.db.WithContext(ctx).Create(user).Error
 }
 
+func (r *integrationUserRepository) SaveOrUpdate(ctx context.Context, user *domain.User) error {
+	return r.db.WithContext(ctx).Save(user).Error
+}
+
 func (r *integrationUserRepository) GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	return nil, 0, nil
 }

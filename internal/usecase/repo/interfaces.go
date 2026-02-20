@@ -12,6 +12,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id string) (*domain.User, error)
 	GetByIDs(ctx context.Context, userIDs []string) ([]*domain.User, error)
 	Create(ctx context.Context, user *domain.User) error
+	SaveOrUpdate(ctx context.Context, user *domain.User) error
 	GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error)
 	GetProfileWithCounts(ctx context.Context, userID string) (*domain.User, int, int, error)
 	GetUserFiles(ctx context.Context, userID, search string, page, limit int) ([]dto.UserFileItem, int, error)

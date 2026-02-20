@@ -107,6 +107,10 @@ func (m *mockUserRepository) Create(ctx context.Context, user *domain.User) erro
 	return errors.New("not implemented")
 }
 
+func (m *mockUserRepository) SaveOrUpdate(ctx context.Context, user *domain.User) error {
+	return errors.New("not implemented")
+}
+
 func (m *mockUserRepository) GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	return nil, 0, errors.New("not implemented")
 }

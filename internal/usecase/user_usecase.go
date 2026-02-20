@@ -442,7 +442,7 @@ func (uc *userUsecase) createSingleUser(ctx context.Context, params createUserPa
 		RoleID:       &roleID,
 		IsActive:     true,
 	}
-	if err := uc.userRepo.Create(ctx, &user); err != nil {
+	if err := uc.userRepo.SaveOrUpdate(ctx, &user); err != nil {
 		_ = uc.authService.DeleteUser(ctx, supabaseUserID)
 		return nil, apperrors.NewInternalError(err)
 	}

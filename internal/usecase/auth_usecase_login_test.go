@@ -114,6 +114,11 @@ func (m *authTestUserRepo) Create(ctx context.Context, user *domain.User) error 
 	return args.Error(0)
 }
 
+func (m *authTestUserRepo) SaveOrUpdate(ctx context.Context, user *domain.User) error {
+	args := m.Called(user)
+	return args.Error(0)
+}
+
 func (m *authTestUserRepo) GetAll(ctx context.Context, search, filterRole string, page, limit int) ([]dto.UserListItem, int, error) {
 	args := m.Called(search, filterRole, page, limit)
 	if args.Get(0) == nil {
@@ -242,7 +247,7 @@ func TestRegister_Success(t *testing.T) {
 		ExpiresIn:    0,
 		User:         &domain.AuthServiceUserInfo{ID: "user-uuid-123", Email: req.Email, Name: req.Name},
 	}, nil)
-	mockUser.On("Create", mock.MatchedBy(func(u *domain.User) bool {
+	mockUser.On("SaveOrUpdate", mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == req.Email && u.Name == req.Name && u.ID == "user-uuid-123"
 	})).Return(nil)
 
@@ -254,7 +259,7 @@ func TestRegister_Success(t *testing.T) {
 	assert.Contains(t, result.Message, "konfirmasi")
 
 	mockAuth.AssertCalled(t, "Register", mock.Anything, mock.Anything)
-	mockUser.AssertCalled(t, "Create", mock.Anything)
+	mockUser.AssertCalled(t, "SaveOrUpdate", mock.Anything)
 	mockAuth.AssertExpectations(t)
 	mockUser.AssertExpectations(t)
 	mockRole.AssertExpectations(t)
@@ -317,7 +322,7 @@ func TestRegister_LocalDBFails_RollbackSupabaseUser(t *testing.T) {
 		ExpiresIn:    3600,
 		User:         &domain.AuthServiceUserInfo{ID: supabaseUserID, Email: req.Email, Name: req.Name},
 	}, nil)
-	mockUser.On("Create", mock.Anything).Return(errors.New("database error"))
+	mockUser.On("SaveOrUpdate", mock.Anything).Return(errors.New("database error"))
 	mockAuth.On("DeleteUser", mock.Anything, supabaseUserID).Return(nil)
 
 	result, err := uc.Register(context.Background(), req)
@@ -326,7 +331,7 @@ func TestRegister_LocalDBFails_RollbackSupabaseUser(t *testing.T) {
 	assert.Nil(t, result)
 
 	mockAuth.AssertCalled(t, "Register", mock.Anything, mock.Anything)
-	mockUser.AssertCalled(t, "Create", mock.Anything)
+	mockUser.AssertCalled(t, "SaveOrUpdate", mock.Anything)
 	mockAuth.AssertCalled(t, "DeleteUser", mock.Anything, supabaseUserID)
 }
 
@@ -476,7 +481,7 @@ func TestLogin_Success_NewUserSync(t *testing.T) {
 	}, nil)
 	mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 	mockRole.On("GetByName", "mahasiswa").Return(role, nil)
-	mockUser.On("Create", mock.MatchedBy(func(u *domain.User) bool {
+	mockUser.On("SaveOrUpdate", mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == req.Email && u.ID == "new-user-uuid"
 	})).Return(nil)
 	mockRole.On("GetByID", uint(1)).Return(role, nil)
@@ -490,7 +495,7 @@ func TestLogin_Success_NewUserSync(t *testing.T) {
 
 	mockAuth.AssertCalled(t, "Login", mock.Anything, req.Email, req.Password)
 	mockUser.AssertCalled(t, "GetByEmail", req.Email)
-	mockUser.AssertCalled(t, "Create", mock.Anything)
+	mockUser.AssertCalled(t, "SaveOrUpdate", mock.Anything)
 }
 
 func TestLogin_SupabaseFails(t *testing.T) {

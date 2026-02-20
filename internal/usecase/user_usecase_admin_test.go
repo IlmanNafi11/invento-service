@@ -55,7 +55,7 @@ func TestAdminCreateUser_Success(t *testing.T) {
 
 	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
 	mockAuthService.On("AdminCreateUser", mock.Anything, req.Email, password).Return("supabase-uid-123", nil)
-	mockUserRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.User")).Return(nil)
+	mockUserRepo.On("SaveOrUpdate", mock.Anything, mock.AnythingOfType("*domain.User")).Return(nil)
 
 	result, err := uc.AdminCreateUser(context.Background(), req)
 
@@ -184,7 +184,7 @@ func TestAdminCreateUser_DBFailure_Rollback(t *testing.T) {
 
 	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
 	mockAuthService.On("AdminCreateUser", mock.Anything, req.Email, mock.AnythingOfType("string")).Return("supabase-uid-456", nil)
-	mockUserRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.User")).Return(errors.New("db constraint violation"))
+	mockUserRepo.On("SaveOrUpdate", mock.Anything, mock.AnythingOfType("*domain.User")).Return(errors.New("db constraint violation"))
 	// Rollback: DeleteUser should be called when DB create fails
 	mockAuthService.On("DeleteUser", mock.Anything, "supabase-uid-456").Return(nil)
 
@@ -260,13 +260,13 @@ func TestBulkImportUsers_Success(t *testing.T) {
 
 	// Auth + DB for user 1
 	mockAuthService.On("AdminCreateUser", mock.Anything, "user1@student.polije.ac.id", "pass1234").Return("uid-1", nil)
-	mockUserRepo.On("Create", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
+	mockUserRepo.On("SaveOrUpdate", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == "user1@student.polije.ac.id"
 	})).Return(nil)
 
 	// Auth + DB for user 2
 	mockAuthService.On("AdminCreateUser", mock.Anything, "user2@student.polije.ac.id", "pass5678").Return("uid-2", nil)
-	mockUserRepo.On("Create", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
+	mockUserRepo.On("SaveOrUpdate", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == "user2@student.polije.ac.id"
 	})).Return(nil)
 
@@ -309,7 +309,7 @@ func TestBulkImportUsers_PartialFailure(t *testing.T) {
 
 	// User 1 succeeds
 	mockAuthService.On("AdminCreateUser", mock.Anything, "user1@student.polije.ac.id", "pass1234").Return("uid-1", nil)
-	mockUserRepo.On("Create", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
+	mockUserRepo.On("SaveOrUpdate", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == "user1@student.polije.ac.id"
 	})).Return(nil)
 
@@ -318,7 +318,7 @@ func TestBulkImportUsers_PartialFailure(t *testing.T) {
 
 	// User 3 succeeds
 	mockAuthService.On("AdminCreateUser", mock.Anything, "user3@student.polije.ac.id", "pass9012").Return("uid-3", nil)
-	mockUserRepo.On("Create", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
+	mockUserRepo.On("SaveOrUpdate", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == "user3@student.polije.ac.id"
 	})).Return(nil)
 
@@ -372,7 +372,7 @@ func TestBulkImportUsers_DuplicateEmails(t *testing.T) {
 
 	// Only the first occurrence should be created
 	mockAuthService.On("AdminCreateUser", mock.Anything, "same@student.polije.ac.id", "pass1234").Return("uid-1", nil)
-	mockUserRepo.On("Create", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
+	mockUserRepo.On("SaveOrUpdate", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == "same@student.polije.ac.id"
 	})).Return(nil)
 
@@ -428,7 +428,7 @@ func TestBulkImportUsers_ExistingUser(t *testing.T) {
 
 	// Only the new user should be created
 	mockAuthService.On("AdminCreateUser", mock.Anything, "new@student.polije.ac.id", "pass5678").Return("uid-new", nil)
-	mockUserRepo.On("Create", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
+	mockUserRepo.On("SaveOrUpdate", mock.Anything, mock.MatchedBy(func(u *domain.User) bool {
 		return u.Email == "new@student.polije.ac.id"
 	})).Return(nil)
 

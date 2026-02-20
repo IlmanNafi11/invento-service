@@ -58,6 +58,11 @@ func (m *MockUserRepository) Create(ctx context.Context, user *domain.User) erro
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) SaveOrUpdate(ctx context.Context, user *domain.User) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
 func (m *MockUserRepository) UpdateProfile(ctx context.Context, userID, name string, jenisKelamin, fotoProfil *string) error {
 	args := m.Called(ctx, userID, name, jenisKelamin, fotoProfil)
 	return args.Error(0)

@@ -130,7 +130,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 			ExpiresIn:    0,
 			User:         &domain.AuthServiceUserInfo{ID: "user-uuid-123", Email: req.Email, Name: req.Name},
 		}, nil)
-		mockUser.On("Create", mock.Anything).Return(errors.New("database write failed"))
+		mockUser.On("SaveOrUpdate", mock.Anything).Return(errors.New("database write failed"))
 		mockAuth.On("DeleteUser", mock.Anything, "user-uuid-123").Return(errors.New("delete failed"))
 
 		result, err := uc.Register(context.Background(), req)
@@ -226,7 +226,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		}, nil)
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 		mockRole.On("GetByName", "mahasiswa").Return(role, nil)
-		mockUser.On("Create", mock.MatchedBy(func(u *domain.User) bool {
+		mockUser.On("SaveOrUpdate", mock.MatchedBy(func(u *domain.User) bool {
 			return u.Name == req.Email
 		})).Return(nil)
 
@@ -293,7 +293,7 @@ func TestAuth_EdgeCases(t *testing.T) {
 		}, nil)
 		mockUser.On("GetByEmail", req.Email).Return(nil, gorm.ErrRecordNotFound)
 		mockRole.On("GetByName", "mahasiswa").Return(role, nil)
-		mockUser.On("Create", mock.Anything).Return(errors.New("insert failed"))
+		mockUser.On("SaveOrUpdate", mock.Anything).Return(errors.New("insert failed"))
 
 		refreshToken, authResp, err := uc.Login(context.Background(), req)
 

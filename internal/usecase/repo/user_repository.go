@@ -48,6 +48,12 @@ func (r *userRepository) Create(ctx context.Context, user *domain.User) error {
 	return r.db.WithContext(ctx).Create(user).Error
 }
 
+// SaveOrUpdate uses GORM's Save which performs an upsert: INSERT if PK doesn't exist, UPDATE all fields if it does.
+// This is needed because Supabase's on_auth_user_created trigger may have already created the user_profiles row.
+func (r *userRepository) SaveOrUpdate(ctx context.Context, user *domain.User) error {
+	return r.db.WithContext(ctx).Save(user).Error
+}
+
 func (r *userRepository) buildUserListQuery(ctx context.Context, search, filterRole string) *gorm.DB {
 	query := r.db.WithContext(ctx).Table("user_profiles").
 		Joins("LEFT JOIN roles ON roles.id = user_profiles.role_id").
