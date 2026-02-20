@@ -6,6 +6,7 @@ import (
 	"invento-service/config"
 	"invento-service/internal/domain"
 	"invento-service/internal/dto"
+	apperrors "invento-service/internal/errors"
 	"invento-service/internal/storage"
 	"testing"
 
@@ -148,13 +149,16 @@ func TestAdminCreateUser_AuthServiceFailure(t *testing.T) {
 	}
 
 	mockRoleRepo.On("GetByID", mock.Anything, roleID).Return(role, nil)
-	mockAuthService.On("AdminCreateUser", mock.Anything, req.Email, mock.AnythingOfType("string")).Return("", errors.New("supabase error: email already exists"))
+	authErr := apperrors.NewConflictError("Email sudah terdaftar")
+	mockAuthService.On("AdminCreateUser", mock.Anything, req.Email, mock.AnythingOfType("string")).Return("", authErr)
 
 	result, err := uc.AdminCreateUser(context.Background(), req)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "supabase error")
+	var appErr *apperrors.AppError
+	assert.True(t, errors.As(err, &appErr), "error harus berupa *apperrors.AppError")
+	assert.Contains(t, err.Error(), "Email sudah terdaftar")
 
 	mockRoleRepo.AssertExpectations(t)
 	mockAuthService.AssertExpectations(t)

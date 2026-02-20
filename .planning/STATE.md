@@ -2,10 +2,10 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-19)
+See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** File storage yang reliable dan resource-efficient pada server terbatas (500MB RAM) -- upload, simpan, dan download file modul/project mahasiswa tanpa gagal.
-**Current focus:** v1.2.1 Tech Debt Cleanup — COMPLETE
+**Current focus:** v1.2.1 milestone ARCHIVED — ready for next milestone via /gsd-new-milestone
 
 ## Current Position
 
@@ -64,9 +64,10 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 002 | Fix 500 error on GET /api/v1/user/:id/files endpoint | 2026-02-19 | 84739d5 | [002-fix-500-error-user-files-endpoint](./quick/002-fix-500-error-user-files-endpoint/) |
+| 003 | Fix 500 error on POST /api/v1/user (tambah user) — wrap raw authService errors as AppError | 2026-02-20 | TBD | [3-fix-500-error-on-post-api-v1-user-tambah](./quick/3-fix-500-error-on-post-api-v1-user-tambah/) |
 
 ## Session Continuity
 
 Last session: 2026-02-20
 Stopped at: Plan 15-02 complete — Phase 15 and v1.2.1 milestone complete
-Next action: `/gsd-complete-milestone` or start new milestone
+Next action: `/gsd-new-milestone` — start next milestone (questioning → research → requirements → roadmap)

@@ -421,7 +421,11 @@ func (uc *userUsecase) createSingleUser(ctx context.Context, params createUserPa
 
 	supabaseUserID, err := uc.authService.AdminCreateUser(ctx, params.Email, password)
 	if err != nil {
-		return nil, err
+		var appErr *apperrors.AppError
+		if errors.As(err, &appErr) {
+			return nil, err
+		}
+		return nil, apperrors.NewInternalError(err)
 	}
 
 	roleID := int(params.RoleID)
