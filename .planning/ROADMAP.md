@@ -109,7 +109,12 @@ Plans:
   1. All `NewUserUsecase(...)` calls in test files include `authService` parameter — `go test ./internal/usecase/...` passes
   2. `BulkImportUsers` delegates per-user creation to `AdminCreateUser` usecase method (or shared helper) instead of reimplementing inline
   3. `github.com/xuri/excelize/v2` is a direct dependency (not `// indirect`) in go.mod after `go mod tidy`
-**Plans**: TBD
+**Requirements:** [TD-01, TD-02, TD-03]
+**Plans:** 2 plans
+
+Plans:
+- [x] 15-01-PLAN.md — Refactor BulkImportUsers to extract shared helper + fix go.mod indirect
+- [ ] 15-02-PLAN.md — Add test coverage for AdminCreateUser & BulkImportUsers
 
 ## Progress
 
@@ -129,4 +134,4 @@ Plans:
 | 12. Auth Confirmation Flow | v1.2 | 2/2 | Complete | 2026-02-20 |
 | 13. Manual User Creation | v1.2 | Complete    | 2026-02-19 | 2026-02-20 |
 | 14. Excel Import & Template | v1.2 | Complete    | 2026-02-19 | 2026-02-20 |
-| 15. Tech Debt Cleanup | v1.2.1 | 0/0 | Planned | — |
+| 15. Tech Debt Cleanup | v1.2.1 | 1/2 | In Progress | — |

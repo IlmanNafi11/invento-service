@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-19)
 
 **Core value:** File storage yang reliable dan resource-efficient pada server terbatas (500MB RAM) -- upload, simpan, dan download file modul/project mahasiswa tanpa gagal.
-**Current focus:** v1.2 User Management & Import — SHIPPED
+**Current focus:** v1.2.1 Tech Debt Cleanup — COMPLETE
 
 ## Current Position
 
-Phase: 14 of 14 (Excel Import & Template) — COMPLETE
-Plan: 14-02 complete (2/2)
-Status: v1.2 milestone shipped — all phases (12-14) complete
-Last activity: 2026-02-20 — Completed plan 14-02: BulkImportUsers business logic, FindByEmails batch query, ParseImportFile, ImportUsers HTTP handler, POST /user/import endpoint with RBAC
+Phase: 15 of 15 (Tech Debt Cleanup) — COMPLETE
+Plan: 15-02 complete (2/2)
+Status: v1.2.1 tech debt cleanup complete
+Last activity: 2026-02-20 — Completed plan 15-02: 10 test cases for AdminCreateUser & BulkImportUsers
 
-Progress: [██████████] 100% (v1.2 — 6/6 plans)
+Progress: [██████████] 100% (v1.2.1 — 2/2 plans)
 
 ## Performance Metrics
 
@@ -22,7 +22,8 @@ Progress: [██████████] 100% (v1.2 — 6/6 plans)
 - v1.0 plans completed: 37 (Phases 1-8)
 - v1.1 plans completed: 5 (Phases 9-11)
 - v1.2 plans completed: 6 (Phases 12-14)
-- Total plans: 48
+- v1.2.1 plans completed: 2 (Phase 15)
+- Total plans: 50
 
 ## Accumulated Context
 
@@ -43,6 +44,12 @@ v1.2 decisions:
 - Teacher email restriction at Register usecase level (not validatePolijeEmail) to preserve reuse for admin-created users
 - ExcelHelper in new `internal/helper/` package (separate from `internal/httputil/`) for Excel-specific operations
 
+v1.2.1 decisions:
+- createSingleUser helper does NOT call SavePolicy — callers decide (per-user in AdminCreateUser vs batch in BulkImportUsers)
+- Helper returns actual password used so callers decide what to expose
+- Reuse existing MockAuthService from auth_mocks_test.go for admin/import tests (no duplicate mocks)
+- Pass nil casbinEnforcer in usecase tests since constructor takes concrete struct pointer
+
 ### Pending Todos
 
 None.
@@ -61,5 +68,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-20
-Stopped at: v1.2 milestone shipped — all 14 phases complete (48 plans total)
-Next action: None — v1.2 complete. Begin v1.3 planning if needed.
+Stopped at: Plan 15-02 complete — Phase 15 and v1.2.1 milestone complete
+Next action: `/gsd-complete-milestone` or start new milestone
