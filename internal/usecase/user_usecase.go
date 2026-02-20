@@ -394,6 +394,69 @@ func generateRandomPassword() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
+type createUserParams struct {
+	Email        string
+	Name         string
+	NIM          string
+	JenisKelamin string
+	Password     string
+	RoleID       uint
+	RoleName     string
+}
+
+type createUserResult struct {
+	User     domain.User
+	Password string
+}
+
+func (uc *userUsecase) createSingleUser(ctx context.Context, params createUserParams) (*createUserResult, error) {
+	password := params.Password
+	if password == "" {
+		pwd, err := generateRandomPassword()
+		if err != nil {
+			return nil, apperrors.NewInternalError(err)
+		}
+		password = pwd
+	}
+
+	supabaseUserID, err := uc.authService.AdminCreateUser(ctx, params.Email, password)
+	if err != nil {
+		return nil, err
+	}
+
+	roleID := int(params.RoleID)
+	var jenisKelaminPtr *string
+	if params.JenisKelamin != "" {
+		jenisKelaminPtr = &params.JenisKelamin
+	}
+
+	user := domain.User{
+		ID:           supabaseUserID,
+		Email:        params.Email,
+		Name:         params.Name,
+		JenisKelamin: jenisKelaminPtr,
+		RoleID:       &roleID,
+		IsActive:     true,
+	}
+	if err := uc.userRepo.Create(ctx, &user); err != nil {
+		_ = uc.authService.DeleteUser(ctx, supabaseUserID)
+		return nil, apperrors.NewInternalError(err)
+	}
+
+	if uc.casbinEnforcer != nil {
+		if err := uc.casbinEnforcer.AddRoleForUser(supabaseUserID, params.RoleName); err != nil {
+			_ = uc.userRepo.Delete(ctx, supabaseUserID)
+			_ = uc.authService.DeleteUser(ctx, supabaseUserID)
+			return nil, apperrors.NewInternalError(err)
+		}
+	}
+
+	return &createUserResult{
+		User:     user,
+		Password: password,
+	}, nil
+}
+
 func (uc *userUsecase) AdminCreateUser(ctx context.Context, req dto.CreateUserRequest) (*dto.CreateUserResponse, error) {
 	role, err := uc.roleRepo.GetByID(ctx, uint(req.RoleID))
 	if err != nil {
@@ -408,50 +471,36 @@ func (uc *userUsecase) AdminCreateUser(ctx context.Context, req dto.CreateUserRe
 	}
 
 	password := ""
-	var generatedPassword *string
-	if req.Password == nil || *req.Password == "" {
-		pwd, err := generateRandomPassword()
-		if err != nil {
-			return nil, apperrors.NewInternalError(err)
-		}
-		password = pwd
-		generatedPassword = &pwd
-	} else {
+	if req.Password != nil && *req.Password != "" {
 		password = *req.Password
 	}
 
-	supabaseUserID, err := uc.authService.AdminCreateUser(ctx, req.Email, password)
+	result, err := uc.createSingleUser(ctx, createUserParams{
+		Email:    req.Email,
+		Name:     req.Name,
+		Password: password,
+		RoleID:   uint(req.RoleID),
+		RoleName: role.NamaRole,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	user := domain.User{
-		ID:       supabaseUserID,
-		Email:    req.Email,
-		Name:     req.Name,
-		RoleID:   &req.RoleID,
-		IsActive: true,
-	}
-	if err := uc.userRepo.Create(ctx, &user); err != nil {
-		_ = uc.authService.DeleteUser(ctx, supabaseUserID)
-		return nil, apperrors.NewInternalError(err)
+	if uc.casbinEnforcer != nil {
+		if err := uc.casbinEnforcer.SavePolicy(); err != nil {
+			_ = uc.userRepo.Delete(ctx, result.User.ID)
+			_ = uc.authService.DeleteUser(ctx, result.User.ID)
+			return nil, apperrors.NewInternalError(err)
+		}
 	}
 
-	if uc.casbinEnforcer != nil {
-		if err := uc.casbinEnforcer.AddRoleForUser(supabaseUserID, role.NamaRole); err != nil {
-			_ = uc.userRepo.Delete(ctx, supabaseUserID)
-			_ = uc.authService.DeleteUser(ctx, supabaseUserID)
-			return nil, apperrors.NewInternalError(err)
-		}
-		if err := uc.casbinEnforcer.SavePolicy(); err != nil {
-			_ = uc.userRepo.Delete(ctx, supabaseUserID)
-			_ = uc.authService.DeleteUser(ctx, supabaseUserID)
-			return nil, apperrors.NewInternalError(err)
-		}
+	var generatedPassword *string
+	if req.Password == nil || *req.Password == "" {
+		generatedPassword = &result.Password
 	}
 
 	return &dto.CreateUserResponse{
-		ID:                supabaseUserID,
+		ID:                result.User.ID,
 		Email:             req.Email,
 		Name:              req.Name,
 		RoleID:            req.RoleID,
@@ -609,18 +658,14 @@ func (uc *userUsecase) BulkImportUsers(ctx context.Context, file *excelize.File,
 			continue
 		}
 
-		password := row.Password
-		var reportPassword string
-		if password == "" {
-			pwd, genErr := generateRandomPassword()
-			if genErr != nil {
-				return nil, apperrors.NewInternalError(genErr)
-			}
-			password = pwd
-			reportPassword = pwd
-		}
-
-		supabaseUserID, createErr := uc.authService.AdminCreateUser(ctx, row.Email, password)
+		result, createErr := uc.createSingleUser(ctx, createUserParams{
+			Email:        row.Email,
+			Name:         row.Nama,
+			JenisKelamin: row.JenisKelamin,
+			Password:     row.Password,
+			RoleID:       uint(roleID),
+			RoleName:     role.NamaRole,
+		})
 		if createErr != nil {
 			report.Detail = append(report.Detail, dto.ImportReportRow{
 				Baris:  row.RowNumber,
@@ -633,46 +678,9 @@ func (uc *userUsecase) BulkImportUsers(ctx context.Context, file *excelize.File,
 			continue
 		}
 
-		var jenisKelaminPtr *string
-		if row.JenisKelamin != "" {
-			jenisKelaminPtr = &row.JenisKelamin
-		}
-
-		user := domain.User{
-			ID:           supabaseUserID,
-			Email:        row.Email,
-			Name:         row.Nama,
-			JenisKelamin: jenisKelaminPtr,
-			RoleID:       &roleID,
-			IsActive:     true,
-		}
-		if dbErr := uc.userRepo.Create(ctx, &user); dbErr != nil {
-			_ = uc.authService.DeleteUser(ctx, supabaseUserID)
-			report.Detail = append(report.Detail, dto.ImportReportRow{
-				Baris:  row.RowNumber,
-				Email:  row.Email,
-				Nama:   row.Nama,
-				Status: "dilewati",
-				Alasan: fmt.Sprintf("Gagal menyimpan data: %s", dbErr.Error()),
-			})
-			report.Dilewati++
-			continue
-		}
-
-		if uc.casbinEnforcer != nil {
-			if policyErr := uc.casbinEnforcer.AddRoleForUser(supabaseUserID, role.NamaRole); policyErr != nil {
-				_ = uc.userRepo.Delete(ctx, supabaseUserID)
-				_ = uc.authService.DeleteUser(ctx, supabaseUserID)
-				report.Detail = append(report.Detail, dto.ImportReportRow{
-					Baris:  row.RowNumber,
-					Email:  row.Email,
-					Nama:   row.Nama,
-					Status: "dilewati",
-					Alasan: fmt.Sprintf("Gagal menyimpan data: %s", policyErr.Error()),
-				})
-				report.Dilewati++
-				continue
-			}
+		var reportPassword string
+		if row.Password == "" {
+			reportPassword = result.Password
 		}
 
 		seenEmails[emailLower] = true

@@ -4,7 +4,8 @@
 
 - ✅ **v1.0 Comprehensive Refactoring & Optimization** — Phases 1-8 (shipped 2026-02-17) — [archive](milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Performance & Security Fixes** — Phases 9-11 (shipped 2026-02-17) — [archive](milestones/v1.1-ROADMAP.md)
-- 🚧 **v1.2 User Management & Import** — Phases 12-14 (in progress)
+- ✅ **v1.2 User Management & Import** — Phases 12-14 (shipped 2026-02-20)
+- 🔧 **v1.2.1 Tech Debt Cleanup** — Phase 15
 
 ## Phases
 
@@ -31,13 +32,25 @@
 
 </details>
 
-### 🚧 v1.2 User Management & Import (In Progress)
+<details>
+<summary>✅ v1.2 User Management & Import (Phases 12-14) — SHIPPED 2026-02-20</summary>
 
 **Milestone Goal:** Add user management features (manual + bulk Excel import) with email confirmation flow that differentiates admin-created vs self-registered users.
 
 - [x] **Phase 12: Auth Confirmation Flow** - Change login to reject unconfirmed users and register to require email confirmation
 - [x] **Phase 13: Manual User Creation** - Add endpoint for authorized users to create individual accounts with role assignment
-- [ ] **Phase 14: Excel Import & Template** - Bulk user import from Excel with validation, skip logic, and detailed reporting
+- [x] **Phase 14: Excel Import & Template** - Bulk user import from Excel with validation, skip logic, and detailed reporting
+
+</details>
+
+<details>
+<summary>🔧 v1.2.1 Tech Debt Cleanup (Phase 15)</summary>
+
+**Milestone Goal:** Fix pre-existing test failures, reduce code duplication in import path, and clean up go.mod.
+
+- [ ] **Phase 15: Tech Debt Cleanup** - Fix test constructor params, refactor import logic duplication, go mod tidy
+
+</details>
 
 ## Phase Details
 
@@ -86,7 +99,17 @@ Plans:
 
 Plans:
 - [x] 14-01-PLAN.md — Excel template generation, import DTOs, and template download endpoint
-- [ ] 14-02-PLAN.md — Bulk import logic with validation, skip logic, and upload endpoint
+- [x] 14-02-PLAN.md — Bulk import logic with validation, skip logic, and upload endpoint
+
+### Phase 15: Tech Debt Cleanup
+**Goal**: Fix pre-existing test failures from missing constructor params, reduce import/create code duplication, and clean up go.mod
+**Depends on**: Phase 14 (addresses tech debt from Phases 13-14)
+**Gap Closure**: Closes tech debt items from v1.2 milestone audit
+**Success Criteria** (what must be TRUE):
+  1. All `NewUserUsecase(...)` calls in test files include `authService` parameter — `go test ./internal/usecase/...` passes
+  2. `BulkImportUsers` delegates per-user creation to `AdminCreateUser` usecase method (or shared helper) instead of reimplementing inline
+  3. `github.com/xuri/excelize/v2` is a direct dependency (not `// indirect`) in go.mod after `go mod tidy`
+**Plans**: TBD
 
 ## Progress
 
@@ -105,4 +128,5 @@ Plans:
 | 11. Verification & Validation | v1.1 | 1/1 | Complete | 2026-02-17 |
 | 12. Auth Confirmation Flow | v1.2 | 2/2 | Complete | 2026-02-20 |
 | 13. Manual User Creation | v1.2 | Complete    | 2026-02-19 | 2026-02-20 |
-| 14. Excel Import & Template | v1.2 | 1/2 | In progress | - |
+| 14. Excel Import & Template | v1.2 | Complete    | 2026-02-19 | 2026-02-20 |
+| 15. Tech Debt Cleanup | v1.2.1 | 0/0 | Planned | — |
