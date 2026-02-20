@@ -9,16 +9,20 @@ require (
 	github.com/casbin/casbin/v2 v2.127.0
 	github.com/casbin/gorm-adapter/v3 v3.37.0
 	github.com/go-playground/validator/v10 v10.27.0
+	github.com/gofiber/contrib/fiberzerolog v1.0.3
 	github.com/gofiber/fiber/v2 v2.52.11
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.5.5
+	github.com/jinzhu/copier v0.4.0
 	github.com/joho/godotenv v1.5.1
+	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	github.com/supabase-community/supabase-go v0.0.4
 	github.com/swaggo/fiber-swagger v1.3.0
 	github.com/swaggo/swag v1.16.6
 	github.com/valyala/fasthttp v1.69.0
+	github.com/xuri/excelize/v2 v2.10.0
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.0
@@ -51,7 +55,6 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
-	github.com/gofiber/contrib/fiberzerolog v1.0.3 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
@@ -59,7 +62,6 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
-	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
@@ -78,7 +80,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230126093431-47fa9a501578 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect
-	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.24.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/supabase-community/functions-go v0.0.0-20220927045802-22373e6cb51d // indirect
@@ -92,7 +93,6 @@ require (
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
-	github.com/xuri/excelize/v2 v2.10.0 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
